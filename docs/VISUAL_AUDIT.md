@@ -12,6 +12,9 @@ Referentni PNG-ovi uključuju: brending/Play ikonu, splash, početni izbornik, k
 - Postavke: 7 redaka poput reference sa zvukom, vibracijom, jezikom, opcionalnim lokalnim obavijestima, kopijom napretka, privatnošću i informacijama.
 - Brendirana završna kartica s dinamičkom verzijom aplikacije. Nema lažnih tvrdnji o cloud sinkronizaciji: odabir "Sinkronizacija napretka" otvara eksplicitni lokalni izvoz/uvoz.
 
+## Ispravak nakon emulator testa v1.4.16
+Emulator je otkrio sistematsko odstupanje vektorskih ikona: canvas je koristio gornji lijevi kut umjesto središta ikone. Zajednička funkcija za crtanje sada koristi `(centerX-width/2, centerY-width/2)` u svim slučajevima. Usklađeni su vertikalni razmaci ikonice/naslova/opisa u četiri početne kartice. U footeru postavki uklonjen je dupliciran potpis, a Android launcher sada ima `adaptive-icon` s dovoljno sigurnog odmaka od maske.
+
 ## Nedovršeno za dokaz 1:1 podudarnosti
 - Referentne slike su marketinške makete sa simuliranim rezultatima, datumima i 4×4 pločom već punom brojeva; aplikacija koristi stvarna dinamička stanja i počinje sa samo dvije pločice.
 - Nije ugrađena identična font datoteka iz reference. Android zamjenski font `sans-serif-rounded` odstupa po širini i težini znakova.

@@ -552,7 +552,8 @@ public final class MainActivity extends Activity {
             txt(content,x,baseline,size,color,bold);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
-            c.save();c.translate(cx,cy);c.scale(width/24f,width/24f);
+            c.save();c.translate(cx-width/2f,cy-width/2f);
+            c.scale(width/24f,width/24f);
             p.setStyle(Paint.Style.FILL);p.setShader(null);
             if("crown".equals(type)){
                 Path crown=new Path();
@@ -678,7 +679,8 @@ public final class MainActivity extends Activity {
                "globe".equals(type)||"info".equals(type)){
                 polishedIcon(type,cx,cy,width,color);return;
             }
-            c.save();c.translate(cx,cy);c.scale(width/24f,width/24f);
+            c.save();c.translate(cx-width/2f,cy-width/2f);
+            c.scale(width/24f,width/24f);
             p.setColor(color);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.7f);
             p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
             p.setShader(null);
@@ -895,11 +897,11 @@ public final class MainActivity extends Activity {
         void shortcut(String label,String glyph,String sub1,String sub2,
                       float x,float y,float w,float h,int fill,Runnable action){
             card(x,y,w,h,19,theme==1?card:fill);
-            icon(glyph,x+w/2,y+46,46,glyph.equals("target")?CORAL:
+            icon(glyph,x+w/2,y+39,43,glyph.equals("target")?CORAL:
                 glyph.equals("stats")?0xff344868:glyph.equals("palette")?0xffb05de9:ink);
-            fitted(label,x+w/2,y+83,16,w-5,ink,true);
-            fitted(sub1,x+w/2,y+108,12,w-6,muted,false);
-            fitted(sub2,x+w/2,y+125,12,w-6,muted,false);
+            fitted(label,x+w/2,y+91,16,w-5,ink,true);
+            fitted(sub1,x+w/2,y+115,12,w-6,muted,false);
+            fitted(sub2,x+w/2,y+132,12,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
@@ -1265,8 +1267,7 @@ public final class MainActivity extends Activity {
                 ()->navigate("about"));
             card(22,717,356,130,27,theme==1?card:0xfffff3e6);
             brand(785,57);
-            fitted("v"+appVersion(),200,809,16,320,muted,false);
-            txt("by Brendigo",200,830,16,muted,true);
+            fitted("v"+appVersion(),200,833,16,320,muted,false);
         }
         void settingsSwitch(String caption,String glyph,int accent,int y,boolean on,
                             Runnable action){

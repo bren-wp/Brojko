@@ -2,7 +2,8 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <application android:label="Brojko" android:icon="@drawable/ic_brojko"
+    <application android:label="Brojko" android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Theme.Brojko"
         android:usesCleartextTraffic="false" android:allowBackup="false" android:supportsRtl="true">
         <receiver android:name=".AppReminder" android:exported="false"/>
