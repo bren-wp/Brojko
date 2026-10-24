@@ -1,8 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application android:label="Brojko" android:icon="@drawable/ic_brojko"
         android:theme="@style/Theme.Brojko"
         android:usesCleartextTraffic="false" android:allowBackup="false" android:supportsRtl="true">
+        <receiver android:name=".AppReminder" android:exported="false"/>
+        <receiver android:name=".AppReminderBoot" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
+        </receiver>
         <activity android:name=".MainActivity" android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>

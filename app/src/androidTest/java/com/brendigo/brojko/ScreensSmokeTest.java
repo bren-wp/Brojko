@@ -155,11 +155,37 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themedAndSettingsScreensRenderWithoutCrashing() {
+        rule.getScenario().onActivity(activity->{
+            int previousTheme=activity.theme;
+            try{
+                for(int theme=0;theme<3;theme++){
+                    activity.theme=theme;
+                    activity.page="home";
+                    capture(activity,"home-theme-"+theme);
+                    activity.page="settings";
+                    capture(activity,"settings-theme-"+theme);
+                    activity.page="game";
+                    if(activity.game==null)activity.newGame("classic");
+                    capture(activity,"game-theme-"+theme);
+                }
+                // Scheduling an inexact local alarm must not require exact alarm
+                // permissions, any server, or login credentials.
+                AppReminder.configure(activity,true);
+                AppReminder.configure(activity,false);
+            }finally{
+                activity.theme=previousTheme;
+                activity.page="home";
+                activity.persist();
+            }
+        });
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");
             String[] pages={
-                "home","game","pause","win","over","confirm","confirmEnd",
+                "splash","home","game","pause","win","over","confirm","confirmEnd",
                 "daily","missions","stats","themes","settings",
                 "language","backup","privacy","about","help","dailyWin","dailyFail"
             };

@@ -5,9 +5,9 @@ Primarni identitet: **Brojko by Brendigo**. Slogan: **Spajaj brojeve. Ruši reko
 ## Paleta
 | Element | HEX |
 |---|---|
-| Koraljna | `#FF7054` |
-| Tirkizna | `#27C7BB` |
-| Tamnoplava tipografija | `#192B4D` |
+| Koraljna | `#FF7A5B` |
+| Tirkizna | `#2EC4B6` |
+| Tamnoplava tipografija | `#1E2A44` |
 | Krem pozadina | `#FFF8EE` |
 | Pločica 8 | `#3D98F0` |
 | Pločica 16 | `#FFBB4A` |

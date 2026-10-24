@@ -7,8 +7,11 @@ Brojko je offline logička igra. Izvorni kod ove verzije ne prikuplja ni ne šal
 ## Podaci na uređaju
 Igra lokalno sprema mrežu pločica, rezultat, rekorde, povijest partija, datum dnevnog izazova i postavke izgleda, zvuka i vibracije u privatnim Android postavkama (SharedPreferences). Podaci ostaju na uređaju dok ih korisnik ne izbriše brisanjem podataka aplikacije ili deinstalacijom. Aplikacija ne traži pristup lokaciji, kontaktima ni osobnim datotekama.
 
+## Opcionalne obavijesti
+Ako korisnik uključi opciju **Obavijesti** u postavkama igre, Android lokalno zakazuje približan dnevni podsjetnik oko 18:00. Od Androida 13 traži se dozvola za obavijesti. Podsjetnik ne zahtijeva internet i ne šalje podatke izvan uređaja. Podsjetnik se može isključiti u bilo kojem trenutku.
+
 ## Dozvole
-Aplikacija traži samo dozvolu **VIBRATE** za kratku vibraciju pri potezu kada je uključena. Vibracija se može isključiti u postavkama.
+Aplikacija koristi dozvolu **VIBRATE** za kratku vibraciju pri potezu kada je uključena. Vibracija se može isključiti u postavkama. Dodatne dozvole **POST_NOTIFICATIONS** (Android 13+) i **RECEIVE_BOOT_COMPLETED** koriste se samo za opcionalne lokalne podsjetnike.
 
 ## Dijeljenje rezultata
 Kada korisnik pritisne **Podijeli**, Androidov standardni dijalog za dijeljenje šalje tekst rezultata u aplikaciju koju korisnik sam odabere. Brojko ne šalje rezultat automatski.
