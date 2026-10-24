@@ -494,9 +494,24 @@ public final class MainActivity extends Activity {
             Typeface base;
             try{base=Typeface.createFromAsset(getContext().getAssets(),"Nunito.ttf");}
             catch(RuntimeException error){base=Typeface.create("sans-serif-rounded",Typeface.NORMAL);}
-            regularFont=makeTypeface(base,500);
-            boldFont=makeTypeface(base,800);
-            displayFont=makeTypeface(base,950);
+            if(Build.VERSION.SDK_INT>=26){
+                Typeface normal=null,heavy=null,display=null;
+                try{
+                    normal=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
+                        .setFontVariationSettings("'wght' 500").setWeight(500).build();
+                    heavy=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
+                        .setFontVariationSettings("'wght' 850").setWeight(850).build();
+                    display=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
+                        .setFontVariationSettings("'wght' 1000").setWeight(1000).build();
+                }catch(RuntimeException ignored){}
+                regularFont=normal!=null?normal:makeTypeface(base,500);
+                boldFont=heavy!=null?heavy:makeTypeface(base,850);
+                displayFont=display!=null?display:makeTypeface(base,1000);
+            }else{
+                regularFont=makeTypeface(base,500);
+                boldFont=makeTypeface(base,850);
+                displayFont=makeTypeface(base,1000);
+            }
         }
         void palette() {
             boolean dark=theme==1;
@@ -572,17 +587,22 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
-            p.setFakeBoldText(false);
+            p.setFakeBoldText(bold);
+            p.setStyle(bold?Paint.Style.FILL_AND_STROKE:Paint.Style.FILL);
+            p.setStrokeWidth(bold?Math.max(.35f,size*.020f):0);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
             c.drawText(content,x,baseline,p);
             p.clearShadowLayer();p.setFakeBoldText(false);
+            p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
         void fitted(String content,float x,float baseline,float size,float maxWidth,int color,boolean bold) {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+            p.setFakeBoldText(bold);
             p.setTextSize(size);
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
+            p.setFakeBoldText(false);
             txt(content,x,baseline,size,color,bold);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){

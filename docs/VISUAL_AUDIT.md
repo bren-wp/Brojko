@@ -63,3 +63,7 @@ Provjeren je svaki primarni vizualni sustav: launcher i splash, početna, klasi�
 ## Revizija tema v1.7.24
 
 Prema referenci, donja navigacijska traka na ekranu **Teme i izgled** nalazi se unutar standardne visine zaslona, bez potrebe za pomicanjem na telefonima s dovoljno prostora. Uklonjen je suvišni gumb koji je gurao navigaciju izvan ekrana, te su dodane odabrane konture i potvrda na aktivnoj temi. Promjena se provjerava instrumentacijskim testom: sva 4 taba u koordinatama y=805–877 te stvaran prijelaz na Postavke. Niži zasloni i dalje koriste vertikalno pomicanje.
+
+## Revizija Nunito težina v1.7.25
+
+Testni ekran v1.7.23 dokazao je da sam izvorni variable Nunito nije dovoljan: Android je neke težine iz `Typeface.create(base, weight, ...)` prikazivao pretanko. Ispravljeno je eksplicitnim `Typeface.Builder` s osi `wght` (500/850/1000) i postupnim zadebljanjem prikaza teksta. Na starijim API-jevima koristi se rezervna obitelj/fake bold. CI instrumentacijski test provjerava da je `displayFont` doista teži od običnog teksta.

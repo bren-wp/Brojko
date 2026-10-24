@@ -263,6 +263,12 @@ public class ScreensSmokeTest {
 
     @Test public void bundledNunitoFontAndLicenseArePresent() throws Exception {
         rule.getScenario().onActivity(activity->{
+            if(android.os.Build.VERSION.SDK_INT>=28){
+                assertTrue("Display Nunito weight must be heavy",
+                    activity.screen.displayFont.getWeight()>=900);
+                assertTrue("Bold Nunito must be heavier than regular",
+                    activity.screen.boldFont.getWeight()>activity.screen.regularFont.getWeight());
+            }
             for(String asset:new String[]{"Nunito.ttf","Nunito-OFL.txt"}){
                 try(java.io.InputStream stream=activity.getAssets().open(asset)){
                     assertTrue("Bundled asset must not be empty: "+asset,stream.available()>1000);
