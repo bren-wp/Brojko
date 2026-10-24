@@ -122,6 +122,7 @@ public final class MainActivity extends Activity {
         e.apply();
     }
     void navigate(String target) {
+        if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();screen.invalidate();
     }
@@ -216,6 +217,18 @@ public final class MainActivity extends Activity {
         i.putExtra(Intent.EXTRA_TEXT,"U igri Brojko osvojio/la sam "+value
             +" bodova! Spajaj brojeve. Ruši rekorde. — Brojko by Brendigo");
         startActivity(Intent.createChooser(i,"Podijeli rezultat"));
+    }
+    @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
+        if("game".equals(page)){
+            switch(keyCode){
+                case android.view.KeyEvent.KEYCODE_DPAD_LEFT:move(TileGame.LEFT);return true;
+                case android.view.KeyEvent.KEYCODE_DPAD_RIGHT:move(TileGame.RIGHT);return true;
+                case android.view.KeyEvent.KEYCODE_DPAD_UP:move(TileGame.UP);return true;
+                case android.view.KeyEvent.KEYCODE_DPAD_DOWN:move(TileGame.DOWN);return true;
+                default:break;
+            }
+        }
+        return super.onKeyDown(keyCode,event);
     }
     @Override public void onBackPressed(){
         if(page.equals("game"))navigate("pause");
@@ -337,11 +350,18 @@ public final class MainActivity extends Activity {
         }
         void back(){button("","back",22,49,52,52,card,false,()->navigate("home"));}
         void brand(float y,float size) {
-            fitted("Brojko",200,y,size,350,ink,true);
-            float tw=size*.20f;
-            card(174,y-size*.79f,tw+4,tw+4,6,CORAL);
-            txt("2",176+tw/2,y-size*.26f,size*.22f,WHITE,true);
-            txt("by Brendigo",269,y+23,15,muted,true);
+            p.setTypeface(Typeface.create("sans-serif-rounded",Typeface.BOLD));
+            p.setTextSize(size);
+            float left=p.measureText("Br"),right=p.measureText("jko");
+            float gap=size*.09f,tile=size*.74f;
+            float total=left+right+tile+2*gap;
+            float start=200-total/2;
+            txt("Br",start+left/2,y,size,ink,true);
+            float bx=start+left+gap;
+            card(bx,y-size*.78f,tile,tile,Math.max(7,size*.16f),CORAL);
+            txt("2",bx+tile/2,y-size*.20f,size*.52f,WHITE,true);
+            txt("jko",bx+tile+gap+right/2,y,size,ink,true);
+            txt("by Brendigo",265,y+23,15,muted,true);
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);c=canvas;palette();
@@ -492,7 +512,7 @@ public final class MainActivity extends Activity {
             txt(fmt(game.score),200,461,35,ink,true);
             button(winning?"Nastavi igrati":"Nova igra",
                 winning?"play":"undo",54,508,292,65,CORAL,true,
-                ()->{if(winning){game.winAcknowledged=true;persist();navigate("game");}
+                ()->{if(winning){game.winAcknowledged=true;persist();navigate(game.gameOver?"over":"game");}
                 else requestNew(game.mode);});
             button("Podijeli rezultat","share",54,594,292,64,card,false,()->share());
         }
