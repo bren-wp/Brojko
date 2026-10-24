@@ -50,7 +50,7 @@ public final class MainActivity extends Activity {
     BoardScreen screen;
     String page="home", pendingMode="classic";
     int best, plays, total, wins, recordTile, totalMerges, streak, theme, tileStyle, animation=1;
-    int todayMerges, todayPoints, playDayStreak;
+    int todayMerges, todayPoints, playDayStreak, lastScore;
     String lastDaily="", statsDay="", lastPlayDay="";
     boolean sound=true, vibration=true;
     float pulse=1f;
@@ -65,6 +65,7 @@ public final class MainActivity extends Activity {
             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         prefs=getSharedPreferences("brojko",MODE_PRIVATE);
         best=prefs.getInt("best",0);plays=prefs.getInt("games",0);total=prefs.getInt("total",0);
+        lastScore=prefs.getInt("lastScore",0);
         wins=prefs.getInt("wins",0);recordTile=prefs.getInt("tile",0);
         totalMerges=prefs.getInt("totalMerges",0);streak=prefs.getInt("streak",0);
         lastDaily=prefs.getString("lastDaily","");
@@ -131,6 +132,7 @@ public final class MainActivity extends Activity {
     void persist() {
         SharedPreferences.Editor e=prefs.edit()
             .putInt("best",best).putInt("games",plays).putInt("total",total)
+            .putInt("lastScore",lastScore)
             .putInt("wins",wins).putInt("tile",recordTile).putInt("totalMerges",totalMerges)
             .putInt("streak",streak).putString("lastDaily",lastDaily)
             .putInt("todayMerges",todayMerges).putInt("todayPoints",todayPoints)
@@ -159,6 +161,7 @@ public final class MainActivity extends Activity {
     void archive(){
         if(game==null||game.archived||game.moves==0)return;
         game.archived=true;
+        lastScore=game.score;
         try {
             JSONObject row=new JSONObject();
             row.put("score",game.score).put("moves",game.moves).put("peak",game.maxTile())
@@ -230,10 +233,11 @@ public final class MainActivity extends Activity {
         int mergeCount=game.merges;
         boolean hadWon=game.reached2048;
         int reverted=game.undo();
-        total=Math.max(0,total-reverted);todayPoints=Math.max(0,todayPoints-reverted);
+        total=Math.max(0,total-reverted);
+        if(today().equals(statsDay))todayPoints=Math.max(0,todayPoints-reverted);
         int revertedMerges=mergeCount-game.merges;
         totalMerges=Math.max(0,totalMerges-revertedMerges);
-        todayMerges=Math.max(0,todayMerges-revertedMerges);
+        if(today().equals(statsDay))todayMerges=Math.max(0,todayMerges-revertedMerges);
         if(hadWon&&!game.reached2048)wins=Math.max(0,wins-1);
         page="game";persist();screen.invalidate();
     }
@@ -385,7 +389,9 @@ public final class MainActivity extends Activity {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         Canvas c;float scale,offX,offY,touchX,touchY;
-        boolean pointerBoard;
+        float scrollOffset,maxScroll,lastFingerY,initialFingerY;
+        String renderedPage="";
+        boolean pointerBoard,draggingScroll;
         int ink,muted,bg,card,shadow;
         class Tap {
             float left,top,right,bottom;Runnable action;String label;
@@ -411,7 +417,8 @@ public final class MainActivity extends Activity {
             p.setColor(color);c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
         }
         void card(float x,float y,float w,float h,float radius,int color) {
-            shape(x,y+3,w,h,radius,shadow);shape(x,y,w,h,radius,color);
+            shape(x,y+4,w,h,radius,shadow);
+            gradient(x,y,w,h,radius,lighten(color,theme==1?.035f:.015f),color);
         }
         void gradient(float x,float y,float w,float h,float radius,int top,int bottom) {
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
@@ -422,6 +429,36 @@ public final class MainActivity extends Activity {
             int r=Color.red(color),g=Color.green(color),b=Color.blue(color);
             return Color.rgb(Math.min(255,(int)(r+(255-r)*amount)),
                 Math.min(255,(int)(g+(255-g)*amount)),Math.min(255,(int)(b+(255-b)*amount)));
+        }
+        int darken(int color,float amount){
+            return Color.rgb(Math.max(0,(int)(Color.red(color)*(1-amount))),
+                Math.max(0,(int)(Color.green(color)*(1-amount))),
+                Math.max(0,(int)(Color.blue(color)*(1-amount))));
+        }
+        void glossyTile(float x,float y,float width,float height,float radius,int color){
+            if(tileStyle==1){
+                shape(x,y,width,height,radius,color);
+                return;
+            }
+            shape(x,y+4,width,height-1,radius,darken(color,.20f));
+            gradient(x,y,width,height-5,radius,lighten(color,tileStyle==2?.35f:.19f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.6f);p.setColor(0x84ffffff);
+            c.drawRoundRect(x+2,y+2,x+width-2,y+height-6,
+                Math.max(2,radius-2),Math.max(2,radius-2),p);
+            p.setStyle(Paint.Style.FILL);
+            if(tileStyle==2) {
+                shape(x+8,y+6,Math.max(1,width-16),Math.max(1,height*.07f),radius,
+                    0x35ffffff);
+            }
+        }
+        void rays(float cx,float cy,float size,int color){
+            for(int i=0;i<3;i++){
+                c.save();
+                c.rotate(-37+i*37,cx,cy);
+                shape(cx-2,cy-size*.85f,4,size*.24f,3,color);
+                c.restore();
+            }
         }
         void txt(String content,float x,float baseline,float size,int color,boolean bold) {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
@@ -502,7 +539,8 @@ public final class MainActivity extends Activity {
             float start=200-total/2;
             txt("Br",start+left/2,y,size,ink,true);
             float bx=start+left+gap;
-            card(bx,y-size*.78f,tile,tile,Math.max(7,size*.16f),CORAL);
+            glossyTile(bx,y-size*.78f,tile,tile,Math.max(7,size*.16f),CORAL);
+            rays(bx+tile*.5f,y-size*.79f,size*.34f,CORAL);
             txt("2",bx+tile/2,y-size*.20f,size*.52f,WHITE,true);
             txt("jko",bx+tile+gap+right/2,y,size,ink,true);
             txt("by Brendigo",265,y+23,15,muted,true);
@@ -511,9 +549,17 @@ public final class MainActivity extends Activity {
             super.onDraw(canvas);c=canvas;palette();
             float usableWidth=Math.max(1,getWidth()-getPaddingLeft()-getPaddingRight());
             float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
-            scale=Math.min(usableWidth/400f,usableHeight/880f);
+            boolean inGame=page.equals("game")||page.equals("pause")||
+                page.equals("win")||page.equals("over")||page.equals("confirm")||
+                page.equals("confirmEnd");
+            boolean compact=!inGame && usableHeight/usableWidth<1.85f;
+            scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
+            maxScroll=compact?Math.max(0,880f-usableHeight/scale):0;
+            if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
+            scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
             offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
-            offY=getPaddingTop()+(usableHeight-880*scale)/2f;
+            offY=compact?getPaddingTop()-scrollOffset*scale:
+                getPaddingTop()+(usableHeight-880*scale)/2f;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             taps.clear();
             switch(page) {
@@ -548,6 +594,12 @@ public final class MainActivity extends Activity {
         void home(){
             // Supplied reference: wide playful wordmark, two score cards, one primary
             // action, three mode tiles and four equally sized shortcut cards.
+            c.save();c.rotate(-16,35,75);
+            glossyTile(19,61,44,44,12,TILES[1]);txt("2",41,91,24,WHITE,true);
+            c.restore();
+            c.save();c.rotate(13,355,74);
+            glossyTile(333,56,44,44,12,TILES[2]);txt("4",355,86,24,WHITE,true);
+            c.restore();
             brand(130,66);
             fitted("Spajaj brojeve. Ruši rekorde.",200,187,21,371,CORAL,true);
             card(23,217,171,93,22,card);card(206,217,171,93,22,card);
@@ -556,9 +608,10 @@ public final class MainActivity extends Activity {
             fitted(fmt(best),113,288,29,150,ink,true);
             icon("stats",241,250,28,0xff468df0);
             txt("POSLJEDNJI",312,252,13,muted,true);
-            fitted(fmt(game==null?0:game.score),296,288,29,150,ink,true);
-            button(game==null?"Nova igra":"Nastavi igru","play",27,338,346,82,CORAL,true,
-                ()->{if(game==null)requestNew("classic");else navigate(game.gameOver?"over":"game");});
+            fitted(fmt(lastScore),296,288,29,150,ink,true);
+            boolean resumable=game!=null&&!game.archived&&!game.gameOver;
+            button(resumable?"Nastavi igru":"Nova igra","play",27,338,346,82,CORAL,true,
+                ()->{if(resumable)navigate("game");else requestNew("classic");});
             modeCard("Klasično","4 × 4",22,448,111,171,0xffffe9de,false,()->requestNew("classic"));
             modeCard("Opušteno","5 × 5",144,448,111,171,0xffdbfaf3,false,()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Igraj danas",266,448,111,171,0xfffff4d4,true,()->navigate("daily"));
@@ -584,7 +637,7 @@ public final class MainActivity extends Activity {
             } else {
                 for(int i=0;i<4;i++){
                     float tx=x+14+(i%2)*43,ty=y+21+(i/2)*39;
-                    shape(tx,ty,39,35,8,TILES[i+1]);
+                    glossyTile(tx,ty,39,35,8,TILES[i+1]);
                     txt(""+(2<<i),tx+19.5f,ty+24,16,WHITE,true);
                 }
             }
@@ -629,13 +682,9 @@ public final class MainActivity extends Activity {
                 float delta=animation==0?1:pulse;
                 float inset=value>0?(1-delta)*tile/2:0;
                 float round=tileStyle==1?7:tileStyle==2?24:15;
-                shape(rx+inset,ry+inset,tile-2*inset,tile-2*inset,round,
-                    value==0?color:lighten(color,.08f));
-                if(value>0) {
-                    if(tileStyle==2)gradient(rx+inset,ry+inset,tile-2*inset,tile-2*inset,
-                        round,lighten(color,.27f),color);
-                    else shape(rx+inset,ry+inset+3,tile-2*inset,tile-2*inset-3,
-                        round,color);
+                if(value==0)shape(rx,ry,tile,tile,round,color);
+                else {
+                    glossyTile(rx+inset,ry+inset,tile-2*inset,tile-2*inset,round,color);
                     String str=Integer.toString(value);
                     int digits=str.length();
                     float fontsize=(n==5?33:44)-(digits>3?(digits-3)*7:0);
@@ -962,11 +1011,29 @@ public final class MainActivity extends Activity {
             float y=(event.getY()-offY)/Math.max(.1f,scale);
             if(event.getActionMasked()==MotionEvent.ACTION_DOWN){
                 touchX=x;touchY=y;
+                lastFingerY=event.getY();initialFingerY=event.getY();
+                draggingScroll=false;
                 pointerBoard=x>=gridX && x<=gridX+gridSize &&
                     y>=gridY&&y<=gridY+gridSize && "game".equals(page);
                 return true;
             }
+            if(event.getActionMasked()==MotionEvent.ACTION_MOVE &&
+                maxScroll>0&&!pointerBoard){
+                if(Math.abs(event.getY()-initialFingerY)>13f*getResources()
+                    .getDisplayMetrics().density)draggingScroll=true;
+                if(draggingScroll){
+                    scrollOffset=Math.max(0,Math.min(maxScroll,
+                        scrollOffset+(lastFingerY-event.getY())/Math.max(.1f,scale)));
+                    invalidate();
+                }
+                lastFingerY=event.getY();
+                return true;
+            }
+            if(event.getActionMasked()==MotionEvent.ACTION_CANCEL){
+                pointerBoard=false;draggingScroll=false;return true;
+            }
             if(event.getActionMasked()==MotionEvent.ACTION_UP){
+                if(draggingScroll){draggingScroll=false;return true;}
                 float dx=x-touchX,dy=y-touchY;
                 if(pointerBoard&&Math.max(Math.abs(dx),Math.abs(dy))>=25) {
                     move(Math.abs(dx)>Math.abs(dy)?

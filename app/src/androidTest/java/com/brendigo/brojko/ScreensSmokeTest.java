@@ -42,6 +42,30 @@ public class ScreensSmokeTest {
         finally{bitmap.recycle();}
     }
 
+    @Test public void compactDisplayKeepsBottomActionsReachable(){
+        rule.getScenario().onActivity(activity->{
+            activity.page="missions";
+            MainActivity.BoardScreen view=activity.screen;
+            view.measure(View.MeasureSpec.makeMeasureSpec(360,View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(600,View.MeasureSpec.EXACTLY));
+            view.layout(0,0,360,600);
+            Bitmap bitmap=Bitmap.createBitmap(360,600,Bitmap.Config.ARGB_8888);
+            try{
+                view.draw(new Canvas(bitmap));
+                assertTrue("Compact screens should scroll",view.maxScroll>10);
+                long time=android.os.SystemClock.uptimeMillis();
+                MotionEvent down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,180,500,0);
+                MotionEvent move=MotionEvent.obtain(time,time+30,MotionEvent.ACTION_MOVE,180,260,0);
+                MotionEvent up=MotionEvent.obtain(time,time+60,MotionEvent.ACTION_UP,180,260,0);
+                view.onTouchEvent(down);view.onTouchEvent(move);view.onTouchEvent(up);
+                down.recycle();move.recycle();up.recycle();
+                view.draw(new Canvas(bitmap));
+                assertTrue("User must be able to reach lower cards",view.scrollOffset>10);
+                assertEquals("missions",activity.page);
+            }finally{bitmap.recycle();}
+        });
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");

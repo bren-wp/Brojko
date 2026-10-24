@@ -30,7 +30,7 @@ Brojko je originalno brendirana mobilna igra spajanja jednakih brojeva inspirira
 
 ## ✨ Zbog čega igrati Brojko?
 
-- 🎨 **Prepoznatljive boje:** koraljna, tirkizna, plava, žuta i ljubičasta.
+- 🎨 **Prepoznatljive boje:** koraljna, tirkizna, plava, žuta i ljubičasta; reljefne pločice s gradijentima i sjajnim rubovima.
 - ⚡ **Bez čekanja:** igra je lokalna i ne treba internet ni prijavu.
 - 🎯 **Ciljevi koji imaju smisla:** pravi dnevni zadaci povezani s rezultatima.
 - 💾 **Sigurnosne kopije:** lokalni JSON izvoz i uvoz preko Androidova odabira datoteka.\n- 📈 **Statistika:** odigrane partije, bodovi, postignute najveće pločice i nedavne partije.
@@ -50,7 +50,7 @@ Boje i sastav temelje se na dizajnerskim referencama **Brojko by Brendigo**. Viz
 - `minSdk 23`; `targetSdk 36`.
 - Neovisni deterministički **TileGame** engine s testovima pomicanja, spajanja, RNG-a, poništavanja i 2048.
 - Spremanje partije, rezultata i postavki u privatnu lokalnu pohranu.
-- CI: JVM unit tests, Android lint, debug APK, release APK i AAB, GitHub izdanje uz svaki uspješni build grane `main`.
+- CI: JVM unit tests, Android lint, emulator UI smoke test i snimke zaslona, debug APK, release APK i AAB, GitHub izdanje uz svaki uspješni build grane `main`.
 
 ### Kako izgraditi
 
