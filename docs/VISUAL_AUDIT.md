@@ -67,3 +67,7 @@ Prema referenci, donja navigacijska traka na ekranu **Teme i izgled** nalazi se 
 ## Revizija Nunito težina v1.7.25
 
 Testni ekran v1.7.23 dokazao je da sam izvorni variable Nunito nije dovoljan: Android je neke težine iz `Typeface.create(base, weight, ...)` prikazivao pretanko. Ispravljeno je eksplicitnim `Typeface.Builder` s osi `wght` (500/850/1000) i postupnim zadebljanjem prikaza teksta. Na starijim API-jevima koristi se rezervna obitelj/fake bold. CI instrumentacijski test provjerava da je `displayFont` doista teži od običnog teksta.
+
+## Nunito v1.7.26 — rezultat vizualne provjere
+
+Na screenshotovima v1.7.25 težina 1000 uz `fakeBold` i `FILL_AND_STROKE` prenaglašavala je slova i smanjivala čitljivost. Uklonjeno je umjetno zadebljanje, a težine Nunito osi `wght` standardizirane su na 500 za tekst, 750 za podebljane natpise i 900 za display naslove, logotip i brojke. To je izravna korekcija prema referentnoj tipografiji, uz potrebu ponovne usporedbe snimki.

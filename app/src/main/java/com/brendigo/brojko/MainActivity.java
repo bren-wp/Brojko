@@ -500,17 +500,17 @@ public final class MainActivity extends Activity {
                     normal=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
                         .setFontVariationSettings("'wght' 500").setWeight(500).build();
                     heavy=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
-                        .setFontVariationSettings("'wght' 850").setWeight(850).build();
+                        .setFontVariationSettings("'wght' 750").setWeight(750).build();
                     display=new Typeface.Builder(getContext().getAssets(),"Nunito.ttf")
-                        .setFontVariationSettings("'wght' 1000").setWeight(1000).build();
+                        .setFontVariationSettings("'wght' 900").setWeight(900).build();
                 }catch(RuntimeException ignored){}
                 regularFont=normal!=null?normal:makeTypeface(base,500);
-                boldFont=heavy!=null?heavy:makeTypeface(base,850);
-                displayFont=display!=null?display:makeTypeface(base,1000);
+                boldFont=heavy!=null?heavy:makeTypeface(base,750);
+                displayFont=display!=null?display:makeTypeface(base,900);
             }else{
                 regularFont=makeTypeface(base,500);
-                boldFont=makeTypeface(base,850);
-                displayFont=makeTypeface(base,1000);
+                boldFont=makeTypeface(base,750);
+                displayFont=makeTypeface(base,900);
             }
         }
         void palette() {
@@ -587,9 +587,11 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
-            p.setFakeBoldText(bold);
-            p.setStyle(bold?Paint.Style.FILL_AND_STROKE:Paint.Style.FILL);
-            p.setStrokeWidth(bold?Math.max(.35f,size*.020f):0);
+            // Nunito's own wght axis supplies the stroke thickness.
+            // FakeBold/FILL_AND_STROKE distorted Croatian glyphs in v1.7.25.
+            p.setFakeBoldText(false);
+            p.setStyle(Paint.Style.FILL);
+            p.setStrokeWidth(0);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
@@ -599,10 +601,9 @@ public final class MainActivity extends Activity {
         }
         void fitted(String content,float x,float baseline,float size,float maxWidth,int color,boolean bold) {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
-            p.setFakeBoldText(bold);
+            p.setFakeBoldText(false);
             p.setTextSize(size);
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
-            p.setFakeBoldText(false);
             txt(content,x,baseline,size,color,bold);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
