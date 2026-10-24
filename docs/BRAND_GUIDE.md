@@ -21,3 +21,8 @@ Korisničke slike predstavljaju cilj za početni izbornik, 4×4 igru, zaslon pob
 
 ## Upravljanje
 Povlačenje unutar ploče gore/dolje/lijevo/desno; početni izbornik i akcije upravljaju se velikim tipkama. Rezultat, status, pobjeda i kraj partije stvarne su vrijednosti enginea, nisu fiksni tekstovi iz predložaka.
+
+
+## Launcher v1.6.21
+
+Ikona zadržava originalni četverobojni motiv (2, 4, 8, 16) i dominantno svijetlo slovo B. Dodani su glatki sjajni rubovi i kratke svjetlosne zrake te prilagođena veličina u adaptive foreground maski. Testirati kružni i zaobljeni Android launcher prije izjave o pikselnoj podudarnosti.
