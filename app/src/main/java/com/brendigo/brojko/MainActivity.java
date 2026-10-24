@@ -833,8 +833,7 @@ public final class MainActivity extends Activity {
             // outside the board rather than scaling the whole game to tiny size.
             boolean compact=extended || usableHeight/usableWidth<1.85f;
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
-            float contentHeight=page.equals("themes")?1050f:
-                page.equals("stats")?1120f:880f;
+            float contentHeight=page.equals("stats")?1120f:880f;
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -1375,7 +1374,13 @@ public final class MainActivity extends Activity {
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
-                card(x,197,116,174,22,theme==i?CORAL:card);
+                card(x,197,116,174,22,card);
+                if(theme==i){
+                    p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeWidth(3.2f);
+                    c.drawRoundRect(x+1.5f,198.5f,x+114.5f,369.5f,21,21,p);
+                    p.setStyle(Paint.Style.FILL);
+                }
                 shape(x+7,207,102,109,18,fills[i]);
                 int[] cs=i==2?new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
@@ -1384,12 +1389,16 @@ public final class MainActivity extends Activity {
                     glossyTile(x+15+a*45,218+b*43,40,39,9,cs[j]);
                     txt(Integer.toString(2<<j),x+35+a*45,246+b*43,21,WHITE,true);
                 }
-                fitted(names[i],x+58,353,17,108,theme==i?WHITE:ink,true);
+                fitted(names[i],x+58,353,17,108,ink,true);
+                if(theme==i){
+                    shape(x+48,374,20,20,11,CORAL);
+                    icon("check",x+58,384,12,WHITE);
+                }
                 taps.add(new Tap(x,197,x+116,371,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
-            card(20,395,360,483,28,card);
+            card(20,395,360,405,28,card);
             txt("Pregled",99,434,24,ink,true);
             txt("Stil pločica",267,433,19,ink,true);
             // Real visual tile preview for all 16 values, independent of the game board.
@@ -1406,15 +1415,21 @@ public final class MainActivity extends Activity {
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
-                card(x,456,51,93,15,tileStyle==i?CORAL:card);
+                card(x,456,51,93,15,card);
+                if(tileStyle==i){
+                    p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeWidth(2.6f);
+                    c.drawRoundRect(x+1.5f,457.5f,x+49.5f,547.5f,14,14,p);
+                    p.setStyle(Paint.Style.FILL);
+                }
                 glossyTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1]);
                 if(i==0){
-                    fitted("Zaob-",x+25,525,11,49,tileStyle==i?WHITE:ink,true);
-                    fitted("ljene",x+25,541,11,49,tileStyle==i?WHITE:ink,true);
+                    fitted("Zaob-",x+25,525,11,49,ink,true);
+                    fitted("ljene",x+25,541,11,49,ink,true);
                 }else if(i==2){
-                    fitted("Stak-",x+25,525,11,49,tileStyle==i?WHITE:ink,true);
-                    fitted("laste",x+25,541,11,49,tileStyle==i?WHITE:ink,true);
-                }else fitted("Ravne",x+25,534,11,49,tileStyle==i?WHITE:ink,true);
+                    fitted("Stak-",x+25,525,11,49,ink,true);
+                    fitted("laste",x+25,541,11,49,ink,true);
+                }else fitted("Ravne",x+25,534,11,49,ink,true);
                 taps.add(new Tap(x,456,x+51,549,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
@@ -1446,18 +1461,16 @@ public final class MainActivity extends Activity {
                     animation=pos;persist();invalidate();
                 }));
             }
-            button("Postavke zvuka","settings",36,814,328,50,card,false,
-                ()->navigate("settings"));
-            card(20,904,360,90,34,card);
+            card(20,805,360,72,29,card);
             String[] tabs={"Novo","Rekordi","Teme","Postavke"};
             String[] glyphs={"home","crown","palette","settings"};
             String[] destinations={"home","stats","themes","settings"};
             for(int i=0;i<4;i++){
                 int index=i;float cx=65+i*90;
-                if(i==2)shape(205,908,90,81,29,theme==1?0xff453a48:0xffffecdf);
-                icon(glyphs[i],cx,937,30,i==2?CORAL:muted);
-                fitted(tabs[i],cx,974,13,84,i==2?CORAL:muted,true);
-                taps.add(new Tap(22+i*89,906,110+i*89,994,tabs[i],
+                if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
+                icon(glyphs[i],cx,830,27,i==2?CORAL:muted);
+                fitted(tabs[i],cx,863,13,84,i==2?CORAL:muted,true);
+                taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
                     ()->navigate(destinations[index])));
             }
         }

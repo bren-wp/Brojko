@@ -200,7 +200,17 @@ public class ScreensSmokeTest {
                 capture(activity,"history-detail");
                 activity.page="themes";
                 capture(activity,"theme-preview-controls");
-                assertTrue("Themes content must support scrolling",screen.maxScroll>0);
+                boolean hasBottomSettings=false;
+                for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                    if("Postavke".equals(tap.label)&&tap.top>=800&&tap.bottom<=880){
+                        hasBottomSettings=true;
+                        tap.action.run();
+                        break;
+                    }
+                }
+                assertTrue("Bottom themes navigation must fit on screen",hasBottomSettings);
+                assertEquals("settings",activity.page);
+                capture(activity,"settings-via-theme-navigation");
                 activity.page="daily";
                 capture(activity,"daily-with-reward");
             }finally{

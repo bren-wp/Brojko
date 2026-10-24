@@ -59,3 +59,7 @@ Provjeren je svaki primarni vizualni sustav: launcher i splash, početna, klasi�
 - QA: instrumentacijski test na 360×600 mjeri stanje ploče i skrolanje te snima sve ključne ekrane.
 
 **Granica 1:1:** originalne marketinške reference prikazuju fiktivne vrijednosti i drukčiji omjer stranica od Pixel 6 Android emulatora. Za strogi pixel-diff treba ista rezolucija, kontrolirana početna ploča i identičan font/izvorna grafika. Bez toga podudarnost svih piksela nije moguće istinito potvrditi.
+
+## Revizija tema v1.7.24
+
+Prema referenci, donja navigacijska traka na ekranu **Teme i izgled** nalazi se unutar standardne visine zaslona, bez potrebe za pomicanjem na telefonima s dovoljno prostora. Uklonjen je suvišni gumb koji je gurao navigaciju izvan ekrana, te su dodane odabrane konture i potvrda na aktivnoj temi. Promjena se provjerava instrumentacijskim testom: sva 4 taba u koordinatama y=805–877 te stvaran prijelaz na Postavke. Niži zasloni i dalje koriste vertikalno pomicanje.

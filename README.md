@@ -98,3 +98,5 @@ Izdavanje: GitHub Actions automatski objavljuje testni APK i AAB; za Play Store 
 ### Font i reproducibilna lokalna izgradnja
 
 Izvorni dizajn koristi Nunito. Prije Gradle izgradnje pokrenuti `bash scripts/prepare-nunito.sh` kako bi se preuzeo i kriptografski provjerio licencirani font (SIL OFL 1.1), uključen unutar APK/AAB paketa. Aplikaciji za rad nije potreban internet. GitHub Actions to izvršava automatski.
+
+**v1.7.24:** zaslon tema sada uključuje vidljivu donju navigaciju, obrise odabranih tema i stilova pločica te uklanja nepotrebni dodatni gumb kako bi ostao vjeran referentnom prikazu.
