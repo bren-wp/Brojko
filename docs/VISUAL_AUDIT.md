@@ -71,3 +71,7 @@ Testni ekran v1.7.23 dokazao je da sam izvorni variable Nunito nije dovoljan: An
 ## Nunito v1.7.26 — rezultat vizualne provjere
 
 Na screenshotovima v1.7.25 težina 1000 uz `fakeBold` i `FILL_AND_STROKE` prenaglašavala je slova i smanjivala čitljivost. Uklonjeno je umjetno zadebljanje, a težine Nunito osi `wght` standardizirane su na 500 za tekst, 750 za podebljane natpise i 900 za display naslove, logotip i brojke. To je izravna korekcija prema referentnoj tipografiji, uz potrebu ponovne usporedbe snimki.
+
+## Sigurni vidljivi prostor i dodirni ciljevi — v1.8
+
+QA snimke v1.7.26 otkrile su da je na Android uređaju 1080×2400 px navigacija tema bila odrezana na dnu jer se tema bez potrebe skalirala prema punoj širini uz neuračunate vertikalne sistemske insets. Sada se normalni zaslon tema skaluje prema minimalnoj dimenziji **stvarno upotrebljive površine**, jednako kao većina ostalih ekrana. Niži zasloni koriste pomicanje. U Postavkama prikaz jezika dodan je zaobljen dropdown s ikonom strelice. Instrumentacijski QA uspoređuje donju koordinatu stvarne navigacijske dodirne zone s krajem vidljive površine i provjerava minimalni touch target. Vizualne reference ostaju cilj, a ne tvrdnja o dokazanoj pikselnoj jednakosti.

@@ -741,6 +741,8 @@ public final class MainActivity extends Activity {
             p.setShader(null);
             Path z=new Path();
             switch(type) {
+                case "chevron-down":
+                    z.moveTo(5,9);z.lineTo(12,16);z.lineTo(19,9);break;
                 case "back":z.moveTo(16,4);z.lineTo(8,12);z.lineTo(16,20);break;
                 case "refresh":
                     z.arcTo(new RectF(4,4,21,21),-40,300,false);
@@ -849,7 +851,10 @@ public final class MainActivity extends Activity {
             boolean inGame=page.equals("game")||page.equals("pause")||
                 page.equals("win")||page.equals("over")||page.equals("confirm")||
                 page.equals("confirmEnd")||page.equals("dailyWin")||page.equals("dailyFail");
-            boolean extended=page.equals("themes")||page.equals("stats");
+            // Themes has a compact bottom navigation within the 880-unit design.
+            // Fit it to the available window INCLUDING system bar insets; only
+            // genuinely taller content (statistics/history) must always scroll.
+            boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
             // outside the board rather than scaling the whole game to tiny size.
             boolean compact=extended || usableHeight/usableWidth<1.85f;
@@ -1540,7 +1545,12 @@ public final class MainActivity extends Activity {
             }else{
                 fitted(caption,caption.length()>13?206:189,y+43,
                     20,caption.length()>13?189:150,ink,true);
-                if(hasValue)fitted(value,319,y+44,14,90,muted,true);
+                if("Jezik".equals(caption)){
+                    // Rounded drop-down as in the original settings reference.
+                    shape(247,y+14,116,44,19,theme==1?0xff394a63:0xfffff2e2);
+                    fitted(value,293,y+43,17,83,ink,true);
+                    icon("chevron-down",348,y+36,17,muted);
+                }else if(hasValue)fitted(value,319,y+44,14,90,muted,true);
                 else txt("›",355,y+49,35,muted,false);
             }
             taps.add(new Tap(23,y,377,y+71,caption,action));

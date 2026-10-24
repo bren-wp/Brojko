@@ -100,3 +100,7 @@ Izdavanje: GitHub Actions automatski objavljuje testni APK i AAB; za Play Store 
 Izvorni dizajn koristi Nunito. Prije Gradle izgradnje pokrenuti `bash scripts/prepare-nunito.sh` kako bi se preuzeo i kriptografski provjerio licencirani font (SIL OFL 1.1), uključen unutar APK/AAB paketa. Aplikaciji za rad nije potreban internet. GitHub Actions to izvršava automatski.
 
 **v1.7.24:** zaslon tema sada uključuje vidljivu donju navigaciju, obrise odabranih tema i stilova pločica te uklanja nepotrebni dodatni gumb kako bi ostao vjeran referentnom prikazu.
+
+## UI/UX provjera v1.8
+
+Zaslon **Teme i izgled** prilagođava cijeli sadržaj, uključujući tekst donje navigacije, stvarno dostupnoj visini prozora unutar Androidovih sistemskih rubova na višim telefonima. Na kraćim zaslonima ostaje omogućen scroll. U Postavkama je odabir jezika prikazan u zaobljenoj kartici s ikonom otvaranja, kao na dizajnerskoj referenci. Android UI test provjerava da kartica jezika ima dovoljno veliku dodirnu zonu te da dno navigacijskog elementa ne prelazi stvarni vidljivi prostor. Dodatne razlike u odnosu na referentne ilustracije i dalje se dokumentiraju i ne predstavljaju dokaz apsolutne 1:1 jednakosti.

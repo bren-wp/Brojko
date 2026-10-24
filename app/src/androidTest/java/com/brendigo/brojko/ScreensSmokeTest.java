@@ -220,6 +220,38 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themesNavigationAndSettingsLanguageFitSafeArea(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.screen;
+            try{
+                activity.page="themes";
+                capture(activity,"themes-safe-area-and-tabs");
+                MainActivity.BoardScreen.Tap settingsTab=null;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Postavke".equals(tap.label)&&tap.top>790)settingsTab=tap;
+                }
+                assertNotNull("Themes must expose Settings bottom tab",settingsTab);
+                float bottom=settingsTab.bottom*view.scale+view.offY;
+                int contentBottom=view.getHeight()-view.getPaddingBottom();
+                assertTrue("All bottom navigation text/tap areas must fit the safe viewport: "+
+                    bottom+" > "+contentBottom,bottom<=contentBottom+1);
+                assertTrue("Tabs need usable touch height",settingsTab.bottom-settingsTab.top>=48);
+                settingsTab.action.run();
+                assertEquals("settings",activity.page);
+                capture(activity,"settings-language-dropdown");
+                boolean hasLanguage=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Jezik".equals(tap.label)){
+                        assertTrue("Language must have a sufficiently large touch target",
+                            tap.bottom-tap.top>=48);
+                        hasLanguage=true;
+                    }
+                }
+                assertTrue("Language selection must be interactive",hasLanguage);
+            }finally{activity.page="home";}
+        });
+    }
+
     @Test public void shortScreenKeepsBoardLargeAndSwipeFunctional(){
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");
