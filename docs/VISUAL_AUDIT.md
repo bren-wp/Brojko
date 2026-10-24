@@ -27,3 +27,21 @@ Emulator je otkrio sistematsko odstupanje vektorskih ikona: canvas je koristio g
 - Testirati sve akcije na različitim ekranima, uključujući opcionalnu dozvolu obavijesti i ponovno pokretanje uređaja.
 - Usporediti slike istih stanja pri istim dimenzijama: margin, typographic baseline, position/size for cards, icons, buttons and gradient tones.
 - Ne deklarirati pixel-perfect dok nisu pregledane snimke i dok nema mjerljivih tolerancija i potvrđenih golden referenci.
+
+
+## Revizija v1.5 — pregled svih glavnih ekrana
+
+| Zaslon | Provedena izmjena | Daljnji QA |
+|---|---|---|
+| Launcher | Korekcija boja, sjaja i safe-zone adaptivne ikone | Test Pixel/Samsung launchera |
+| Splash | Zadržan brendirani dinamički prikaz | Provjera omjera 20:9 |
+| Početni | Tri moda + četiri povezana prečaca, karta rezultata | Vizualna usporedba fonta i sjena |
+| Klasično/Opušteno | Zaglavlje sa score podacima, glavni gumbi i realni board | Provjera gesti 4×4/5×5 |
+| Pauza/Pobjeda/Poraz | Pobjeda s tri funkcionalna gumba | Test resume/undo/new |
+| Dnevni izazov | Ikonice, kapsula datuma, pregled, tri cilja, reward +250 | Test ponoći i isteka poteza |
+| Misije | Progres + stvarne nagrade | Test prijenosa dana |
+| Statistika | Kontrastne metric kartice, grafikon Bodovi/Pločica, 5 povijesnih redova, detalji partije | Test duge povijesti |
+| Teme | 3 pregleda, pločice, zvuk/vibracija, interaktivna jačina animacija, donja navigacija | Provjera aktivnih stanja |
+| Postavke | Pomaknute kartice ispod zaglavlja, uredan footer | Test obavijesti/backup |
+
+**Napomena:** Jednostavni Android vektori i sistemski rounded font ne mogu jamčiti identične piksele ilustrativnoj raster-maketi. Nema tvrdnje o verificiranoj 1:1 podudarnosti bez diffa snimki istog stanja i istog viewporta.

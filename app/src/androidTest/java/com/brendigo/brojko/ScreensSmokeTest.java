@@ -181,13 +181,42 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void statsHistoryDetailsAndLongThemePagesAreAccessible(){
+        rule.getScenario().onActivity(activity->{
+            String backup=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen screen=activity.screen;
+            try{
+                activity.prefs.edit().putString("history",
+                    "[{\"score\":12600,\"moves\":91,\"peak\":1024,"+
+                    "\"mode\":\"classic\",\"day\":\"25.10.2026.\"}, "+
+                    "{\"score\":6400,\"moves\":70,\"peak\":512,"+
+                    "\"mode\":\"relaxed\",\"day\":\"24.10.2026.\"}]").commit();
+                activity.page="stats";
+                capture(activity,"stats-with-history");
+                assertTrue("History list must be scrollable",
+                    screen.maxScroll>0);
+                activity.selectedHistoryIndex=0;
+                activity.page="historyDetail";
+                capture(activity,"history-detail");
+                activity.page="themes";
+                capture(activity,"theme-preview-controls");
+                assertTrue("Themes content must support scrolling",screen.maxScroll>0);
+                activity.page="daily";
+                capture(activity,"daily-with-reward");
+            }finally{
+                activity.prefs.edit().putString("history",backup).commit();
+                activity.page="home";
+            }
+        });
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");
             String[] pages={
                 "splash","home","game","pause","win","over","confirm","confirmEnd",
                 "daily","missions","stats","themes","settings",
-                "language","backup","privacy","about","help","dailyWin","dailyFail"
+                "language","backup","privacy","about","help","dailyWin","dailyFail","historyDetail"
             };
             for(String page:pages){
                 activity.page=page;

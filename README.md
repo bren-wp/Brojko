@@ -83,3 +83,7 @@ Prije objave završiti: vizualnu kontrolu na više gustoća i veličina zaslona,
 © Brendigo. All rights reserved.
 
 </div>
+
+## Vizualni QA — v1.5
+
+Zasloni su ponovno usklađivani prema referentnom rasporedu: brendirana zaglavlja, igra 4×4/5×5, tri gumba na ekranu pobjede, dnevni reward panel, misije, detalji povijesti, statistički grafikon, pregled tema sa stvarnim prekidačima i skrolanje na manjim uređajima. CI snima te ekrane u zasebnom Android UI workflowu. Precizna pixel-to-pixel jednakost još mora biti potvrđena nakon vizualnog pregleda snimki; referentni marketing prikazi nisu isto što i stvarni gameplay početni state.
