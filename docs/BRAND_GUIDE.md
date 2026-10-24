@@ -26,3 +26,8 @@ Povlačenje unutar ploče gore/dolje/lijevo/desno; početni izbornik i akcije up
 ## Launcher v1.6.21
 
 Ikona zadržava originalni četverobojni motiv (2, 4, 8, 16) i dominantno svijetlo slovo B. Dodani su glatki sjajni rubovi i kratke svjetlosne zrake te prilagođena veličina u adaptive foreground maski. Testirati kružni i zaobljeni Android launcher prije izjave o pikselnoj podudarnosti.
+
+
+## Nunito font — v1.7
+
+Aplikacija u CI-u uključuje **Nunito Variable** s potvrđenog izvornog Google Fonts commita (SIL OFL 1.1). Skripta `scripts/prepare-nunito.sh` verificira SHA-1 Git blob izvornog fonta i licence te ih umeće u Android `assets`. Glavni tekst koristi težinu 500, oznake kartica 800, istaknuti naslovi i logotip 950. Pri lokalnoj izgradnji prvo pokrenuti skriptu. Font se ne preuzima u aplikaciji i nije potrebno mrežno dopuštenje.

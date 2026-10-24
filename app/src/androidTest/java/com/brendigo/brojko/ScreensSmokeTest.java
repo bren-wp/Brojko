@@ -251,6 +251,18 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void bundledNunitoFontAndLicenseArePresent() throws Exception {
+        rule.getScenario().onActivity(activity->{
+            for(String asset:new String[]{"Nunito.ttf","Nunito-OFL.txt"}){
+                try(java.io.InputStream stream=activity.getAssets().open(asset)){
+                    assertTrue("Bundled asset must not be empty: "+asset,stream.available()>1000);
+                }catch(java.io.IOException problem){
+                    throw new AssertionError("Missing font resource: "+asset,problem);
+                }
+            }
+        });
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");

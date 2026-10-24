@@ -93,3 +93,8 @@ Zasloni su ponovno usklađivani prema referentnom rasporedu: brendirana zaglavlj
 Nadograđeni su dubina kartica i reljef pločica, zaobljeni naslovi, dvobojna zaglavlja, ikona za novi početak i odzivnost igraće ploče na nižim Android ekranima. Instrumentacijski QA uključuje kontrolu gesta pri 360×600 i kompletne snimke svih glavnih zaslona.
 
 Izdavanje: GitHub Actions automatski objavljuje testni APK i AAB; za Play Store produkciju nužan je valjan produkcijski upload potpis.
+
+
+### Font i reproducibilna lokalna izgradnja
+
+Izvorni dizajn koristi Nunito. Prije Gradle izgradnje pokrenuti `bash scripts/prepare-nunito.sh` kako bi se preuzeo i kriptografski provjerio licencirani font (SIL OFL 1.1), uključen unutar APK/AAB paketa. Aplikaciji za rad nije potreban internet. GitHub Actions to izvršava automatski.

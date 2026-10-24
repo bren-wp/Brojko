@@ -474,6 +474,11 @@ public final class MainActivity extends Activity {
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
         int ink,muted,bg,card,shadow;
+        final Typeface regularFont, boldFont, displayFont;
+        Typeface makeTypeface(Typeface base,int weight){
+            if(Build.VERSION.SDK_INT>=28)return Typeface.create(base,weight,false);
+            return Typeface.create(base,weight>=600?Typeface.BOLD:Typeface.NORMAL);
+        }
         class Tap {
             float left,top,right,bottom;Runnable action;String label;
             Tap(float l,float t,float r,float b,Runnable a) {
@@ -484,7 +489,15 @@ public final class MainActivity extends Activity {
                 label=caption==null||caption.isEmpty()?"Akcija":caption;
             }
         }
-        BoardScreen(Context context){super(context);}
+        BoardScreen(Context context){
+            super(context);
+            Typeface base;
+            try{base=Typeface.createFromAsset(getAssets(),"Nunito.ttf");}
+            catch(RuntimeException error){base=Typeface.create("sans-serif-rounded",Typeface.NORMAL);}
+            regularFont=makeTypeface(base,500);
+            boldFont=makeTypeface(base,800);
+            displayFont=makeTypeface(base,950);
+        }
         void palette() {
             boolean dark=theme==1;
             bg=dark?0xff14233a:CREAM;
@@ -557,9 +570,9 @@ public final class MainActivity extends Activity {
         }
         void txt(String content,float x,float baseline,float size,int color,boolean bold) {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
-            p.setColor(color);p.setTypeface(Typeface.create("sans-serif-rounded",
-                bold?Typeface.BOLD:Typeface.NORMAL));
-            p.setFakeBoldText(bold&&size>=16);
+            p.setColor(color);
+            p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+            p.setFakeBoldText(false);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
@@ -567,11 +580,9 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setFakeBoldText(false);
         }
         void fitted(String content,float x,float baseline,float size,float maxWidth,int color,boolean bold) {
-            p.setTypeface(Typeface.create("sans-serif-rounded",bold?Typeface.BOLD:Typeface.NORMAL));
-            p.setFakeBoldText(bold&&size>=16);
+            p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setTextSize(size);
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
-            p.setFakeBoldText(false);
             txt(content,x,baseline,size,color,bold);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
@@ -796,7 +807,7 @@ public final class MainActivity extends Activity {
                     "language".equals(page)||"backup".equals(page)||
                     "help".equals(page))?"settings":"home"));}
         void brand(float y,float size) {
-            p.setTypeface(Typeface.create("sans-serif-rounded",Typeface.BOLD));
+            p.setTypeface(displayFont);
             p.setTextSize(size);
             float left=p.measureText("Br"),right=p.measureText("jko");
             float gap=size*.09f,tile=size*.74f;

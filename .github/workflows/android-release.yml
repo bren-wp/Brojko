@@ -36,6 +36,8 @@ jobs:
           else
             echo "::warning::No signing secrets: release AAB and APK will be unsigned and NOT Play-ready."
           fi
+      - name: Prepare and verify Nunito font + OFL license
+        run: bash scripts/prepare-nunito.sh
       - name: Run unit tests and build APK/AAB
         env:
           BROJKO_STORE_PASSWORD: ${{ secrets.BROJKO_STORE_PASSWORD }}
@@ -45,7 +47,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Brojko-Android-v1.6-${{ github.run_number }}
+          name: Brojko-Android-v1.7-${{ github.run_number }}
           if-no-files-found: error
           path: |
             app/build/outputs/apk/debug/*.apk
@@ -55,8 +57,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.6.{0}', github.run_number) }}
-          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.6.{0}', github.run_number) }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.7.{0}', github.run_number) }}
+          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.7.{0}', github.run_number) }}
           generate_release_notes: true
           body: |
             Android build with gameplay, local progress, three game modes, challenges, statistics and visual refinements.
