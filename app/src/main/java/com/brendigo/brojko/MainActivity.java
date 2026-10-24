@@ -747,13 +747,18 @@ public final class MainActivity extends Activity {
             }else card(x,y,w,h,radius,color);
             boolean hasSymbol=symbol!=null;
             int iconColor=prominent?WHITE:ink;
-            if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
-                y+h/2,Math.min(prominent?33:23,h*.52f),iconColor);
-            float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
-            int labelColor=prominent?WHITE:ink;
-            float font=prominent?Math.min(27,h*.34f):(h>=66?18:16);
-            fitted(label,textCenter,y+h/2+font*.35f,font,
-                hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+            if(prominent&&hasSymbol&&w<150){
+                icon(symbol,x+w/2,y+h*.30f,29,iconColor);
+                fitted(label,x+w/2,y+h*.78f,21,w-14,WHITE,true);
+            }else{
+                if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
+                    y+h/2,Math.min(prominent?33:23,h*.52f),iconColor);
+                float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
+                int labelColor=prominent?WHITE:ink;
+                float font=prominent?Math.min(27,h*.34f):(h>=66?18:16);
+                fitted(label,textCenter,y+h/2+font*.35f,font,
+                    hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+            }
             taps.add(new Tap(x,y,x+w,y+h,label==null||label.isEmpty()?
                 (symbol==null?"Akcija":symbol):label,action));
         }
@@ -1029,7 +1034,7 @@ public final class MainActivity extends Activity {
             }
             return TILES[index];
         }
-        void dim(){shape(0,0,400,880,0,0xb71b2940);}
+        void dim(){c.drawColor(0xb71b2940);}
         void overlayBox(float y,float height){
             card(27,y,346,height,30,theme==1?0xff293956:CREAM);
         }
@@ -1278,9 +1283,20 @@ public final class MainActivity extends Activity {
                 caption.contains("partija")?"play":
                 caption.contains("pločica")?"check":
                 caption.contains("Prosjek")?"stats":"star";
-            icon(symbol,x+width*.27f,y+28,27,accent);
-            fitted(caption,x+width*.61f,y+39,14,width*.72f,ink,true);
-            fitted(value,x+width/2,y+h-19,29,width-12,accent,true);
+            String top,bottom;
+            switch(caption){
+                case "Najbolji rezultat":top="Najbolji";bottom="rezultat";break;
+                case "Ukupno partija":top="Ukupno";bottom="partija";break;
+                case "Najveća pločica":top="Najveća";bottom="pločica";break;
+                case "Prosjek bodova":top="Prosjek";bottom="bodova";break;
+                default:top="Niz dana";bottom="igranja";
+            }
+            icon(symbol,x+25,y+29,width<=118?24:29,accent);
+            float labelX=x+(width<=118?77:98);
+            float labelWidth=width<=118?68:123;
+            fitted(top,labelX,y+31,width<=118?13:16,labelWidth,ink,true);
+            fitted(bottom,labelX,y+48,width<=118?13:16,labelWidth,ink,true);
+            fitted(value,x+width/2,y+h-17,29,width-12,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -1348,7 +1364,13 @@ public final class MainActivity extends Activity {
                 final int value=i;float x=210+i*56;
                 card(x,456,51,93,15,tileStyle==i?CORAL:card);
                 glossyTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1]);
-                fitted(styles[i],x+25,534,11,52,tileStyle==i?WHITE:ink,true);
+                if(i==0){
+                    fitted("Zaob-",x+25,525,11,49,tileStyle==i?WHITE:ink,true);
+                    fitted("ljene",x+25,541,11,49,tileStyle==i?WHITE:ink,true);
+                }else if(i==2){
+                    fitted("Stak-",x+25,525,11,49,tileStyle==i?WHITE:ink,true);
+                    fitted("laste",x+25,541,11,49,tileStyle==i?WHITE:ink,true);
+                }else fitted("Ravne",x+25,534,11,49,tileStyle==i?WHITE:ink,true);
                 taps.add(new Tap(x,456,x+51,549,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
