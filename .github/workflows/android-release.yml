@@ -1,4 +1,4 @@
-name: Android APK and AAB
+name: Build and release Android
 on:
   push:
     branches: [main]
@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: brojko-release-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -15,31 +18,35 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Install Android API 36
+      - name: Install Android SDK 36
         run: |
           SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - name: Install Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Configure signing when secrets exist
+      - name: Configure signing, if secrets exist
         env:
-          KEYSTORE: ${{ secrets.BROJKO_KEYSTORE_B64 }}
+          STORE: ${{ secrets.BROJKO_KEYSTORE_B64 }}
         run: |
-          if [ -n "$KEYSTORE" ]; then
-            echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
+          if [ -n "$STORE" ]; then
+            echo "$STORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
             echo "BROJKO_KEYSTORE_FILE=$RUNNER_TEMP/brojko-upload.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No signing secrets: release AAB and APK will be unsigned and NOT Play-ready."
           fi
-      - name: Build debug APK and release APK/AAB
+      - name: Run unit tests and build APK/AAB
         env:
           BROJKO_STORE_PASSWORD: ${{ secrets.BROJKO_STORE_PASSWORD }}
           BROJKO_KEY_ALIAS: ${{ secrets.BROJKO_KEY_ALIAS }}
           BROJKO_KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
-        run: gradle --no-daemon :app:assembleDebug :app:assembleRelease :app:bundleRelease
-      - uses: actions/upload-artifact@v4
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: Brojko-APK-AAB
+          name: Brojko-Android-v1.1-${{ github.run_number }}
+          if-no-files-found: error
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
@@ -48,9 +55,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.0.{0}', github.run_number) }}
-          name: Brojko v1.0.${{ github.run_number }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.1.{0}', github.run_number) }}
+          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.1.{0}', github.run_number) }}
           generate_release_notes: true
+          body: |
+            Android build with gameplay, local progress, three game modes, challenges, statistics and visual refinements.
+            **Signing:** debug APK is installed with a debug key. Release APK/AAB are production-signable only when repository keystore secrets are configured.
           files: |
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk

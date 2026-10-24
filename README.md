@@ -1,24 +1,77 @@
-# 🎮 Brojko — Spajaj brojeve. Ruši rekorde.
+<div align="center">
 
-**Brojko by Brendigo** je šarena Android logička igra nadahnuta pravilima 2048. Jednostavna za naučiti, izazovna za savladati.
+# 🎮 Brojko
+### Spajaj brojeve. Ruši rekorde.
 
-## ✨ Zašto Brojko?
-- 🧩 Klasični način **4×4** i opušteni način **5×5**
-- 🎯 **Dnevni izazov** s reproducibilnim početnim rasporedom
-- 🏆 Osobni rekordi, statistika i postignuća
-- ↩️ Poništavanje posljednjeg poteza
-- 🎨 Tri vizualne teme i hrvatsko sučelje
-- 📱 Nativni Android, rad bez interneta i bez korisničkih računa
+**Nativna Android logička igra · by [Brendigo](https://brendigo.com)**
 
-## 📲 Instalacija i izgradnja
-Projekt koristi Java Android Views i Android Gradle Plugin 8.9.2. U Android Studiju otvorite korijenski direktorij; Gradle sinkronizira ovisnosti. GitHub Actions automatski pokreće izgradnju APK-a i AAB-a. Build zahtijeva Android SDK 36 i Java 17.
+![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin? No](https://img.shields.io/badge/Native-Java-FF7054)
+![Offline](https://img.shields.io/badge/Igra-bez%20interneta-27C7BB)
+![CI](https://github.com/bren-wp/Brojko/actions/workflows/android-release.yml/badge.svg)
 
-**Release potpisivanje:** postavite secrets `BROJKO_KEYSTORE_B64`, `BROJKO_STORE_PASSWORD`, `BROJKO_KEY_ALIAS`, `BROJKO_KEY_PASSWORD`. Bez njih se izrade ne smiju predstavljati kao potpisani produkcijski paketi. AAB i APK se isporučuju kao CI artifacts; GitHub Releases nastaje za tag `v*`.
+**Jedan potez, jedno spajanje, novi rekord.** 🧩
 
-## 🔒 Privatnost
-Brojko pohranjuje napredak lokalno na uređaju. Nema oglasa, analitike ni mrežnih zahtjeva u izvornom kodu. Prije objave provjerite Play Console Data Safety i konačne podatke o privatnosti.
+[📦 Preuzmi izdanje](https://github.com/bren-wp/Brojko/releases) · [🔨 Izvorni kod](https://github.com/bren-wp/Brojko) · [🔐 Privatnost](PRIVACY.md)
 
-## ℹ️ Status
-Ovo je inicijalna implementacija; vizualni raspored koristi programatski Canvas i mora proći testiranje na različitim ekranima prije tvrdnje da je **1:1** sa svim dizajnerskim referencama. Postignuća su osnovna, a dnevni izazov koristi predodređen početni raspored.
+</div>
 
-**© Brendigo** · [brendigo.com](https://brendigo.com)
+---
+
+## 🔢 Spoji. Napreduj. Pobijedi.
+
+Brojko je originalno brendirana mobilna igra spajanja jednakih brojeva inspirirana poznatim mehanikama **2048**. Povuci prstom po mreži, spoji jednake pločice, osvoji 2048 i nastavi dok možeš. Kratke partije prikladne su za nekoliko minuta opuštanja ili duže obaranje rezultata.
+
+| 🎲 Način igre | 🔥 Izazov | 🏆 Napredak |
+|---|---|---|
+| **Klasično 4×4** — strateško spajanje | **Dnevni izazov** — isti početak na dan | Lokalni rekord i povijest partija |
+| **Opušteno 5×5** — više prostora | Ciljevi: pločica 256, 3.000 bodova, 80 poteza | Misije, statistika i niz uspješnih dana |
+| Brze kontrole povlačenjem | Poništavanje poteza | Tri teme i tri stila pločica |
+
+## ✨ Zbog čega igrati Brojko?
+
+- 🎨 **Prepoznatljive boje:** koraljna, tirkizna, plava, žuta i ljubičasta.
+- ⚡ **Bez čekanja:** igra je lokalna i ne treba internet ni prijavu.
+- 🎯 **Ciljevi koji imaju smisla:** pravi dnevni zadaci povezani s rezultatima.
+- 📈 **Statistika:** odigrane partije, bodovi, postignute najveće pločice i nedavne partije.
+- 🔊 **Ugodno igranje:** podesivi zvuk, vibracija i animacije.
+- 🔒 **Privatnost:** nema oglasa, analitike, praćenja ni mrežnih SDK-ova u ovoj verziji.
+
+## 🧭 Ekrani
+
+Početni izbornik · Igra 4×4 · Igra 5×5 · Pauza · Pobjeda · Kraj igre · Dnevni izazov · Misije · Statistika · Teme i izgled · Postavke · Privatnost · O igri.
+
+Boje i sastav temelje se na dizajnerskim referencama **Brojko by Brendigo**. Vizualna preciznost 1:1 zahtijeva dodatnu provjeru stvarnih uređaja i prilagodbu; sam build nije dokaz pikselne identičnosti.
+
+## 🛠️ Razvoj
+
+- Nativni Android u **Javi**, bez internetskih ovisnosti u aplikaciji.
+- Android Gradle Plugin 8.9.2; JDK 17; Gradle 8.11.1; Android SDK 36.
+- `minSdk 23`; `targetSdk 36`.
+- Neovisni deterministički **TileGame** engine s testovima pomicanja, spajanja, RNG-a, poništavanja i 2048.
+- Spremanje partije, rezultata i postavki u privatnu lokalnu pohranu.
+- CI: JVM unit tests, debug APK, release APK i AAB, GitHub izdanje uz svaki uspješni build grane `main`.
+
+### Kako izgraditi
+
+Otvorite projekt u Android Studiju ili koristite instalirani Gradle i Android SDK:
+
+```bash
+gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease
+```
+
+**Za Google Play obvezno je potpisati release AAB stabilnim privatnim upload ključem.** U GitHub Actions secrets postavite `BROJKO_KEYSTORE_B64`, `BROJKO_STORE_PASSWORD`, `BROJKO_KEY_ALIAS` i `BROJKO_KEY_PASSWORD`. Bez njih release AAB i release APK nisu potpisani za produkciju. **Debug APK je namijenjen instalacijskom testiranju**, a ne objavi. Ne spremajte privatne ključeve u repozitorij.
+
+## 📱 Google Play
+
+Prije objave završiti: vizualnu kontrolu na više gustoća i veličina zaslona, testiranje vraćanja igre i daily izazova, stvarni uređaj/emulator, pristupačnost, release potpisivanje, listing/screenshotove, izjave o podacima i Play Console testiranje ako je obvezno za račun. Pogledajte [PRIVACY.md](PRIVACY.md).
+
+---
+
+<div align="center">
+
+**Brojko — by Brendigo** · [brendigo.com](https://brendigo.com)
+
+© Brendigo. All rights reserved.
+
+</div>
