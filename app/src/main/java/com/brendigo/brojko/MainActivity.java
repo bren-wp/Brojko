@@ -42,7 +42,8 @@ public final class MainActivity extends Activity {
     BoardScreen screen;
     String page="home", pendingMode="classic";
     int best, plays, total, wins, recordTile, totalMerges, streak, theme, tileStyle, animation=1;
-    String lastDaily="";
+    int todayMerges, todayPoints, playDayStreak;
+    String lastDaily="", statsDay="", lastPlayDay="";
     boolean sound=true, vibration=true;
     float pulse=1f;
     ToneGenerator tones;
@@ -58,7 +59,12 @@ public final class MainActivity extends Activity {
         best=prefs.getInt("best",0);plays=prefs.getInt("games",0);total=prefs.getInt("total",0);
         wins=prefs.getInt("wins",0);recordTile=prefs.getInt("tile",0);
         totalMerges=prefs.getInt("totalMerges",0);streak=prefs.getInt("streak",0);
-        lastDaily=prefs.getString("lastDaily","");theme=prefs.getInt("theme",0);
+        lastDaily=prefs.getString("lastDaily","");
+        statsDay=prefs.getString("statsDay","");
+        todayMerges=prefs.getInt("todayMerges",0);todayPoints=prefs.getInt("todayPoints",0);
+        playDayStreak=prefs.getInt("playDayStreak",0);
+        lastPlayDay=prefs.getString("lastPlayDay","");ensureDay();
+        theme=prefs.getInt("theme",0);
         tileStyle=prefs.getInt("style",0);animation=prefs.getInt("animation",1);
         sound=prefs.getBoolean("sound",true);vibration=prefs.getBoolean("vibrate",true);
         try {
@@ -84,6 +90,7 @@ public final class MainActivity extends Activity {
         }catch(Exception ignored){game=null;}
     }
     String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
+    void ensureDay(){if(!today().equals(statsDay)){statsDay=today();todayMerges=0;todayPoints=0;}}
     String yesterday(){
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
@@ -105,6 +112,9 @@ public final class MainActivity extends Activity {
             .putInt("best",best).putInt("games",plays).putInt("total",total)
             .putInt("wins",wins).putInt("tile",recordTile).putInt("totalMerges",totalMerges)
             .putInt("streak",streak).putString("lastDaily",lastDaily)
+            .putInt("todayMerges",todayMerges).putInt("todayPoints",todayPoints)
+            .putString("statsDay",statsDay).putInt("playDayStreak",playDayStreak)
+            .putString("lastPlayDay",lastPlayDay)
             .putInt("theme",theme).putInt("style",tileStyle).putInt("animation",animation)
             .putBoolean("sound",sound).putBoolean("vibrate",vibration);
         if(game!=null)e.putString("session",game.toJson().toString());
@@ -139,6 +149,11 @@ public final class MainActivity extends Activity {
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
         game=new TileGame(mode,"daily".equals(mode)?today():"",seed);
+        ensureDay();
+        if(!today().equals(lastPlayDay)){
+            playDayStreak=yesterday().equals(lastPlayDay)?playDayStreak+1:1;
+            lastPlayDay=today();
+        }
         plays++;recordTile=Math.max(recordTile,game.maxTile());
         page="game";persist();screen.invalidate();
     }
@@ -159,7 +174,8 @@ public final class MainActivity extends Activity {
         if(!page.equals("game")||game==null)return;
         TileGame.Result result=game.move(direction);
         if(!result.changed)return;
-        total+=result.points;totalMerges+=result.merges;
+        ensureDay();total+=result.points;totalMerges+=result.merges;
+        todayPoints+=result.points;todayMerges+=result.merges;
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
         if(result.first2048)wins++;
         if("daily".equals(game.mode)&&today().equals(game.day)
@@ -175,11 +191,14 @@ public final class MainActivity extends Activity {
     }
     void undo() {
         if(game==null||!game.canUndo())return;
-        int points=game.score;
+        ensureDay();
         int mergeCount=game.merges;
         boolean hadWon=game.reached2048;
-        total=Math.max(0,total-game.undo());
-        totalMerges=Math.max(0,totalMerges-(mergeCount-game.merges));
+        int reverted=game.undo();
+        total=Math.max(0,total-reverted);todayPoints=Math.max(0,todayPoints-reverted);
+        int revertedMerges=mergeCount-game.merges;
+        totalMerges=Math.max(0,totalMerges-revertedMerges);
+        todayMerges=Math.max(0,todayMerges-revertedMerges);
         if(hadWon&&!game.reached2048)wins=Math.max(0,wins-1);
         page="game";persist();screen.invalidate();
     }
@@ -200,6 +219,8 @@ public final class MainActivity extends Activity {
     }
     @Override public void onBackPressed(){
         if(page.equals("game"))navigate("pause");
+        else if(page.equals("pause"))navigate("game");
+        else if(page.equals("privacy")||page.equals("about")||page.equals("language"))navigate("settings");
         else if(page.equals("confirm"))navigate(game==null?"home":"game");
         else if(page.equals("win")||page.equals("over"))navigate("home");
         else if(page.equals("home"))super.onBackPressed();
@@ -331,15 +352,16 @@ public final class MainActivity extends Activity {
             switch(page) {
                 case "home":home();break;
                 case "game":gameScreen();break;
-                case "pause":gameScreen();pauseOverlay();break;
-                case "win":gameScreen();resultOverlay(true);break;
-                case "over":gameScreen();resultOverlay(false);break;
-                case "confirm":gameScreen();confirmOverlay();break;
+                case "pause":gameScreen();taps.clear();pauseOverlay();break;
+                case "win":gameScreen();taps.clear();resultOverlay(true);break;
+                case "over":gameScreen();taps.clear();resultOverlay(false);break;
+                case "confirm":gameScreen();taps.clear();confirmOverlay();break;
                 case "daily":daily();break;
                 case "missions":missions();break;
                 case "stats":statistics();break;
                 case "themes":themes();break;
                 case "settings":settings();break;
+                case "language":languagePage();break;
                 case "privacy":textPage("Privatnost",new String[]{"Brojko čuva rezultate i postavke",
                     "samo na vašem uređaju.","Igra radi bez interneta i računa.",
                     "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
@@ -399,7 +421,8 @@ public final class MainActivity extends Activity {
             button("","pause",328,54,48,49,card,false,()->navigate("pause"));
             drawGrid();
             if(game.canUndo())button("Poništi","undo",24,656,168,72,card,false,()->undo());
-            else button("Poništi","undo",24,656,168,72,card,false,()->{});
+            else {card(24,656,168,72,18,theme==1?0xff29364a:0xffeae5de);
+                icon("undo",49,692,22,muted);txt("Poništi",112,698,19,muted,true);}
             button("Novo","undo",208,656,168,72,card,false,()->requestNew(game.mode));
             button("Izbornik","home",24,747,168,65,card,false,()->navigate("home"));
             button("Podijeli","share",208,747,168,65,CORAL,true,()->share());
@@ -489,10 +512,10 @@ public final class MainActivity extends Activity {
             txt("Niz dovršenih dana: "+streak,200,258,17,muted,false);
             taskRow("Dosegni pločicu 256","Spoji pločice do 256.",304,
                 game!=null&&"daily".equals(game.mode)&&today().equals(game.day)?
-                game.peak>=256:today().equals(lastDaily));
+                (game.peak>=256||today().equals(lastDaily)):today().equals(lastDaily));
             taskRow("Osvoji 3000 bodova","Skupi najmanje 3000 bodova.",416,
                 game!=null&&"daily".equals(game.mode)&&today().equals(game.day)?
-                game.score>=3000:today().equals(lastDaily));
+                (game.score>=3000||today().equals(lastDaily)):today().equals(lastDaily));
             taskRow("U najviše 80 poteza","Ispuni oba cilja do 80. poteza.",528,
                 today().equals(lastDaily));
             card(29,641,342,70,20,theme==1?0xff284b48:0xffe5f9ee);
@@ -511,12 +534,13 @@ public final class MainActivity extends Activity {
         void missions() {
             title("Misije i postignuća");
             txt("DNEVNE",81,181,17,CORAL,true);
-            missionRow("Spoji 20 pločica","Ukupno spajanja",totalMerges,20,206);
-            missionRow("Skupi 1000 bodova","Ukupni rezultat",total,1000,322);
-            txt("POSTIGNUĆA",107,482,17,CORAL,true);
-            missionRow("Prva partija","Odigrane partije",plays,1,511);
-            missionRow("Majstor spajanja","Dosegni pločicu 512",recordTile,512,623);
-            missionRow("Kralj brojeva","Dosegni pločicu 2048",recordTile,2048,735);
+            missionRow("Spoji 20 pločica","Danas spojene pločice",todayMerges,20,206);
+            missionRow("Skupi 1000 bodova","Danas osvojeni bodovi",todayPoints,1000,322);
+            txt("TJEDNE",77,465,17,CORAL,true);
+            missionRow("Igraj 7 dana zaredom","Različiti dani igranja",playDayStreak,7,484);
+            txt("POSTIGNUĆA",107,629,17,CORAL,true);
+            missionRow("Majstor spajanja","Dosegni pločicu 512",recordTile,512,654);
+            missionRow("Kralj brojeva","Dosegni pločicu 2048",recordTile,2048,760);
         }
         void missionRow(String name,String sub,int value,int target,int y){
             card(25,y,350,97,18,card);
@@ -612,6 +636,15 @@ public final class MainActivity extends Activity {
             button("Pravila privatnosti","shield",25,562,350,69,card,false,()->navigate("privacy"));
             button("O aplikaciji","settings",25,651,350,69,card,false,()->navigate("about"));
             txt("Brojko v1.1.0  •  by Brendigo",200,812,17,muted,true);
+        }
+        void languagePage(){
+            title("Jezik");
+            txt("Jezik sučelja",200,181,21,muted,true);
+            card(25,223,350,95,20,card);
+            icon("check",67,269,28,TEAL);
+            txt("Hrvatski",208,278,25,ink,true);
+            txt("Ostali jezici nisu dostupni u ovoj verziji.",200,369,15,muted,false);
+            button("Natrag na postavke","back",25,720,350,70,CORAL,true,()->navigate("settings"));
         }
         void switchRow(String name,String symbol,int y,boolean active,Runnable click){
             card(25,y,350,85,20,card);

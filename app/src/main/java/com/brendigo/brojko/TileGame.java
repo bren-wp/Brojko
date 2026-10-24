@@ -42,7 +42,7 @@ public final class TileGame {
         this.size="relaxed".equals(mode)?5:4;
         this.cells=new int[size*size];
         this.randomState=seed==0?0x9E3779B97F4A7C15L:seed;
-        spawn();spawn();
+        spawn();spawn();peak=maxTile();
     }
     private TileGame(int size, String mode, String day) {
         this.size=size;this.mode=mode;this.day=day;cells=new int[size*size];
