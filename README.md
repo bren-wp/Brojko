@@ -104,3 +104,9 @@ Izvorni dizajn koristi Nunito. Prije Gradle izgradnje pokrenuti `bash scripts/pr
 ## UI/UX provjera v1.8
 
 Zaslon **Teme i izgled** prilagođava cijeli sadržaj, uključujući tekst donje navigacije, stvarno dostupnoj visini prozora unutar Androidovih sistemskih rubova na višim telefonima. Na kraćim zaslonima ostaje omogućen scroll. U Postavkama je odabir jezika prikazan u zaobljenoj kartici s ikonom otvaranja, kao na dizajnerskoj referenci. Android UI test provjerava da kartica jezika ima dovoljno veliku dodirnu zonu te da dno navigacijskog elementa ne prelazi stvarni vidljivi prostor. Dodatne razlike u odnosu na referentne ilustracije i dalje se dokumentiraju i ne predstavljaju dokaz apsolutne 1:1 jednakosti.
+
+## Pixel alignment: v1.9
+
+Usklađivanje je provjereno izravno prema korisnikovim deset referentnih prikaza (9 zaslona + brand board). Za telefonski omjer blizak 16:9, klasična/opuštena ploča pomaknuta je više kako bi sva 4×4 / 5×5 polja i tri akcijska gumba ostali unutar istog zaslona, bez smanjivanja pločica. Na dugim telefonima ostaju dodatne naredbe za izbornik i dijeljenje. Android instrumentacijski test sada snima ključne ekrane pri **941×1672**, identično referentnim slikama (isključujući Android status/navigation bar prikaz), te provjerava da su gumbi Novo i Završi unutar dostupne površine.
+
+Adaptive ikona dodatno ispunjava masku launchera; dominantno svijetlo slovo B dobilo je tamniju donju dubinsku sjenu. Navedene vizualne provjere potvrđuju raspored i funkcionalnost, ali ne dokazuju identičnost svih piksela bez fiksnih testnih podataka i zasebnog slikovnog diffa.

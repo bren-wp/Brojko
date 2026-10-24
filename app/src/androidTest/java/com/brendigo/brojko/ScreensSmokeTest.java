@@ -252,6 +252,51 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void originalReferenceViewportMaintainsFullGameplayControls(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.screen;
+            int width=view.getWidth(),height=view.getHeight();
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            try{
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                if(activity.game==null)activity.newGame("classic");
+                String[] pages={"splash","home","game","win","daily",
+                    "missions","stats","themes","settings","help","over","pause"};
+                for(String page:pages){
+                    activity.page=page;
+                    capture(activity,"reference-941x1672-"+page);
+                }
+                activity.page="game";
+                Bitmap verify=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(verify));}finally{verify.recycle();}
+                assertTrue("Reference ratio should use the compact board layout",
+                    view.compactBoardLayout);
+                assertEquals("Board should begin high enough to fit the buttons",
+                    171f,view.gridY,.1f);
+                boolean newButton=false,finishButton=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    float physicalBottom=view.offY+tap.bottom*view.scale;
+                    if("Novo".equals(tap.label)||"Završi".equals(tap.label)){
+                        assertTrue("Primary game button clipped on 941x1672: "+tap.label,
+                            physicalBottom<=view.getHeight()-view.getPaddingBottom()+1);
+                        if("Novo".equals(tap.label))newButton=true;
+                        if("Završi".equals(tap.label))finishButton=true;
+                    }
+                }
+                assertTrue("Both reference game buttons must be accessible",
+                    newButton&&finishButton);
+            }finally{
+                view.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,width,height);
+                activity.game=previousGame;activity.page=previousPage;
+            }
+        });
+    }
+
     @Test public void shortScreenKeepsBoardLargeAndSwipeFunctional(){
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");

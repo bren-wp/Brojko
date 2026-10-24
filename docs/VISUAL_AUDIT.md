@@ -79,3 +79,12 @@ QA snimke v1.7.26 otkrile su da je na Android uređaju 1080×2400 px navigacija 
 ## Ikone statistike — dodatna revizija v1.8
 
 Kartice statistike sada koriste značenjski i vizualno dosljedne vektorske simbole iz izvornog dizajna: krunu za rekord, gamepad za broj partija, mrežu četiriju kvadrata za najveću pločicu, zvijezdu za prosjek bodova i plamen za niz igranja. Svi su nacrtani u zajedničkim 24×24 lokalnim koordinatama i istom sustavu boja, skaliranja i poravnanja. Prikaz treba provjeriti na svijetloj i tamnoj temi u snimkama emulatora, uključujući uvećani prikaz.
+
+## v1.9 — ispravak geometrije prema 941×1672 referenci
+
+- Izvorne slike: 941 × 1672 px; Android emulator 1080 × 2400 px. Različit aspect ratio mijenja položaj i veličinu sadržaja.
+- Na uskom 16:9 omjeru ekran igre zadržava puni promjer pločica, ali gornji rub ploče pomiče s 222 na 171 logičkih jedinica; pause/undo komande prelaze u desni stupac uz score.
+- Gumbi Novo/Poništi/Završi prelaze na y=555 (ili 578 za dnevnu igru), a sekundarne akcije skrivaju se samo u kompaktnoj varijanti. To su funkcionalne prilagodbe, ne snimka zaslona pretvorena u lažno sučelje.
+- Instrumentacijski test renderira 12 glavnih stanja na točno 941×1672 i provjerava završne rubove dodirnih zona. Rezultati se pohranjuju kao `reference-941x1672-*.png` u QA artefakt.
+- Adaptive ikona: veličina foreground sloja 0.81→0.88; na dominantno B dodan dubinski obris, uz zadržavanje postojeće varijante vector ikone.
+- **Preostale razlike**: marketing mockovi koriste potpuno popunjene demonstracijske ploče, specifične 3D ilustracije i vlastiti render tekstura. To nije moguće pouzdano izmjeriti kao savršen pixel-diff bez identičnih ulaznih stanja i bitmap slojeva.

@@ -896,6 +896,8 @@ public final class MainActivity extends Activity {
             // Themes has a compact bottom navigation within the 880-unit design.
             // Fit it to the available window INCLUDING system bar insets; only
             // genuinely taller content (statistics/history) must always scroll.
+            compactBoardLayout=inGame&&usableHeight/usableWidth<1.85f;
+            gridY=compactBoardLayout?171:222;
             boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
             // outside the board rather than scaling the whole game to tiny size.
@@ -983,7 +985,7 @@ public final class MainActivity extends Activity {
             c.save();c.rotate(9,390,179);
             glossyTile(360,149,76,69,14,TILES[4]);
             txt("16",392,191,31,WHITE,true);c.restore();
-            brand(197,67);
+            brand(197,72);
             fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             card(21,269,171,80,19,card);
             card(207,269,171,80,19,card);
@@ -1059,9 +1061,11 @@ public final class MainActivity extends Activity {
             fitted(value,x+width/2,y+59,28,width-16,ink,true);
         }
         float gridX=16,gridY=222,gridSize=368;
+        boolean compactBoardLayout=false;
         void gameScreen(){
             boolean relaxed="relaxed".equals(game.mode);
             boolean daily="daily".equals(game.mode);
+            boolean narrow=compactBoardLayout;
             fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
                 105,89,daily?32:43,201,ink,true);
             if(!daily) {
@@ -1071,34 +1075,51 @@ public final class MainActivity extends Activity {
             }else{
                 fitted("izazov",103,135,36,195,CORAL,true);
             }
-            icon("crown",224,70,24,0xffffb43d);
-            fitted("NAJBOLJI",257,100,12,105,muted,true);
-            fitted(fmt(best),258,129,25,105,ink,true);
-            icon("stats",313,69,23,muted);
-            fitted("REZULTAT",331,101,12,98,muted,true);
-            fitted(fmt(game.score),330,129,24,113,ink,true);
-            button("","pause",327,153,48,49,card,false,()->navigate("pause"));
-            button("","undo",265,153,50,49,card,false,()->{
-                if(game.canUndo())undo();
-            });
+            icon("crown",narrow?216:224,70,24,0xffffb43d);
+            fitted("NAJBOLJI",narrow?224:257,100,12,narrow?72:105,muted,true);
+            fitted(fmt(best),narrow?224:258,129,25,narrow?72:105,ink,true);
+            icon("stats",narrow?292:313,69,23,muted);
+            fitted("REZULTAT",narrow?292:331,101,12,narrow?68:98,muted,true);
+            fitted(fmt(game.score),narrow?292:330,129,24,narrow?70:113,ink,true);
+            if(narrow){
+                // Reference 941x1672: action buttons live beside the heading,
+                // while the large numbered board and primary controls remain visible.
+                button("","pause",335,32,43,49,card,false,()->navigate("pause"));
+                button("","undo",335,98,43,49,card,false,()->{
+                    if(game.canUndo())undo();
+                });
+            }else{
+                button("","pause",327,153,48,49,card,false,()->navigate("pause"));
+                button("","undo",265,153,50,49,card,false,()->{
+                    if(game.canUndo())undo();
+                });
+            }
             drawGrid();
             if(daily){
                 int remaining=Math.max(0,80-game.moves);
                 fitted("DNEVNI IZAZOV • "+remaining+" POTEZA PREOSTALO",
-                    200,624,15,351,remaining<=10?CORAL:muted,true);
+                    200,narrow?561:624,15,351,remaining<=10?CORAL:muted,true);
             }
-            button("Novo","refresh",22,647,113,91,card,false,()->requestNew(game.mode));
-            if(game.canUndo())button("Poništi","undo",144,647,112,91,card,false,()->undo());
+            float actionsY=narrow?(daily?578:555):647;
+            float actionsH=narrow?82:91;
+            button("Novo","refresh",22,actionsY,113,actionsH,card,false,
+                ()->requestNew(game.mode));
+            if(game.canUndo())
+                button("Poništi","undo",144,actionsY,112,actionsH,card,false,()->undo());
             else {
-                card(144,647,112,91,20,theme==1?0xff29364a:0xffeae5de);
-                icon("undo",200,676,25,muted);
-                txt("Poništi",200,719,17,muted,true);
+                card(144,actionsY,112,actionsH,20,
+                    theme==1?0xff29364a:0xffeae5de);
+                icon("undo",200,actionsY+27,25,muted);
+                txt("Poništi",200,actionsY+actionsH-15,17,muted,true);
             }
-            button("Završi","check",265,647,113,91,CORAL,true,
+            button("Završi","check",265,actionsY,113,actionsH,CORAL,true,
                 ()->navigate("confirmEnd"));
-            button("Izbornik","home",22,757,171,64,card,false,()->navigate("home"));
-            button("Podijeli","share",207,757,171,64,card,false,()->share());
-            bottomBrand();
+            if(!narrow){
+                button("Izbornik","home",22,757,171,64,card,false,
+                    ()->navigate("home"));
+                button("Podijeli","share",207,757,171,64,card,false,()->share());
+                bottomBrand();
+            }
         }
         void drawGrid(){
             if(game==null)return;
