@@ -492,7 +492,7 @@ public final class MainActivity extends Activity {
         BoardScreen(Context context){
             super(context);
             Typeface base;
-            try{base=Typeface.createFromAsset(getAssets(),"Nunito.ttf");}
+            try{base=Typeface.createFromAsset(getContext().getAssets(),"Nunito.ttf");}
             catch(RuntimeException error){base=Typeface.create("sans-serif-rounded",Typeface.NORMAL);}
             regularFont=makeTypeface(base,500);
             boldFont=makeTypeface(base,800);
