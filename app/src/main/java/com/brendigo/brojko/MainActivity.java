@@ -896,7 +896,8 @@ public final class MainActivity extends Activity {
             // Themes has a compact bottom navigation within the 880-unit design.
             // Fit it to the available window INCLUDING system bar insets; only
             // genuinely taller content (statistics/history) must always scroll.
-            compactBoardLayout=inGame&&usableHeight/usableWidth<1.85f;
+            referencePortraitLayout=usableHeight/usableWidth<1.85f;
+            compactBoardLayout=inGame&&referencePortraitLayout;
             gridY=compactBoardLayout?171:222;
             boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
@@ -1062,6 +1063,7 @@ public final class MainActivity extends Activity {
         }
         float gridX=16,gridY=222,gridSize=368;
         boolean compactBoardLayout=false;
+        boolean referencePortraitLayout=false;
         void gameScreen(){
             boolean relaxed="relaxed".equals(game.mode);
             boolean daily="daily".equals(game.mode);
@@ -1172,6 +1174,7 @@ public final class MainActivity extends Activity {
         }
         void resultOverlay(boolean winning){
             dim();
+            boolean narrow=referencePortraitLayout;
             if(winning){
                 int[] confetti={CORAL,TEAL,0xff428fea,0xffffbd4e};
                 for(int i=0;i<29;i++){
@@ -1180,33 +1183,42 @@ public final class MainActivity extends Activity {
                     shape(x,y,7,18,4,confetti[i%4]);c.restore();
                 }
             }
-            overlayBox(159,winning?577:528);
+            // At the reference phone's aspect ratio, the victory card and
+            // all three real buttons fit in one frame without vertical cropping.
+            float panelTop=narrow?181:159;
+            overlayBox(panelTop,narrow?503:(winning?577:528));
             if(winning){
-                icon("crown",200,160,91,0xffffba38);
-                txt("Bravo!",200,279,44,ink,true);
-                card(71,300,258,43,21,theme==1?card:0xffffeddb);
-                fitted("Dosegnuli ste 2048!",200,329,23,245,CORAL,true);
+                icon("crown",200,narrow?177:160,91,0xffffba38);
+                txt("Bravo!",200,narrow?267:279,44,ink,true);
+                card(71,narrow?282:300,258,43,21,
+                    theme==1?card:0xffffeddb);
+                fitted("Dosegnuli ste 2048!",200,narrow?310:329,
+                    23,245,CORAL,true);
             }else{
-                icon("target",200,205,68,CORAL);
-                txt("Kraj igre",200,291,42,ink,true);
-                fitted("Nema više mogućih poteza.",200,335,18,310,muted,false);
+                icon("target",200,narrow?211:205,68,CORAL);
+                txt("Kraj igre",200,narrow?276:291,42,ink,true);
+                fitted("Nema više mogućih poteza.",200,narrow?316:335,
+                    18,310,muted,false);
             }
-            card(52,365,145,99,21,card);
-            card(208,365,145,99,21,card);
-            txt("Tvoj rezultat",124,393,15,muted,false);
-            fitted(fmt(game.score),124,446,35,132,ink,true);
-            txt(winning?"Zvjezdice":"Najveća pločica",280,393,15,muted,false);
-            if(winning)fitted("★ ★ ★",280,444,28,125,0xffffaf25,true);
-            else fitted(fmt(game.maxTile()),280,446,31,125,TEAL,true);
-            button(winning?"Nastavi igrati":"Nova igra","play",54,491,292,67,
-                CORAL,true,()->{
+            float summary=narrow?336:365;
+            card(52,summary,145,99,21,card);
+            card(208,summary,145,99,21,card);
+            txt("Tvoj rezultat",124,summary+28,15,muted,false);
+            fitted(fmt(game.score),124,summary+81,35,132,ink,true);
+            txt(winning?"Zvjezdice":"Najveća pločica",
+                280,summary+28,15,muted,false);
+            if(winning)fitted("★ ★ ★",280,summary+79,28,125,
+                0xffffaf25,true);
+            else fitted(fmt(game.maxTile()),280,summary+81,31,125,TEAL,true);
+            button(winning?"Nastavi igrati":"Nova igra","play",
+                54,narrow?454:491,292,67,CORAL,true,()->{
                     if(winning){game.winAcknowledged=true;persist();navigate("game");}
                     else newGame(game.mode);
                 });
             button(winning?"Nova igra":"Povratak",winning?"undo":"home",
-                54,576,292,64,card,false,
+                54,narrow?532:576,292,64,card,false,
                 ()->{if(winning)newGame(game.mode);else navigate("home");});
-            button("Podijeli rezultat","share",54,657,292,57,
+            button("Podijeli rezultat","share",54,narrow?606:657,292,57,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         void dailyResultOverlay(boolean success){
@@ -1563,60 +1575,85 @@ public final class MainActivity extends Activity {
                     ()->navigate(destinations[index])));
             }
         }
+
         void settings(){
-            // Settings reference deliberately has a full-width display title.
+            // The supplied reference is 941x1672. Keep every setting and
+            // the branded footer in one frame at this aspect ratio.
+            boolean shortView=referencePortraitLayout;
             back();
-            txt("Postavke",200,108,44,ink,true);
-            rays(74,97,24,CORAL);rays(331,97,24,CORAL);
-            settingsSwitch("Zvuk","sound",CORAL,148,sound,()->{
+            txt("Postavke",200,shortView?84:108,44,ink,true);
+            rays(74,shortView?75:97,24,CORAL);
+            rays(331,shortView?75:97,24,CORAL);
+            int start=shortView?105:148, step=shortView?63:81;
+            settingsSwitch("Zvuk","sound",CORAL,start,sound,()->{
                 sound=!sound;persist();invalidate();
             });
-            settingsSwitch("Vibracija","phone",TEAL,229,vibration,()->{
+            settingsSwitch("Vibracija","phone",TEAL,start+step,vibration,()->{
                 vibration=!vibration;persist();invalidate();
             });
-            settingsAction("Jezik", "Hrvatski","globe",0xff378ef6,310,()->navigate("language"));
-            settingsSwitch("Obavijesti","bell",0xffffb630,391,notifications,()->toggleNotifications());
-            settingsAction("Sinkronizacija napretka","Lokalna kopija","shield",0xffa55ee5,
-                472,()->navigate("backup"));
-            settingsAction("Pravila privatnosti","›","shield",0xffff7969,553,
-                ()->navigate("privacy"));
-            settingsAction("O aplikaciji","›","info",0xff378ef6,634,
-                ()->navigate("about"));
-            card(22,729,356,127,27,theme==1?card:0xfffff3e6);
-            brand(792,54);
-            fitted("v"+appVersion(),200,840,16,320,muted,false);
+            settingsAction("Jezik","Hrvatski","globe",0xff378ef6,start+2*step,
+                ()->navigate("language"));
+            settingsSwitch("Obavijesti","bell",0xffffb630,start+3*step,
+                notifications,()->toggleNotifications());
+            settingsAction("Sinkronizacija napretka","Lokalna kopija","shield",
+                0xffa55ee5,start+4*step,()->navigate("backup"));
+            settingsAction("Pravila privatnosti","›","shield",0xffff7969,
+                start+5*step,()->navigate("privacy"));
+            settingsAction("O aplikaciji","›","info",0xff378ef6,
+                start+6*step,()->navigate("about"));
+            float footer=shortView?556:729;
+            card(22,footer,356,shortView?138:127,27,
+                theme==1?card:0xfffff3e6);
+            brand(shortView?615:792,shortView?50:54);
+            fitted("v"+appVersion(),200,shortView?675:840,16,320,muted,false);
         }
         void settingsSwitch(String caption,String glyph,int accent,int y,boolean on,
                             Runnable action){
-            card(23,y,354,71,21,card);
-            glossyTile(37,y+10,51,51,13,accent);
-            icon(glyph,62,y+36,29,WHITE);
-            fitted(caption,201,y+43,21,203,ink,true);
-            shape(309,y+20,55,32,17,on?TEAL:0xffc6ced6);
-            shape(on?333:313,y+23,26,26,15,WHITE);
-            taps.add(new Tap(23,y,377,y+71,caption+(on?" uključeno":" isključeno"),action));
+            boolean shortView=referencePortraitLayout;
+            int height=shortView?57:71;
+            card(23,y,354,height,21,card);
+            float iconSize=shortView?43:51;
+            float iconY=y+(height-iconSize)/2f;
+            glossyTile(37,iconY,iconSize,iconSize,12,accent);
+            icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
+            fitted(caption,shortView?180:201,y+height*.61f,
+                shortView?20:21,shortView?183:203,ink,true);
+            float toggleY=y+(height-32)/2f;
+            shape(309,toggleY,55,32,17,on?TEAL:0xffc6ced6);
+            shape(on?333:313,toggleY+3,26,26,15,WHITE);
+            taps.add(new Tap(23,y,377,y+height,
+                caption+(on?" uključeno":" isključeno"),action));
         }
         void settingsAction(String caption,String value,String glyph,
                             int accent,int y,Runnable action){
-            card(23,y,354,71,21,card);
-            glossyTile(37,y+10,51,51,13,accent);
-            icon(glyph,62,y+35,29,WHITE);
+            boolean shortView=referencePortraitLayout;
+            int height=shortView?57:71;
+            card(23,y,354,height,21,card);
+            float iconSize=shortView?43:51;
+            float iconY=y+(height-iconSize)/2f;
+            glossyTile(37,iconY,iconSize,iconSize,12,accent);
+            icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
-                fitted(caption,224,y+31,16,240,ink,true);
-                fitted(value,224,y+55,13,225,muted,false);
+                fitted(caption,shortView?216:224,y+(shortView?24:31),
+                    shortView?15:16,shortView?236:240,ink,true);
+                fitted(value,shortView?216:224,y+(shortView?44:55),
+                    shortView?12:13,shortView?230:225,muted,false);
             }else{
-                fitted(caption,caption.length()>13?206:189,y+43,
-                    20,caption.length()>13?189:150,ink,true);
+                fitted(caption,caption.length()>13?206:189,
+                    y+(shortView?36:43),shortView?19:20,
+                    caption.length()>13?189:150,ink,true);
                 if("Jezik".equals(caption)){
-                    // Rounded drop-down as in the original settings reference.
-                    shape(247,y+14,116,44,19,theme==1?0xff394a63:0xfffff2e2);
-                    fitted(value,293,y+43,17,83,ink,true);
-                    icon("chevron-down",348,y+36,17,muted);
-                }else if(hasValue)fitted(value,319,y+44,14,90,muted,true);
-                else txt("›",355,y+49,35,muted,false);
+                    float pillY=y+(shortView?9:14),pillH=shortView?39:44;
+                    shape(247,pillY,116,pillH,19,
+                        theme==1?0xff394a63:0xfffff2e2);
+                    fitted(value,293,y+(shortView?36:43),17,83,ink,true);
+                    icon("chevron-down",348,y+height/2f,17,muted);
+                }else if(hasValue){
+                    fitted(value,319,y+(shortView?35:44),14,90,muted,true);
+                }else txt("›",355,y+(shortView?39:49),35,muted,false);
             }
-            taps.add(new Tap(23,y,377,y+71,caption,action));
+            taps.add(new Tap(23,y,377,y+height,caption,action));
         }
         void helpPage(){
             title("Kako igrati");

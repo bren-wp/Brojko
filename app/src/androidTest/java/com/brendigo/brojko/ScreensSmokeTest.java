@@ -288,6 +288,39 @@ public class ScreensSmokeTest {
                 }
                 assertTrue("Both reference game buttons must be accessible",
                     newButton&&finishButton);
+                activity.page="settings";
+                Bitmap settingsBitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(settingsBitmap));}
+                finally{settingsBitmap.recycle();}
+                assertTrue("Reference-sized settings must use the compact layout",
+                    view.referencePortraitLayout);
+                boolean lastSetting=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("O aplikaciji".equals(tap.label)){
+                        lastSetting=true;
+                        assertTrue("Last settings row is clipped at 941x1672",
+                            view.offY+tap.bottom*view.scale<=view.getHeight()+1);
+                        assertTrue("All settings remain comfortably touchable",
+                            tap.bottom-tap.top>=48);
+                    }
+                }
+                assertTrue("Settings footer controls must exist",lastSetting);
+                activity.page="win";
+                Bitmap victoryBitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(victoryBitmap));}
+                finally{victoryBitmap.recycle();}
+                int visibleActions=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Nastavi igrati".equals(tap.label)||
+                       "Nova igra".equals(tap.label)||
+                       "Podijeli rezultat".equals(tap.label)){
+                        visibleActions++;
+                        assertTrue("Victory action clipped at 941x1672: "+tap.label,
+                            view.offY+tap.bottom*view.scale<=view.getHeight()+1);
+                    }
+                }
+                assertEquals("Three functional victory buttons must fit",
+                    3,visibleActions);
             }finally{
                 view.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));

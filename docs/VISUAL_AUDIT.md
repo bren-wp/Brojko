@@ -88,3 +88,7 @@ Kartice statistike sada koriste značenjski i vizualno dosljedne vektorske simbo
 - Instrumentacijski test renderira 12 glavnih stanja na točno 941×1672 i provjerava završne rubove dodirnih zona. Rezultati se pohranjuju kao `reference-941x1672-*.png` u QA artefakt.
 - Adaptive ikona: veličina foreground sloja 0.81→0.88; na dominantno B dodan dubinski obris, uz zadržavanje postojeće varijante vector ikone.
 - **Preostale razlike**: marketing mockovi koriste potpuno popunjene demonstracijske ploče, specifične 3D ilustracije i vlastiti render tekstura. To nije moguće pouzdano izmjeriti kao savršen pixel-diff bez identičnih ulaznih stanja i bitmap slojeva.
+
+## v1.9 — referentni kompaktni raspored postavki i pobjede
+
+U dodatnoj vizualnoj kontroli primijećeno je da pri 941×1672 originalni raspored svih sedam redaka Postavki i footer logotipa zahtijeva previše visine, iako na visokom emulatoru sve izgleda uredno. Uski viewport sada koristi redove visine 57 jedinica i korak 63, s footerom na y=556–694. Prekidači i kartica jezika prate isti pomak i imaju najmanje 48 jedinica dodirne visine. Modal pobjede za uske ekrane zadržava sve tri radne akcije u jednome vidljivome okviru (panel y=181–684). Instrumentacijski test eksplicitno mjeri fizičke koordinate donjeg retka postavki i sva tri gumba pobjede, uz test ploče i tipografije.
