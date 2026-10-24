@@ -718,29 +718,29 @@ public final class MainActivity extends Activity {
         void daily(){
             title("Dnevni izazov");
             txt(compactDate(),200,154,19,CORAL,true);
-            card(286,163,94,47,16,theme==1?card:0xffffecd1);
-            icon("crown",307,187,22,0xffffac22);
-            txt(streak+" dana",347,193,16,ink,true);
-            fitted("Riješi današnji izazov i osvoji nagradu!",200,198,17,271,muted,false);
+            card(286,147,94,48,16,theme==1?card:0xffffecd1);
+            icon("crown",307,171,22,0xffffac22);
+            txt(streak+" dana",347,177,16,ink,true);
+            fitted("Riješi današnji izazov i osvoji nagradu!",200,221,17,344,muted,false);
             // Visual preview, not the actual randomized opening board.
-            card(77,231,246,246,20,theme==1?0xff36445d:0xffefe1ce);
+            card(77,239,246,246,20,theme==1?0xff36445d:0xffefe1ce);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int col=i%4,row=i/4;
-                float px=84+col*59,py=238+row*59;
+                float px=84+col*59,py=246+row*59;
                 int v=sample[i];
                 int color=tileColor(v);
                 shape(px,py,52,52,10,color);
                 fitted(""+v,px+26,py+32,v>999?16:23,49,WHITE,true);
             }
-            txt("PRIMJER PLOČE",200,502,13,muted,true);
+            txt("PRIMJER PLOČE",200,515,13,muted,true);
             boolean dailyActive=game!=null&&"daily".equals(game.mode)&&today().equals(game.day);
             boolean finished=today().equals(lastDaily);
-            dailyGoalRow("Dosegni 256","Spoji do pločice 256",530,
+            dailyGoalRow("Dosegni 256","Spoji do pločice 256",539,
                 finished||(dailyActive&&game.peak>=256));
-            dailyGoalRow("Osvoji 3000 bodova","Igraj i skupljaj bodove",608,
+            dailyGoalRow("Osvoji 3000 bodova","Igraj i skupljaj bodove",616,
                 finished||(dailyActive&&game.score>=3000));
-            dailyGoalRow("Završi u 80 poteza","Ispuni oba cilja u 80 poteza",686,finished);
+            dailyGoalRow("Završi u 80 poteza","Ispuni oba cilja u 80 poteza",693,finished);
             button(dailyActive&&!game.gameOver?"Nastavi izazov":"Započni izazov",
                 "play",27,781,346,64,CORAL,true,
                 ()->{if(dailyActive&&!game.gameOver)navigate("game");

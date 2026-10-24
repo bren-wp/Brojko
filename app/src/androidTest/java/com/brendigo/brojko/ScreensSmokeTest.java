@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 /**
  * Android device/emulator QA: launches the actual Activity, renders every view,
- * checks primary navigation and exports unmodified 400×880 screenshots.
+ * checks primary navigation and exports screenshots at the emulator's native app-viewport resolution.
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
@@ -24,10 +24,12 @@ public class ScreensSmokeTest {
 
     private void capture(MainActivity activity,String name) {
         MainActivity.BoardScreen view=activity.screen;
-        view.measure(View.MeasureSpec.makeMeasureSpec(400,View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(880,View.MeasureSpec.EXACTLY));
-        view.layout(0,0,400,880);
-        Bitmap bitmap=Bitmap.createBitmap(400,880,Bitmap.Config.ARGB_8888);
+        // Capture the actual on-device layout without changing its dimensions.
+        // Forcing 400x880 while keeping real-device system insets distorted
+        // screenshots and hid screen-size problems.
+        int width=view.getWidth(),height=view.getHeight();
+        assertTrue("View must be laid out by Android",width>0&&height>0);
+        Bitmap bitmap=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         view.draw(new Canvas(bitmap));
         File root=activity.getExternalFilesDir(null);
         assertNotNull(root);
