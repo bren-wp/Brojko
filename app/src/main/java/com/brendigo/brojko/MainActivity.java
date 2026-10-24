@@ -26,6 +26,8 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
 import android.view.MotionEvent;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -80,6 +82,7 @@ public final class MainActivity extends Activity {
         }catch(Exception ignored){game=null;}
         screen=new BoardScreen(this);setContentView(screen);
         screen.setFocusable(true);
+        screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
         if(Build.VERSION.SDK_INT>=35){
             screen.setOnApplyWindowInsetsListener((v,insets)->{
@@ -142,7 +145,11 @@ public final class MainActivity extends Activity {
     void navigate(String target) {
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
-        page=target;updateBars();screen.invalidate();
+        page=target;updateBars();
+        screen.setContentDescription("Brojko — "+target+
+            (game==null?"":". Rezultat "+fmt(game.score)));
+        screen.invalidate();
+        screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
     }
     void requestNew(String mode){
         if(game!=null&&!game.gameOver&&!game.archived&&game.moves>0){
@@ -207,6 +214,8 @@ public final class MainActivity extends Activity {
             lastDaily=today();
         }
         soundEffect();
+        screen.setContentDescription("Brojko, rezultat "+fmt(game.score)+
+            ", najveća pločica "+fmt(game.peak)+", potez "+game.moves);
         if(result.first2048)page="win";
         else if(result.lost){page="over";}
         persist();animate();
@@ -379,12 +388,16 @@ public final class MainActivity extends Activity {
         boolean pointerBoard;
         int ink,muted,bg,card,shadow;
         class Tap {
-            float left,top,right,bottom;Runnable action;
+            float left,top,right,bottom;Runnable action;String label;
             Tap(float l,float t,float r,float b,Runnable a) {
+                this(l,t,r,b,"Aktiviraj",a);
+            }
+            Tap(float l,float t,float r,float b,String caption,Runnable a){
                 left=l;top=t;right=r;bottom=b;action=a;
+                label=caption==null||caption.isEmpty()?"Akcija":caption;
             }
         }
-        BoardScreen(Context context){super(context);setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
+        BoardScreen(Context context){super(context);}
         void palette() {
             boolean dark=theme==1;
             bg=dark?0xff14233a:CREAM;
@@ -471,7 +484,8 @@ public final class MainActivity extends Activity {
             if(symbol!=null)icon(symbol,x+25,y+h/2,22,prominent?WHITE:ink);
             fitted(label,x+(symbol!=null?(w+38)/2:w/2),y+h/2+6,
                 h>=66?19:16,symbol!=null?w-56:w-22,prominent?WHITE:ink,true);
-            taps.add(new Tap(x,y,x+w,y+h,action));
+            taps.add(new Tap(x,y,x+w,y+h,label==null||label.isEmpty()?
+                (symbol==null?"Akcija":symbol):label,action));
         }
         void title(String name) {
             back();
@@ -559,7 +573,7 @@ public final class MainActivity extends Activity {
             icon(glyph,x+w/2,y+48,37,glyph.equals("target")?CORAL:
                 glyph.equals("stats")?0xff488ce9:glyph.equals("palette")?0xffb05de9:ink);
             fitted(label,x+w/2,y+112,15,w-7,ink,true);
-            taps.add(new Tap(x,y,x+w,y+h,action));
+            taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
@@ -576,7 +590,7 @@ public final class MainActivity extends Activity {
             }
             fitted(name,x+w/2,y+118,17,w-8,ink,true);
             fitted(sub,x+w/2,y+146,14,w-8,muted,false);
-            taps.add(new Tap(x,y,x+w,y+h,tap));
+            taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
         void scoreCard(String caption,String value,float x,float y,float width){
             card(x,y,width,72,17,card);
@@ -834,7 +848,7 @@ public final class MainActivity extends Activity {
                     txt(""+(2<<j),x+38+a*43,263+b*39,17,WHITE,true);
                 }
                 fitted(names[i],x+58,350,15,112,theme==i?WHITE:ink,true);
-                taps.add(new Tap(x,217,x+116,375,()->{
+                taps.add(new Tap(x,217,x+116,375,names[i],()->{
                     theme=selected;persist();updateBars();invalidate();
                 }));
             }
@@ -903,7 +917,7 @@ public final class MainActivity extends Activity {
             fitted(name,174,y+50,22,130,ink,true);
             shape(291,y+23,65,38,21,active?TEAL:0xffb6bfce);
             shape(active?325:296,y+27,30,30,15,WHITE);
-            taps.add(new Tap(25,y,375,y+85,click));
+            taps.add(new Tap(25,y,375,y+85,name+(active?" uključeno":" isključeno"),click));
         }
         void textPage(String heading,String[] lines){
             title(heading);
@@ -911,6 +925,37 @@ public final class MainActivity extends Activity {
             for(int i=0;i<lines.length;i++)
                 fitted(lines[i],200,219+i*48,17,330,ink,false);
             button("Nazad","back",25,722,350,72,CORAL,true,()->navigate("settings"));
+        }
+        // Screen readers expose the buttons and all four board directions as
+        // explicit custom actions; directional keyboard keys also remain supported.
+        static final int ACTION_TAP_BASE=0x01001000;
+        static final int ACTION_DIRECTION_BASE=0x01002000;
+        @Override public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info){
+            super.onInitializeAccessibilityNodeInfo(info);
+            info.setClassName("android.view.View");
+            info.setFocusable(true);
+            int count=Math.min(taps.size(),200);
+            for(int i=0;i<count;i++){
+                Tap tap=taps.get(i);
+                info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
+                    ACTION_TAP_BASE+i,tap.label));
+            }
+            if("game".equals(page)){
+                String[] directions={"Pomiči lijevo","Pomiči desno","Pomiči gore","Pomiči dolje"};
+                for(int i=0;i<4;i++)
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
+                        ACTION_DIRECTION_BASE+i,directions[i]));
+            }
+        }
+        @Override public boolean performAccessibilityAction(int action,Bundle args){
+            if(action>=ACTION_TAP_BASE&&action<ACTION_TAP_BASE+taps.size()){
+                taps.get(action-ACTION_TAP_BASE).action.run();invalidate();return true;
+            }
+            if(action>=ACTION_DIRECTION_BASE&&action<ACTION_DIRECTION_BASE+4&&
+                "game".equals(page)){
+                move(action-ACTION_DIRECTION_BASE);return true;
+            }
+            return super.performAccessibilityAction(action,args);
         }
         @Override public boolean onTouchEvent(MotionEvent event){
             float x=(event.getX()-offX)/Math.max(.1f,scale);
@@ -929,6 +974,8 @@ public final class MainActivity extends Activity {
                         (dy<0?TileGame.UP:TileGame.DOWN));
                     pointerBoard=false;return true;
                 }
+                // A release after scrolling should never activate a button.
+                if(Math.max(Math.abs(dx),Math.abs(dy))>18)return true;
                 for(Tap t:new ArrayList<>(taps))if(x>=t.left&&x<=t.right&&
                     y>=t.top&&y<=t.bottom){t.action.run();return true;}
                 performClick();return true;
