@@ -625,6 +625,46 @@ public final class MainActivity extends Activity {
                 c.drawCircle(12,3.3f,2.1f,p);
                 c.drawCircle(22.5f,7.7f,2.1f,p);
                 p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+            }else if("gamepad".equals(type)){
+                Path pad=new Path();
+                pad.moveTo(6,6);pad.cubicTo(8,4,16,4,18,6);
+                pad.cubicTo(21,8,24,17,22,20);
+                pad.cubicTo(20,23,17,17,15,17);
+                pad.lineTo(9,17);pad.cubicTo(7,17,4,23,2,20);
+                pad.cubicTo(0,17,3,8,6,6);pad.close();
+                p.setColor(color);c.drawPath(pad,p);
+                p.setColor(WHITE);c.drawRoundRect(6,9,8,15,1,1,p);
+                c.drawRoundRect(4,11,10,13,1,1,p);
+                c.drawCircle(16,10,1.5f,p);c.drawCircle(19,13,1.5f,p);
+            }else if("grid".equals(type)){
+                p.setColor(color);
+                for(int row=0;row<2;row++)
+                    for(int col=0;col<2;col++)
+                        c.drawRoundRect(2+col*11,2+row*11,11+col*11,
+                            11+row*11,2.5f,2.5f,p);
+            }else if("star".equals(type)){
+                Path star=new Path();
+                for(int i=0;i<10;i++){
+                    double angle=-Math.PI/2+i*Math.PI/5;
+                    float rr=i%2==0?11f:5.3f;
+                    float px=12+(float)Math.cos(angle)*rr;
+                    float py=12+(float)Math.sin(angle)*rr;
+                    if(i==0)star.moveTo(px,py);else star.lineTo(px,py);
+                }
+                star.close();p.setColor(color);c.drawPath(star,p);
+            }else if("flame".equals(type)){
+                Path flame=new Path();
+                flame.moveTo(12,1);
+                flame.cubicTo(15,6,15,8,17,10);
+                flame.cubicTo(18,7,19,6,19,5);
+                flame.cubicTo(25,12,23,17,20,21);
+                flame.cubicTo(16,25,8,25,4,20);
+                flame.cubicTo(0,15,5,8,12,1);
+                flame.close();p.setColor(color);c.drawPath(flame,p);
+                Path core=new Path();core.moveTo(12,12);
+                core.cubicTo(17,17,17,19,14,22);
+                core.cubicTo(11,24,8,21,9,18);
+                core.close();p.setColor(0x70ffffff);c.drawPath(core,p);
             }else if("stats".equals(type)){
                 int[] fills={0xff8196b8,0xff647d9f,0xff243c66};
                 float[] hs={8,13,19};
@@ -727,6 +767,8 @@ public final class MainActivity extends Activity {
         }
         void icon(String type,float cx,float cy,float width,int color){
             if("crown".equals(type)||"stats".equals(type)||
+               "gamepad".equals(type)||"grid".equals(type)||
+               "star".equals(type)||"flame".equals(type)||
                "target".equals(type)||"palette".equals(type)||
                "settings".equals(type)||"calendar".equals(type)||
                "play".equals(type)||"pause".equals(type)||
@@ -1346,9 +1388,9 @@ public final class MainActivity extends Activity {
             int bg=theme==1?card:lighten(accent,.84f);
             card(x,y,width,h,21,bg);
             String symbol=caption.contains("Najbolji")?"crown":
-                caption.contains("partija")?"play":
-                caption.contains("pločica")?"check":
-                caption.contains("Prosjek")?"stats":"star";
+                caption.contains("partija")?"gamepad":
+                caption.contains("pločica")?"grid":
+                caption.contains("Prosjek")?"star":"flame";
             String top,bottom;
             switch(caption){
                 case "Najbolji rezultat":top="Najbolji";bottom="rezultat";break;

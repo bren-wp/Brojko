@@ -75,3 +75,7 @@ Na screenshotovima v1.7.25 težina 1000 uz `fakeBold` i `FILL_AND_STROKE` prenag
 ## Sigurni vidljivi prostor i dodirni ciljevi — v1.8
 
 QA snimke v1.7.26 otkrile su da je na Android uređaju 1080×2400 px navigacija tema bila odrezana na dnu jer se tema bez potrebe skalirala prema punoj širini uz neuračunate vertikalne sistemske insets. Sada se normalni zaslon tema skaluje prema minimalnoj dimenziji **stvarno upotrebljive površine**, jednako kao većina ostalih ekrana. Niži zasloni koriste pomicanje. U Postavkama prikaz jezika dodan je zaobljen dropdown s ikonom strelice. Instrumentacijski QA uspoređuje donju koordinatu stvarne navigacijske dodirne zone s krajem vidljive površine i provjerava minimalni touch target. Vizualne reference ostaju cilj, a ne tvrdnja o dokazanoj pikselnoj jednakosti.
+
+## Ikone statistike — dodatna revizija v1.8
+
+Kartice statistike sada koriste značenjski i vizualno dosljedne vektorske simbole iz izvornog dizajna: krunu za rekord, gamepad za broj partija, mrežu četiriju kvadrata za najveću pločicu, zvijezdu za prosjek bodova i plamen za niz igranja. Svi su nacrtani u zajedničkim 24×24 lokalnim koordinatama i istom sustavu boja, skaliranja i poravnanja. Prikaz treba provjeriti na svijetloj i tamnoj temi u snimkama emulatora, uključujući uvećani prikaz.
