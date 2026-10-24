@@ -41,7 +41,7 @@ jobs:
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
-            grep -q "OK (1 test)" instrumentation-results.txt
+            grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/
       - name: Upload real Android screen captures

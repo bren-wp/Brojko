@@ -50,7 +50,7 @@ public final class MainActivity extends Activity {
     BoardScreen screen;
     String page="home", pendingMode="classic";
     int best, plays, total, wins, recordTile, totalMerges, streak, theme, tileStyle, animation=1;
-    int todayMerges, todayPoints, playDayStreak, lastScore;
+    int todayMerges, todayPoints, playDayStreak, lastScore, stars, rewardFlags;
     String lastDaily="", statsDay="", lastPlayDay="";
     boolean sound=true, vibration=true;
     float pulse=1f;
@@ -66,6 +66,7 @@ public final class MainActivity extends Activity {
         prefs=getSharedPreferences("brojko",MODE_PRIVATE);
         best=prefs.getInt("best",0);plays=prefs.getInt("games",0);total=prefs.getInt("total",0);
         lastScore=prefs.getInt("lastScore",0);
+        stars=prefs.getInt("stars",0);rewardFlags=prefs.getInt("rewardFlags",0);
         wins=prefs.getInt("wins",0);recordTile=prefs.getInt("tile",0);
         totalMerges=prefs.getInt("totalMerges",0);streak=prefs.getInt("streak",0);
         lastDaily=prefs.getString("lastDaily","");
@@ -112,7 +113,25 @@ public final class MainActivity extends Activity {
         }catch(Exception ignored){game=null;}
     }
     String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
-    void ensureDay(){if(!today().equals(statsDay)){statsDay=today();todayMerges=0;todayPoints=0;}}
+    void ensureDay(){
+        if(!today().equals(statsDay)){
+            statsDay=today();todayMerges=0;todayPoints=0;
+            // Daily rewards may be earned once per local calendar day.
+            rewardFlags &= ~3;
+        }
+    }
+    void reward(int bit,int amount,boolean reached){
+        if(reached&&(rewardFlags&bit)==0){
+            rewardFlags |= bit;stars=Math.max(0,stars+amount);
+        }
+    }
+    void updateRewards(){
+        reward(1,50,todayMerges>=20);
+        reward(2,100,todayPoints>=1000);
+        reward(4,150,playDayStreak>=7);
+        reward(8,500,recordTile>=1024);
+        reward(16,1000,best>=50000);
+    }
     String yesterday(){
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
@@ -133,6 +152,7 @@ public final class MainActivity extends Activity {
         SharedPreferences.Editor e=prefs.edit()
             .putInt("best",best).putInt("games",plays).putInt("total",total)
             .putInt("lastScore",lastScore)
+            .putInt("stars",stars).putInt("rewardFlags",rewardFlags)
             .putInt("wins",wins).putInt("tile",recordTile).putInt("totalMerges",totalMerges)
             .putInt("streak",streak).putString("lastDaily",lastDaily)
             .putInt("todayMerges",todayMerges).putInt("todayPoints",todayPoints)
@@ -184,6 +204,7 @@ public final class MainActivity extends Activity {
             lastPlayDay=today();
         }
         plays++;recordTile=Math.max(recordTile,game.maxTile());
+        updateRewards();
         page="game";persist();screen.invalidate();
     }
     void soundEffect(){
@@ -210,6 +231,7 @@ public final class MainActivity extends Activity {
         todayPoints+=result.points;todayMerges+=result.merges;
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
         if(result.first2048)wins++;
+        updateRewards();
         if("daily".equals(game.mode)&&today().equals(game.day)
            &&game.peak>=256 && game.score>=3000 && game.moves<=80
            &&!today().equals(lastDaily)){
@@ -261,6 +283,7 @@ public final class MainActivity extends Activity {
     private static final String BACKUP_FORMAT="brendigo.brojko.backup.v1";
     private static final String[] BACKUP_KEYS={
         "best","games","total","wins","tile","totalMerges","streak",
+        "stars","rewardFlags","lastScore",
         "lastDaily","statsDay","todayMerges","todayPoints","playDayStreak",
         "lastPlayDay","theme","style","animation","sound","vibrate",
         "session","history"
@@ -492,6 +515,15 @@ public final class MainActivity extends Activity {
                     z.lineTo(11,8);z.moveTo(18,20);z.lineTo(18,3);break;
                 case "target": c.drawCircle(12,12,9,p);c.drawCircle(12,12,4,p);returnIcon();return;
                 case "settings":c.drawCircle(12,12,9,p);c.drawCircle(12,12,3,p);returnIcon();return;
+                case "star":
+                    for(int i=0;i<10;i++){
+                        double angle=-Math.PI/2+i*Math.PI/5;
+                        float radius=(i%2==0)?10:4.6f;
+                        float px=12+(float)Math.cos(angle)*radius;
+                        float py=12+(float)Math.sin(angle)*radius;
+                        if(i==0)z.moveTo(px,py);else z.lineTo(px,py);
+                    }
+                    z.close();p.setStyle(Paint.Style.FILL);break;
                 case "calendar":p.setStrokeWidth(2.3f);c.drawRoundRect(3,5,21,21,3,3,p);
                     z.moveTo(3,10);z.lineTo(21,10);z.moveTo(8,2);z.lineTo(8,8);
                     z.moveTo(16,2);z.lineTo(16,8);break;
@@ -804,24 +836,36 @@ public final class MainActivity extends Activity {
         }
         void missions() {
             title("Misije i postignuća");
-            txt("DNEVNE",81,181,17,CORAL,true);
-            missionRow("Spoji 20 pločica","Danas spojene pločice",todayMerges,20,206);
-            missionRow("Skupi 1000 bodova","Danas osvojeni bodovi",todayPoints,1000,322);
-            txt("TJEDNE",77,465,17,CORAL,true);
-            missionRow("Igraj 7 dana zaredom","Različiti dani igranja",playDayStreak,7,484);
-            txt("POSTIGNUĆA",107,629,17,CORAL,true);
-            missionRow("Majstor spajanja","Dosegni pločicu 512",recordTile,512,654);
-            missionRow("Kralj brojeva","Dosegni pločicu 2048",recordTile,2048,760);
+            card(260,137,117,48,18,theme==1?card:0xffffefcc);
+            icon("star",283,162,26,0xffffae1d);
+            fitted(fmt(stars),331,170,20,70,ink,true);
+            txt("DNEVNE",82,181,17,CORAL,true);
+            missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
+                todayMerges,20,50,206,TEAL);
+            missionRow("Skupi 1000 bodova","Dnevni rezultat",
+                todayPoints,1000,100,318,0xff468ff0);
+            txt("TJEDNE",77,457,17,CORAL,true);
+            missionRow("Igraj 7 dana zaredom","Sedam različitih dana",
+                playDayStreak,7,150,484,0xff3ecb8c);
+            txt("POSTIGNUĆA",110,628,17,CORAL,true);
+            missionRow("Majstor spajanja","Dosegni pločicu 1024",
+                recordTile,1024,500,654,0xffa663e4);
+            missionRow("Kralj rezultata","Osvoji 50.000 bodova",
+                best,50000,1000,762,0xffff934b);
         }
-        void missionRow(String name,String sub,int value,int target,int y){
-            card(25,y,350,97,18,card);
-            fitted(name,200,y+27,19,320,ink,true);
-            fitted(sub,200,y+50,14,320,muted,false);
-            shape(58,y+67,284,8,4,theme==1?0xff43516c:0xffe9dfd4);
-            float fraction=Math.min(1,(float)value/target);
-            if(fraction>0)shape(58,y+67,284*fraction,8,4,
-                value>=target?TEAL:CORAL);
-            txt(Math.min(value,target)+"/"+target,200,y+91,12,muted,true);
+        void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
+            card(26,y,348,96,21,card);
+            shape(39,y+14,58,62,15,theme==1?0xff35435d:lighten(accent,.80f));
+            icon(value>=target?"check":"target",68,y+45,32,accent);
+            fitted(name,198,y+27,18,188,ink,true);
+            fitted(sub,198,y+48,13,188,muted,false);
+            shape(106,y+65,174,8,4,theme==1?0xff40516c:0xffdce3e8);
+            float fraction=Math.max(0,Math.min(1,(float)value/target));
+            if(fraction>0)shape(106,y+65,174*fraction,8,4,accent);
+            fitted(fmt(Math.min(value,target))+"/"+fmt(target),196,y+90,12,175,muted,true);
+            card(289,y+12,71,73,15,theme==1?0xff3b3b4c:0xfffff0d5);
+            icon("star",323,y+43,27,0xffffad1a);
+            fitted("+"+fmt(reward),323,y+70,13,63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}

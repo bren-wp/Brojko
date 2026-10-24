@@ -42,6 +42,35 @@ public class ScreensSmokeTest {
         finally{bitmap.recycle();}
     }
 
+    @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
+        rule.getScenario().onActivity(activity->{
+            int originalStars=activity.stars,originalFlags=activity.rewardFlags;
+            int originalMerges=activity.todayMerges,originalPoints=activity.todayPoints;
+            int originalStreak=activity.playDayStreak,originalTile=activity.recordTile;
+            int originalBest=activity.best;
+            try{
+                activity.stars=0;activity.rewardFlags=0;
+                activity.todayMerges=20;activity.todayPoints=1000;
+                activity.playDayStreak=7;activity.recordTile=1024;activity.best=50000;
+                activity.updateRewards();
+                assertEquals(1800,activity.stars);
+                assertEquals(31,activity.rewardFlags);
+                activity.updateRewards();
+                assertEquals("Repeated refresh must not duplicate rewards",1800,activity.stars);
+                activity.statsDay="2000-01-01";
+                activity.ensureDay();
+                assertEquals("Daily flags must reset on a new day",28,activity.rewardFlags);
+                assertEquals(0,activity.todayMerges);
+            }finally{
+                activity.stars=originalStars;activity.rewardFlags=originalFlags;
+                activity.todayMerges=originalMerges;activity.todayPoints=originalPoints;
+                activity.playDayStreak=originalStreak;activity.recordTile=originalTile;
+                activity.best=originalBest;
+                activity.statsDay=activity.today();
+            }
+        });
+    }
+
     @Test public void compactDisplayKeepsBottomActionsReachable(){
         rule.getScenario().onActivity(activity->{
             activity.page="missions";
