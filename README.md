@@ -87,3 +87,9 @@ Prije objave završiti: vizualnu kontrolu na više gustoća i veličina zaslona,
 ## Vizualni QA — v1.5
 
 Zasloni su ponovno usklađivani prema referentnom rasporedu: brendirana zaglavlja, igra 4×4/5×5, tri gumba na ekranu pobjede, dnevni reward panel, misije, detalji povijesti, statistički grafikon, pregled tema sa stvarnim prekidačima i skrolanje na manjim uređajima. CI snima te ekrane u zasebnom Android UI workflowu. Precizna pixel-to-pixel jednakost još mora biti potvrđena nakon vizualnog pregleda snimki; referentni marketing prikazi nisu isto što i stvarni gameplay početni state.
+
+## Usklađivanje v1.6
+
+Nadograđeni su dubina kartica i reljef pločica, zaobljeni naslovi, dvobojna zaglavlja, ikona za novi početak i odzivnost igraće ploče na nižim Android ekranima. Instrumentacijski QA uključuje kontrolu gesta pri 360×600 i kompletne snimke svih glavnih zaslona.
+
+Izdavanje: GitHub Actions automatski objavljuje testni APK i AAB; za Play Store produkciju nužan je valjan produkcijski upload potpis.

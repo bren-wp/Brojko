@@ -210,6 +210,47 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void shortScreenKeepsBoardLargeAndSwipeFunctional(){
+        rule.getScenario().onActivity(activity->{
+            activity.newGame("classic");
+            MainActivity.BoardScreen view=activity.screen;
+            view.measure(View.MeasureSpec.makeMeasureSpec(360,View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(600,View.MeasureSpec.EXACTLY));
+            view.layout(0,0,360,600);
+            Bitmap bitmap=Bitmap.createBitmap(360,600,Bitmap.Config.ARGB_8888);
+            try{
+                view.draw(new Canvas(bitmap));
+                assertTrue("Short game displays must scroll",view.maxScroll>10);
+                assertEquals("Board should retain width-based scaling",.9f,view.scale,.02f);
+                java.util.Arrays.fill(activity.game.cells,0);
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                long time=android.os.SystemClock.uptimeMillis();
+                float y=(view.gridY+33)*view.scale+view.offY;
+                MotionEvent down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,
+                    100*view.scale,y,0);
+                MotionEvent up=MotionEvent.obtain(time,time+80,MotionEvent.ACTION_UP,
+                    295*view.scale,y,0);
+                view.onTouchEvent(down);view.onTouchEvent(up);
+                down.recycle();up.recycle();
+                assertEquals("Swipe must merge tiles even in scrollable mode",4,
+                    activity.game.score);
+                int moves=activity.game.moves;
+                // Scroll outside the tile board without triggering a tile move.
+                time=android.os.SystemClock.uptimeMillis();
+                down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,5,520,0);
+                MotionEvent move=MotionEvent.obtain(time,time+40,MotionEvent.ACTION_MOVE,
+                    5,250,0);
+                up=MotionEvent.obtain(time,time+60,MotionEvent.ACTION_UP,5,250,0);
+                view.onTouchEvent(down);view.onTouchEvent(move);view.onTouchEvent(up);
+                down.recycle();move.recycle();up.recycle();
+                view.draw(new Canvas(bitmap));
+                assertTrue("Lower buttons remain reachable",view.scrollOffset>10);
+                assertEquals("Scrolling must not move tiles",moves,activity.game.moves);
+            }finally{bitmap.recycle();}
+        });
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
         rule.getScenario().onActivity(activity->{
             activity.newGame("classic");

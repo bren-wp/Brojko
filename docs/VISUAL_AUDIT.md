@@ -45,3 +45,17 @@ Emulator je otkrio sistematsko odstupanje vektorskih ikona: canvas je koristio g
 | Postavke | Pomaknute kartice ispod zaglavlja, uredan footer | Test obavijesti/backup |
 
 **Napomena:** Jednostavni Android vektori i sistemski rounded font ne mogu jamčiti identične piksele ilustrativnoj raster-maketi. Nema tvrdnje o verificiranoj 1:1 podudarnosti bez diffa snimki istog stanja i istog viewporta.
+
+## Revizija v1.6 — usklađivanje prema originalnim referencama
+
+Provjeren je svaki primarni vizualni sustav: launcher i splash, početna, klasična/opuštena ploča, pauza, pobjeda/poraz, dnevni izazov, misije, statistika i povijest, teme, postavke te pomoćni prikazi.
+
+- Zajedničke kartice: dvije dubinske sjene, mekan vertikalni gradijent i tanki unutarnji svijetli rub.
+- Zajedničke pločice: dimenzijama prilagođen donji reljef, varijabilan sjaj i obris, bez crtanja negativnih rect dimenzija pri animaciji.
+- Naglašeni fontovi: deblji rounded font, kalibracija širine teksta i suptilna sjena za veće naslove.
+- Igre 4×4/5×5: veća ploča, više mjesta za brojke, razlikovni simbol „Novo”.
+- Sekundarna zaglavlja: dvobojna Dnevni izazov, Teme i izgled, Misije i postignuća; zasebni naslov Postavke bez dodatnog logotipa.
+- Kompaktni viewport: game board zadržava širinu i geste, dok se izvan ploče može vertikalno doći do donjih kontrola.
+- QA: instrumentacijski test na 360×600 mjeri stanje ploče i skrolanje te snima sve ključne ekrane.
+
+**Granica 1:1:** originalne marketinške reference prikazuju fiktivne vrijednosti i drukčiji omjer stranica od Pixel 6 Android emulatora. Za strogi pixel-diff treba ista rezolucija, kontrolirana početna ploča i identičan font/izvorna grafika. Bez toga podudarnost svih piksela nije moguće istinito potvrditi.

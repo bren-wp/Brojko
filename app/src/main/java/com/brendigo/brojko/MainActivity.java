@@ -498,8 +498,15 @@ public final class MainActivity extends Activity {
             p.setColor(color);c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
         }
         void card(float x,float y,float w,float h,float radius,int color) {
-            shape(x,y+4,w,h,radius,shadow);
-            gradient(x,y,w,h,radius,lighten(color,theme==1?.035f:.015f),color);
+            // One elevation/outline treatment for ALL selectable cards.
+            shape(x,y+6,w,h,radius,theme==1?0xff0d192b:0xffe9d9c7);
+            shape(x+1,y+3,w-2,h,radius,shadow);
+            gradient(x,y,w,h,radius,lighten(color,theme==1?.10f:.07f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1f);p.setColor(theme==1?0x30ffffff:0x85ffffff);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,Math.max(1,radius-1),
+                Math.max(1,radius-1),p);
+            p.setStyle(Paint.Style.FILL);
         }
         void gradient(float x,float y,float w,float h,float radius,int top,int bottom) {
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
@@ -517,20 +524,27 @@ public final class MainActivity extends Activity {
                 Math.max(0,(int)(Color.blue(color)*(1-amount))));
         }
         void glossyTile(float x,float y,float width,float height,float radius,int color){
-            if(tileStyle==1){
-                shape(x,y,width,height,radius,color);
-                return;
-            }
-            shape(x,y+4,width,height-1,radius,darken(color,.20f));
-            gradient(x,y,width,height-5,radius,lighten(color,tileStyle==2?.35f:.19f),color);
+            if(width<=0||height<=0)return;
+            if(tileStyle==1){shape(x,y,width,height,radius,color);return;}
+            float depth=Math.min(5,Math.max(2,height*.075f));
+            shape(x,y+depth,width,Math.max(1,height-depth),radius,
+                darken(color,.22f));
+            gradient(x,y,width,Math.max(1,height-depth),radius,
+                lighten(color,tileStyle==2?.32f:.24f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(1.6f);p.setColor(0x84ffffff);
-            c.drawRoundRect(x+2,y+2,x+width-2,y+height-6,
-                Math.max(2,radius-2),Math.max(2,radius-2),p);
+            p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
+            p.setColor(0xb0ffffff);
+            c.drawRoundRect(x+1.5f,y+1.5f,x+width-1.5f,
+                y+height-depth-1.3f,Math.max(2,radius-1.5f),
+                Math.max(2,radius-1.5f),p);
             p.setStyle(Paint.Style.FILL);
-            if(tileStyle==2) {
-                shape(x+8,y+6,Math.max(1,width-16),Math.max(1,height*.07f),radius,
-                    0x35ffffff);
+            if(width>=24&&height>=24){
+                shape(x+6,y+3,Math.max(1,width-12),
+                    Math.max(1,height*.055f),radius,0x38ffffff);
+            }
+            if(tileStyle==2 && width>=26 && height>=26){
+                shape(x+7,y+8,Math.max(1,width-14),
+                    Math.max(1,height*.12f),radius,0x25ffffff);
             }
         }
         void rays(float cx,float cy,float size,int color){
@@ -545,13 +559,19 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);p.setTypeface(Typeface.create("sans-serif-rounded",
                 bold?Typeface.BOLD:Typeface.NORMAL));
+            p.setFakeBoldText(bold&&size>=16);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);
+            if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
+                theme==1?0x44000000:0x150c1d3e);
             c.drawText(content,x,baseline,p);
+            p.clearShadowLayer();p.setFakeBoldText(false);
         }
         void fitted(String content,float x,float baseline,float size,float maxWidth,int color,boolean bold) {
             p.setTypeface(Typeface.create("sans-serif-rounded",bold?Typeface.BOLD:Typeface.NORMAL));
+            p.setFakeBoldText(bold&&size>=16);
             p.setTextSize(size);
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
+            p.setFakeBoldText(false);
             txt(content,x,baseline,size,color,bold);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
@@ -690,6 +710,9 @@ public final class MainActivity extends Activity {
             Path z=new Path();
             switch(type) {
                 case "back":z.moveTo(16,4);z.lineTo(8,12);z.lineTo(16,20);break;
+                case "refresh":
+                    z.arcTo(new RectF(4,4,21,21),-40,300,false);
+                    z.moveTo(20,5);z.lineTo(22,11);z.lineTo(16,10);break;
                 case "undo":z.arcTo(new RectF(5,4,22,22),-100,305,false);
                     z.moveTo(6,5);z.lineTo(5,12);z.lineTo(12,11);break;
                 case "play":z.moveTo(7,3);z.lineTo(21,12);z.lineTo(7,21);z.close();break;
@@ -747,9 +770,9 @@ public final class MainActivity extends Activity {
             }else card(x,y,w,h,radius,color);
             boolean hasSymbol=symbol!=null;
             int iconColor=prominent?WHITE:ink;
-            if(prominent&&hasSymbol&&w<150){
+            if(hasSymbol&&w<150&&h>=77){
                 icon(symbol,x+w/2,y+h*.30f,29,iconColor);
-                fitted(label,x+w/2,y+h*.78f,21,w-14,WHITE,true);
+                fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
                     y+h/2,Math.min(prominent?33:23,h*.52f),iconColor);
@@ -795,7 +818,9 @@ public final class MainActivity extends Activity {
                 page.equals("win")||page.equals("over")||page.equals("confirm")||
                 page.equals("confirmEnd")||page.equals("dailyWin")||page.equals("dailyFail");
             boolean extended=page.equals("themes")||page.equals("stats");
-            boolean compact=!inGame && (extended || usableHeight/usableWidth<1.85f);
+            // Keep buttons touch-sized on 16:9 screens; permit scrolling
+            // outside the board rather than scaling the whole game to tiny size.
+            boolean compact=extended || usableHeight/usableWidth<1.85f;
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             float contentHeight=page.equals("themes")?1050f:
                 page.equals("stats")?1120f:880f;
@@ -955,7 +980,7 @@ public final class MainActivity extends Activity {
             txt(caption,x+width/2,y+25,15,muted,true);
             fitted(value,x+width/2,y+59,28,width-16,ink,true);
         }
-        float gridX=24,gridY=239,gridSize=352;
+        float gridX=16,gridY=222,gridSize=368;
         void gameScreen(){
             boolean relaxed="relaxed".equals(game.mode);
             boolean daily="daily".equals(game.mode);
@@ -984,7 +1009,7 @@ public final class MainActivity extends Activity {
                 fitted("DNEVNI IZAZOV • "+remaining+" POTEZA PREOSTALO",
                     200,624,15,351,remaining<=10?CORAL:muted,true);
             }
-            button("Novo","undo",22,647,113,91,card,false,()->requestNew(game.mode));
+            button("Novo","refresh",22,647,113,91,card,false,()->requestNew(game.mode));
             if(game.canUndo())button("Poništi","undo",144,647,112,91,card,false,()->undo());
             else {
                 card(144,647,112,91,20,theme==1?0xff29364a:0xffeae5de);
@@ -1121,7 +1146,9 @@ public final class MainActivity extends Activity {
             button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
         }
         void daily(){
-            title("Dnevni izazov");
+            back();brand(63,35);
+            fitted("Dnevni",158,119,36,173,ink,true);
+            fitted("izazov",268,119,36,160,CORAL,true);
             card(112,142,177,39,19,theme==1?card:0xffffecdc);
             icon("calendar",143,163,22,muted);
             fitted(compactDate(),208,169,16,147,ink,true);
@@ -1166,7 +1193,9 @@ public final class MainActivity extends Activity {
             fitted(description,231,y+55,13,274,muted,false);
         }
         void missions() {
-            title("Misije i postignuća");
+            back();brand(63,32);
+            fitted("Misije i",112,128,30,174,ink,true);
+            fitted("postignuća",273,128,30,209,CORAL,true);
             card(260,154,117,44,18,theme==1?card:0xffffefcc);
             icon("star",283,177,26,0xffffae1d);
             fitted(fmt(stars),331,185,20,70,ink,true);
@@ -1204,6 +1233,7 @@ public final class MainActivity extends Activity {
         }
         void statistics(){
             title("Statistika");
+            rays(52,122,18,CORAL);rays(352,122,18,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
             statCell("Ukupno partija",fmt(plays),143,151,114,112,TEAL);
             statCell("Najveća pločica",fmt(recordTile),266,151,114,112,0xffffb431);
@@ -1324,7 +1354,10 @@ public final class MainActivity extends Activity {
                 ()->navigate("stats"));
         }
         void themes(){
-            title("Teme i izgled");
+            back();
+            brand(61,38);
+            fitted("Teme i",158,126,35,165,ink,true);
+            fitted("izgled",276,126,35,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
@@ -1418,8 +1451,10 @@ public final class MainActivity extends Activity {
             }
         }
         void settings(){
-            title("Postavke");
-            rays(116,97,20,CORAL);rays(307,97,20,CORAL);
+            // Settings reference deliberately has a full-width display title.
+            back();
+            txt("Postavke",200,108,44,ink,true);
+            rays(74,97,24,CORAL);rays(331,97,24,CORAL);
             settingsSwitch("Zvuk","sound",CORAL,148,sound,()->{
                 sound=!sound;persist();invalidate();
             });
