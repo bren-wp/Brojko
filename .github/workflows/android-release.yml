@@ -16,7 +16,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Install Android API 36
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+        run: |
+          SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - name: Install Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
