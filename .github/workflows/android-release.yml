@@ -1,0 +1,54 @@
+name: Android APK and AAB
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Configure signing when secrets exist
+        env:
+          KEYSTORE: ${{ secrets.BROJKO_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE" ]; then
+            echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
+            echo "BROJKO_KEYSTORE_FILE=$RUNNER_TEMP/brojko-upload.jks" >> "$GITHUB_ENV"
+          fi
+      - name: Build debug APK and release APK/AAB
+        env:
+          BROJKO_STORE_PASSWORD: ${{ secrets.BROJKO_STORE_PASSWORD }}
+          BROJKO_KEY_ALIAS: ${{ secrets.BROJKO_KEY_ALIAS }}
+          BROJKO_KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
+        run: gradle --no-daemon :app:assembleDebug :app:assembleRelease :app:bundleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Brojko-APK-AAB
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
