@@ -59,12 +59,18 @@ public final class TileGame {
         for(int i=0;i<cells.length;i++)if(cells[i]==0)empty.add(i);
         if(!empty.isEmpty())cells[empty.get(nextInt(empty.size()))]=nextInt(10)==0?4:2;
     }
+    public boolean isDailyGoalComplete() {
+        return "daily".equals(mode) && peak>=256 && score>=3000 && moves<=80;
+    }
+    public boolean isDailyOutOfMoves() {
+        return "daily".equals(mode) && moves>=80 && !isDailyGoalComplete();
+    }
     public int maxTile() {int max=0;for(int x:cells)max=Math.max(max,x);return max;}
     public boolean canMove() {
         for(int y=0;y<size;y++)for(int x=0;x<size;x++) {
             int n=cells[y*size+x];
-            if(n==0 || (x<size-1 && n==cells[y*size+x+1])
-                 || (y<size-1 && n==cells[(y+1)*size+x]))return true;
+            if(n==0 || (x<size-1 && n<1073741824 && n==cells[y*size+x+1])
+                 || (y<size-1 && n<1073741824 && n==cells[(y+1)*size+x]))return true;
         }
         return false;
     }
@@ -86,9 +92,11 @@ public final class TileGame {
             int[] output=new int[size];
             int next=0;
             for(int i=0;i<occupied;i++) {
-                if(i+1<occupied && values[i]==values[i+1]) {
+                if(i+1<occupied && values[i]==values[i+1] &&
+                   values[i]<1073741824) {
                     output[next]=values[i]*2;
-                    score+=output[next];merges++;i++;
+                    score=(int)Math.min(Integer.MAX_VALUE,(long)score+output[next]);
+                    merges++;i++;
                 }else output[next]=values[i];
                 next++;
             }
@@ -146,16 +154,24 @@ public final class TileGame {
             int n=obj.getInt("size");
             if(n!=4&&n!=5)throw new IllegalArgumentException("Invalid size");
             String mode=obj.getString("mode"),day=obj.optString("day","");
+            if(!("classic".equals(mode)||"relaxed".equals(mode)||"daily".equals(mode)) ||
+               (n==5)!="relaxed".equals(mode))
+                throw new IllegalArgumentException("Invalid game mode");
+            if(day.length()>20)throw new IllegalArgumentException("Invalid day");
             TileGame game=new TileGame(n,mode,day);
             JSONArray a=obj.getJSONArray("cells");
             if(a.length()!=n*n)throw new IllegalArgumentException("Invalid board");
             for(int i=0;i<a.length();i++){
                 int x=a.getInt(i);
-                if(x!=0&&(x<2||(x&(x-1))!=0))throw new IllegalArgumentException("Invalid tile");
+                if(x!=0&&(x<2||(x&(x-1))!=0||x>1073741824))
+                    throw new IllegalArgumentException("Invalid tile");
                 game.cells[i]=x;
             }
             game.score=obj.getInt("score");game.moves=obj.optInt("moves");
             game.merges=obj.optInt("merges");game.peak=obj.optInt("peak",game.maxTile());
+            if(game.score<0||game.moves<0||game.merges<0||game.peak<game.maxTile()||
+               game.peak>1073741824||((long)game.merges)>((long)game.moves)*n*n)
+                throw new IllegalArgumentException("Invalid counters");
             game.randomState=Long.parseLong(obj.getString("rng"));
             if(game.randomState==0)throw new IllegalArgumentException("Invalid RNG");
             game.reached2048=obj.optBoolean("reached",false);
@@ -167,10 +183,20 @@ public final class TileGame {
                 TileGame older=new TileGame(n,mode,day);
                 JSONArray b=u.getJSONArray("cells");
                 if(b.length()==n*n){
-                    for(int i=0;i<b.length();i++)older.cells[i]=b.getInt(i);
+                    for(int i=0;i<b.length();i++){
+                        int tile=b.getInt(i);
+                        if(tile!=0&&(tile<2||(tile&(tile-1))!=0||tile>1073741824))
+                            throw new IllegalArgumentException("Invalid undo tile");
+                        older.cells[i]=tile;
+                    }
                     older.score=u.getInt("score");older.moves=u.getInt("moves");
                     older.merges=u.getInt("merges");older.peak=u.getInt("peak");
                     older.randomState=Long.parseLong(u.getString("rng"));
+                    if(older.score<0||older.score>game.score||older.moves<0||
+                       older.moves>game.moves||older.merges<0||
+                       older.merges>game.merges||older.peak<older.maxTile()||
+                       older.randomState==0)
+                        throw new IllegalArgumentException("Invalid undo state");
                     older.reached2048=u.optBoolean("reached");
                     older.gameOver=u.optBoolean("over");
                     older.winAcknowledged=u.optBoolean("ack");

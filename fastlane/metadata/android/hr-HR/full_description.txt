@@ -1,0 +1,22 @@
+Brojko je šarena, jednostavna i izazovna logička Android igra spajanja brojeva.
+
+Povuci prstom preko ploče, spoji dvije jednake pločice i otključavaj sve veće brojeve. Dosegni 2048, obaraj osobne rekorde i prati koliko si napredovao/la!
+
+NAČINI IGRANJA
+• Klasično 4×4: strateški spoji pločice i osvoji 2048.
+• Opušteno 5×5: dodatni prostor za dulje partije.
+• Dnevni izazov: dosegnuti 256 i skupiti 3000 bodova u najviše 80 poteza.
+
+ZAŠTO BROJKO?
+• Moderni, šareni izgled i nekoliko tema.
+• Zvjezdice za misije i dnevne izazove.
+• Statistika, osobni rekord i povijest partija.
+• Poništavanje posljednjeg poteza.
+• Radi potpuno bez interneta i korisničkog računa.
+• Napredak je lokalno spremljen i može se izvesti u sigurnosnu kopiju.
+• Bez oglasa i bez kupnji u aplikaciji.
+
+Spajaj brojeve. Ruši rekorde.
+
+Brojko by Brendigo
+brendigo.com

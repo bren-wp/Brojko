@@ -71,6 +71,66 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyChallengeAwardsOnceAndEnforcesMoveLimit() {
+        rule.getScenario().onActivity(activity->{
+            TileGame originalGame=activity.game;
+            String originalPage=activity.page;
+            String oldCompleted=activity.lastDaily,oldRewardDate=activity.dailyRewardDate;
+            int oldStars=activity.stars,oldStreak=activity.streak;
+            try {
+                activity.lastDaily="";
+                activity.dailyRewardDate="";
+                activity.streak=0;
+                activity.stars=0;
+                activity.game=new TileGame("daily",activity.today(),123L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                activity.game.score=2996;
+                activity.game.moves=79;
+                activity.game.peak=256;
+                activity.page="game";
+                activity.move(TileGame.LEFT);
+                assertEquals("dailyWin",activity.page);
+                assertEquals(80,activity.game.moves);
+                assertEquals(3000,activity.game.score);
+                assertEquals(activity.today(),activity.lastDaily);
+                assertEquals(250,activity.stars);
+                capture(activity,"daily-success");
+                // A second valid daily attempt is allowed, but no second reward.
+                activity.game=new TileGame("daily",activity.today(),124L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                activity.game.score=2996;
+                activity.game.moves=79;
+                activity.game.peak=256;
+                activity.page="game";
+                activity.move(TileGame.LEFT);
+                assertEquals(250,activity.stars);
+                // Failing the 80th move must finish the challenge, not keep
+                // showing a misleading active daily task.
+                activity.game=new TileGame("daily",activity.today(),125L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                activity.game.moves=79;
+                activity.game.peak=4;
+                activity.page="game";
+                activity.move(TileGame.LEFT);
+                assertEquals("dailyFail",activity.page);
+                assertTrue(activity.game.gameOver);
+                capture(activity,"daily-failed");
+            }finally{
+                activity.game=originalGame;activity.page=originalPage;
+                activity.lastDaily=oldCompleted;
+                activity.dailyRewardDate=oldRewardDate;
+                activity.stars=oldStars;activity.streak=oldStreak;
+                activity.persist();
+            }
+        });
+    }
+
     @Test public void compactDisplayKeepsBottomActionsReachable(){
         rule.getScenario().onActivity(activity->{
             activity.page="missions";
@@ -101,7 +161,7 @@ public class ScreensSmokeTest {
             String[] pages={
                 "home","game","pause","win","over","confirm","confirmEnd",
                 "daily","missions","stats","themes","settings",
-                "language","backup","privacy","about"
+                "language","backup","privacy","about","help","dailyWin","dailyFail"
             };
             for(String page:pages){
                 activity.page=page;

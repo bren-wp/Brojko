@@ -51,7 +51,7 @@ public final class MainActivity extends Activity {
     String page="home", pendingMode="classic";
     int best, plays, total, wins, recordTile, totalMerges, streak, theme, tileStyle, animation=1;
     int todayMerges, todayPoints, playDayStreak, lastScore, stars, rewardFlags;
-    String lastDaily="", statsDay="", lastPlayDay="";
+    String lastDaily="", statsDay="", lastPlayDay="", dailyRewardDate="";
     boolean sound=true, vibration=true;
     float pulse=1f;
     ToneGenerator tones;
@@ -70,6 +70,7 @@ public final class MainActivity extends Activity {
         wins=prefs.getInt("wins",0);recordTile=prefs.getInt("tile",0);
         totalMerges=prefs.getInt("totalMerges",0);streak=prefs.getInt("streak",0);
         lastDaily=prefs.getString("lastDaily","");
+        dailyRewardDate=prefs.getString("dailyRewardDate","");
         statsDay=prefs.getString("statsDay","");
         todayMerges=prefs.getInt("todayMerges",0);todayPoints=prefs.getInt("todayPoints",0);
         playDayStreak=prefs.getInt("playDayStreak",0);
@@ -155,6 +156,7 @@ public final class MainActivity extends Activity {
             .putInt("stars",stars).putInt("rewardFlags",rewardFlags)
             .putInt("wins",wins).putInt("tile",recordTile).putInt("totalMerges",totalMerges)
             .putInt("streak",streak).putString("lastDaily",lastDaily)
+            .putString("dailyRewardDate",dailyRewardDate)
             .putInt("todayMerges",todayMerges).putInt("todayPoints",todayPoints)
             .putString("statsDay",statsDay).putInt("playDayStreak",playDayStreak)
             .putString("lastPlayDay",lastPlayDay)
@@ -222,6 +224,7 @@ public final class MainActivity extends Activity {
     }
     void move(int direction) {
         if(!page.equals("game")||game==null)return;
+        boolean dailyWasComplete=game.isDailyGoalComplete() && today().equals(game.day);
         TileGame.Result result=game.move(direction);
         if(!result.changed){
             if(result.lost){page="over";persist();screen.invalidate();}
@@ -232,16 +235,25 @@ public final class MainActivity extends Activity {
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
         if(result.first2048)wins++;
         updateRewards();
-        if("daily".equals(game.mode)&&today().equals(game.day)
-           &&game.peak>=256 && game.score>=3000 && game.moves<=80
-           &&!today().equals(lastDaily)){
+        boolean daily="daily".equals(game.mode)&&today().equals(game.day);
+        boolean dailyComplete=daily && game.isDailyGoalComplete();
+        if(dailyComplete&&!today().equals(lastDaily)){
             streak=yesterday().equals(lastDaily)?streak+1:1;
             lastDaily=today();
+        }
+        if(dailyComplete&&!today().equals(dailyRewardDate)){
+            dailyRewardDate=today();
+            stars+=250;
         }
         soundEffect();
         screen.setContentDescription("Brojko, rezultat "+fmt(game.score)+
             ", najveća pločica "+fmt(game.peak)+", potez "+game.moves);
-        if(result.first2048)page="win";
+        if(dailyComplete && !dailyWasComplete) {
+            page="dailyWin";
+        }else if(daily && game.isDailyOutOfMoves()){
+            game.gameOver=true;
+            page="dailyFail";
+        }else if(result.first2048)page="win";
         else if(result.lost){page="over";}
         persist();animate();
     }
@@ -284,7 +296,7 @@ public final class MainActivity extends Activity {
     private static final String[] BACKUP_KEYS={
         "best","games","total","wins","tile","totalMerges","streak",
         "stars","rewardFlags","lastScore",
-        "lastDaily","statsDay","todayMerges","todayPoints","playDayStreak",
+        "lastDaily","dailyRewardDate","statsDay","todayMerges","todayPoints","playDayStreak",
         "lastPlayDay","theme","style","animation","sound","vibrate",
         "session","history"
     };
@@ -399,9 +411,10 @@ public final class MainActivity extends Activity {
         if(page.equals("game"))navigate("pause");
         else if(page.equals("pause"))navigate("game");
         else if(page.equals("privacy")||page.equals("about")||
-            page.equals("language")||page.equals("backup"))navigate("settings");
+            page.equals("language")||page.equals("backup")||page.equals("help"))
+            navigate("settings");
         else if(page.equals("confirm")||page.equals("confirmEnd"))navigate(game==null?"home":"game");
-        else if(page.equals("win")||page.equals("over"))navigate("home");
+        else if(page.equals("win")||page.equals("over")||page.equals("dailyWin")||page.equals("dailyFail"))navigate("home");
         else if(page.equals("home"))super.onBackPressed();
         else navigate("home");
     }
@@ -583,7 +596,7 @@ public final class MainActivity extends Activity {
             float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
             boolean inGame=page.equals("game")||page.equals("pause")||
                 page.equals("win")||page.equals("over")||page.equals("confirm")||
-                page.equals("confirmEnd");
+                page.equals("confirmEnd")||page.equals("dailyWin")||page.equals("dailyFail");
             boolean compact=!inGame && usableHeight/usableWidth<1.85f;
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             maxScroll=compact?Math.max(0,880f-usableHeight/scale):0;
@@ -602,6 +615,8 @@ public final class MainActivity extends Activity {
                 case "over":gameScreen();taps.clear();resultOverlay(false);break;
                 case "confirm":gameScreen();taps.clear();confirmOverlay();break;
                 case "confirmEnd":gameScreen();taps.clear();confirmEndOverlay();break;
+                case "dailyWin":gameScreen();taps.clear();dailyResultOverlay(true);break;
+                case "dailyFail":gameScreen();taps.clear();dailyResultOverlay(false);break;
                 case "daily":daily();break;
                 case "missions":missions();break;
                 case "stats":statistics();break;
@@ -609,6 +624,7 @@ public final class MainActivity extends Activity {
                 case "settings":settings();break;
                 case "language":languagePage();break;
                 case "backup":backupPage();break;
+                case "help":helpPage();break;
                 case "privacy":textPage("Privatnost",new String[]{"Brojko čuva rezultate i postavke",
                     "samo na vašem uređaju.","Igra radi bez interneta i računa.",
                     "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
@@ -690,6 +706,11 @@ public final class MainActivity extends Activity {
             scoreCard("NAJBOLJI",fmt(best),24,173,168);
             scoreCard("REZULTAT",fmt(game.score),208,173,168);
             drawGrid();
+            if("daily".equals(game.mode)){
+                int remaining=Math.max(0,80-game.moves);
+                fitted("DNEVNI IZAZOV  •  "+remaining+" PREOSTALIH POTEZA",
+                    200,634,15,352,remaining<=10?CORAL:muted,true);
+            }
             button("Novo","undo",22,653,113,79,card,false,()->requestNew(game.mode));
             if(game.canUndo())button("Poništi","undo",144,653,112,79,card,false,()->undo());
             else {card(144,653,112,79,18,theme==1?0xff29364a:0xffeae5de);
@@ -780,6 +801,25 @@ public final class MainActivity extends Activity {
                     button("Podijeli rezultat","share",54,582,292,61,card,false,()->share());
             }
         }
+        void dailyResultOverlay(boolean success){
+            dim();
+            overlayBox(193,501);
+            icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
+            txt(success?"Dnevni izazov riješen!":"Izazov nije uspio",200,329,
+                success?28:31,ink,true);
+            fitted(success?"Sva 3 zadatka su ostvarena!":
+                "Potrošeno je 80 dopuštenih poteza.",200,369,17,316,muted,false);
+            card(65,401,270,98,20,card);
+            txt("TVOJ REZULTAT",200,432,15,muted,true);
+            txt(fmt(game.score),200,472,36,ink,true);
+            txt(success?"+250 zvjezdica (jednom dnevno)":
+                "Pokušaj ponovno i dosegni 256.",200,534,17,
+                success?0xff259d85:muted,true);
+            button("Igraj ponovno","undo",53,558,294,62,CORAL,true,
+                ()->newGame("daily"));
+            button("Izbornik","home",53,639,294,55,card,false,
+                ()->navigate("home"));
+        }
         void confirmEndOverlay(){
             dim();overlayBox(266,356);
             icon("check",200,312,43,TEAL);
@@ -822,7 +862,8 @@ public final class MainActivity extends Activity {
             dailyGoalRow("Osvoji 3000 bodova","Igraj i skupljaj bodove",616,
                 finished||(dailyActive&&game.score>=3000));
             dailyGoalRow("Završi u 80 poteza","Ispuni oba cilja u 80 poteza",693,finished);
-            button(dailyActive&&!game.gameOver?"Nastavi izazov":"Započni izazov",
+            button(dailyActive&&!game.gameOver?"Nastavi izazov":
+                    finished?"Igraj ponovno":"Započni izazov",
                 "play",27,781,346,64,CORAL,true,
                 ()->{if(dailyActive&&!game.gameOver)navigate("game");
                      else requestNew("daily");});
@@ -968,15 +1009,39 @@ public final class MainActivity extends Activity {
         }
         void settings(){
             title("Postavke");
-            switchRow("Zvuk","sound",178,sound,()->{sound=!sound;persist();invalidate();});
-            switchRow("Vibracija","phone",281,vibration,()->{
+            switchRow("Zvuk","sound",154,sound,()->{sound=!sound;persist();invalidate();});
+            switchRow("Vibracija","phone",247,vibration,()->{
                 vibration=!vibration;persist();invalidate();});
-            button("Jezik: Hrvatski",null,25,384,350,69,card,false,()->navigate("language"));
-            button("Teme i izgled","palette",25,473,350,69,card,false,()->navigate("themes"));
-            button("Sigurnosna kopija","shield",25,562,350,69,card,false,()->navigate("backup"));
-            button("Pravila privatnosti","shield",25,651,169,67,card,false,()->navigate("privacy"));
-            button("O aplikaciji","settings",206,651,169,67,card,false,()->navigate("about"));
-            fitted("Brojko "+appVersion()+"  •  by Brendigo",200,812,17,350,muted,true);
+            button("Jezik: Hrvatski",null,25,349,350,64,card,false,()->navigate("language"));
+            button("Teme i izgled","palette",25,425,350,64,card,false,()->navigate("themes"));
+            button("Kako igrati","target",25,501,350,64,card,false,()->navigate("help"));
+            button("Sigurnosna kopija","shield",25,577,350,64,card,false,()->navigate("backup"));
+            button("Pravila privatnosti","shield",25,662,169,64,card,false,()->navigate("privacy"));
+            button("O aplikaciji","settings",206,662,169,64,card,false,()->navigate("about"));
+            fitted("Brojko "+appVersion()+"  •  by Brendigo",200,808,17,350,muted,true);
+        }
+        void helpPage(){
+            title("Kako igrati");
+            txt("Spajaj jednake pločice",200,170,24,ink,true);
+            card(42,202,316,139,22,card);
+            glossyTile(78,229,81,81,16,TILES[1]);
+            glossyTile(167,229,81,81,16,TILES[1]);
+            glossyTile(261,229,81,81,16,TILES[2]);
+            txt("2",119,283,37,WHITE,true);
+            txt("2",208,283,37,WHITE,true);
+            txt("4",301,283,37,WHITE,true);
+            txt("→",253,322,20,CORAL,true);
+            card(29,381,342,196,20,card);
+            txt("1. Povuci prstom",200,424,23,ink,true);
+            fitted("Sve pločice pomiču se u istom smjeru.",200,461,17,314,muted,false);
+            fitted("Dvije jednake spajaju se u jednu veću.",200,495,17,314,muted,false);
+            fitted("Pokušaj dosegnuti 2048 i oboriti rekord!",200,529,16,314,muted,false);
+            card(29,594,342,89,20,theme==1?card:0xffe5f7f3);
+            fitted("2. Igraj svojim tempom",200,630,21,310,ink,true);
+            fitted("4×4, 5×5 ili dnevni izazov od 80 poteza.",200,658,15,312,muted,false);
+            button("Započni klasičnu igru","play",29,727,342,73,CORAL,true,
+                ()->requestNew("classic"));
+            bottomBrand();
         }
         void backupPage(){
             title("Sigurnosna kopija");

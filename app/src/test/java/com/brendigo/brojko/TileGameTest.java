@@ -86,6 +86,50 @@ public class TileGameTest {
             a.move(dir);b.move(dir);assertArrayEquals(a.cells,b.cells);
         }
     }
+    @Test public void dailyChallengeUsesInclusiveEightyMoveLimit() {
+        TileGame g=new TileGame("daily","2026-10-24",55L);
+        g.peak=256;g.score=3000;g.moves=80;
+        assertTrue(g.isDailyGoalComplete());
+        assertFalse(g.isDailyOutOfMoves());
+        g.score=2999;
+        assertFalse(g.isDailyGoalComplete());
+        assertTrue(g.isDailyOutOfMoves());
+        g.moves=79;
+        assertFalse(g.isDailyOutOfMoves());
+        g.moves=81;g.score=3000;
+        assertFalse(g.isDailyGoalComplete());
+        assertTrue(g.isDailyOutOfMoves());
+    }
+    @Test public void classicModeNeverUsesDailyMoveLimit() {
+        TileGame g=new TileGame("classic","",55L);
+        g.peak=256;g.score=3000;g.moves=800;
+        assertFalse(g.isDailyGoalComplete());
+        assertFalse(g.isDailyOutOfMoves());
+    }
+    @Test public void rejectWrongModeAndNegativeCounters() throws Exception {
+        TileGame original=new TileGame("classic","",55L);
+        org.json.JSONObject doc=original.toJson();
+        doc.put("mode","relaxed");
+        assertNull(TileGame.fromJson(doc));
+        doc.put("mode","classic");doc.put("score",-1);
+        assertNull(TileGame.fromJson(doc));
+        doc.put("score",0);doc.put("moves",-20);
+        assertNull(TileGame.fromJson(doc));
+    }
+    @Test public void rejectCorruptedUndoAndInvalidTile() throws Exception {
+        TileGame g=new TileGame("classic","",79L);
+        Arrays.fill(g.cells,0);
+        g.cells[4]=2;
+        assertTrue(g.move(TileGame.UP).changed);
+        org.json.JSONObject valid=g.toJson();
+        org.json.JSONObject undo=valid.optJSONObject("undo");
+        assertNotNull(undo);
+        undo.put("rng","0");
+        assertNull(TileGame.fromJson(valid));
+        org.json.JSONObject badTile=g.toJson();
+        badTile.getJSONArray("cells").put(0,3);
+        assertNull(TileGame.fromJson(badTile));
+    }
     @Test public void fiveByFiveMode() {
         TileGame g=new TileGame("relaxed","",41L);
         assertEquals(5,g.size);assertEquals(25,g.cells.length);

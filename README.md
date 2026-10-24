@@ -25,7 +25,7 @@ Brojko je originalno brendirana mobilna igra spajanja jednakih brojeva inspirira
 | 🎲 Način igre | 🔥 Izazov | 🏆 Napredak |
 |---|---|---|
 | **Klasično 4×4** — strateško spajanje | **Dnevni izazov** — isti početak na dan | Lokalni rekord i povijest partija |
-| **Opušteno 5×5** — više prostora | Ciljevi: pločica 256, 3.000 bodova, 80 poteza | Misije sa stvarnim nagradama u zvjezdicama, statistika i niz uspješnih dana |
+| **Opušteno 5×5** — više prostora | Ciljevi: pločica 256, 3.000 bodova i najviše 80 poteza | Misije sa stvarnim nagradama u zvjezdicama, 250 zvjezdica za dnevni izazov, statistika i niz uspješnih dana |
 | Brze kontrole povlačenjem | Poništavanje poteza | Tri teme i tri stila pločica |
 
 ## ✨ Zbog čega igrati Brojko?
@@ -39,13 +39,13 @@ Brojko je originalno brendirana mobilna igra spajanja jednakih brojeva inspirira
 
 ## 🧭 Ekrani
 
-Početni izbornik · Igra 4×4 · Igra 5×5 · Pauza · Pobjeda · Kraj igre · Dnevni izazov · Misije · Statistika · Teme i izgled · Postavke · Privatnost · Sigurnosna kopija · O igri.
+Početni izbornik · Kako igrati · Igra 4×4 · Igra 5×5 · Pauza · Pobjeda · Kraj igre · Dnevni izazov · Misije · Statistika · Teme i izgled · Postavke · Privatnost · Sigurnosna kopija · O igri.
 
 Boje i sastav temelje se na dizajnerskim referencama **Brojko by Brendigo**. Vizualna preciznost 1:1 zahtijeva dodatnu provjeru stvarnih uređaja i prilagodbu; sam build nije dokaz pikselne identičnosti.
 
 ## ⭐ Zvjezdice i misije
 
-Zvjezdice su lokalni pokazatelj ostvarenog napretka; nisu valuta, ne mogu se kupiti, prenijeti niti zamijeniti za stvarne proizvode. Dnevne nagrade mogu se osvojiti jednom dnevno, a nagrade za niz dana i postignuća samo jednom. Napredak i zvjezdice spremaju se lokalno i uključuju u JSON sigurnosnu kopiju.
+Zvjezdice su lokalni pokazatelj ostvarenog napretka; nisu valuta, ne mogu se kupiti, prenijeti niti zamijeniti za stvarne proizvode. Dnevni izazov završava uspjehom ako se do 80. poteza dosegnu 256 i 3.000 bodova; u suprotnom nastupa kraj izazova. Za prvo uspješno rješenje toga dana dodjeljuje se 250 zvjezdica. Dnevne nagrade mogu se osvojiti jednom dnevno, a nagrade za niz dana i postignuća samo jednom. Napredak i zvjezdice spremaju se lokalno i uključuju u JSON sigurnosnu kopiju.
 
 ## 🛠️ Razvoj
 
