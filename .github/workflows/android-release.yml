@@ -41,11 +41,11 @@ jobs:
           BROJKO_STORE_PASSWORD: ${{ secrets.BROJKO_STORE_PASSWORD }}
           BROJKO_KEY_ALIAS: ${{ secrets.BROJKO_KEY_ALIAS }}
           BROJKO_KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease :app:bundleRelease
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleRelease :app:bundleRelease
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Brojko-Android-v1.1-${{ github.run_number }}
+          name: Brojko-Android-v1.2-${{ github.run_number }}
           if-no-files-found: error
           path: |
             app/build/outputs/apk/debug/*.apk
@@ -55,8 +55,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.1.{0}', github.run_number) }}
-          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.1.{0}', github.run_number) }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.2.{0}', github.run_number) }}
+          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.2.{0}', github.run_number) }}
           generate_release_notes: true
           body: |
             Android build with gameplay, local progress, three game modes, challenges, statistics and visual refinements.

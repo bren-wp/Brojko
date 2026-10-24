@@ -39,7 +39,44 @@ public class TileGameTest {
     @Test public void fullBoardWithoutMatchesLoses() {
         TileGame g=empty(4);
         int[] blocked={2,4,2,4,4,2,4,2,2,4,2,4,4,2,4,2};
-        g.cells=blocked;assertFalse(g.canMove());assertFalse(g.move(TileGame.LEFT).changed);
+        g.cells=blocked;assertFalse(g.canMove());
+        TileGame.Result result=g.move(TileGame.LEFT);
+        assertFalse(result.changed);assertTrue(result.lost);assertTrue(g.gameOver);
+    }
+    @Test public void pairOfPairsMustNotMergeTwice() {
+        TileGame g=empty(4);
+        g.cells[0]=4;g.cells[1]=4;g.cells[2]=8;g.cells[3]=8;
+        TileGame.Result r=g.move(TileGame.LEFT);
+        assertEquals(24,r.points);assertEquals(2,r.merges);
+        assertEquals(8,g.cells[0]);assertEquals(16,g.cells[1]);
+    }
+    @Test public void oneInvalidSwipeCannotChangeBoard() {
+        TileGame g=empty(4);
+        g.cells[0]=2;
+        int[] initial=g.cells.clone();
+        assertFalse(g.move(99).changed);
+        assertArrayEquals(initial,g.cells);
+        assertEquals(0,g.score);assertEquals(0,g.moves);
+    }
+    @Test public void jsonRoundTripPreservesUndoAndRandomSequence(){
+        TileGame a=new TileGame("daily","2026-10-24",1234L);
+        a.move(TileGame.UP);a.move(TileGame.LEFT);
+        TileGame b=TileGame.fromJson(a.toJson());
+        assertNotNull(b);assertArrayEquals(a.cells,b.cells);
+        assertEquals(a.score,b.score);assertEquals(a.moves,b.moves);
+        assertEquals(a.canUndo(),b.canUndo());
+        assertEquals(a.undo(),b.undo());
+        assertArrayEquals(a.cells,b.cells);
+        a.move(TileGame.RIGHT);b.move(TileGame.RIGHT);
+        assertArrayEquals(a.cells,b.cells);
+    }
+    @Test public void corruptSessionMustNotLoad(){
+        org.json.JSONObject corrupt=new org.json.JSONObject();
+        try{
+            corrupt.put("size",4);corrupt.put("mode","classic");corrupt.put("rng","123");
+            corrupt.put("score",0);corrupt.put("cells",new org.json.JSONArray("[2,4]"));
+        }catch(Exception ignored){}
+        assertNull(TileGame.fromJson(corrupt));
     }
     @Test public void sameSeedReproducesChallengeSequence() {
         TileGame a=new TileGame("daily","2026-10-24",123456L);

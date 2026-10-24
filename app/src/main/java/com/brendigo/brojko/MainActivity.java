@@ -4,6 +4,12 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.widget.Toast;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -73,6 +79,18 @@ public final class MainActivity extends Activity {
             else migrateLegacy();
         }catch(Exception ignored){game=null;}
         screen=new BoardScreen(this);setContentView(screen);
+        screen.setFocusable(true);
+        screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
+        if(Build.VERSION.SDK_INT>=35){
+            screen.setOnApplyWindowInsetsListener((v,insets)->{
+                android.graphics.Insets safe=insets.getInsets(
+                    android.view.WindowInsets.Type.systemBars()|
+                    android.view.WindowInsets.Type.displayCutout());
+                v.setPadding(safe.left,safe.top,safe.right,safe.bottom);
+                return insets;
+            });
+            screen.requestApplyInsets();
+        }
         updateBars();
     }
     void migrateLegacy(){
@@ -174,7 +192,10 @@ public final class MainActivity extends Activity {
     void move(int direction) {
         if(!page.equals("game")||game==null)return;
         TileGame.Result result=game.move(direction);
-        if(!result.changed)return;
+        if(!result.changed){
+            if(result.lost){page="over";persist();screen.invalidate();}
+            return;
+        }
         ensureDay();total+=result.points;totalMerges+=result.merges;
         todayPoints+=result.points;todayMerges+=result.merges;
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
@@ -187,8 +208,12 @@ public final class MainActivity extends Activity {
         }
         soundEffect();
         if(result.first2048)page="win";
-        else if(result.lost){archive();page="over";}
+        else if(result.lost){page="over";}
         persist();animate();
+    }
+    void endSession(){
+        if(game!=null)archive();
+        game=null;page="home";persist();screen.invalidate();
     }
     void undo() {
         if(game==null||!game.canUndo())return;
@@ -218,6 +243,110 @@ public final class MainActivity extends Activity {
             +" bodova! Spajaj brojeve. Ruši rekorde. — Brojko by Brendigo");
         startActivity(Intent.createChooser(i,"Podijeli rezultat"));
     }
+
+    private static final int EXPORT_BACKUP=601, IMPORT_BACKUP=602;
+    private static final String BACKUP_FORMAT="brendigo.brojko.backup.v1";
+    private static final String[] BACKUP_KEYS={
+        "best","games","total","wins","tile","totalMerges","streak",
+        "lastDaily","statsDay","todayMerges","todayPoints","playDayStreak",
+        "lastPlayDay","theme","style","animation","sound","vibrate",
+        "session","history"
+    };
+    String appVersion(){
+        try{return getPackageManager().getPackageInfo(getPackageName(),0).versionName;}
+        catch(Exception ignored){return "1.1";}
+    }
+    void chooseBackupFile(boolean exporting){
+        Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
+        i.setType("application/json");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        if(exporting)i.putExtra(Intent.EXTRA_TITLE,"Brojko-backup-"+today()+".json");
+        try{startActivityForResult(i,exporting?EXPORT_BACKUP:IMPORT_BACKUP);}
+        catch(Exception ex){Toast.makeText(this,"Nije moguće otvoriti datoteke.",Toast.LENGTH_LONG).show();}
+    }
+    byte[] getBackupBytes() throws Exception{
+        JSONObject root=new JSONObject();
+        root.put("format",BACKUP_FORMAT);
+        root.put("created",today());
+        root.put("package","com.brendigo.brojko");
+        JSONObject data=new JSONObject();
+        java.util.Map<String,?> stored=prefs.getAll();
+        for(String key:BACKUP_KEYS){
+            Object value=stored.get(key);
+            if(value!=null)data.put(key,value);
+        }
+        root.put("data",data);
+        return root.toString(2).getBytes(StandardCharsets.UTF_8);
+    }
+    void readBackupBytes(byte[] bytes) throws Exception{
+        if(bytes.length>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
+        JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
+        if(!BACKUP_FORMAT.equals(root.optString("format")))
+            throw new IllegalArgumentException("Nepodržani oblik sigurnosne kopije.");
+        JSONObject data=root.getJSONObject("data");
+        if(data.has("session")){
+            TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));
+            if(restored==null)throw new IllegalArgumentException("Oštećena spremljena partija.");
+        }
+        if(data.has("history")){
+            JSONArray history=new JSONArray(data.getString("history"));
+            if(history.length()>200)throw new IllegalArgumentException("Oštećena povijest partija.");
+        }
+        for(String key:BACKUP_KEYS){
+            if(!data.has(key))continue;
+            Object value=data.get(key);
+            Object expected=prefs.getAll().get(key);
+            if(value instanceof Integer){
+                if(((Integer)value)<0&&!key.equals("theme"))throw new IllegalArgumentException("Nevaljani podatci.");
+            }else if(!(value instanceof String) && !(value instanceof Boolean))
+                throw new IllegalArgumentException("Nevaljani podatci.");
+            if(key.equals("theme")||key.equals("style")||key.equals("animation")){
+                if(!(value instanceof Integer)||((Integer)value)>2||((Integer)value)<0)
+                    throw new IllegalArgumentException("Nevaljane postavke.");
+            }
+            if((key.equals("sound")||key.equals("vibrate"))&&!(value instanceof Boolean))
+                throw new IllegalArgumentException("Nevaljane postavke.");
+        }
+        SharedPreferences.Editor editor=prefs.edit().clear();
+        for(String key:BACKUP_KEYS){
+            if(!data.has(key))continue;
+            Object value=data.get(key);
+            if(value instanceof Integer)editor.putInt(key,(Integer)value);
+            else if(value instanceof Boolean)editor.putBoolean(key,(Boolean)value);
+            else editor.putString(key,(String)value);
+        }
+        if(!editor.commit())throw new IllegalStateException("Neuspješno spremanje.");
+    }
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
+        Uri uri=data.getData();
+        try{
+            if(requestCode==EXPORT_BACKUP){
+                byte[] bytes=getBackupBytes();
+                try(OutputStream stream=getContentResolver().openOutputStream(uri)){
+                    if(stream==null)throw new IllegalStateException("Datoteka nije dostupna.");
+                    stream.write(bytes);
+                }
+                Toast.makeText(this,"Sigurnosna kopija spremljena.",Toast.LENGTH_LONG).show();
+            }else if(requestCode==IMPORT_BACKUP){
+                ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+                try(InputStream input=getContentResolver().openInputStream(uri)){
+                    if(input==null)throw new IllegalStateException("Datoteka nije dostupna.");
+                    byte[] buffer=new byte[8192];int count;
+                    while((count=input.read(buffer))!=-1){
+                        bytes.write(buffer,0,count);
+                        if(bytes.size()>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
+                    }
+                }
+                readBackupBytes(bytes.toByteArray());
+                Toast.makeText(this,"Sigurnosna kopija vraćena.",Toast.LENGTH_LONG).show();
+                recreate();
+            }
+        }catch(Exception err){
+            Toast.makeText(this,"Pogreška: "+err.getMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
     @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
         if("game".equals(page)){
             switch(keyCode){
@@ -233,8 +362,9 @@ public final class MainActivity extends Activity {
     @Override public void onBackPressed(){
         if(page.equals("game"))navigate("pause");
         else if(page.equals("pause"))navigate("game");
-        else if(page.equals("privacy")||page.equals("about")||page.equals("language"))navigate("settings");
-        else if(page.equals("confirm"))navigate(game==null?"home":"game");
+        else if(page.equals("privacy")||page.equals("about")||
+            page.equals("language")||page.equals("backup"))navigate("settings");
+        else if(page.equals("confirm")||page.equals("confirmEnd"))navigate(game==null?"home":"game");
         else if(page.equals("win")||page.equals("over"))navigate("home");
         else if(page.equals("home"))super.onBackPressed();
         else navigate("home");
@@ -365,8 +495,11 @@ public final class MainActivity extends Activity {
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);c=canvas;palette();
-            scale=Math.min(getWidth()/400f,getHeight()/880f);
-            offX=(getWidth()-400*scale)/2f;offY=(getHeight()-880*scale)/2f;
+            float usableWidth=Math.max(1,getWidth()-getPaddingLeft()-getPaddingRight());
+            float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
+            scale=Math.min(usableWidth/400f,usableHeight/880f);
+            offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
+            offY=getPaddingTop()+(usableHeight-880*scale)/2f;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             taps.clear();
             switch(page) {
@@ -376,17 +509,19 @@ public final class MainActivity extends Activity {
                 case "win":gameScreen();taps.clear();resultOverlay(true);break;
                 case "over":gameScreen();taps.clear();resultOverlay(false);break;
                 case "confirm":gameScreen();taps.clear();confirmOverlay();break;
+                case "confirmEnd":gameScreen();taps.clear();confirmEndOverlay();break;
                 case "daily":daily();break;
                 case "missions":missions();break;
                 case "stats":statistics();break;
                 case "themes":themes();break;
                 case "settings":settings();break;
                 case "language":languagePage();break;
+                case "backup":backupPage();break;
                 case "privacy":textPage("Privatnost",new String[]{"Brojko čuva rezultate i postavke",
                     "samo na vašem uređaju.","Igra radi bez interneta i računa.",
                     "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
                     "analitiku na poslužitelje."});break;
-                case "about":textPage("O igri",new String[]{"Brojko 1.1.0 — by Brendigo",
+                case "about":textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",
                     "Spajaj jednake pločice i osvoji 2048.",
                     "Povuci gore, dolje, lijevo ili desno.",
                     "Dostupni su način 4×4, 5×5",
@@ -397,34 +532,50 @@ public final class MainActivity extends Activity {
         }
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
         void home(){
-            // Rounded tile confetti recalls the supplied visual identity.
-            for(int i=0;i<4;i++){
-                float x=30+i*91;
-                card(x,38,70,69,16,TILES[i+1]);
-                txt(String.valueOf(2<<i),x+35,82,31,WHITE,true);
-            }
-            brand(182,66);
-            fitted("Spajaj brojeve. Ruši rekorde.",200,238,22,370,
-                theme==1?TEAL:CORAL,true);
-            card(22,264,171,88,22,card);card(207,264,171,88,22,card);
-            icon("crown",54,300,26,0xffffae16);txt("NAJBOLJI",116,303,15,muted,true);
-            txt(fmt(best),111,335,29,ink,true);
-            icon("stats",238,300,26,0xff3d98f0);txt("PARTIJA",310,303,15,muted,true);
-            txt(fmt(plays),297,335,29,ink,true);
-            button(game==null?"Nova igra":"Nastavi igru","play",27,382,346,79,CORAL,true,
+            // Supplied reference: wide playful wordmark, two score cards, one primary
+            // action, three mode tiles and four equally sized shortcut cards.
+            brand(130,66);
+            fitted("Spajaj brojeve. Ruši rekorde.",200,187,21,371,CORAL,true);
+            card(23,217,171,93,22,card);card(206,217,171,93,22,card);
+            icon("crown",58,250,27,0xffffb228);
+            txt("NAJBOLJI",122,252,14,muted,true);
+            fitted(fmt(best),113,288,29,150,ink,true);
+            icon("stats",241,250,28,0xff468df0);
+            txt("POSLJEDNJI",312,252,13,muted,true);
+            fitted(fmt(game==null?0:game.score),296,288,29,150,ink,true);
+            button(game==null?"Nova igra":"Nastavi igru","play",27,338,346,82,CORAL,true,
                 ()->{if(game==null)requestNew("classic");else navigate(game.gameOver?"over":"game");});
-            modeCard("Klasično","4×4",23,481,170,110,0xffffe3d5,()->requestNew("classic"));
-            modeCard("Opušteno","5×5",207,481,170,110,0xffd2f6ef,()->requestNew("relaxed"));
-            button("Dnevni izazov","calendar",23,611,354,64,0xfffff0cb,false,()->navigate("daily"));
-            button("Misije","target",23,698,170,60,card,false,()->navigate("missions"));
-            button("Statistika","stats",207,698,170,60,card,false,()->navigate("stats"));
-            button("Teme","palette",23,780,170,54,card,false,()->navigate("themes"));
-            button("Postavke","settings",207,780,170,54,card,false,()->navigate("settings"));
+            modeCard("Klasično","4 × 4",22,448,111,171,0xffffe9de,false,()->requestNew("classic"));
+            modeCard("Opušteno","5 × 5",144,448,111,171,0xffdbfaf3,false,()->requestNew("relaxed"));
+            modeCard("Dnevni izazov","Igraj danas",266,448,111,171,0xfffff4d4,true,()->navigate("daily"));
+            shortcut("Misije","target",21,650,85,156,0xffffecdd,()->navigate("missions"));
+            shortcut("Statistika","stats",112,650,85,156,0xffe2efff,()->navigate("stats"));
+            shortcut("Teme","palette",203,650,85,156,0xfff3e6fa,()->navigate("themes"));
+            shortcut("Postavke","settings",294,650,85,156,0xffe8f8ee,()->navigate("settings"));
+            bottomBrand();
         }
-        void modeCard(String name,String sub,float x,float y,float w,float h,int fill,Runnable tap){
+        void shortcut(String label,String glyph,float x,float y,float w,float h,int fill,Runnable action){
+            card(x,y,w,h,18,theme==1?card:fill);
+            icon(glyph,x+w/2,y+48,37,glyph.equals("target")?CORAL:
+                glyph.equals("stats")?0xff488ce9:glyph.equals("palette")?0xffb05de9:ink);
+            fitted(label,x+w/2,y+112,15,w-7,ink,true);
+            taps.add(new Tap(x,y,x+w,y+h,action));
+        }
+        void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
+                      boolean daily,Runnable tap){
             card(x,y,w,h,23,theme==1?card:fill);
-            fitted(name,x+w/2,y+48,22,w-20,ink,true);
-            txt(sub,x+w/2,y+82,23,muted,true);
+            if(daily) {
+                icon("calendar",x+w/2,y+60,49,CORAL);
+                icon("crown",x+w/2,y+62,16,0xffffaf24);
+            } else {
+                for(int i=0;i<4;i++){
+                    float tx=x+14+(i%2)*43,ty=y+21+(i/2)*39;
+                    shape(tx,ty,39,35,8,TILES[i+1]);
+                    txt(""+(2<<i),tx+19.5f,ty+24,16,WHITE,true);
+                }
+            }
+            fitted(name,x+w/2,y+118,17,w-8,ink,true);
+            fitted(sub,x+w/2,y+146,14,w-8,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,tap));
         }
         void scoreCard(String caption,String value,float x,float y,float width){
@@ -432,20 +583,21 @@ public final class MainActivity extends Activity {
             txt(caption,x+width/2,y+25,15,muted,true);
             fitted(value,x+width/2,y+59,28,width-16,ink,true);
         }
-        float gridX=24,gridY=258,gridSize=352;
+        float gridX=24,gridY=246,gridSize=352;
         void gameScreen(){
-            brand(91,49);
-            txt(labelMode(game.mode),123,161,22,ink,true);
-            scoreCard("NAJBOLJI",fmt(best),24,176,168);
-            scoreCard("REZULTAT",fmt(game.score),208,176,168);
-            button("","pause",328,54,48,49,card,false,()->navigate("pause"));
+            brand(84,48);
+            fitted(labelMode(game.mode),167,152,32,288,ink,true);
+            button("","pause",326,115,51,51,card,false,()->navigate("pause"));
+            scoreCard("NAJBOLJI",fmt(best),24,173,168);
+            scoreCard("REZULTAT",fmt(game.score),208,173,168);
             drawGrid();
-            if(game.canUndo())button("Poništi","undo",24,656,168,72,card,false,()->undo());
-            else {card(24,656,168,72,18,theme==1?0xff29364a:0xffeae5de);
-                icon("undo",49,692,22,muted);txt("Poništi",112,698,19,muted,true);}
-            button("Novo","undo",208,656,168,72,card,false,()->requestNew(game.mode));
-            button("Izbornik","home",24,747,168,65,card,false,()->navigate("home"));
-            button("Podijeli","share",208,747,168,65,CORAL,true,()->share());
+            button("Novo","undo",22,653,113,79,card,false,()->requestNew(game.mode));
+            if(game.canUndo())button("Poništi","undo",144,653,112,79,card,false,()->undo());
+            else {card(144,653,112,79,18,theme==1?0xff29364a:0xffeae5de);
+                  icon("undo",167,691,21,muted);txt("Poništi",210,696,15,muted,true);}
+            button("Završi","check",265,653,113,79,CORAL,true,()->navigate("confirmEnd"));
+            button("Podijeli rezultat","share",22,759,173,60,card,false,()->share());
+            button("Izbornik","home",205,759,173,60,card,false,()->navigate("home"));
             bottomBrand();
         }
         void drawGrid(){
@@ -502,19 +654,44 @@ public final class MainActivity extends Activity {
             button("Izbornik","home",52,532,296,61,card,false,()->navigate("home"));
         }
         void resultOverlay(boolean winning){
-            dim();overlayBox(198,494);
-            icon(winning?"crown":"target",200,248,47,winning?0xffffb52a:CORAL);
-            txt(winning?"Bravo!":"Kraj igre",200,320,40,ink,true);
+            dim();
+            if(winning) {
+                // Celebratory particles are part of the UI, not image assets.
+                int[] confetti={CORAL,TEAL,0xff428fea,0xffffbd4e};
+                for(int i=0;i<21;i++) {
+                    float x=(i*79+37)%380+9, y=(i*73+187)%515+120;
+                    c.save();c.rotate((i*37)%180,x,y);
+                    shape(x,y,8,20,5,confetti[i%4]);c.restore();
+                }
+            }
+            overlayBox(winning?177:208,winning?528:484);
+            icon(winning?"crown":"target",200,244,52,winning?0xffffb52a:CORAL);
+            txt(winning?"Bravo!":"Kraj igre",200,316,40,ink,true);
             txt(winning?"Dosegnuta pločica 2048!":"Nema više mogućih poteza.",
-                200,363,18,muted,true);
-            card(65,388,270,93,20,card);
-            txt("TVOJ REZULTAT",200,420,15,muted,true);
-            txt(fmt(game.score),200,461,35,ink,true);
-            button(winning?"Nastavi igrati":"Nova igra",
-                winning?"play":"undo",54,508,292,65,CORAL,true,
-                ()->{if(winning){game.winAcknowledged=true;persist();navigate(game.gameOver?"over":"game");}
-                else requestNew(game.mode);});
-            button("Podijeli rezultat","share",54,594,292,64,card,false,()->share());
+                200,356,18,muted,true);
+            card(65,381,270,101,20,card);
+            txt("TVOJ REZULTAT",200,417,15,muted,true);
+            txt(fmt(game.score),200,464,35,ink,true);
+            if(winning) {
+                txt("★  ★  ★",200,513,30,0xffffac22,true);
+                button("Nastavi igrati","play",54,536,292,65,CORAL,true,()->{
+                    game.winAcknowledged=true;persist();navigate(game.gameOver?"over":"game");});
+                button("Podijeli rezultat","share",54,615,292,58,card,false,()->share());
+            }else{
+                button("Nova igra","undo",54,504,292,62,CORAL,true,()->requestNew(game.mode));
+                if(game.canUndo())
+                    button("Poništi zadnji potez","undo",54,582,292,61,card,false,()->undo());
+                else
+                    button("Podijeli rezultat","share",54,582,292,61,card,false,()->share());
+            }
+        }
+        void confirmEndOverlay(){
+            dim();overlayBox(266,356);
+            icon("check",200,312,43,TEAL);
+            txt("Završiti partiju?",200,371,29,ink,true);
+            txt("Rezultat se sprema u statistiku.",200,414,16,muted,false);
+            button("Završi i spremi","check",50,448,300,64,CORAL,true,()->endSession());
+            button("Nastavi igrati","play",50,532,300,60,card,false,()->navigate("game"));
         }
         void confirmOverlay() {
             dim();overlayBox(282,320);
@@ -526,30 +703,41 @@ public final class MainActivity extends Activity {
         }
         void daily(){
             title("Dnevni izazov");
-            txt(compactDate(),200,176,21,CORAL,true);
-            card(31,202,338,71,20,card);
-            txt("Isti početak za sve pokušaje danas",200,233,17,ink,true);
-            txt("Niz dovršenih dana: "+streak,200,258,17,muted,false);
-            taskRow("Dosegni pločicu 256","Spoji pločice do 256.",304,
-                game!=null&&"daily".equals(game.mode)&&today().equals(game.day)?
-                (game.peak>=256||today().equals(lastDaily)):today().equals(lastDaily));
-            taskRow("Osvoji 3000 bodova","Skupi najmanje 3000 bodova.",416,
-                game!=null&&"daily".equals(game.mode)&&today().equals(game.day)?
-                (game.score>=3000||today().equals(lastDaily)):today().equals(lastDaily));
-            taskRow("U najviše 80 poteza","Ispuni oba cilja do 80. poteza.",528,
-                today().equals(lastDaily));
-            card(29,641,342,70,20,theme==1?0xff284b48:0xffe5f9ee);
-            txt(today().equals(lastDaily)?"Današnji izazov dovršen!":
-                "Ispuni sve ciljeve za niz pobjeda",200,685,18,ink,true);
-            button("Započni izazov","play",33,757,334,67,CORAL,true,
-                ()->requestNew("daily"));
+            txt(compactDate(),200,154,19,CORAL,true);
+            card(286,163,94,47,16,theme==1?card:0xffffecd1);
+            icon("crown",307,187,22,0xffffac22);
+            txt(streak+" dana",347,193,16,ink,true);
+            fitted("Riješi današnji izazov i osvoji nagradu!",200,198,17,271,muted,false);
+            // Visual preview, not the actual randomized opening board.
+            card(77,231,246,246,20,theme==1?0xff36445d:0xffefe1ce);
+            int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
+            for(int i=0;i<16;i++){
+                int col=i%4,row=i/4;
+                float px=84+col*59,py=238+row*59;
+                int v=sample[i];
+                int color=tileColor(v);
+                shape(px,py,52,52,10,color);
+                fitted(""+v,px+26,py+32,v>999?16:23,49,WHITE,true);
+            }
+            txt("PRIMJER PLOČE",200,502,13,muted,true);
+            boolean dailyActive=game!=null&&"daily".equals(game.mode)&&today().equals(game.day);
+            boolean finished=today().equals(lastDaily);
+            dailyGoalRow("Dosegni 256","Spoji do pločice 256",530,
+                finished||(dailyActive&&game.peak>=256));
+            dailyGoalRow("Osvoji 3000 bodova","Igraj i skupljaj bodove",608,
+                finished||(dailyActive&&game.score>=3000));
+            dailyGoalRow("Završi u 80 poteza","Ispuni oba cilja u 80 poteza",686,finished);
+            button(dailyActive&&!game.gameOver?"Nastavi izazov":"Započni izazov",
+                "play",27,781,346,64,CORAL,true,
+                ()->{if(dailyActive&&!game.gameOver)navigate("game");
+                     else requestNew("daily");});
         }
-        void taskRow(String text,String caption,int y,boolean checked){
-            card(30,y,340,99,19,card);
-            shape(45,y+21,57,57,14,checked?TEAL:0xffffe1ce);
-            icon(checked?"check":"target",73,y+49,30,checked?WHITE:CORAL);
-            fitted(text,242,y+40,20,246,ink,true);
-            fitted(caption,242,y+70,14,246,muted,false);
+        void dailyGoalRow(String name,String description,int y,boolean done){
+            card(28,y,344,70,17,card);
+            shape(42,y+14,44,44,11,done?TEAL:0xffffdbc6);
+            icon(done?"check":"target",64,y+36,25,done?WHITE:CORAL);
+            fitted(name,231,y+30,19,274,ink,true);
+            fitted(description,231,y+53,13,274,muted,false);
         }
         void missions() {
             title("Misije i postignuća");
@@ -578,30 +766,55 @@ public final class MainActivity extends Activity {
         }
         void statistics(){
             title("Statistika");
-            statCell("Najbolji rezultat",fmt(best),24,157,169,109,CORAL);
-            statCell("Ukupno partija",fmt(plays),207,157,169,109,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),24,279,169,109,0xffe79b35);
-            statCell("Ukupno bodova",fmt(total),207,279,169,109,0xff5e9fee);
-            statCell("Dosegnuto 2048",fmt(wins),24,401,169,109,0xffba68dd);
-            statCell("Ukupno spajanja",fmt(totalMerges),207,401,169,109,0xff35ba8f);
-            txt("POVIJEST PARTIJA",116,560,17,ink,true);
+            statCell("Najbolji rezultat",fmt(best),20,151,114,113,CORAL);
+            statCell("Ukupno partija",fmt(plays),143,151,114,113,TEAL);
+            statCell("Najveća pločica",fmt(recordTile),266,151,114,113,0xffe79b35);
+            int average=plays==0?0:total/plays;
+            statCell("Prosjek bodova",fmt(average),22,279,173,100,0xff4a90ef);
+            statCell("Niz dana igranja",fmt(playDayStreak),205,279,173,100,0xff9b53dd);
+            card(22,403,356,211,22,card);
+            txt("ZADNJIH 10 PARTIJA",137,437,17,ink,true);
             JSONArray array=history();
-            int count=Math.min(3,array.length());
-            if(count==0)txt("Odigrane partije prikazat će se ovdje.",200,620,16,muted,false);
-            for(int i=0;i<count;i++){
-                JSONObject r=array.optJSONObject(i);if(r==null)continue;
-                int y=583+i*78;
-                card(27,y,346,67,15,card);
-                txt(r.optString("day",""),105,y+26,14,muted,false);
-                txt(labelMode(r.optString("mode")),107,y+50,13,muted,true);
-                txt(fmt(r.optInt("score")),299,y+40,22,ink,true);
+            int count=Math.min(10,array.length());
+            if(count==0){
+                txt("Grafikon će se popuniti nakon",200,511,16,muted,false);
+                txt("završenih partija.",200,539,16,muted,false);
+            } else {
+                int ceiling=1;
+                for(int i=0;i<count;i++){
+                    JSONObject row=array.optJSONObject(i);
+                    if(row!=null)ceiling=Math.max(ceiling,row.optInt("score",0));
+                }
+                float chartLeft=39,chartWidth=322;
+                for(int i=0;i<count;i++){
+                    JSONObject row=array.optJSONObject(count-1-i);
+                    int score=row==null?0:row.optInt("score",0);
+                    float bw=chartWidth/count, height=Math.max(4,119f*score/ceiling);
+                    float x=chartLeft+i*bw+bw*.13f;
+                    float y=581-height;
+                    shape(x,y,bw*.73f,height,5,
+                        score==ceiling?CORAL:(i%2==0?TEAL:0xff4b9def));
+                    txt(""+(i+1),x+bw*.37f,600,10,muted,false);
+                }
             }
+            txt("POVIJEST PARTIJA",111,648,17,ink,true);
+            int displayed=Math.min(2,array.length());
+            if(displayed==0)txt("Još nema dovršenih partija.",200,702,16,muted,false);
+            for(int i=0;i<displayed;i++){
+                JSONObject row=array.optJSONObject(i);if(row==null)continue;
+                int y=668+i*75;
+                card(24,y,352,65,17,card);
+                txt(row.optString("day",""),102,y+26,14,muted,false);
+                fitted(labelMode(row.optString("mode")),102,y+50,13,150,muted,true);
+                txt(fmt(row.optInt("score")),296,y+42,23,ink,true);
+            }
+            bottomBrand();
         }
         void statCell(String title,String value,int x,int y,int width,int h,int accent){
             card(x,y,width,h,20,card);
-            shape(x+14,y+15,7,7,3,accent);
-            fitted(title,x+width/2,y+42,15,width-20,muted,true);
-            fitted(value,x+width/2,y+85,31,width-20,accent,true);
+            shape(x+11,y+12,8,8,4,accent);
+            fitted(title,x+width/2,y+39,14,width-10,muted,true);
+            fitted(value,x+width/2,y+h-20,29,width-10,accent,true);
         }
         void themes(){
             title("Teme i izgled");
@@ -653,9 +866,26 @@ public final class MainActivity extends Activity {
                 vibration=!vibration;persist();invalidate();});
             button("Jezik: Hrvatski",null,25,384,350,69,card,false,()->navigate("language"));
             button("Teme i izgled","palette",25,473,350,69,card,false,()->navigate("themes"));
-            button("Pravila privatnosti","shield",25,562,350,69,card,false,()->navigate("privacy"));
-            button("O aplikaciji","settings",25,651,350,69,card,false,()->navigate("about"));
-            txt("Brojko v1.1.0  •  by Brendigo",200,812,17,muted,true);
+            button("Sigurnosna kopija","shield",25,562,350,69,card,false,()->navigate("backup"));
+            button("Pravila privatnosti","shield",25,651,169,67,card,false,()->navigate("privacy"));
+            button("O aplikaciji","settings",206,651,169,67,card,false,()->navigate("about"));
+            fitted("Brojko "+appVersion()+"  •  by Brendigo",200,812,17,350,muted,true);
+        }
+        void backupPage(){
+            title("Sigurnosna kopija");
+            card(24,161,352,206,22,card);
+            icon("shield",200,214,45,TEAL);
+            txt("Spremi svoj napredak",200,270,23,ink,true);
+            txt("Izvezi rezultate i postavke u JSON.",200,305,16,muted,false);
+            txt("Datoteka ostaje pod tvojom kontrolom.",200,335,15,muted,false);
+            button("Izvezi kopiju","share",24,404,352,79,CORAL,true,
+                ()->chooseBackupFile(true));
+            button("Vrati kopiju","undo",24,507,352,79,card,false,
+                ()->chooseBackupFile(false));
+            txt("Vraćanje zamjenjuje lokalni napredak.",200,649,16,muted,false);
+            txt("Cloud sinkronizacija nije uključena.",200,684,16,muted,false);
+            button("Postavke","back",24,755,352,63,card,false,()->navigate("settings"));
+            bottomBrand();
         }
         void languagePage(){
             title("Jezik");

@@ -33,13 +33,13 @@ Brojko je originalno brendirana mobilna igra spajanja jednakih brojeva inspirira
 - 🎨 **Prepoznatljive boje:** koraljna, tirkizna, plava, žuta i ljubičasta.
 - ⚡ **Bez čekanja:** igra je lokalna i ne treba internet ni prijavu.
 - 🎯 **Ciljevi koji imaju smisla:** pravi dnevni zadaci povezani s rezultatima.
-- 📈 **Statistika:** odigrane partije, bodovi, postignute najveće pločice i nedavne partije.
+- 💾 **Sigurnosne kopije:** lokalni JSON izvoz i uvoz preko Androidova odabira datoteka.\n- 📈 **Statistika:** odigrane partije, bodovi, postignute najveće pločice i nedavne partije.
 - 🔊 **Ugodno igranje:** podesivi zvuk, vibracija i animacije.
 - 🔒 **Privatnost:** nema oglasa, analitike, praćenja ni mrežnih SDK-ova u ovoj verziji.
 
 ## 🧭 Ekrani
 
-Početni izbornik · Igra 4×4 · Igra 5×5 · Pauza · Pobjeda · Kraj igre · Dnevni izazov · Misije · Statistika · Teme i izgled · Postavke · Privatnost · O igri.
+Početni izbornik · Igra 4×4 · Igra 5×5 · Pauza · Pobjeda · Kraj igre · Dnevni izazov · Misije · Statistika · Teme i izgled · Postavke · Privatnost · Sigurnosna kopija · O igri.
 
 Boje i sastav temelje se na dizajnerskim referencama **Brojko by Brendigo**. Vizualna preciznost 1:1 zahtijeva dodatnu provjeru stvarnih uređaja i prilagodbu; sam build nije dokaz pikselne identičnosti.
 
@@ -50,7 +50,7 @@ Boje i sastav temelje se na dizajnerskim referencama **Brojko by Brendigo**. Viz
 - `minSdk 23`; `targetSdk 36`.
 - Neovisni deterministički **TileGame** engine s testovima pomicanja, spajanja, RNG-a, poništavanja i 2048.
 - Spremanje partije, rezultata i postavki u privatnu lokalnu pohranu.
-- CI: JVM unit tests, debug APK, release APK i AAB, GitHub izdanje uz svaki uspješni build grane `main`.
+- CI: JVM unit tests, Android lint, debug APK, release APK i AAB, GitHub izdanje uz svaki uspješni build grane `main`.
 
 ### Kako izgraditi
 

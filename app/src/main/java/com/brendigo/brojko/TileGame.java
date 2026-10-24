@@ -94,7 +94,12 @@ public final class TileGame {
             }
             for(int i=0;i<size;i++)cells[indexes[i]]=output[i];
         }
-        if(Arrays.equals(original,cells))return new Result(false,false,false,0,0);
+        if(Arrays.equals(original,cells)) {
+            // A fully blocked board must finish even if the final attempted swipe
+            // cannot move any tile (e.g. after restoring a stale session).
+            gameOver=!canMove();
+            return new Result(false,false,gameOver,0,0);
+        }
         undo=previous;
         moves++;
         spawn();
