@@ -977,7 +977,7 @@ public final class MainActivity extends Activity {
             rays(bx+tile*.5f,y-size*.79f,size*.34f,CORAL);
             txt("2",bx+tile/2,y-size*.20f,size*.52f,WHITE,true);
             txt("jko",bx+tile+gap+right/2,y,size,ink,true);
-            txt("by Brendigo",265,y+23,15,muted,true);
+            txt("by Brendigo",265,y+Math.max(23,size*.43f),15,muted,true);
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);c=canvas;palette();
@@ -1623,6 +1623,7 @@ public final class MainActivity extends Activity {
                     float x=chartLeft+i*barSlot+2,y=581-height;
                     shape(x,y,barSlot-6,height,Math.min(6,height/2),
                         val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
+                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-9,9,barSlot+3,ink,true);
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,606,11,barSlot-4,
                         muted,false);
                 }
@@ -1862,6 +1863,7 @@ public final class MainActivity extends Activity {
                     float y=497-height;
                     shape(x,y,barSlot-6,height,Math.min(6,height/2),
                         val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
+                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-8,9,barSlot+3,ink,true);
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,517,
                         10,barSlot-4,muted,false);
                 }

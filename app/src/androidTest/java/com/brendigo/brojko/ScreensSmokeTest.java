@@ -1079,4 +1079,59 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void originalPixelReferencesUseIdenticalRepresentativeGameData(){
+        rule.getScenario().onActivity(activity->{
+            TileGame prior=activity.game;
+            String priorPage=activity.page;
+            int priorBest=activity.best,priorGames=activity.plays;
+            int priorTotal=activity.total,priorTile=activity.recordTile;
+            int priorStreak=activity.playDayStreak;
+            String priorHistory=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen reference=activity.new BoardScreen(activity);
+            try{
+                reference.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                reference.layout(0,0,941,1672);
+                activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[]{
+                    2,4,8,16,
+                    8,16,2,4,
+                    32,64,8,2,
+                    128,16,32,256
+                };
+                activity.game.peak=256;activity.game.moves=33;
+                activity.game.score=1316;activity.best=3864;
+                activity.page="game";
+                captureReference(activity,reference,"golden-state-game-941x1672");
+                activity.game.peak=2048;activity.game.reached2048=true;
+                activity.game.score=2048;activity.best=12560;
+                activity.page="win";
+                captureReference(activity,reference,"golden-state-win-941x1672");
+                org.json.JSONArray history=new org.json.JSONArray();
+                int[] scores={12560,6144,3072,8192,1024,4608,5120,3840,6400,3000};
+                int[] peaks={1024,256,128,512,1024,256,512,128,256,64};
+                for(int i=0;i<10;i++){
+                    org.json.JSONObject entry=new org.json.JSONObject();
+                    try{
+                        entry.put("score",scores[i]);
+                        entry.put("peak",peaks[i]);
+                        entry.put("day","12. tra 2024.");
+                    }catch(org.json.JSONException error){throw new AssertionError(error);}
+                    history.put(entry);
+                }
+                activity.prefs.edit().putString("history",history.toString()).commit();
+                activity.best=12560;activity.plays=248;activity.total=958272;
+                activity.recordTile=1024;activity.playDayStreak=7;
+                activity.page="stats";
+                captureReference(activity,reference,"golden-state-stats-941x1672");
+            }finally{
+                activity.prefs.edit().putString("history",priorHistory).commit();
+                activity.game=prior;activity.page=priorPage;activity.best=priorBest;
+                activity.plays=priorGames;activity.total=priorTotal;
+                activity.recordTile=priorTile;activity.playDayStreak=priorStreak;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

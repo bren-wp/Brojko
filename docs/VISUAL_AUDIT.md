@@ -228,3 +228,8 @@ Sada dostupne izvorne slike pokazale su da je središnji Brojko logo na splashu 
 ## Izvorna ikonografija referentnih ekrana
 
 Kada je izvorni PNG dostupan, njegovi detalji imaju prednost pred prethodnim generičkim UI pretpostavkama: tri male kartice stilova Zaobljene/Ravne/Staklaste prikazuju **praznu obojenu pločicu**, a ne broj 2. Oba theme prekidača koriste koraljnu aktivnu boju kao izvorna slika (za razliku od glavne stranice Postavke, koja koristi tirkizne prekidače). Dnevni izazov sada razlikuje ružičastu pločicu 256, zlatnu zvijezdu i plavu ikonu za poteze. Misije prikazuju vlastite male numerirane pločice za spajanja 2/4, pločicu 512 bez Undo i četiri pločice za Majstora spajanja, umjesto generičkih meta na svim karticama. Sav proračun ciljeva i nagrada ostaje isti kao u prethodnom commitu.
+
+
+## Referentna stanja radi stvarne provjere 1:1 na 941×1672
+
+U Android testove uvedena su reprezentativna, **samo testna** stanja iz originalnog screenshot dizajna: klasična 4×4 ploča s 16 zadanih brojeva i rezultatom 1.316, pobjednički modal te statistika s 10 uzoraka, rezultatom 12.560 i 248 partija. Stvarna korisnička pohrana se nakon testnih snimki vraća i ne mijenja. Dodani su brojevi bodova iznad svih stupaca grafikona u oba layouta, jer se vide na referenci, a dosad su nedostajali. Logo ima više unutarnjeg prostora između slova s descenderom i natpisa by Brendigo. Ovi testni screenshotovi služe za usporedbu s korisničkim izvorima, no same po sebi ne dokazuju jednakost rasterskih piksela.
