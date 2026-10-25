@@ -98,3 +98,9 @@ U dodatnoj vizualnoj kontroli primijećeno je da pri 941×1672 originalni raspor
 Snimke na 941×1672 otkrile su da su donje četiri kartice početne stranice, nagrada dnevnog izazova i posljednja misija izlazile ispod granice referentne slike. U odgovoru na to dodana je sadržajna prilagodba za omjer stranica 16:9 (bez deformiranja fonta ili kartica): početni ekran raspoređuje rezultatske kartice, veliki CTA, tri moda i četiri prečaca unutar y=205–668 logičkih jedinica. Dnevni izazov koristi sažeti preview 4×4 i kraće kartice ciljeva te CTA do y=704. Misije su raspoređene u dnevne, tjedne i postignuća s preglednim progresom, svih pet stavki unutar y=161–655. Za visoke telefone zadržan je prostrani raspored.
 
 UI test u izoliranom 941×1672 prikazu provjerava da sva četiri prečaca i glavni gumb izazova imaju dodirne zone unutar kadra. Za 1:1 provjeru boja, logotipa i 3D detalja potrebna je dodatna usporedba odgovarajućih referentnih PNG-ova sa stvarnim snimkama istog stanja i tolerancijama.
+
+## v1.9 — kompaktne Statistike i Teme / 941 × 1672
+
+Statistika sada ima dvije vrste rasporeda. Na kraćoj referentnoj visini pet metričkih kartica, prebacivanje grafikona, stupci do 10 partija i pet redaka povijesti smješteni su u y=145–704, uz funkcionalne dodirne zone za promjenu prikaza i povijest. Na višim telefonima ostaje postojeći prostrani raspored s većim grafom. U referentnom rasporedu onemogućen je nepotreban višak skrolanja za statistiku.
+
+Zaslon Teme i izgled sada ima zaseban kompaktni raspored: 3 tematske kartice s oznakom odabira, preview svih 16 brojeva, tri stila pločica, aktivne prekidače zvuka i vibracije, slider animacija i sve četiri stavke donje navigacije unutar y=158–704. Izvorni visoki raspored ostao je za telefone omjera 20:9. QA snima realni Android renderer u 941×1672 i provjerava da donji tab Postavke stane na ekran te da je grafikon statistike interaktivan.

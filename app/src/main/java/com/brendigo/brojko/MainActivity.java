@@ -904,7 +904,8 @@ public final class MainActivity extends Activity {
             // outside the board rather than scaling the whole game to tiny size.
             boolean compact=extended || usableHeight/usableWidth<1.85f;
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
-            float contentHeight=page.equals("stats")?1120f:880f;
+            float contentHeight=page.equals("stats")?
+                (referencePortraitLayout?710f:1120f):880f;
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -1397,6 +1398,7 @@ public final class MainActivity extends Activity {
             catch(Exception ignored){return new JSONArray();}
         }
         void statistics(){
+            if(referencePortraitLayout){statisticsCompact();return;}
             title("Statistika");
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
@@ -1519,6 +1521,7 @@ public final class MainActivity extends Activity {
                 ()->navigate("stats"));
         }
         void themes(){
+            if(referencePortraitLayout){themesCompact();return;}
             back();
             brand(61,38);
             fitted("Teme i",158,126,35,165,ink,true);
@@ -1630,6 +1633,194 @@ public final class MainActivity extends Activity {
             }
         }
 
+        void statisticsCompact(){
+            title("Statistika");
+            rays(52,122,18,CORAL);rays(352,122,18,CORAL);
+            statCell("Najbolji rezultat",fmt(best),20,145,114,94,CORAL);
+            statCell("Ukupno partija",fmt(plays),143,145,114,94,TEAL);
+            statCell("Najveća pločica",fmt(recordTile),266,145,114,94,0xffffb431);
+            int average=plays==0?0:total/plays;
+            statCell("Prosjek bodova",fmt(average),21,247,174,90,0xff478df4);
+            statCell("Niz dana igranja",fmt(playDayStreak),205,247,174,90,0xffa657de);
+            card(22,352,356,173,22,card);
+            txt("Zadnjih 10 partija",113,380,18,ink,true);
+            card(213,359,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
+            shape(215+(chartMetric==0?0:77),361,77,25,13,CORAL);
+            fitted("Bodovi",253,379,13,71,chartMetric==0?WHITE:ink,true);
+            fitted("Pločica",330,379,13,71,chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(214,358,291,391,"Grafikon bodova",()->{
+                chartMetric=0;invalidate();
+            }));
+            taps.add(new Tap(292,358,371,391,"Grafikon pločica",()->{
+                chartMetric=1;invalidate();
+            }));
+            JSONArray data=history();
+            int count=Math.min(10,data.length());
+            if(count==0){
+                txt("Grafikon će se prikazati nakon",200,451,15,muted,false);
+                txt("prve završene partije.",200,473,15,muted,false);
+            }else{
+                int ceiling=1;
+                for(int i=0;i<count;i++){
+                    JSONObject row=data.optJSONObject(i);
+                    if(row==null)continue;
+                    int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
+                    ceiling=Math.max(ceiling,value);
+                }
+                float barSlot=315f/Math.max(10,count);
+                for(int i=0;i<count;i++){
+                    JSONObject row=data.optJSONObject(count-1-i);
+                    int val=row==null?0:(chartMetric==0?
+                        row.optInt("score"):row.optInt("peak"));
+                    float height=Math.max(4,86f*Math.max(0,val)/ceiling);
+                    float x=42+i*barSlot+2;
+                    float y=497-height;
+                    shape(x,y,barSlot-6,height,Math.min(6,height/2),
+                        val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
+                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,517,
+                        10,barSlot-4,muted,false);
+                }
+            }
+            txt("Povijest partija",111,544,20,ink,true);
+            int visible=Math.min(5,data.length());
+            if(visible==0){
+                card(22,554,356,62,16,card);
+                txt("Još nema dovršenih partija.",200,593,16,muted,false);
+            }
+            for(int i=0;i<visible;i++){
+                JSONObject row=data.optJSONObject(i);
+                if(row==null)continue;
+                int y=553+i*31,idx=i;
+                card(22,y,356,27,12,card);
+                fitted(row.optString("day",""),92,y+19,12,119,muted,false);
+                fitted(fmt(row.optInt("score")),237,y+20,17,123,
+                    i==0?CORAL:TEAL,true);
+                int peak=row.optInt("peak",0);
+                if(peak>0){
+                    shape(290,y+3,63,21,9,
+                        theme==1?0xff46416b:0xfff4e0ff);
+                    fitted(fmt(peak),321,y+19,12,56,0xff8a41bc,true);
+                }
+                txt("›",368,y+21,22,muted,true);
+                taps.add(new Tap(22,y,378,y+27,"Detalji partije "+(i+1),
+                    ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
+            }
+        }
+        void themesCompact(){
+            back();
+            brand(38,36);
+            fitted("Teme i",158,102,33,165,ink,true);
+            fitted("izgled",276,102,33,166,CORAL,true);
+            fitted("Prilagodi igru svojem stilu.",200,133,16,344,muted,false);
+            String[] names={"Svijetla","Tamna","Živopisna"};
+            int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
+            for(int i=0;i<3;i++){
+                final int chosen=i;float x=19+i*126,y=158;
+                card(x,y,116,143,20,card);
+                if(theme==i){
+                    p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeWidth(3f);
+                    c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
+                    p.setStyle(Paint.Style.FILL);
+                }
+                shape(x+7,y+9,102,92,16,fills[i]);
+                int[] colors=i==2?
+                    new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
+                    new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
+                for(int j=0;j<4;j++){
+                    int xx=j%2,yy=j/2;
+                    glossyTile(x+15+xx*45,y+17+yy*38,40,35,9,colors[j]);
+                    txt(Integer.toString(2<<j),
+                        x+35+xx*45,y+43+yy*38,19,WHITE,true);
+                }
+                fitted(names[i],x+58,y+123,16,108,ink,true);
+                if(theme==i){
+                    shape(x+48,y+131,20,20,11,CORAL);
+                    icon("check",x+58,y+141,12,WHITE);
+                }
+                taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
+                    theme=chosen;persist();updateBars();invalidate();
+                }));
+            }
+            card(20,320,360,308,26,card);
+            txt("Pregled",102,351,22,ink,true);
+            txt("Stil pločica",282,350,18,ink,true);
+            shape(29,365,167,152,17,
+                theme==1?0xff344157:0xfff3e9da);
+            int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
+            for(int i=0;i<16;i++){
+                int val=sample[i],col=i%4,row=i/4;
+                float x=34+col*39.8f,y=370+row*35.5f;
+                glossyTile(x,y,36,32,
+                    tileStyle==1?5:tileStyle==2?13:9,tileColor(val));
+                fitted(Integer.toString(val),x+18,y+23,
+                    val>=1000?11:15,33,WHITE,true);
+            }
+            fitted("Ovako će izgledati tvoja ploča.",113,534,11,171,muted,false);
+            String[] styles={"Zaobljene","Ravne","Staklaste"};
+            for(int i=0;i<3;i++){
+                final int value=i;float x=210+i*56;
+                card(x,367,51,90,13,card);
+                if(tileStyle==i){
+                    p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeWidth(2.5f);
+                    c.drawRoundRect(x+1.5f,368.5f,x+49.5f,455.5f,12,12,p);
+                    p.setStyle(Paint.Style.FILL);
+                }
+                glossyTile(x+6,375,39,39,
+                    i==1?5:i==2?15:10,TILES[1]);
+                if(i==0){
+                    fitted("Zaob-",x+25,436,10,48,ink,true);
+                    fitted("ljene",x+25,448,10,48,ink,true);
+                }else if(i==2){
+                    fitted("Stak-",x+25,436,10,48,ink,true);
+                    fitted("laste",x+25,448,10,48,ink,true);
+                }else fitted("Ravne",x+25,443,10,48,ink,true);
+                taps.add(new Tap(x,367,x+51,457,styles[i],()->{
+                    tileStyle=value;persist();invalidate();
+                }));
+            }
+            icon("phone",219,490,26,TEAL);
+            fitted("Vibracija",274,496,16,100,ink,true);
+            shape(324,478,43,27,14,vibration?TEAL:0xffb7c1cf);
+            shape(vibration?342:326,480,23,23,12,WHITE);
+            taps.add(new Tap(205,466,378,519,"Vibracija",()->{
+                vibration=!vibration;persist();invalidate();
+            }));
+            icon("sound",219,537,26,0xff4c9af3);
+            fitted("Zvukovi",272,544,16,97,ink,true);
+            shape(324,526,43,27,14,sound?TEAL:0xffb7c1cf);
+            shape(sound?342:326,528,23,23,12,WHITE);
+            taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
+                sound=!sound;persist();invalidate();
+            }));
+            fitted("Jačina animacija",287,580,17,170,ink,true);
+            shape(211,599,159,8,5,theme==1?0xff536078:0xffe8ded1);
+            shape(211,599,animation*79+4,8,5,CORAL);
+            shape(210+animation*79,592,22,22,11,CORAL);
+            String[] intensities={"Niska","Srednja","Visoka"};
+            for(int i=0;i<3;i++){
+                int pos=i;
+                fitted(intensities[i],223+i*74,619,11,66,muted,false);
+                taps.add(new Tap(208+i*55,582,265+i*53,627,
+                    intensities[i],()->{
+                        animation=pos;persist();invalidate();
+                    }));
+            }
+            card(20,635,360,69,28,card);
+            String[] tabs={"Novo","Rekordi","Teme","Postavke"};
+            String[] glyphs={"home","crown","palette","settings"};
+            String[] destinations={"home","stats","themes","settings"};
+            for(int i=0;i<4;i++){
+                final int index=i;float cx=65+i*90;
+                if(i==2)shape(205,639,90,61,25,
+                    theme==1?0xff453a48:0xffffecdf);
+                icon(glyphs[i],cx,658,26,i==2?CORAL:muted);
+                fitted(tabs[i],cx,690,13,84,i==2?CORAL:muted,true);
+                taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
+                    ()->navigate(destinations[index])));
+            }
+        }
         void settings(){
             // The supplied reference is 941x1672. Keep every setting and
             // the branded footer in one frame at this aspect ratio.

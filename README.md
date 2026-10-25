@@ -114,3 +114,5 @@ Adaptive ikona dodatno ispunjava masku launchera; dominantno svijetlo slovo B do
 **Dodatni v1.9 polish:** referentni 16:9 viewport prikazuje svih sedam redaka postavki i završnu logo karticu bez skrivanja; modal pobjede ima sva tri funkcionalna gumba unutar prikaza. To se provjerava automatskim Android testovima uz snimanje referentne rezolucije.
 
 **v1.9 UI polish:** Početni zaslon (oba rezultata, primarni gumb, tri igre i četiri prečaca), dnevni izazov (ploča, svi ciljevi, nagrada i gumb) te svih pet misija imaju poseban raspored za referentni omjer 941×1672. Kartice nisu rastezane vertikalno: promijenjeni su razmaci i stvarne pozicije elemenata. QA provjerava dostupnost prečaca i glavne radnje.
+
+**Kompaktne statistike i teme:** na uskim ekranima 16:9 sve metričke kartice, grafikon i pregled povijesti te sve opcije tema, kontrole zvuka/vibracije, animacije i donji tabovi raspoređeni su unutar vidljivog kadra bez vertikalnog izobličenja teksta. Na visokim telefonima zadržan je prostran dizajn.

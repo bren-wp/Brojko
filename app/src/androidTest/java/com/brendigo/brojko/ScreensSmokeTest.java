@@ -372,6 +372,26 @@ public class ScreensSmokeTest {
                 }
                 assertTrue("Daily CTA must be visible and clickable",
                     challengeAction);
+                activity.page="themes";
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                boolean settingsTab=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Postavke".equals(tap.label)&&tap.top>=620){
+                        settingsTab=true;
+                        assertTrue("Themes bottom navigation is clipped",
+                            view.offY+tap.bottom*view.scale<=1673);
+                    }
+                }
+                assertTrue("Theme preview must include all four tabs",settingsTab);
+                activity.page="stats";
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                assertTrue("Statistics chart must be selectable",
+                    view.taps.stream().anyMatch(tap->
+                        "Grafikon bodova".equals(tap.label)));
             }finally{
                 activity.game=previousGame;
                 activity.page=previousPage;
