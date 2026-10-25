@@ -7,8 +7,10 @@ android {
   minSdk 23
   targetSdk 36
   testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-  versionCode (System.getenv('GITHUB_RUN_NUMBER')?.toInteger() ?: 2)
-  versionName "1.12.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+  // QA uses the release workflow's run number, not its own run number.
+  def releaseBuildNumber = System.getenv('BROJKO_BUILD_NUMBER') ?: System.getenv('GITHUB_RUN_NUMBER')
+  versionCode (releaseBuildNumber?.toInteger() ?: 2)
+  versionName "1.12.${releaseBuildNumber ?: '0'}"
  }
  signingConfigs {
   release {
