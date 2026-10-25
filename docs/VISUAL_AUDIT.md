@@ -166,3 +166,8 @@ Na stvarnom Android emulator artefaktu v1.12.42 pregledane su snimke Splash, Hom
 - **Statistika**: pet redaka povijesti dobiva 54 jedinice visine umjesto 27, s nenametljivim razmacima; `maxScroll` raste ovisno o broju rezultata. Dodana su dva regresijska emulator testa, za stvarno različite thumbnail renderinge i pet nepoklapajućih dodirnih zona.
 
 Ne izvoditi zaključak o 1:1 pikselnoj identičnosti bez izvornih referentnih PNG-ova i odgovarajućih golden diffs.
+
+
+## Regresijski popravak dnevnog poraza i dead-code provjera
+
+Nakon detaljnijeg pregleda svih modalnih stanja pronađeno je da završetak dnevnog izazova zbog potpuno blokirane ploče prikazuje generički modal poraza, dok poseban modal dnevnog poraza tvrdnjom o 80 potrošenih poteza pogrešno objašnjava svaki neuspjeh. Sada dnevna partija uvijek vodi u odgovarajući rezultat, uz točnu poruku o preostalim potezima ili blokiranoj ploči. Dodan je Android regresijski test za potpuno blokiranu dnevnu ploču u 12. potezu. Dva nekorištena privatna Canvas pomoćna renderera (`scoreCard` i `switchRow`) uklonjena su nakon provjere odsutnosti pozivatelja. Nisu mijenjani trajni korisnički podatci ni javne funkcionalnosti.

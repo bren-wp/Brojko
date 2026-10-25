@@ -731,4 +731,35 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void blockedDailyBoardShowsDailyFailureWithoutFalseMoveLimit(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previous=activity.game;
+            String previousPage=activity.page;
+            try{
+                TileGame daily=new TileGame("daily",activity.today(),501L);
+                daily.cells=new int[]{
+                    2,4,2,4,
+                    4,2,4,2,
+                    2,4,2,4,
+                    4,2,4,2
+                };
+                daily.peak=4;
+                daily.moves=12;
+                activity.game=daily;
+                activity.page="game";
+                activity.move(TileGame.LEFT);
+                assertEquals("Blocked daily board should show its own result",
+                    "dailyFail",activity.page);
+                assertTrue("Blocked session must be flagged game over",
+                    daily.gameOver);
+                assertEquals("No false swipe should be counted",12,daily.moves);
+                capture(activity,"daily-no-moves");
+            }finally{
+                activity.game=previous;
+                activity.page=previousPage;
+                activity.persist();
+            }
+        });
+    }
+
 }

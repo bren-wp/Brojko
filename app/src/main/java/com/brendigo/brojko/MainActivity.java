@@ -272,7 +272,10 @@ public final class MainActivity extends Activity {
         boolean dailyWasComplete=game.isDailyGoalComplete() && today().equals(game.day);
         TileGame.Result result=game.move(direction);
         if(!result.changed){
-            if(result.lost){page="over";persist();screen.invalidate();}
+            if(result.lost){
+                page="daily".equals(game.mode)?"dailyFail":"over";
+                persist();screen.invalidate();
+            }
             return;
         }
         ensureDay();total+=result.points;totalMerges+=result.merges;
@@ -300,7 +303,7 @@ public final class MainActivity extends Activity {
             game.gameOver=true;
             page="dailyFail";
         }else if(result.first2048)page="win";
-        else if(result.lost){page="over";}
+        else if(result.lost){page="daily".equals(game.mode)?"dailyFail":"over";}
         persist();animate();
     }
     void endSession(){
@@ -1155,11 +1158,6 @@ public final class MainActivity extends Activity {
             }else fitted(sub,x+w/2,y+(portrait?152:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
-        void scoreCard(String caption,String value,float x,float y,float width){
-            card(x,y,width,72,17,card);
-            txt(caption,x+width/2,y+25,15,muted,true);
-            fitted(value,x+width/2,y+59,28,width-16,ink,true);
-        }
         float gridX=16,gridY=222,gridSize=368;
         boolean compactBoardLayout=false;
         boolean referencePortraitLayout=false;
@@ -1327,13 +1325,14 @@ public final class MainActivity extends Activity {
             txt(success?"Dnevni izazov riješen!":"Izazov nije uspio",200,329,
                 success?28:31,ink,true);
             fitted(success?"Sva 3 zadatka su ostvarena!":
-                "Potrošeno je 80 dopuštenih poteza.",200,369,17,316,muted,false);
+                (game.moves>=80?"Potrošeno je 80 dopuštenih poteza.":
+                "Nema više mogućih poteza."),200,369,17,316,muted,false);
             card(65,401,270,98,20,card);
             txt("TVOJ REZULTAT",200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
             fitted(success?(dailyBonusGrantedThisAttempt?
                 "+250 zvjezdica osvojeno!":"Današnja nagrada već preuzeta"):
-                "Pokušaj ponovno i dosegni 256.",200,534,17,310,
+                "Pokušaj ponovno ostvariti sve ciljeve.",200,534,17,310,
                 success?0xff259d85:muted,true);
             // Leave clear space below the last action inside the rounded modal.
             button("Igraj ponovno","undo",53,546,294,62,CORAL,true,
@@ -2073,15 +2072,6 @@ public final class MainActivity extends Activity {
             txt("Hrvatski",208,278,25,ink,true);
             txt("Ostali jezici nisu dostupni u ovoj verziji.",200,369,15,muted,false);
             button("Natrag na postavke","back",25,720,350,70,CORAL,true,()->navigate("settings"));
-        }
-        void switchRow(String name,String symbol,int y,boolean active,Runnable click){
-            card(25,y,350,85,20,card);
-            shape(40,y+14,58,57,15,active?TEAL:0xffa3abb6);
-            icon(symbol,69,y+43,30,WHITE);
-            fitted(name,174,y+50,22,130,ink,true);
-            shape(291,y+23,65,38,21,active?TEAL:0xffb6bfce);
-            shape(active?325:296,y+27,30,30,15,WHITE);
-            taps.add(new Tap(25,y,375,y+85,name+(active?" uključeno":" isključeno"),click));
         }
         void textPage(String heading,String[] lines){
             title(heading);
