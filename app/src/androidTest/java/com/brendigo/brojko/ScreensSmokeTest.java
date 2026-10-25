@@ -599,7 +599,17 @@ public class ScreensSmokeTest {
             try{
                 activity.game=new TileGame("classic","",777L);
                 activity.page="game";
-                capture(activity,"game-icon-action-a11y");
+                capture(activity,"game-disabled-undo");
+                assertFalse("New game must not expose an inert Undo action",
+                    activity.screen.taps.stream().anyMatch(tap->
+                        "Poništi potez".equals(tap.label)));
+                // A legal merge creates an undo snapshot and enables both controls.
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                assertTrue(activity.game.move(TileGame.LEFT).changed);
+                assertTrue(activity.game.canUndo());
+                capture(activity,"game-enabled-undo");
                 boolean pause=false,undo=false;
                 for(MainActivity.BoardScreen.Tap tap:activity.screen.taps){
                     if("Pauziraj igru".equals(tap.label)||
@@ -830,6 +840,36 @@ public class ScreensSmokeTest {
             }finally{
                 activity.game=previousGame;
                 activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void stylePreviewsAndHelpEquationHaveRealOnDeviceScreenshots(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldStyle=activity.tileStyle;
+            try{
+                activity.page="help";
+                capture(activity,"help-visible-merge-equation");
+                activity.page="themes";
+                for(int style=0;style<3;style++){
+                    activity.tileStyle=style;
+                    capture(activity,"themes-selected-style-"+style);
+                    boolean optionFound=false;
+                    String target=new String[]{"Zaobljene","Ravne","Staklaste"}[style];
+                    for(MainActivity.BoardScreen.Tap tap:activity.screen.taps){
+                        if(target.equals(tap.label)){
+                            optionFound=true;
+                            assertTrue("Tile-style preview must have a useful touch height",
+                                tap.bottom-tap.top>=48);
+                        }
+                    }
+                    assertTrue("Tile style option must be reachable",optionFound);
+                }
+            }finally{
+                activity.tileStyle=oldStyle;
+                activity.page=oldPage;
                 activity.screen.invalidate();
             }
         });

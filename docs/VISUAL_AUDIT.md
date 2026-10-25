@@ -191,3 +191,10 @@ UI workflow sada snima **stvarna stanja** sva tri načina igre, ne samo generič
 ## Android launcher mask safe-area — završna geometrijska korekcija
 
 Emulator snimka v1.12.45 pokazala je ispravne nove konture 8 i 6, no njihovi donji potezi i dalje su bili odrezani kružnom launcher maskom. Stoga je donja lijeva brojka pomaknuta za +6 po x i −7 po y, a donja desna za −9 po y u izvornim vektorskim koordinatama prije adaptive skaliranja. Zadržani su isti oblik B, sva četiri polja, njihove boje i zaobljenost. Ovaj zahvat cilja stvarni Android mask clipping, ne samo kozmetičko smanjivanje ikone; provjeru treba potvrditi novom emulator snimkom.
+
+
+## UI/UX dorada nakon pregleda 78 stvarnih QA snimki (25. 10. 2026.)
+
+Ponovno su vizualno pregledani početni ekran, klasični i opušteni 4×4/5×5 način, dnevni izazov, modali, misije, statistika, teme, postavke, pomoćni zasloni i sve varijante ikone iz v1.12.48. Utvrđena je nesukladnost gornje ikone Poništi (prikazivala se aktivno čak i kad ne postoji potez za poništavanje), što je ispravljeno zajedničkom funkcijom `headerUndo`. Sada je onemogućena i vizualno i semantički, bez lažnog dodirnog cilja, dok se nakon prvog valjanog poteza aktivira. Instrumentacijski test provjerava oba stanja.
+
+Na zaslonu Teme i izgled tri prikaza stila dobila su vidljivi broj 2, jednako kao pločice u samoj igri; stvarni izbor stila i prethodno spremljene postavke nisu mijenjani. Primjer u Kako igrati redizajniran je u preglednu jednadžbu **2 + 2 → 4**, s međusobno nepoklapajućim pločicama i znakovima. Novi Android instrumentacijski test sprema screenshot sva tri odabrana stila, provjerava zone dodira i snima novi prikaz pomoći. Ovo nije tvrdnja o automatski dokazanoj apsolutnoj 1:1 identičnosti u nedostatku usporedivih izvornih golden PNG datoteka.

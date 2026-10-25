@@ -1184,14 +1184,10 @@ public final class MainActivity extends Activity {
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.
                 button("","pause",335,32,43,49,card,false,()->navigate("pause"));
-                button("","undo",335,98,43,49,card,false,()->{
-                    if(game.canUndo())undo();
-                });
+                headerUndo(335,98,43,49);
             }else{
                 button("","pause",327,153,48,49,card,false,()->navigate("pause"));
-                button("","undo",265,153,50,49,card,false,()->{
-                    if(game.canUndo())undo();
-                });
+                headerUndo(265,153,50,49);
             }
             drawGrid();
             if(daily){
@@ -1218,6 +1214,16 @@ public final class MainActivity extends Activity {
                     ()->navigate("home"));
                 button("Podijeli","share",207,757,171,64,card,false,()->share());
                 bottomBrand();
+            }
+        }
+        void headerUndo(float x,float y,float w,float h){
+            if(game!=null && game.canUndo()){
+                button("","undo",x,y,w,h,card,false,()->undo());
+            }else{
+                // Match the disabled bottom Undo button: no inert hit target.
+                card(x,y,w,h,Math.min(23,h*.27f),
+                    theme==1?0xff29364a:0xffeae5de);
+                icon("undo",x+w/2,y+h/2,Math.min(23,h*.52f),muted);
             }
         }
         void drawGrid(){
@@ -1700,6 +1706,7 @@ public final class MainActivity extends Activity {
                     p.setStyle(Paint.Style.FILL);
                 }
                 styledTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1],i);
+                fitted("2",x+25.5f,496,23,35,WHITE,true);
                 if(i==0){
                     fitted("Zaob-",x+25,525,11,49,ink,true);
                     fitted("ljene",x+25,541,11,49,ink,true);
@@ -1895,6 +1902,7 @@ public final class MainActivity extends Activity {
                 }
                 styledTile(x+6,375,39,39,
                     i==1?5:i==2?15:10,TILES[1],i);
+                fitted("2",x+25.5f,404,22,35,WHITE,true);
                 if(i==0){
                     fitted("Zaob-",x+25,436,10,48,ink,true);
                     fitted("ljene",x+25,448,10,48,ink,true);
@@ -2033,13 +2041,15 @@ public final class MainActivity extends Activity {
             title("Kako igrati");
             txt("Spajaj jednake pločice",200,170,24,ink,true);
             card(42,202,316,139,22,card);
-            glossyTile(78,229,81,81,16,TILES[1]);
-            glossyTile(167,229,81,81,16,TILES[1]);
-            glossyTile(261,229,81,81,16,TILES[2]);
-            txt("2",119,283,37,WHITE,true);
-            txt("2",208,283,37,WHITE,true);
-            txt("4",301,283,37,WHITE,true);
-            txt("→",253,322,20,CORAL,true);
+            // Readable visual equation; neither operator overlaps its tiles.
+            glossyTile(58,235,70,70,15,TILES[1]);
+            glossyTile(156,235,70,70,15,TILES[1]);
+            glossyTile(274,235,70,70,15,TILES[2]);
+            txt("2",93,283,36,WHITE,true);
+            txt("+",142,279,27,ink,true);
+            txt("2",191,283,36,WHITE,true);
+            txt("→",250,280,29,CORAL,true);
+            txt("4",309,283,36,WHITE,true);
             card(29,381,342,196,20,card);
             txt("1. Povuci prstom",200,424,23,ink,true);
             fitted("Sve pločice pomiču se u istom smjeru.",200,461,17,314,muted,false);
