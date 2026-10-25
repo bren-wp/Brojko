@@ -1812,4 +1812,32 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGiftStaysSaturatedAfterItsTransparentShadow(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bmp));
+                    int x=Math.round(board.offX+71f*board.scale);
+                    int y=Math.round(board.offY+617f*board.scale);
+                    int color=bmp.getPixel(x,y);
+                    assertTrue("Reward purple must not fade to its pastel panel",
+                        android.graphics.Color.blue(color)>145 &&
+                        android.graphics.Color.blue(color)-
+                            android.graphics.Color.green(color)>60);
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

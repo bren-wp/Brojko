@@ -355,3 +355,8 @@ Stvarna usporedba 941×1672 iz `brojko-v84-usporedba` pokazala je razliku u dva 
 ### Nagrada dnevnog izazova — veličina ilustracije i tekst prema referenci
 
 Izvorni 941×1672 prikaz ima darovni paket u lijevoj trećini ljubičastog panela, a naslov `Posebna nagrada` počinje oko x≈375 px. Na usporednoj snimci v1.12.84 natpis je počinjao oko x≈290 px, a poklon je bio premalen, s dvama tankim žutim krugovima umjesto širokih mašni. U portretnom renderu roditeljski panel proširen je na x=18..382, vektorski paket povećan i optički centriran na x≈91, a tekst počinje na x=158; `+250` i dalje prikazuje stvarnu nagradu i ostaje s desne strane, bez preklapanja. Sam poklon sada ima slojevitu ljubičastu kutiju, dvotonske zlatne trake i pune zakrivljene mašne izrađene Android Canvas Pathom; nema statičkog screenshot-as-background trika i ništa od korisničkih podataka ni pravila nagrade nije promijenjeno.
+
+
+### Provjera boje ljubičastog paketa
+
+Kod crtanja darovnog paketa vektorska prozirna sjena može ostaviti `Paint` u stanju s malim alpha kanalom: prije idućeg tijela koje se crta gradijentom sada se eksplicitno postavlja `p.setColor(WHITE)`. Dodan je instrumentacijski test zasićenosti ljubičastog dijela poklona kako se ne bi ponovila ranija regresija blijedih kartica. Test izravno očitava piksel iz Android Canvas renderera, a ne samo iz prisutnosti koda.

@@ -1605,6 +1605,8 @@ public final class MainActivity extends Activity {
             // Dynamic challenge reward remains a real label, not baked art.
             float left=cx-size*.37f,top=cy-size*.11f;
             shape(left,top+size*.06f,size*.74f,size*.49f,9,0x41652e96);
+            // Paint alpha survives shape(): make the gift body fully opaque.
+            p.setShader(null);p.setColor(WHITE);
             gradient(left,top,size*.74f,size*.49f,9,
                 0xffb77bf5,0xff6738c8);
             // Ribbons span both the lid and the body.
