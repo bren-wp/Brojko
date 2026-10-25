@@ -1783,10 +1783,52 @@ public final class MainActivity extends Activity {
             button("Natrag na statistiku","back",28,729,344,69,CORAL,true,
                 ()->navigate("stats"));
         }
+        void themesTabIcon(String type,float cx,float cy,float width,int color){
+            if(!"crown".equals(type)&&!"palette".equals(type)){
+                icon(type,cx,cy,width,color);return;
+            }
+            c.save();c.translate(cx-width/2,cy-width/2);
+            c.scale(width/24,width/24);
+            p.setShader(null);p.setColor(color);p.setStyle(Paint.Style.FILL);
+            if("crown".equals(type)){
+                Path crown=new Path();
+                crown.moveTo(2,8);crown.lineTo(7,12.5f);
+                crown.lineTo(12,3);crown.lineTo(17,12.5f);
+                crown.lineTo(22,8);crown.lineTo(20,20);
+                crown.lineTo(4,20);crown.close();
+                c.drawPath(crown,p);
+            }else{
+                c.drawCircle(12,12,10,p);
+                p.setColor(theme==1?0xff263653:CREAM);
+                c.drawCircle(7,9,1.4f,p);c.drawCircle(13,6.5f,1.4f,p);
+                c.drawCircle(18,12,1.4f,p);c.drawCircle(10,17,1.4f,p);
+                c.drawCircle(18,19,2.5f,p);
+            }
+            c.restore();
+        }
+        void themesTitlePill(float y,float h){
+            p.setShader(null);p.setColor(WHITE);
+            gradient(53,y,294,h,h/2,theme==1?0xff30394b:0xfffff1dc,
+                theme==1?0xff253047:0xfffff7ed);
+        }
+        // Theme-only preview bevels: don't change the real game tiles.
+        void themePreviewTile(float x,float y,float w,float h,int color,int style){
+            float radius=style==1?5:style==2?12:9;
+            if(style==1){shape(x,y,w,h,radius,color);return;}
+            shape(x+1,y+3,w,h-2,radius,darken(color,.19f));
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,w,h-3,radius,
+                lighten(color,style==2?.23f:.14f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);p.setColor(0x70ffffff);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
+                Math.max(2,radius-1),Math.max(2,radius-1),p);
+            p.setStyle(Paint.Style.FILL);
+        }
         void themes(){
             if(referencePortraitLayout){themesCompact();return;}
-            back();
             brand(61,38);
+            themesTitlePill(99,53);
             fitted("Teme i",158,126,35,165,ink,true);
             fitted("izgled",276,126,35,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
@@ -1795,8 +1837,8 @@ public final class MainActivity extends Activity {
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
-                card(x,197,116,174,22,card);
                 if(theme==i){
+                    card(x,197,116,174,22,card);
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(3.2f);
                     c.drawRoundRect(x+1.5f,198.5f,x+114.5f,369.5f,21,21,p);
@@ -1807,7 +1849,7 @@ public final class MainActivity extends Activity {
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int a=j%2,b=j/2;
-                    glossyTile(x+15+a*45,218+b*43,40,39,9,cs[j]);
+                    themePreviewTile(x+15+a*45,218+b*43,40,39,cs[j],0);
                     txt(Integer.toString(2<<j),x+35+a*45,246+b*43,21,WHITE,true);
                 }
                 fitted(names[i],x+58,362,17,108,ink,true);
@@ -1819,15 +1861,16 @@ public final class MainActivity extends Activity {
                 }));
             }
             card(20,395,360,405,28,card);
-            txt("Pregled",99,434,24,ink,true);
-            txt("Stil pločica",267,433,19,ink,true);
+            leftFitted("Pregled",30,434,24,167,ink,true);
+            leftFitted("Stil pločica",210,433,19,162,ink,true);
+            shape(201,416,1,360,0,theme==1?0xff47536a:0xffebdfd0);
             // Real visual tile preview for all 16 values, independent of the game board.
             shape(29,465,167,172,17,theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
                 float x=34+col*39.8f,y=470+row*40f;
-                glossyTile(x,y,36,36,tileStyle==1?5:tileStyle==2?13:9,tileColor(val));
+                themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
                 fitted(Integer.toString(val),x+18,y+24,val>=1000?12:16,33,WHITE,true);
             }
             txt("Ovako će izgledati",113,671,13,muted,false);
@@ -1842,14 +1885,8 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,457.5f,x+49.5f,547.5f,14,14,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                styledTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1],i);
-                if(i==0){
-                    fitted("Zaob-",x+25,525,11,49,ink,true);
-                    fitted("ljene",x+25,541,11,49,ink,true);
-                }else if(i==2){
-                    fitted("Stak-",x+25,525,11,49,ink,true);
-                    fitted("laste",x+25,541,11,49,ink,true);
-                }else fitted("Ravne",x+25,534,11,49,ink,true);
+                themePreviewTile(x+6,465,39,44,TILES[1],i);
+                fitted(styles[i],x+25,537,9.5f,49,ink,true);
                 taps.add(new Tap(x,456,x+51,549,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
@@ -1890,7 +1927,7 @@ public final class MainActivity extends Activity {
             for(int i=0;i<4;i++){
                 int index=i;float cx=65+i*90;
                 if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
-                icon(glyphs[i],cx,830,27,i==2?CORAL:muted);
+                themesTabIcon(glyphs[i],cx,830,27,i==2?CORAL:muted);
                 fitted(tabs[i],cx,863,13,84,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
                     ()->navigate(destinations[index])));
@@ -1975,8 +2012,8 @@ public final class MainActivity extends Activity {
             }
         }
         void themesCompact(){
-            back();
             brand(38,36);
+            themesTitlePill(72,50);
             fitted("Teme i",158,102,33,165,ink,true);
             fitted("izgled",276,102,33,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,133,16,344,muted,false);
@@ -1984,8 +2021,8 @@ public final class MainActivity extends Activity {
             int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=158;
-                card(x,y,116,143,20,card);
                 if(theme==i){
+                    card(x,y,116,143,20,card);
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(3f);
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
@@ -1997,7 +2034,7 @@ public final class MainActivity extends Activity {
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    glossyTile(x+15+xx*45,y+29+yy*38,40,35,9,colors[j]);
+                    themePreviewTile(x+15+xx*45,y+29+yy*38,40,35,colors[j],0);
                     txt(Integer.toString(2<<j),
                         x+35+xx*45,y+55+yy*38,19,WHITE,true);
                 }
@@ -2010,16 +2047,16 @@ public final class MainActivity extends Activity {
                 }));
             }
             card(20,335,360,293,26,card);
-            txt("Pregled",102,351,22,ink,true);
-            txt("Stil pločica",282,350,18,ink,true);
+            leftFitted("Pregled",30,351,22,167,ink,true);
+            leftFitted("Stil pločica",210,350,18,162,ink,true);
+            shape(201,344,1,269,0,theme==1?0xff47536a:0xffebdfd0);
             shape(29,411,167,147,17,
                 theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
                 float x=34+col*39.8f,y=416+row*35.5f;
-                glossyTile(x,y,36,32,
-                    tileStyle==1?5:tileStyle==2?13:9,tileColor(val));
+                themePreviewTile(x,y,36,32,tileColor(val),tileStyle);
                 fitted(Integer.toString(val),x+18,y+23,
                     val>=1000?11:15,33,WHITE,true);
             }
@@ -2035,15 +2072,10 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,368.5f,x+49.5f,455.5f,12,12,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                styledTile(x+6,375,39,39,
-                    i==1?5:i==2?15:10,TILES[1],i);
-                if(i==0){
-                    fitted("Zaob-",x+25,436,10,48,ink,true);
-                    fitted("ljene",x+25,448,10,48,ink,true);
-                }else if(i==2){
-                    fitted("Stak-",x+25,436,10,48,ink,true);
-                    fitted("laste",x+25,448,10,48,ink,true);
-                }else fitted("Ravne",x+25,443,10,48,ink,true);
+                themePreviewTile(x+6,375,39,39,TILES[1],i);
+                fitted(styles[i],x+25,439,9,48,ink,true);
+                shape(x+19,449,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
+                if(tileStyle==i)icon("check",x+25.5f,455.5f,9,WHITE);
                 taps.add(new Tap(x,367,x+51,457,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
@@ -2085,7 +2117,7 @@ public final class MainActivity extends Activity {
                 final int index=i;float cx=65+i*90;
                 if(i==2)shape(205,639,90,61,25,
                     theme==1?0xff453a48:0xffffecdf);
-                icon(glyphs[i],cx,658,26,i==2?CORAL:muted);
+                themesTabIcon(glyphs[i],cx,658,26,i==2?CORAL:muted);
                 fitted(tabs[i],cx,690,13,84,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
                     ()->navigate(destinations[index])));

@@ -1349,4 +1349,54 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themesSourceCompositionKeepsAllThemeStylesAndTabs(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;activity.tileStyle=0;
+                int[][] screens={{941,1672},{1080,2400}};
+                for(int[] size:screens){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                        View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+                    int themes=0,styles=0,tabs=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        assertFalse("Themes uses bottom tabs rather than Back",
+                            "Natrag".equals(tap.label));
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label))themes++;
+                        if("Zaobljene".equals(tap.label)||
+                           "Ravne".equals(tap.label)||
+                           "Staklaste".equals(tap.label)){
+                            styles++;
+                            assertTrue("Style cards remain tappable",
+                                tap.bottom-tap.top>=48);
+                        }
+                        if("Novo".equals(tap.label)||
+                           "Rekordi".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))tabs++;
+                    }
+                    assertEquals("Three themes",3,themes);
+                    assertEquals("Three styles",3,styles);
+                    assertEquals("Four tabs",4,tabs);
+                    if(size[0]==941)
+                        captureReference(activity,view,
+                            "themes-original-layout-polished-941x1672");
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.screen.invalidate();
+            }
+        });
+    }
+
 }
