@@ -258,3 +258,8 @@ Nakon usporedbe sa stvarnim emulator snimkama v1.12.60 utvrđeno je da klizač r
 ## Dnevni izazov — funkcionalna pomoć i tekst prema izvorniku
 
 Originalni PNG referentnog dnevnog izazova koristi lijevo poravnanje naziva i opisa sva tri cilja, vlastitu ikonu 256/zvijezda/dvosmjerna strelica te mali informacijski znak desno od svakog reda. Prethodni prikaz crtao je sva tri opisa centrirano i nije sadržavao funkcionalne informacije o cilju. Sada sva tri cilja imaju tekst na stalnom x=105, vlastitu namjensku pomoćnu dodirnu zonu 54×51/72 dizajnerske jedinice s TalkBack nazivom te stvarnu Toast poruku opisa cilja. Dvosmjerna strelica zamjenjuje generičku Refresh ikonu, a datum na dnevnom izazovu sada koristi puni hrvatski naziv mjeseca i razmak nakon ikone. Nisu mijenjani datumi obračuna, trajni napredak i game engine. Dodan je instrumentacijski test sva tri nova pomoćna cilja i stvarne lokalizacije datuma.
+
+
+## Kompaktna statistika nakon usporedbe izvorne 941×1672 slike
+
+Izvorna referenca prikazuje svih pet redaka povijesti na istom zaslonu, a dosadašnji renderer ih je smjestio ispod donjega ruba. Rekalibrirana su dva retka KPI kartica, visina stupčastog grafikona i početak povijesti tako da pet međusobno različitih 48-unit dodirnih zona stane u y=466..706 bez pomicanja na originalnoj rezoluciji. Kartice visoke 44 jedinice imaju vizualni međurazmak, dok se 360×600 i dalje skrola prema stvarnom sadržaju. U testu se sada izričito potvrđuju svi redci, nulto skrolanje na 941×1672 te screenshot novog stanja. Zbijenim KPI karticama smanjena je veličina vrijednosti, čime se sprječava njihovo preklapanje s drugom linijom naslova.

@@ -1030,7 +1030,7 @@ public final class MainActivity extends Activity {
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
-                    Math.max(710f,553f+Math.min(5,history().length())*58f+24f)
+                    Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):880f;
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
@@ -1734,9 +1734,11 @@ public final class MainActivity extends Activity {
             icon(symbol,x+25,y+29,width<=118?24:29,accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
-            fitted(top,labelX,y+31,width<=118?13:16,labelWidth,ink,true);
-            fitted(bottom,labelX,y+48,width<=118?13:16,labelWidth,ink,true);
-            fitted(value,x+width/2,y+h-17,29,width-12,accent,true);
+            boolean dense=h<90;
+            fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
+            fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
+            fitted(value,x+width/2,y+h-(dense?9:17),
+                dense?21:29,width-12,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -1877,34 +1879,35 @@ public final class MainActivity extends Activity {
             }
         }
 
+
         void statisticsCompact(){
             back();
-            brand(48,35);
-            fitted("Statistika",200,132,47,325,ink,true);
-            rays(49,122,21,CORAL);rays(351,122,21,CORAL);
-            statCell("Najbolji rezultat",fmt(best),20,145,114,94,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,145,114,94,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),266,145,114,94,0xffffb431);
+            brand(40,35);
+            fitted("Statistika",200,114,43,325,ink,true);
+            rays(49,105,20,CORAL);rays(351,105,20,CORAL);
+            statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
+            statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
+            statCell("Najveća pločica",fmt(recordTile),266,126,114,83,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,247,174,90,0xff478df4);
-            statCell("Niz dana igranja",fmt(playDayStreak),205,247,174,90,0xffa657de);
-            card(22,352,356,173,22,card);
-            txt("Zadnjih 10 partija",113,380,18,ink,true);
-            card(213,359,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
-            shape(215+(chartMetric==0?0:77),361,77,25,13,CORAL);
-            fitted("Bodovi",253,379,13,71,chartMetric==0?WHITE:ink,true);
-            fitted("Pločica",330,379,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,358,291,391,"Grafikon bodova",()->{
+            statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
+            statCell("Niz dana igranja",fmt(playDayStreak),205,215,174,75,0xffa657de);
+            card(22,297,356,142,22,card);
+            txt("Zadnjih 10 partija",113,323,18,ink,true);
+            card(213,303,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
+            shape(215+(chartMetric==0?0:77),305,77,25,13,CORAL);
+            fitted("Bodovi",253,323,13,71,chartMetric==0?WHITE:ink,true);
+            fitted("Pločica",330,323,13,71,chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(214,303,291,336,"Grafikon bodova",()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,358,371,391,"Grafikon pločica",()->{
+            taps.add(new Tap(292,303,371,336,"Grafikon pločica",()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,451,15,muted,false);
-                txt("prve završene partije.",200,473,15,muted,false);
+                txt("Grafikon će se prikazati nakon",200,372,15,muted,false);
+                txt("prve završene partije.",200,395,15,muted,false);
             }else{
                 int ceiling=1;
                 for(int i=0;i<count;i++){
@@ -1918,40 +1921,38 @@ public final class MainActivity extends Activity {
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float height=Math.max(4,86f*Math.max(0,val)/ceiling);
-                    float x=42+i*barSlot+2;
-                    float y=497-height;
-                    shape(x,y,barSlot-6,height,Math.min(6,height/2),
+                    float barHeight=Math.max(4,72f*Math.max(0,val)/ceiling);
+                    float x=42+i*barSlot+2,y=414-barHeight;
+                    shape(x,y,barSlot-6,barHeight,Math.min(6,barHeight/2),
                         val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
                     if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-8,9,barSlot+3,ink,true);
-                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,517,
+                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,431,
                         10,barSlot-4,muted,false);
                 }
             }
-            txt("Povijest partija",111,544,20,ink,true);
+            txt("Povijest partija",111,460,20,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
-                card(22,554,356,62,16,card);
-                txt("Još nema dovršenih partija.",200,593,16,muted,false);
+                card(22,466,356,62,16,card);
+                txt("Još nema dovršenih partija.",200,504,16,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=553+i*58,idx=i;
-                // Every history row has a 54-unit touch target, with 4 units
-                // of visual separation. Short screens scroll instead of shrinking.
-                card(22,y,356,54,14,card);
-                fitted(row.optString("day",""),92,y+23,13,119,muted,false);
-                fitted(fmt(row.optInt("score")),237,y+33,19,123,
+                int y=466+i*48,idx=i;
+                // 48-unit independent touch targets and visually separated 44-unit cards.
+                card(22,y,356,44,12,card);
+                fitted(row.optString("day",""),92,y+18,12,119,muted,false);
+                fitted(fmt(row.optInt("score")),237,y+28,18,123,
                     i==0?CORAL:TEAL,true);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
-                    shape(290,y+15,63,26,10,
+                    shape(290,y+10,63,25,9,
                         theme==1?0xff46416b:0xfff4e0ff);
-                    fitted(fmt(peak),321,y+34,13,56,0xff8a41bc,true);
+                    fitted(fmt(peak),321,y+28,13,56,0xff8a41bc,true);
                 }
-                txt("›",368,y+35,24,muted,true);
-                taps.add(new Tap(22,y,378,y+54,"Detalji partije "+(i+1),
+                txt("›",368,y+29,22,muted,true);
+                taps.add(new Tap(22,y,378,y+48,"Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }

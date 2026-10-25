@@ -735,16 +735,19 @@ public class ScreensSmokeTest {
                 int previousBottom=-1,count=0;
                 for(MainActivity.BoardScreen.Tap tap:custom.taps){
                     if(!tap.label.startsWith("Detalji partije"))continue;
-                    assertTrue("History touch target must be >= 54 units",
-                        tap.bottom-tap.top>=54f);
+                    assertTrue("History touch target must be >= 48 units",
+                        tap.bottom-tap.top>=48f);
+                    assertTrue("Fifth row must fit reference viewport",tap.bottom<=710f);
                     if(previousBottom>=0)assertTrue("History rows cannot overlap",
                         tap.top>=previousBottom);
                     previousBottom=(int)tap.bottom;
                     count++;
                 }
                 assertEquals("All five history rows must stay accessible",5,count);
-                assertTrue("History list must scroll instead of clipping",
-                    custom.maxScroll>0);
+                assertTrue("Five rows should fit without scrolling at reference size",
+                    custom.maxScroll<=1.1f);
+                captureReference(activity,custom,
+                    "stats-five-history-fully-visible-941x1672");
             }finally{
                 activity.prefs.edit().putString("history",previousHistory).commit();
                 activity.page=previousPage;
