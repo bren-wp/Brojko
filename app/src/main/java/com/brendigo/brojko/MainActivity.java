@@ -1467,10 +1467,20 @@ public final class MainActivity extends Activity {
             int height=portrait?51:72;
             card(28,y,344,height,18,card);
             float iconSize=portrait?41:46;
-            glossyTile(40,y+(height-iconSize)/2,iconSize,iconSize,13,
-                done?TEAL:0xffffb754);
-            icon(done?"check":"target",40+iconSize/2,y+height/2f,
-                portrait?24:26,WHITE);
+            float tileY=y+(height-iconSize)/2f;
+            int goalColor=name.startsWith("Dosegni")?0xffff6f96:
+                name.startsWith("Osvoji")?0xffffb541:0xff3d98f0;
+            styledTile(40,tileY,iconSize,iconSize,13,
+                done?TEAL:goalColor,0);
+            float glyphCenter=40+iconSize/2f;
+            if(done)icon("check",glyphCenter,y+height/2f,portrait?24:26,WHITE);
+            else if(name.startsWith("Dosegni"))
+                fitted("256",glyphCenter,y+height/2f+7,
+                    portrait?20:22,iconSize-3,WHITE,true);
+            else if(name.startsWith("Osvoji"))
+                icon("star",glyphCenter,y+height/2f,portrait?27:30,WHITE);
+            else icon("refresh",glyphCenter,y+height/2f,
+                portrait?27:30,WHITE);
             fitted(name,231,y+(portrait?22:29),
                 portrait?18:19,274,ink,true);
             fitted(description,231,y+(portrait?40:55),
@@ -1524,8 +1534,29 @@ public final class MainActivity extends Activity {
                 name.contains("Igraj")?"calendar":
                 name.contains("Majstor")?"grid":
                 name.contains("Spoji")?"grid":"target";
-            icon(taskGlyph,portrait?62:65,y+(portrait?33:38),
-                portrait?26:31,accent);
+            if(name.startsWith("Dosegni 512")){
+                styledTile(42,y+12,40,40,10,0xffa663e4,0);
+                fitted("512",62,y+40,18,39,WHITE,true);
+            }else if(name.startsWith("Spoji 20")){
+                styledTile(42,y+15,21,24,6,CORAL,0);
+                styledTile(62,y+15,21,24,6,TEAL,0);
+                fitted("2",52,y+33,16,19,WHITE,true);
+                fitted("4",72,y+33,16,19,WHITE,true);
+            }else if(name.startsWith("Majstor")){
+                int[] mini={2,4,8,16};
+                for(int index=0;index<4;index++){
+                    float mx=41+(index%2)*22,my=y+10+(index/2)*22;
+                    styledTile(mx,my,20,20,5,TILES[index+1],0);
+                    fitted(Integer.toString(mini[index]),mx+10,my+14,
+                        mini[index]>9?9:11,18,WHITE,true);
+                }
+            }else{
+                icon(taskGlyph,portrait?62:65,y+(portrait?33:38),
+                    portrait?26:31,accent);
+                if(name.startsWith("Igraj 7"))
+                    fitted("7",portrait?62:65,y+(portrait?43:48),
+                        15,22,INK,true);
+            }
             fitted(name,portrait?194:198,y+(portrait?20:25),
                 portrait?15:17,188,ink,true);
             fitted(sub,portrait?194:198,y+(portrait?37:45),
@@ -1731,7 +1762,6 @@ public final class MainActivity extends Activity {
                     p.setStyle(Paint.Style.FILL);
                 }
                 styledTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1],i);
-                fitted("2",x+25.5f,496,23,35,WHITE,true);
                 if(i==0){
                     fitted("Zaob-",x+25,525,11,49,ink,true);
                     fitted("ljene",x+25,541,11,49,ink,true);
@@ -1746,14 +1776,14 @@ public final class MainActivity extends Activity {
             // Native controls integrated into the same reference-style preview card.
             icon("phone",220,593,30,TEAL);
             txt("Vibracija",284,596,18,ink,true);
-            shape(324,577,43,27,14,vibration?TEAL:0xffb7c1cf);
+            shape(324,577,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?342:326,579,23,23,12,WHITE);
             taps.add(new Tap(205,564,378,615,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,658,30,0xff4c9af3);
             txt("Zvukovi",280,661,18,ink,true);
-            shape(324,642,43,27,14,sound?TEAL:0xffb7c1cf);
+            shape(324,642,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?342:326,644,23,23,12,WHITE);
             taps.add(new Tap(205,628,378,683,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
@@ -1925,7 +1955,6 @@ public final class MainActivity extends Activity {
                 }
                 styledTile(x+6,375,39,39,
                     i==1?5:i==2?15:10,TILES[1],i);
-                fitted("2",x+25.5f,404,22,35,WHITE,true);
                 if(i==0){
                     fitted("Zaob-",x+25,436,10,48,ink,true);
                     fitted("ljene",x+25,448,10,48,ink,true);
@@ -1939,14 +1968,14 @@ public final class MainActivity extends Activity {
             }
             icon("phone",219,490,26,TEAL);
             fitted("Vibracija",274,496,16,100,ink,true);
-            shape(324,478,43,27,14,vibration?TEAL:0xffb7c1cf);
+            shape(324,478,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?342:326,480,23,23,12,WHITE);
             taps.add(new Tap(205,466,378,519,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,537,26,0xff4c9af3);
             fitted("Zvukovi",272,544,16,97,ink,true);
-            shape(324,526,43,27,14,sound?TEAL:0xffb7c1cf);
+            shape(324,526,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?342:326,528,23,23,12,WHITE);
             taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();

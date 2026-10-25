@@ -223,3 +223,8 @@ Korisničke izvorne PNG reference pokazuju dvije dnevne, dvije tjedne i dvije ka
 ## Referentne PNG slike: tipografija splasha, raspored tema i sigurna zona ikone
 
 Sada dostupne izvorne slike pokazale su da je središnji Brojko logo na splashu trebao biti znatno veći i da je slogan bio previsoko pri dnu. Splash je usklađen povećanjem brand bloka (77→108 dizajnerskih jedinica) i pomicanjem slogana 43 jedinice prema gore. Oznake tri teme sada su radio-badge ispod numeriranih 2×2 pločica, a nazivi ispod kartica kao u referenci. Referentni lijevi preview: legenda se nalazi iznad mini mreže 4×4, pa su raspored mreže i središnji panel recalibrirani bez preklapanja ikona, radijskih kontrola i donjih tabova. Adaptive foreground launcher vektor smanjen je na 75% radi sigurnog kružnog Android maskiranja i provjere čitljivosti četiri broja. Zadržane su postojeće interaktivne zone, sve palete tema i pohranjeni izbor.
+
+
+## Izvorna ikonografija referentnih ekrana
+
+Kada je izvorni PNG dostupan, njegovi detalji imaju prednost pred prethodnim generičkim UI pretpostavkama: tri male kartice stilova Zaobljene/Ravne/Staklaste prikazuju **praznu obojenu pločicu**, a ne broj 2. Oba theme prekidača koriste koraljnu aktivnu boju kao izvorna slika (za razliku od glavne stranice Postavke, koja koristi tirkizne prekidače). Dnevni izazov sada razlikuje ružičastu pločicu 256, zlatnu zvijezdu i plavu ikonu za poteze. Misije prikazuju vlastite male numerirane pločice za spajanja 2/4, pločicu 512 bez Undo i četiri pločice za Majstora spajanja, umjesto generičkih meta na svim karticama. Sav proračun ciljeva i nagrada ostaje isti kao u prethodnom commitu.
