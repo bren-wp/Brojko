@@ -1884,7 +1884,7 @@ public final class MainActivity extends Activity {
             back();
             brand(40,35);
             fitted("Statistika",200,114,43,325,ink,true);
-            rays(49,105,20,CORAL);rays(351,105,20,CORAL);
+            rays(80,121,17,CORAL);rays(352,121,17,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
             statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
             statCell("Najveća pločica",fmt(recordTile),266,126,114,83,0xffffb431);
