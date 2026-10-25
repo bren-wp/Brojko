@@ -665,4 +665,70 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void everyThemeThumbnailUsesItsOwnTileTreatment(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen board=activity.screen;
+            android.graphics.Canvas savedCanvas=board.c;
+            Bitmap[] previews=new Bitmap[3];
+            try{
+                for(int style=0;style<3;style++){
+                    previews[style]=Bitmap.createBitmap(90,90,Bitmap.Config.ARGB_8888);
+                    Canvas canvas=new Canvas(previews[style]);
+                    canvas.drawColor(MainActivity.CREAM);
+                    board.c=canvas;
+                    board.styledTile(10,10,68,68,style==1?6:style==2?24:14,
+                        MainActivity.CORAL,style);
+                }
+                int flatVsRound=0,glassVsRound=0;
+                for(int y=10;y<78;y+=3)for(int x=10;x<78;x+=3){
+                    if(previews[0].getPixel(x,y)!=previews[1].getPixel(x,y))
+                        flatVsRound++;
+                    if(previews[0].getPixel(x,y)!=previews[2].getPixel(x,y))
+                        glassVsRound++;
+                }
+                assertTrue("Flat preview must be visibly different",flatVsRound>50);
+                assertTrue("Glass preview must be visibly different",glassVsRound>50);
+            }finally{
+                board.c=savedCanvas;
+                for(Bitmap img:previews)if(img!=null)img.recycle();
+            }
+        });
+    }
+
+    @Test public void compactHistoryRowsHaveReadableSizeAndDoNotOverlap(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            String previousHistory=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen custom=activity.new BoardScreen(activity);
+            try{
+                activity.prefs.edit().putString("history",
+                    "[{\"score\":100,\"peak\":16},{\"score\":200,\"peak\":32},"+
+                    "{\"score\":300,\"peak\":64},{\"score\":400,\"peak\":128},"+
+                    "{\"score\":500,\"peak\":256}]").commit();
+                custom.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                custom.layout(0,0,941,1672);
+                activity.page="stats";
+                Bitmap img=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{custom.draw(new Canvas(img));}finally{img.recycle();}
+                int previousBottom=-1,count=0;
+                for(MainActivity.BoardScreen.Tap tap:custom.taps){
+                    if(!tap.label.startsWith("Detalji partije"))continue;
+                    assertTrue("History touch target must be >= 54 units",
+                        tap.bottom-tap.top>=54f);
+                    if(previousBottom>=0)assertTrue("History rows cannot overlap",
+                        tap.top>=previousBottom);
+                    previousBottom=(int)tap.bottom;
+                    count++;
+                }
+                assertEquals("All five history rows must stay accessible",5,count);
+                assertTrue("History list must scroll instead of clipping",
+                    custom.maxScroll>0);
+            }finally{
+                activity.prefs.edit().putString("history",previousHistory).commit();
+                activity.page=previousPage;
+            }
+        });
+    }
+
 }

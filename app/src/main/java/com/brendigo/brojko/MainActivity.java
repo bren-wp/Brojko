@@ -557,8 +557,13 @@ public final class MainActivity extends Activity {
                 Math.max(0,(int)(Color.blue(color)*(1-amount))));
         }
         void glossyTile(float x,float y,float width,float height,float radius,int color){
+            styledTile(x,y,width,height,radius,color,tileStyle);
+        }
+        // Theme thumbnails must preview their own style, not the currently selected one.
+        void styledTile(float x,float y,float width,float height,float radius,
+                        int color,int previewStyle){
             if(width<=0||height<=0)return;
-            if(tileStyle==1){shape(x,y,width,height,radius,color);return;}
+            if(previewStyle==1){shape(x,y,width,height,radius,color);return;}
             float depth=Math.min(5.5f,Math.max(2,height*.082f));
             // Warm extrusion and restrained shadow used across all themes.
             shape(x+1.2f,y+depth+1.4f,Math.max(1,width-2.4f),
@@ -567,7 +572,7 @@ public final class MainActivity extends Activity {
             shape(x,y+depth,width,Math.max(1,height-depth),radius,
                 darken(color,.23f));
             gradient(x,y,width,Math.max(1,height-depth),radius,
-                lighten(color,tileStyle==2?.30f:.20f),color);
+                lighten(color,previewStyle==2?.30f:.20f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
             p.setColor(0xb0ffffff);
@@ -587,7 +592,7 @@ public final class MainActivity extends Activity {
                 glint.quadTo(x+6,y+6,x+5,y+radius*.78f);
                 c.drawPath(glint,p);p.setStyle(Paint.Style.FILL);
             }
-            if(tileStyle==2 && width>=26 && height>=26){
+            if(previewStyle==2 && width>=26 && height>=26){
                 shape(x+7,y+8,Math.max(1,width-14),
                     Math.max(1,height*.12f),radius,0x25ffffff);
             }
@@ -969,7 +974,9 @@ public final class MainActivity extends Activity {
             boolean compact=extended || usableHeight/usableWidth<1.85f;
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             float contentHeight=page.equals("stats")?
-                (referencePortraitLayout?710f:1120f):880f;
+                (referencePortraitLayout?
+                    Math.max(710f,553f+Math.min(5,history().length())*58f+24f)
+                    :1120f):880f;
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -1693,7 +1700,7 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,457.5f,x+49.5f,547.5f,14,14,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                glossyTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1]);
+                styledTile(x+6,465,39,44,i==1?5:i==2?15:10,TILES[1],i);
                 if(i==0){
                     fitted("Zaob-",x+25,525,11,49,ink,true);
                     fitted("ljene",x+25,541,11,49,ink,true);
@@ -1805,19 +1812,21 @@ public final class MainActivity extends Activity {
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=553+i*31,idx=i;
-                card(22,y,356,27,12,card);
-                fitted(row.optString("day",""),92,y+19,12,119,muted,false);
-                fitted(fmt(row.optInt("score")),237,y+20,17,123,
+                int y=553+i*58,idx=i;
+                // Every history row has a 54-unit touch target, with 4 units
+                // of visual separation. Short screens scroll instead of shrinking.
+                card(22,y,356,54,14,card);
+                fitted(row.optString("day",""),92,y+23,13,119,muted,false);
+                fitted(fmt(row.optInt("score")),237,y+33,19,123,
                     i==0?CORAL:TEAL,true);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
-                    shape(290,y+3,63,21,9,
+                    shape(290,y+15,63,26,10,
                         theme==1?0xff46416b:0xfff4e0ff);
-                    fitted(fmt(peak),321,y+19,12,56,0xff8a41bc,true);
+                    fitted(fmt(peak),321,y+34,13,56,0xff8a41bc,true);
                 }
-                txt("›",368,y+21,22,muted,true);
-                taps.add(new Tap(22,y,378,y+27,"Detalji partije "+(i+1),
+                txt("›",368,y+35,24,muted,true);
+                taps.add(new Tap(22,y,378,y+54,"Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
@@ -1883,8 +1892,8 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,368.5f,x+49.5f,455.5f,12,12,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                glossyTile(x+6,375,39,39,
-                    i==1?5:i==2?15:10,TILES[1]);
+                styledTile(x+6,375,39,39,
+                    i==1?5:i==2?15:10,TILES[1],i);
                 if(i==0){
                     fitted("Zaob-",x+25,436,10,48,ink,true);
                     fitted("ljene",x+25,448,10,48,ink,true);

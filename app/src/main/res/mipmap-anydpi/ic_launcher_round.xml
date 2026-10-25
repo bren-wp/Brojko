@@ -52,8 +52,10 @@
  android:pathData="M17,66 H45 V69 H25 A6,6 0,0 0,19 76 H16 V72 A7,7 0,0 1,17 66 Z"/>
  <path android:fillColor="#48FFFFFF"
  android:pathData="M62,66 H90 V69 H62 Z"/>
- <group android:scaleX="0.84" android:scaleY="0.84"
-  android:pivotX="54" android:pivotY="54">
+ <!-- Keep the B central while revealing the bottom 8 and 16 glyphs. -->
+ <group android:scaleX="0.66" android:scaleY="0.66"
+  android:pivotX="54" android:pivotY="54"
+  android:translateY="-7">
  <group android:translateY="2.5">
   <path android:strokeColor="#963C2A" android:strokeWidth="18" android:strokeLineCap="round"
    android:strokeLineJoin="round"

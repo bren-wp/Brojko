@@ -155,3 +155,14 @@ Ova revizija **nije potvrda apsolutne 1:1 podudarnosti**. Izvorni dizajnerski PN
 ## Dodatna dorada nakon pregleda 70 snimki v1.12.41
 
 Emulator QA za v1.12.41 završio je uspješno. Na stvarnim snimkama potvrđeno je da su oznake teme unutar selekcijskih kartica i da novi testni prikazi pokrivaju ikonografske akcije. U modalu uspješnog dnevnog izazova posljednji gumb bio je poravnat uz sam donji rub panela; primarna i sekundarna akcija su podignute uz 18 dizajnerskih jedinica slobodnog prostora. Ovaj razmak sada provjerava regresijski test. Android launch tema na API 23–30 i API 31+ eksplicitno postavlja krem pozadinu `#FFF8EE` prije prvog Canvas kadra i koristi jedinstvenu koraljnu `#FF7A5B` boju naglaska. Time se smanjuje rizik bijelog početnog bljeska; snimka prvog stvarnog prikaza na različitim uređajima i dalje ostaje dio završnog manualnog QA.
+
+
+## v1.12 — nastavak: provjera svakog zaslona, ikone i dodirnih zona
+
+Na stvarnom Android emulator artefaktu v1.12.42 pregledane su snimke Splash, Home, 4×4/5×5 gameplaya, pobjede/poraza, dnevnog izazova, misija, statistike, povijesti, tema, postavki, jezika, sigurnosne kopije, privatnosti, informacija o aplikaciji i sve tri teme. Identificirana su i ciljano ispravljena tri nova odstupanja:
+
+- **Launcher ikona**: u adaptive foreground i svim legacy/round vectorima središnji B više ne prekriva brojke 8 i 16. Motiv i paleta ostaju isti, a središnji znak smanjen je i pomaknut kako bi četiri broja ostala čitljiva na kružnoj maski. Potrebna je vizualna kontrola novih CI snimki prije potvrde konačne kvalitete.
+- **Odabir stila**: svi thumbnaili sada pozivaju renderer s izričitim stilom (Zaobljene/Ravne/Staklaste); ranije su sva tri slučaja bila nacrtana prema samo trenutno odabranom stilu. Postojeća igra i spremljene korisničke postavke ostaju neizmijenjene.
+- **Statistika**: pet redaka povijesti dobiva 54 jedinice visine umjesto 27, s nenametljivim razmacima; `maxScroll` raste ovisno o broju rezultata. Dodana su dva regresijska emulator testa, za stvarno različite thumbnail renderinge i pet nepoklapajućih dodirnih zona.
+
+Ne izvoditi zaključak o 1:1 pikselnoj identičnosti bez izvornih referentnih PNG-ova i odgovarajućih golden diffs.
