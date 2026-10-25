@@ -1928,7 +1928,8 @@ public final class MainActivity extends Activity {
                 int index=i;float cx=65+i*90;
                 if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
                 themesTabIcon(glyphs[i],cx,830,27,i==2?CORAL:muted);
-                fitted(tabs[i],cx,863,13,84,i==2?CORAL:muted,true);
+                fitted(i==2?"Teme i izgled":tabs[i],cx,863,
+                    i==2?10:13,86,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
                     ()->navigate(destinations[index])));
             }
@@ -2012,15 +2013,16 @@ public final class MainActivity extends Activity {
             }
         }
         void themesCompact(){
-            brand(38,36);
-            themesTitlePill(72,50);
-            fitted("Teme i",158,102,33,165,ink,true);
-            fitted("izgled",276,102,33,166,CORAL,true);
-            fitted("Prilagodi igru svojem stilu.",200,133,16,344,muted,false);
+            // Measured against original supplied 941x1672 screen.
+            brand(52,42);
+            themesTitlePill(85,53);
+            fitted("Teme i",158,125,36,165,ink,true);
+            fitted("izgled",276,125,36,166,CORAL,true);
+            fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
-                final int chosen=i;float x=19+i*126,y=158;
+                final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
                     card(x,y,116,143,20,card);
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
@@ -2047,17 +2049,17 @@ public final class MainActivity extends Activity {
                 }));
             }
             card(20,335,360,293,26,card);
-            leftFitted("Pregled",30,351,22,167,ink,true);
-            leftFitted("Stil pločica",210,350,18,162,ink,true);
-            shape(201,344,1,269,0,theme==1?0xff47536a:0xffebdfd0);
-            shape(29,411,167,147,17,
+            leftFitted("Pregled",30,370,22,167,ink,true);
+            leftFitted("Stil pločica",201,369,18,172,ink,true);
+            shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
+            shape(29,411,167,169,17,
                 theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
-                float x=34+col*39.8f,y=416+row*35.5f;
-                themePreviewTile(x,y,36,32,tileColor(val),tileStyle);
-                fitted(Integer.toString(val),x+18,y+23,
+                float x=34+col*39.8f,y=416+row*39.6f;
+                themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
+                fitted(Integer.toString(val),x+18,y+25,
                     val>=1000?11:15,33,WHITE,true);
             }
             leftFitted("Ovako će izgledati",30,384,12,159,muted,false);
@@ -2065,18 +2067,18 @@ public final class MainActivity extends Activity {
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
-                card(x,367,51,90,13,card);
+                card(x,371,51,69,13,card);
                 if(tileStyle==i){
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(2.5f);
-                    c.drawRoundRect(x+1.5f,368.5f,x+49.5f,455.5f,12,12,p);
+                    c.drawRoundRect(x+1.5f,372.5f,x+49.5f,438.5f,12,12,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                themePreviewTile(x+6,375,39,39,TILES[1],i);
-                fitted(styles[i],x+25,439,9,48,ink,true);
-                shape(x+19,449,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
-                if(tileStyle==i)icon("check",x+25.5f,455.5f,9,WHITE);
-                taps.add(new Tap(x,367,x+51,457,styles[i],()->{
+                themePreviewTile(x+6,383,39,39,TILES[1],i);
+                fitted(styles[i],x+25,434,9,48,ink,true);
+                shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
+                if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
+                taps.add(new Tap(x,371,x+51,466,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
             }
@@ -2118,7 +2120,8 @@ public final class MainActivity extends Activity {
                 if(i==2)shape(205,639,90,61,25,
                     theme==1?0xff453a48:0xffffecdf);
                 themesTabIcon(glyphs[i],cx,658,26,i==2?CORAL:muted);
-                fitted(tabs[i],cx,690,13,84,i==2?CORAL:muted,true);
+                fitted(i==2?"Teme i izgled":tabs[i],cx,690,
+                    i==2?10:13,86,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
                     ()->navigate(destinations[index])));
             }

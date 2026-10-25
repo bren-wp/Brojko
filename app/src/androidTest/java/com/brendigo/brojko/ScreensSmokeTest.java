@@ -1399,4 +1399,39 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themeReferenceUsesSquarePreviewCellsAndAReadableFullTab(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldStyle=activity.tileStyle,oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;activity.tileStyle=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(image));}finally{image.recycle();}
+                assertEquals("Reference themes must fit without vertical scrolling",
+                    0f,view.maxScroll,.01f);
+                int count=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Zaobljene".equals(tap.label)||
+                        "Ravne".equals(tap.label)||
+                        "Staklaste".equals(tap.label)){
+                        assertTrue("Full card and radio indicator are tappable",
+                            tap.bottom-tap.top>=90);
+                        count++;
+                    }
+                }
+                assertEquals(3,count);
+                captureReference(activity,view,
+                    "themes-original-final-aligned-941x1672");
+            }finally{
+                activity.page=oldPage;activity.tileStyle=oldStyle;
+                activity.theme=oldTheme;activity.screen.invalidate();
+            }
+        });
+    }
+
 }
