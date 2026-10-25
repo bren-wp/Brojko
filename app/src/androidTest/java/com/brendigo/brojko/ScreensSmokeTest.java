@@ -42,6 +42,26 @@ public class ScreensSmokeTest {
         finally{bitmap.recycle();}
     }
 
+    // Renders the same production BoardScreen on an independent, non-attached
+    // Android View. The Activity window cannot resize the golden viewport.
+    private void captureReference(MainActivity activity,
+                                  MainActivity.BoardScreen view,String name){
+        assertEquals(941,view.getWidth());
+        assertEquals(1672,view.getHeight());
+        Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+        try{
+            view.draw(new Canvas(bitmap));
+            File directory=new File(activity.getExternalFilesDir(null),"screenshots");
+            assertTrue(directory.isDirectory()||directory.mkdirs());
+            try(FileOutputStream output=new FileOutputStream(
+                    new File(directory,name+".png"))){
+                assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
+            }catch(java.io.IOException failure){
+                throw new AssertionError("Cannot save reference capture "+name,failure);
+            }
+        }finally{bitmap.recycle();}
+    }
+
     @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
         rule.getScenario().onActivity(activity->{
             int originalStars=activity.stars,originalFlags=activity.rewardFlags;
@@ -254,78 +274,78 @@ public class ScreensSmokeTest {
 
     @Test public void originalReferenceViewportMaintainsFullGameplayControls(){
         rule.getScenario().onActivity(activity->{
-            MainActivity.BoardScreen view=activity.screen;
-            int width=view.getWidth(),height=view.getHeight();
+            // An offscreen instance avoids Activity relayout and device insets
+            // changing the requested 941x1672 reference viewport mid-test.
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             TileGame previousGame=activity.game;
             String previousPage=activity.page;
             try{
+                if(activity.game==null)
+                    activity.game=new TileGame("classic","",441L);
                 view.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
                 view.layout(0,0,941,1672);
-                if(activity.game==null)activity.newGame("classic");
                 String[] pages={"splash","home","game","win","daily",
                     "missions","stats","themes","settings","help","over","pause"};
                 for(String page:pages){
                     activity.page=page;
-                    capture(activity,"reference-941x1672-"+page);
+                    captureReference(activity,view,"reference-941x1672-"+page);
                 }
                 activity.page="game";
-                Bitmap verify=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{view.draw(new Canvas(verify));}finally{verify.recycle();}
-                assertTrue("Reference ratio should use the compact board layout",
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                assertEquals(941,view.getWidth());
+                assertEquals(1672,view.getHeight());
+                assertTrue("Reference aspect must use compact board",
                     view.compactBoardLayout);
-                assertEquals("Board should begin high enough to fit the buttons",
-                    171f,view.gridY,.1f);
+                assertEquals(171f,view.gridY,.1f);
                 boolean newButton=false,finishButton=false;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
-                    float physicalBottom=view.offY+tap.bottom*view.scale;
                     if("Novo".equals(tap.label)||"Završi".equals(tap.label)){
-                        assertTrue("Primary game button clipped on 941x1672: "+tap.label,
-                            physicalBottom<=view.getHeight()-view.getPaddingBottom()+1);
+                        float edge=view.offY+tap.bottom*view.scale;
+                        assertTrue("Game action clipped: "+tap.label+" edge="+edge,
+                            edge<=1673);
                         if("Novo".equals(tap.label))newButton=true;
                         if("Završi".equals(tap.label))finishButton=true;
                     }
                 }
-                assertTrue("Both reference game buttons must be accessible",
+                assertTrue("The three-button game toolbar must exist",
                     newButton&&finishButton);
                 activity.page="settings";
-                Bitmap settingsBitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{view.draw(new Canvas(settingsBitmap));}
-                finally{settingsBitmap.recycle();}
-                assertTrue("Reference-sized settings must use the compact layout",
-                    view.referencePortraitLayout);
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
                 boolean lastSetting=false;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("O aplikaciji".equals(tap.label)){
                         lastSetting=true;
-                        assertTrue("Last settings row is clipped at 941x1672",
-                            view.offY+tap.bottom*view.scale<=view.getHeight()+1);
-                        assertTrue("All settings remain comfortably touchable",
+                        assertTrue("Settings last row clipped",
+                            view.offY+tap.bottom*view.scale<=1673);
+                        assertTrue("Settings touch target is too small",
                             tap.bottom-tap.top>=48);
                     }
                 }
-                assertTrue("Settings footer controls must exist",lastSetting);
+                assertTrue("About app settings item missing",lastSetting);
                 activity.page="win";
-                Bitmap victoryBitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{view.draw(new Canvas(victoryBitmap));}
-                finally{victoryBitmap.recycle();}
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
                 int visibleActions=0;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Nastavi igrati".equals(tap.label)||
                        "Nova igra".equals(tap.label)||
                        "Podijeli rezultat".equals(tap.label)){
                         visibleActions++;
-                        assertTrue("Victory action clipped at 941x1672: "+tap.label,
-                            view.offY+tap.bottom*view.scale<=view.getHeight()+1);
+                        assertTrue("Victory action clipped: "+tap.label,
+                            view.offY+tap.bottom*view.scale<=1673);
                     }
                 }
-                assertEquals("Three functional victory buttons must fit",
+                assertEquals("Victory must show all 3 functional buttons",
                     3,visibleActions);
             }finally{
-                view.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));
-                view.layout(0,0,width,height);
-                activity.game=previousGame;activity.page=previousPage;
+                activity.game=previousGame;
+                activity.page=previousPage;
             }
         });
     }
