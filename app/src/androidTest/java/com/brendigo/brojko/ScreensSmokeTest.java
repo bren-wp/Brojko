@@ -1542,7 +1542,11 @@ public class ScreensSmokeTest {
                         "\"score\":2560,\"peak\":128}]").commit();
                     board.draw(new Canvas(withTime));
                     int differences=0;
-                    for(int y=488;y<505;y++)for(int x=270;x<380;x++){
+                    int top=Math.max(0,Math.round(board.offY+475f*board.scale));
+                    int bottom=Math.min(1672,Math.round(board.offY+501f*board.scale));
+                    int left=Math.max(0,Math.round(board.offX+117f*board.scale));
+                    int right=Math.min(941,Math.round(board.offX+165f*board.scale));
+                    for(int y=top;y<bottom;y++)for(int x=left;x<right;x++){
                         if(legacy.getPixel(x,y)!=withTime.getPixel(x,y))
                             differences++;
                     }
