@@ -1733,8 +1733,10 @@ public final class MainActivity extends Activity {
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
-                fitted(intensities[i],223+i*74,791,12,67,muted,false);
-                taps.add(new Tap(208+i*55,739,265+i*53,801,intensities[i],()->{
+                fitted(intensities[i],236+i*54,791,12,62,muted,false);
+                float left=i==0?208:i==1?262:316;
+                float right=i==0?261:i==1?315:378;
+                taps.add(new Tap(left,739,right,801,intensities[i],()->{
                     animation=pos;persist();invalidate();
                 }));
             }
@@ -1925,8 +1927,10 @@ public final class MainActivity extends Activity {
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
-                fitted(intensities[i],223+i*74,619,11,66,muted,false);
-                taps.add(new Tap(208+i*55,582,265+i*53,627,
+                fitted(intensities[i],236+i*54,619,11,62,muted,false);
+                float left=i==0?208:i==1?262:316;
+                float right=i==0?261:i==1?315:378;
+                taps.add(new Tap(left,582,right,627,
                     intensities[i],()->{
                         animation=pos;persist();invalidate();
                     }));

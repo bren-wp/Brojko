@@ -762,4 +762,39 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void animationLevelTapZonesDoNotOverlapOnEitherLayout(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            MainActivity.BoardScreen custom=activity.new BoardScreen(activity);
+            try{
+                int[][] sizes={{1080,2400},{941,1672}};
+                for(int[] size:sizes){
+                    custom.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                        View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(size[1],
+                        View.MeasureSpec.EXACTLY));
+                    custom.layout(0,0,size[0],size[1]);
+                    activity.page="themes";
+                    Bitmap bmp=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{custom.draw(new Canvas(bmp));}finally{bmp.recycle();}
+                    MainActivity.BoardScreen.Tap[] targets=new MainActivity.BoardScreen.Tap[3];
+                    for(MainActivity.BoardScreen.Tap tap:custom.taps){
+                        if("Niska".equals(tap.label))targets[0]=tap;
+                        if("Srednja".equals(tap.label))targets[1]=tap;
+                        if("Visoka".equals(tap.label))targets[2]=tap;
+                    }
+                    for(int i=0;i<3;i++){
+                        assertNotNull("Missing animation tap "+i,targets[i]);
+                        assertTrue("Tap must fit the content width",
+                            targets[i].right<=380);
+                        assertTrue("Tap must be wide enough",
+                            targets[i].right-targets[i].left>=53);
+                        if(i>0)assertTrue("Animation tap targets cannot overlap",
+                            targets[i-1].right<targets[i].left);
+                    }
+                }
+            }finally{activity.page=oldPage;}
+        });
+    }
+
 }

@@ -176,3 +176,8 @@ Nakon detaljnijeg pregleda svih modalnih stanja pronađeno je da završetak dnev
 ## Završna korekcija launcher vektora prema stvarnoj 512×512 Android snimci
 
 Pregled adaptivne ikone nakon promjene proporcija središnjeg B u izdanju v1.12.43 otkrio je preostalu pogrešku: broj 16 prikazivao je konturu nalik na 12, dok je osmica imala ukrižene otvorene petlje. Četiri međusobno usklađene color-vector datoteke sada imaju ispravljenu šesticu s donjom zatvorenom petljom i dvije pravilno složene petlje osmice. Nije generirana rasterizirana ikona, nije promijenjen Brojko motiv ni paleta; Android simulator kroz postojeći QA ponovno snima adaptive i round varijante. Potrebna je dodatna stvarna vizualna potvrda, a ne samo prolazak builda.
+
+
+## Mikroispravak kontrola animacije — obje visine zaslona
+
+Natpisi Niska/Srednja/Visoka sada imaju uravnotežen razmak unutar kartice na standardnom i kompaktnom ekranu Teme i izgled. Tri dodirne zone su nepoklapajuće (208–261, 262–315, 316–378 dizajnerskih jedinica); položaji gumba i aktivna spremljena razina ostaju nepromijenjeni. Dodan je instrumentacijski test obje geometrije zaslona.
