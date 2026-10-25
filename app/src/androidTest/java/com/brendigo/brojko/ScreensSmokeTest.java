@@ -289,7 +289,8 @@ public class ScreensSmokeTest {
                 assertTrue("Adaptive launcher icon required",
                     icon instanceof android.graphics.drawable.AdaptiveIconDrawable);
                 renderLauncherAsset(activity,icon,"launcher-adaptive");
-                int roundRes=activity.getApplicationInfo().roundIcon;
+                int roundRes=activity.getResources().getIdentifier(
+                    "ic_launcher_round","mipmap",activity.getPackageName());
                 assertTrue("Separate round launcher resource required",roundRes!=0);
                 android.graphics.drawable.Drawable round=activity.getResources()
                     .getDrawable(roundRes,activity.getTheme());
