@@ -1673,11 +1673,11 @@ public final class MainActivity extends Activity {
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
             }
-            shape(104,y+(portrait?52:61),171,7,4,
+            shape(104,y+(portrait?49:59),171,5,3,
                 theme==1?0xff40516c:0xffdce3e8);
             float fraction=Math.max(0,Math.min(1,(float)value/target));
-            if(fraction>0)shape(104,y+(portrait?52:61),
-                171*fraction,7,4,accent);
+            if(fraction>0)shape(104,y+(portrait?49:59),
+                171*fraction,5,3,accent);
             // Existing 1024 tile milestone is binary; show 0/1 or 1/1
             // instead of the misleading raw maxTile/1024 ratio.
             boolean binaryMilestone=name.startsWith("Majstor");
