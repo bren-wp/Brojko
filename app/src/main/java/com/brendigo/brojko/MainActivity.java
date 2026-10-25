@@ -57,6 +57,8 @@ public final class MainActivity extends Activity {
     int todayMerges, todayPoints, playDayStreak, lastScore, stars, rewardFlags;
     String lastDaily="", statsDay="", lastPlayDay="", dailyRewardDate="";
     boolean sound=true, vibration=true, notifications=false;
+    // UI-only state: distinguishes a newly awarded daily bonus from a replay.
+    boolean dailyBonusGrantedThisAttempt=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -211,6 +213,7 @@ public final class MainActivity extends Activity {
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
         game=new TileGame(mode,"daily".equals(mode)?today():"",seed);
+        dailyBonusGrantedThisAttempt=false;
         ensureDay();
         if(!today().equals(lastPlayDay)){
             playDayStreak=yesterday().equals(lastPlayDay)?playDayStreak+1:1;
@@ -286,6 +289,7 @@ public final class MainActivity extends Activity {
         if(dailyComplete&&!today().equals(dailyRewardDate)){
             dailyRewardDate=today();
             stars+=250;
+            dailyBonusGrantedThisAttempt=true;
         }
         soundEffect();
         screen.setContentDescription("Brojko, rezultat "+fmt(game.score)+
@@ -907,8 +911,19 @@ public final class MainActivity extends Activity {
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
             }
-            taps.add(new Tap(x,y,x+w,y+h,label==null||label.isEmpty()?
-                (symbol==null?"Akcija":symbol):label,action));
+            // Icon-only actions need localized TalkBack labels and a full touch target.
+            boolean iconOnly=label==null||label.isEmpty();
+            String accessibleLabel=label;
+            if(iconOnly) {
+                if("back".equals(symbol))accessibleLabel="Natrag";
+                else if("pause".equals(symbol))accessibleLabel="Pauziraj igru";
+                else if("undo".equals(symbol))accessibleLabel="Poništi potez";
+                else accessibleLabel=symbol==null?"Akcija":symbol;
+            }
+            float extraX=iconOnly?Math.max(0,(54f-w)/2):0;
+            float extraY=iconOnly?Math.max(0,(54f-h)/2):0;
+            taps.add(new Tap(Math.max(0,x-extraX),Math.max(0,y-extraY),
+                Math.min(400,x+w+extraX),y+h+extraY,accessibleLabel,action));
         }
         void title(String name) {
             back();
@@ -1126,11 +1141,11 @@ public final class MainActivity extends Activity {
                         v>99?8.4f:12,side-2,WHITE,true);
                 }
             }
-            fitted(name,x+w/2,y+(portrait?132:150),portrait?16:17,w-5,ink,true);
+            fitted(name,x+w/2,y+(portrait?125:150),portrait?16:17,w-5,ink,true);
             if(daily){
-                fitted("Novi izazov",x+w/2,y+(portrait?147:169),12,w-5,muted,false);
-                fitted("svaki dan!",x+w/2,y+(portrait?160:182),12,w-5,muted,false);
-            }else fitted(sub,x+w/2,y+(portrait?154:177),17,w-6,muted,false);
+                fitted("Novi izazov",x+w/2,y+(portrait?140:169),12,w-5,muted,false);
+                fitted("svaki dan!",x+w/2,y+(portrait?154:182),12,w-5,muted,false);
+            }else fitted(sub,x+w/2,y+(portrait?152:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
         void scoreCard(String caption,String value,float x,float y,float width){
@@ -1309,8 +1324,9 @@ public final class MainActivity extends Activity {
             card(65,401,270,98,20,card);
             txt("TVOJ REZULTAT",200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
-            txt(success?"+250 zvjezdica (jednom dnevno)":
-                "Pokušaj ponovno i dosegni 256.",200,534,17,
+            fitted(success?(dailyBonusGrantedThisAttempt?
+                "+250 zvjezdica osvojeno!":"Današnja nagrada već preuzeta"):
+                "Pokušaj ponovno i dosegni 256.",200,534,17,310,
                 success?0xff259d85:muted,true);
             button("Igraj ponovno","undo",53,558,294,62,CORAL,true,
                 ()->newGame("daily"));
@@ -1644,8 +1660,9 @@ public final class MainActivity extends Activity {
                 }
                 fitted(names[i],x+58,353,17,108,ink,true);
                 if(theme==i){
-                    shape(x+48,374,20,20,11,CORAL);
-                    icon("check",x+58,384,12,WHITE);
+                    // Selection indicator stays inside the theme card, not below its border.
+                    shape(x+90,202,20,20,11,CORAL);
+                    icon("check",x+100,212,12,WHITE);
                 }
                 taps.add(new Tap(x,197,x+116,371,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
@@ -1832,8 +1849,9 @@ public final class MainActivity extends Activity {
                 }
                 fitted(names[i],x+58,y+123,16,108,ink,true);
                 if(theme==i){
-                    shape(x+48,y+131,20,20,11,CORAL);
-                    icon("check",x+58,y+141,12,WHITE);
+                    // Compact indicator also stays within the card safe area.
+                    shape(x+90,y+7,20,20,11,CORAL);
+                    icon("check",x+100,y+17,12,WHITE);
                 }
                 taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();

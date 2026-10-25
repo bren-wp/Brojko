@@ -116,8 +116,11 @@ public class ScreensSmokeTest {
                 assertEquals(3000,activity.game.score);
                 assertEquals(activity.today(),activity.lastDaily);
                 assertEquals(250,activity.stars);
+                assertTrue("Newly achieved daily bonus should be announced",
+                    activity.dailyBonusGrantedThisAttempt);
                 capture(activity,"daily-success");
                 // A second valid daily attempt is allowed, but no second reward.
+                activity.dailyBonusGrantedThisAttempt=false;
                 activity.game=new TileGame("daily",activity.today(),124L);
                 activity.game.cells=new int[16];
                 activity.game.cells[0]=2;
@@ -128,6 +131,8 @@ public class ScreensSmokeTest {
                 activity.page="game";
                 activity.move(TileGame.LEFT);
                 assertEquals(250,activity.stars);
+                assertFalse("Replay must not claim a second reward",
+                    activity.dailyBonusGrantedThisAttempt);
                 // Failing the 80th move must finish the challenge, not keep
                 // showing a misleading active daily task.
                 activity.game=new TileGame("daily",activity.today(),125L);
@@ -587,4 +592,39 @@ public class ScreensSmokeTest {
             assertTrue(activity.game.cells.length==16||activity.game.cells.length==25);
         });
     }
+    @Test public void iconOnlyControlsUseLocalizedLabelsAndGenerousTouchAreas(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            TileGame previousGame=activity.game;
+            try{
+                activity.game=new TileGame("classic","",777L);
+                activity.page="game";
+                capture(activity,"game-icon-action-a11y");
+                boolean pause=false,undo=false;
+                for(MainActivity.BoardScreen.Tap tap:activity.screen.taps){
+                    if("Pauziraj igru".equals(tap.label)||
+                        "Poništi potez".equals(tap.label)){
+                        assertTrue("Icon touch width should be >= 54 design units",
+                            tap.right-tap.left>=53.9f);
+                        assertTrue("Icon touch height should be >= 54 design units",
+                            tap.bottom-tap.top>=53.9f);
+                        if("Pauziraj igru".equals(tap.label))pause=true;
+                        else undo=true;
+                    }
+                }
+                assertTrue("Pause must have a localized label",pause);
+                assertTrue("Undo must have a localized label",undo);
+                activity.page="daily";
+                capture(activity,"daily-back-a11y");
+                assertTrue("Back action must have a localized label",
+                    activity.screen.taps.stream().anyMatch(tap->
+                        "Natrag".equals(tap.label)));
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

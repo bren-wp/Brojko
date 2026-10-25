@@ -137,3 +137,16 @@ Izvorno dostavljeno devet ekraniziranih referenci plus zasebna brand ploča uspo
 ## v1.12 — posljednja revizija proporcija launcher brojeva
 
 Snimka adaptive ikone 512×512 iz stvarnog emulatora v1.12.39 otkrila je da 8 i 16 još izlaze ispod bijelog slova B i da je broj 2 razmjerno velik. Brojevi su pomaknuti prema vanjskim kutovima i skalirani neovisno (83%, 83%, 80%, 77%) na svim obojenim vektorskim varijantama. Logo B i pozadina zadržavaju prethodni reljef. Emulator provjerava prikaz, ali izvorna 3D ikona i dalje se ne može zvati identičnom vektoru bez izvornog raster asseta.
+
+
+## v1.12 — pregled stvarnih emulator snimki i ispravci sučelja (25. 10. 2026.)
+
+Pregledan je `Brojko-real-device-UI` artefakt prethodnog uspješnog emulator workflowa s 68 snimki, uključujući sve primarne ekrane, 3 teme, Android launcher ikone i referentni viewport 941×1672. Uočena su odstupanja koja se mogu dokazati iz izvornog Canvas rasporeda:
+
+- Odabrana tema imala je oznaku potvrde ispod donjeg ruba kartice; indikator je sada pozicioniran unutar kartice u punom i kompaktnom rasporedu.
+- Kompaktne kartice za načine igre sada imaju veći donji razmak ispod podnaslova; tekst ostaje čitljiv bez preklapanja susjednih kartica.
+- Ikonički gumbi Natrag, Pauza i Poništi dobili su opisna hrvatska pristupačna imena i minimalnu interaktivnu zonu 54×54 dizajnerske jedinice; vizualna veličina ikona ostaje vjerna dizajnu.
+- Poruka nakon ponovljenog dnevnog izazova više ne tvrdi da je dodijeljeno novih 250 zvjezdica. Podatak o dodjeli je UI-only; trajno stanje nagrada ostaje zaštićeno postojećom provjerom `dailyRewardDate`.
+- Dodan je instrumentacijski regresijski test za opise i veličine zona ikonografskih gumba, uz proširenje provjere dnevne nagrade.
+
+Ova revizija **nije potvrda apsolutne 1:1 podudarnosti**. Izvorni dizajnerski PNG-ovi još nisu u repozitoriju kao golden reference; za pixel-diff treba iste ulazne podatke, prikaz i izvorne grafičke slojeve. Testovi i novo izdanje ovise o uspješnom CI prolazu nakon commita.
