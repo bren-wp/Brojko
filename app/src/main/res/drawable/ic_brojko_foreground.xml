@@ -23,7 +23,7 @@
  </group>
  <group android:scaleX="0.8" android:scaleY="0.8"
   android:pivotX="28" android:pivotY="75"
-  android:translateX="-2" android:translateY="2">
+  android:translateX="4" android:translateY="-5">
  <!-- Two closed, aligned loops prevent the lower-left 8 from resembling a 3. -->
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3.4"
  android:strokeLineCap="round" android:strokeLineJoin="round"
@@ -31,7 +31,7 @@
  </group>
  <group android:scaleX="0.77" android:scaleY="0.77"
   android:pivotX="75" android:pivotY="77"
-  android:translateX="5" android:translateY="2">
+  android:translateX="5" android:translateY="-7">
  <!-- A true six with a closed lower bowl, never a curved two. -->
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3.1"
  android:strokeLineCap="round" android:strokeLineJoin="round"

@@ -186,3 +186,8 @@ Natpisi Niska/Srednja/Visoka sada imaju uravnotežen razmak unutar kartice na st
 ## Potpuno snimanje sva tri načina igre
 
 UI workflow sada snima **stvarna stanja** sva tri načina igre, ne samo generičku klasičnu ploču: Klasično 4×4, Opušteno 5×5 i Dnevni izazov 4×4. Za svaki se stvara stvarni emulator screenshot i posebna referentna snimka renderera na 941×1672. Test mjeri broj ćelija, kvadratni izgled mreže, granice vidljivog boarda i postojanje aktivne kontrole Završi. Ti QA snimci ne podrazumijevaju da su referentni marketinški PNG-ovi učitani ili da je 1:1 usporedba provedena.
+
+
+## Android launcher mask safe-area — završna geometrijska korekcija
+
+Emulator snimka v1.12.45 pokazala je ispravne nove konture 8 i 6, no njihovi donji potezi i dalje su bili odrezani kružnom launcher maskom. Stoga je donja lijeva brojka pomaknuta za +6 po x i −7 po y, a donja desna za −9 po y u izvornim vektorskim koordinatama prije adaptive skaliranja. Zadržani su isti oblik B, sva četiri polja, njihove boje i zaobljenost. Ovaj zahvat cilja stvarni Android mask clipping, ne samo kozmetičko smanjivanje ikone; provjeru treba potvrditi novom emulator snimkom.
