@@ -1754,4 +1754,26 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyHeaderKeepsBothDescriptionLinesAbovePreview(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(bmp));}finally{bmp.recycle();}
+                assertEquals("Daily reference needs no ghost scrolling",
+                    0f,board.maxScroll,1.1f);
+                // Regression screenshot: short second subtitle was painted
+                // beneath the sample grid in the previous release.
+                captureReference(activity,board,
+                    "daily-subtitles-above-board-941x1672");
+            }finally{activity.page=oldPage;activity.screen.invalidate();}
+        });
+    }
+
 }

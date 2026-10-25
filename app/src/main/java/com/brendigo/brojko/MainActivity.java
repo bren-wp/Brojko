@@ -1447,7 +1447,7 @@ public final class MainActivity extends Activity {
             fitted("izazov",199,portrait?99:141,portrait?42:48,234,
                 CORAL,true);
             rays(154,portrait?31:53,15,CORAL);
-            float dateY=portrait?108:164;
+            float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
             card(98,dateY,191,portrait?32:39,19,
                 theme==1?card:0xffffecdc);
@@ -1465,16 +1465,18 @@ public final class MainActivity extends Activity {
                 // The original portrait artwork has two subtitle lines,
                 // spaced between the date pill and the illustrative board.
                 fitted("Riješi današnji izazov i osvoji posebnu nagradu.",
-                    200,153,13,350,muted,false);
+                    200,145,13,350,muted,false);
                 fitted("Pokaži koliko daleko možeš stići!",
-                    200,167,13,338,muted,false);
+                    200,159,13,338,muted,false);
             }else{
                 fitted("Riješi današnji izazov i osvoji nagradu!",
                     200,218,17,337,muted,false);
                 fitted("Pokaži koliko daleko možeš stići!",
                     200,237,16,337,muted,false);
             }
-            float boardY=portrait?165:250;
+            float boardY=portrait?167:250;
+            // The second subtitle line ends well above the sample board.
+            // Do not move the board upward without leaving its text margin.
             // Decorative bursts live outside the board and stay below
             // the description, as in the supplied 941x1672 mockup.
             rays(51,boardY+(portrait?105:118),22,0xffffa83e);
