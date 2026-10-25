@@ -1050,4 +1050,33 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void originalThemeChoiceUsesCenteredIndicatorsUnderTiles(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="themes";
+                MainActivity.BoardScreen custom=activity.new BoardScreen(activity);
+                custom.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                custom.layout(0,0,941,1672);
+                for(int theme=0;theme<3;theme++){
+                    activity.theme=theme;
+                    Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                    try{custom.draw(new Canvas(bmp));}
+                    finally{bmp.recycle();}
+                    assertEquals("Three theme options remain tappable",3,
+                        (int)custom.taps.stream().filter(tap->
+                            "Svijetla".equals(tap.label)||
+                            "Tamna".equals(tap.label)||
+                            "Živopisna".equals(tap.label)).count());
+                    capture(activity,"original-theme-selection-"+theme);
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

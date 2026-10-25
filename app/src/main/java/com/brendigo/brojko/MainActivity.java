@@ -1076,10 +1076,10 @@ public final class MainActivity extends Activity {
             c.save();c.rotate(-15,374,713);
             styledTile(327,666,118,111,23,TILES[8],0);
             txt("256",386,734,38,WHITE,true);c.restore();
-            brand(487,77);
-            card(26,747,348,77,32,theme==1?card:0xfffff0db);
-            fitted("Spajaj brojeve.",128,793,22,192,CORAL,true);
-            fitted("Ruši rekorde.",290,793,22,182,TEAL,true);
+            brand(487,108);
+            card(26,704,348,77,32,theme==1?card:0xfffff0db);
+            fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
+            fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
         }
         void home(){
             boolean portrait=referencePortraitLayout;
@@ -1698,12 +1698,10 @@ public final class MainActivity extends Activity {
                     glossyTile(x+15+a*45,218+b*43,40,39,9,cs[j]);
                     txt(Integer.toString(2<<j),x+35+a*45,246+b*43,21,WHITE,true);
                 }
-                fitted(names[i],x+58,353,17,108,ink,true);
-                if(theme==i){
-                    // Selection indicator stays inside the theme card, not below its border.
-                    shape(x+90,202,20,20,11,CORAL);
-                    icon("check",x+100,212,12,WHITE);
-                }
+                fitted(names[i],x+58,362,17,108,ink,true);
+                // Selection state is a centered radio-like badge below preview.
+                shape(x+47,320,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,331,13,WHITE);
                 taps.add(new Tap(x,197,x+116,371,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
@@ -1882,41 +1880,39 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                shape(x+7,y+9,102,92,16,fills[i]);
+                shape(x+7,y+18,102,96,16,fills[i]);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    glossyTile(x+15+xx*45,y+17+yy*38,40,35,9,colors[j]);
+                    glossyTile(x+15+xx*45,y+29+yy*38,40,35,9,colors[j]);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*45,y+43+yy*38,19,WHITE,true);
+                        x+35+xx*45,y+55+yy*38,19,WHITE,true);
                 }
-                fitted(names[i],x+58,y+123,16,108,ink,true);
-                if(theme==i){
-                    // Compact indicator also stays within the card safe area.
-                    shape(x+90,y+7,20,20,11,CORAL);
-                    icon("check",x+100,y+17,12,WHITE);
-                }
+                fitted(names[i],x+58,y+157,16,108,ink,true);
+                // Original design: selector beneath the four numbered tiles.
+                shape(x+47,y+114,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,y+125,13,WHITE);
                 taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
-            card(20,320,360,308,26,card);
+            card(20,335,360,293,26,card);
             txt("Pregled",102,351,22,ink,true);
             txt("Stil pločica",282,350,18,ink,true);
-            shape(29,365,167,152,17,
+            shape(29,401,167,155,17,
                 theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
-                float x=34+col*39.8f,y=370+row*35.5f;
+                float x=34+col*39.8f,y=406+row*35.5f;
                 glossyTile(x,y,36,32,
                     tileStyle==1?5:tileStyle==2?13:9,tileColor(val));
                 fitted(Integer.toString(val),x+18,y+23,
                     val>=1000?11:15,33,WHITE,true);
             }
-            fitted("Ovako će izgledati tvoja ploča.",113,534,11,171,muted,false);
+            fitted("Ovako će izgledati tvoja ploča.",113,389,11,171,muted,false);
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;

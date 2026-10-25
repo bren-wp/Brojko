@@ -218,3 +218,8 @@ Pregled 21 dodatne screenshot slike s viewportom 360×600 otkrio je da splash do
 ## Reference 941×1672: obnovljeno svih šest izvornih misija (2026-10-25)
 
 Korisničke izvorne PNG reference pokazuju dvije dnevne, dvije tjedne i dvije kartice postignuća. UI je usklađen, uključujući dnevni cilj 512 bez Undo i tjednih 10.000 bodova, sa stvarnim dedupliciranim nagradama i trajanjem po danu/tjednu. Premješteni su svi redci, naslovne trake, ikone i progresne trake u kompaktni i visoki raspored. Lokalno su dodana polja za weekPoints, weekStart i undoUsedThisGame; prethodne sigurnosne kopije ostaju kompatibilne jer su novi ključevi neobvezni.
+
+
+## Referentne PNG slike: tipografija splasha, raspored tema i sigurna zona ikone
+
+Sada dostupne izvorne slike pokazale su da je središnji Brojko logo na splashu trebao biti znatno veći i da je slogan bio previsoko pri dnu. Splash je usklađen povećanjem brand bloka (77→108 dizajnerskih jedinica) i pomicanjem slogana 43 jedinice prema gore. Oznake tri teme sada su radio-badge ispod numeriranih 2×2 pločica, a nazivi ispod kartica kao u referenci. Referentni lijevi preview: legenda se nalazi iznad mini mreže 4×4, pa su raspored mreže i središnji panel recalibrirani bez preklapanja ikona, radijskih kontrola i donjih tabova. Adaptive foreground launcher vektor smanjen je na 75% radi sigurnog kružnog Android maskiranja i provjere čitljivosti četiri broja. Zadržane su postojeće interaktivne zone, sve palete tema i pohranjeni izbor.
