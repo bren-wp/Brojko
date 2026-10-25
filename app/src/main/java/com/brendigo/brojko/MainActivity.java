@@ -1215,12 +1215,14 @@ public final class MainActivity extends Activity {
             }else{
                 fitted("izazov",103,135,36,195,CORAL,true);
             }
-            icon("crown",narrow?216:224,70,24,0xffffb43d);
-            fitted("NAJBOLJI",narrow?224:257,100,12,narrow?72:105,muted,true);
-            fitted(fmt(best),narrow?224:258,129,25,narrow?72:105,ink,true);
-            icon("stats",narrow?292:313,69,23,muted);
-            fitted("REZULTAT",narrow?292:331,101,12,narrow?68:98,muted,true);
-            fitted(fmt(game.score),narrow?292:330,129,24,narrow?70:113,ink,true);
+            // Both score labels have independent, non-overlapping bounds even
+            // for 5+ digit values shown in the original populated 4x4 artwork.
+            icon("crown",narrow?214:224,70,24,0xffffb43d);
+            fitted("NAJBOLJI",narrow?219:255,100,12,narrow?66:70,muted,true);
+            fitted(fmt(best),narrow?219:255,129,24,narrow?64:70,ink,true);
+            icon("stats",narrow?299:313,69,23,muted);
+            fitted("REZULTAT",narrow?301:334,101,12,narrow?65:70,muted,true);
+            fitted(fmt(game.score),narrow?301:334,129,23,narrow?64:70,ink,true);
             if(narrow){
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.

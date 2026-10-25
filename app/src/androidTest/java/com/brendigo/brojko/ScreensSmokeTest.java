@@ -1093,6 +1093,11 @@ public class ScreensSmokeTest {
                     View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
                 reference.layout(0,0,941,1672);
                 activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;activity.game.cells[1]=2;
+                assertTrue("Golden game should have an active Undo history",
+                    activity.game.move(TileGame.LEFT).changed);
+                assertTrue(activity.game.canUndo());
                 activity.game.cells=new int[]{
                     2,4,8,16,
                     8,16,2,4,

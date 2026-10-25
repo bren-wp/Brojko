@@ -238,3 +238,8 @@ U Android testove uvedena su reprezentativna, **samo testna** stanja iz original
 ## Sekcijski headeri i stvarne periodičke oznake u Misijama
 
 Originalna referenca pokazuje neovisne piktograme i satne oznake u Dnevnim i Tjednim misijama. Dodani su izvoru bliži simboli za dnevne/tjedne ciljeve te mali neutralni satni badge s stvarnim vremenom do sljedeće lokalne ponoći ili idućeg ponedjeljka. Ukupan broj skupljenih zvjezdica premješten je u naslovni dio Postignuća, tako da više ne prelazi preko prve dnevne kartice. Vrijeme nije hardkodirano i ne tvrdi da je cloud sinkronizacija omogućena. Izračun se temelji na lokalnom vremenu telefona i prikazuje se pri idućem iscrtavanju zaslona.
+
+
+## Stvarni usporedni screenshot: brojke Najbolji/Rezultat
+
+Testno stanje 4×4 prema dostavljenom izvorniku (rezultat 1.316, najbolji 3.864) otkrilo je da dva broja imaju prevelike natpisne širine te se gotovo spajaju. Igra sada računa kompaktnije, nepoklapajuće score natpise u obje varijante headera. Testna referentna ploča dobiva stvarnu spremljenu Undo povijest prije injektiranja 16 brojeva, tako da gumb Poništi u njezinoj QA snimci ima aktivni izgled kao u originalnom dizajnu. Stvarni engine i spremljene korisničke partije nisu mijenjani.
