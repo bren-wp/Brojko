@@ -121,3 +121,7 @@ Zaglavlje dnevnog izazova sada koristi veliki dvoredni naslov **Dnevni / izazov*
 ## v1.11 — gumbi, siguran dodir i launcher
 
 Sve Canvas tipke i navigacijske kartice sada dijele povratnu informaciju na pritisak. ACTION_UP aktivira samo izvorno dodirnutu kontrolu kada je otpuštena unutar nje, dok pomicanje sadržaja i ACTION_CANCEL prekidaju interakciju. Regresijski instrumentacijski test pokriva otpuštanje izvan gumba i valjan klik. Za Android 13+ dodana je monokromatska tematska ikona s četiri pločice i dominantnim B te zasebna okrugla varijanta; obojena ikona zadržana je. Ove promjene ne dokazuju pikselnu jednakost 3D mockupu.
+
+### Test ikone na stvarnom Android launcheru
+
+Novi Android UI test renderira adaptivnu i okruglu ikonu u PNG 512×512 te na Androidu 13+ i monokromatski sloj pod tematskom bojom. Test zahtijeva dostupne slojeve resursa i neprozirnu jezgru ikone; PNG snimke ulaze u GitHub Actions UI QA artefakt zajedno s 941×1672 prikazima svih ekrana. Time se dokazuje da launcher resursi nisu samo prisutni u kodu, nego se i mogu crtati na uređaju.

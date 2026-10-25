@@ -280,6 +280,58 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void launcherAdaptiveRoundAndThemedIconRender() {
+        rule.getScenario().onActivity(activity->{
+            if(android.os.Build.VERSION.SDK_INT<26)return;
+            try{
+                android.graphics.drawable.Drawable icon=activity.getPackageManager()
+                    .getApplicationIcon(activity.getPackageName());
+                assertTrue("Adaptive launcher icon required",
+                    icon instanceof android.graphics.drawable.AdaptiveIconDrawable);
+                renderLauncherAsset(activity,icon,"launcher-adaptive");
+                int roundRes=activity.getApplicationInfo().roundIcon;
+                assertTrue("Separate round launcher resource required",roundRes!=0);
+                android.graphics.drawable.Drawable round=activity.getResources()
+                    .getDrawable(roundRes,activity.getTheme());
+                renderLauncherAsset(activity,round,"launcher-round");
+                if(android.os.Build.VERSION.SDK_INT>=33){
+                    android.graphics.drawable.AdaptiveIconDrawable adaptive=
+                        (android.graphics.drawable.AdaptiveIconDrawable)icon;
+                    android.graphics.drawable.Drawable monochrome=
+                        adaptive.getMonochrome();
+                    assertNotNull("Android themed monochrome layer required",
+                        monochrome);
+                    monochrome.setTint(android.graphics.Color.DKGRAY);
+                    renderLauncherAsset(activity,monochrome,
+                        "launcher-android13-monochrome");
+                }
+            }catch(android.content.pm.PackageManager.NameNotFoundException error){
+                throw new AssertionError("Brojko launcher must be installed",error);
+            }
+        });
+    }
+
+    private void renderLauncherAsset(MainActivity activity,
+        android.graphics.drawable.Drawable drawable,String filename){
+        Bitmap bmp=Bitmap.createBitmap(512,512,Bitmap.Config.ARGB_8888);
+        try{
+            Canvas canvas=new Canvas(bmp);
+            drawable.setBounds(0,0,512,512);
+            drawable.draw(canvas);
+            assertTrue("Launcher cannot be entirely transparent",
+                android.graphics.Color.alpha(bmp.getPixel(256,256))>0);
+            File folder=new File(activity.getExternalFilesDir(null),"screenshots");
+            assertTrue(folder.isDirectory()||folder.mkdirs());
+            try(FileOutputStream out=new FileOutputStream(
+                new File(folder,filename+".png"))){
+                assertTrue("Unable to save launcher image",
+                    bmp.compress(Bitmap.CompressFormat.PNG,100,out));
+            }catch(java.io.IOException error){
+                throw new AssertionError("Saving launcher icon failed",error);
+            }
+        }finally{bmp.recycle();}
+    }
+
     @Test public void buttonPressFeedbackAndReleaseSafety(){
         rule.getScenario().onActivity(activity->{
             MainActivity.BoardScreen screen=activity.screen;
