@@ -171,3 +171,8 @@ Ne izvoditi zaključak o 1:1 pikselnoj identičnosti bez izvornih referentnih PN
 ## Regresijski popravak dnevnog poraza i dead-code provjera
 
 Nakon detaljnijeg pregleda svih modalnih stanja pronađeno je da završetak dnevnog izazova zbog potpuno blokirane ploče prikazuje generički modal poraza, dok poseban modal dnevnog poraza tvrdnjom o 80 potrošenih poteza pogrešno objašnjava svaki neuspjeh. Sada dnevna partija uvijek vodi u odgovarajući rezultat, uz točnu poruku o preostalim potezima ili blokiranoj ploči. Dodan je Android regresijski test za potpuno blokiranu dnevnu ploču u 12. potezu. Dva nekorištena privatna Canvas pomoćna renderera (`scoreCard` i `switchRow`) uklonjena su nakon provjere odsutnosti pozivatelja. Nisu mijenjani trajni korisnički podatci ni javne funkcionalnosti.
+
+
+## Završna korekcija launcher vektora prema stvarnoj 512×512 Android snimci
+
+Pregled adaptivne ikone nakon promjene proporcija središnjeg B u izdanju v1.12.43 otkrio je preostalu pogrešku: broj 16 prikazivao je konturu nalik na 12, dok je osmica imala ukrižene otvorene petlje. Četiri međusobno usklađene color-vector datoteke sada imaju ispravljenu šesticu s donjom zatvorenom petljom i dvije pravilno složene petlje osmice. Nije generirana rasterizirana ikona, nije promijenjen Brojko motiv ni paleta; Android simulator kroz postojeći QA ponovno snima adaptive i round varijante. Potrebna je dodatna stvarna vizualna potvrda, a ne samo prolazak builda.
