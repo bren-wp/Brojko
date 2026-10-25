@@ -7,14 +7,30 @@
  <path android:fillColor="#2EC4B6" android:pathData="M58,14 H83 A11,11 0,0 1,94 25 V50 H58 Z"/>
  <path android:fillColor="#3D98F0" android:pathData="M14,58 H50 V94 H25 A11,11 0,0 1,14 83 Z"/>
  <path android:fillColor="#FFBB4A" android:pathData="M58,58 H94 V83 A11,11 0,0 1,83 94 H58 Z"/>
+ <group android:scaleX="0.83" android:scaleY="0.83"
+  android:pivotX="29" android:pivotY="31"
+  android:translateX="-3" android:translateY="-2">
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round"
  android:strokeLineJoin="round" android:pathData="M22,24 C27,19 36,20 36,26 C36,31 23,34 22,41 H37"/>
+ </group>
+ <group android:scaleX="0.83" android:scaleY="0.83"
+  android:pivotX="78" android:pivotY="31"
+  android:translateX="3" android:translateY="-2">
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round"
  android:strokeLineJoin="round" android:pathData="M78,20 L68,37 H87 M81,19 V42"/>
+ </group>
+ <group android:scaleX="0.8" android:scaleY="0.8"
+  android:pivotX="28" android:pivotY="75"
+  android:translateX="-2" android:translateY="2">
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round"
  android:strokeLineJoin="round" android:pathData="M25,66 C14,76 36,79 34,67 C33,60 22,62 25,66 Z M25,70 C18,74 20,87 30,87 C40,86 36,77 25,70"/>
+ </group>
+ <group android:scaleX="0.77" android:scaleY="0.77"
+  android:pivotX="75" android:pivotY="77"
+  android:translateX="5" android:translateY="2">
  <path android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round"
  android:pathData="M66,70 V86 M62,74 L66,70 M75,70 C80,67 85,72 82,77 C77,80 75,83 83,86"/>
+ </group>
  <path android:fillColor="#36FFFFFF"
  android:pathData="M25,15 H48 V20 H24 A8,8 0,0 0,16 28 V27 A12,12 0,0 1,25 15 Z"/>
  <path android:fillColor="#35FFFFFF"

@@ -133,3 +133,7 @@ Izvorno dostavljeno devet ekraniziranih referenci plus zasebna brand ploča uspo
 **Launcher audit**: Stvarni Android adaptive render v1.11.38 zaklanjao je donje kutne brojeve masivnim B. B i njegov dubinski sloj smanjeni su na 84% unutar postojeće podloge, na sve četiri vektorske varijante (legacy, legacy-round, adaptive foreground i drawable). Provjeriti u naknadnom emulator UI zipu PNG slike adaptive/round/themed (sada već postoje u regresijskom testu).
 
 **Granica provjerljivosti**: reference prikazuju namještene odigrane ploče i statistiku, dok emulator koristi čiste ili programatski proizvedene podatke. Brojke, pločice i povijest moraju ostati stvarne i ne smiju se lažirati radi podudarnosti. Potpuna 1:1 jednakost 3D slika i tekstura nije utvrđena.
+
+## v1.12 — posljednja revizija proporcija launcher brojeva
+
+Snimka adaptive ikone 512×512 iz stvarnog emulatora v1.12.39 otkrila je da 8 i 16 još izlaze ispod bijelog slova B i da je broj 2 razmjerno velik. Brojevi su pomaknuti prema vanjskim kutovima i skalirani neovisno (83%, 83%, 80%, 77%) na svim obojenim vektorskim varijantama. Logo B i pozadina zadržavaju prethodni reljef. Emulator provjerava prikaz, ali izvorna 3D ikona i dalje se ne može zvati identičnom vektoru bez izvornog raster asseta.
