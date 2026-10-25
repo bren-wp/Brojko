@@ -975,7 +975,10 @@ public final class MainActivity extends Activity {
             boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
             // outside the board rather than scaling the whole game to tiny size.
-            boolean compact=extended || usableHeight/usableWidth<1.85f;
+            // Splash is time-limited and has no scroll gestures: fit the whole
+            // illustrated logo and slogan instead of cropping on short phones.
+            boolean compact=!page.equals("splash") &&
+                (extended || usableHeight/usableWidth<1.85f);
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?

@@ -970,4 +970,34 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void brandedSplashFitsCompletelyOnShortAndReferencePhones(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";
+                int[][] viewports={{360,600},{941,1672},{1080,2400}};
+                for(int[] size:viewports){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(bitmap));}
+                    finally{bitmap.recycle();}
+                    assertEquals("Splash cannot require scrolling",0f,view.maxScroll,.01f);
+                    float lastSloganEdge=view.offY+824f*view.scale;
+                    assertTrue("Brand slogan clipped at "+
+                        size[0]+"x"+size[1]+": "+lastSloganEdge,
+                        lastSloganEdge<=size[1]+1f);
+                    float firstContentEdge=view.offY+74f*view.scale;
+                    assertTrue("Splash upper decoration must stay visible",
+                        firstContentEdge>=0);
+                }
+            }finally{activity.page=oldPage;}
+        });
+    }
+
 }

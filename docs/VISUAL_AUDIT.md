@@ -208,3 +208,8 @@ Za sve 21 podržano stanje (`splash`, početni, tri modalna završetka igre, pot
 ## Konstantan Brojko logotip kroz sva tri stila igre
 
 Otklonjena je ovisnost brendiranog kvadrata 2 u logotipu te ukrasnih pločica splash/početnog zaslona o postavci stila igraće ploče. Brendirane ilustracije sada zadržavaju postojeći reljefni izgled, dok opcije Zaobljene, Ravne i Staklaste i dalje mijenjaju stvarnu igru i preglede stilova. Novi Android instrumentacijski test uspoređuje sve piksele splash renderera za sva tri stila i arhivira odgovarajuće snimke; time se čuva vizualni identitet pri promjenama korisničkih postavki.
+
+
+## Splash nije skrolabilan: potpuna vidljivost na kratkim zaslonima
+
+Pregled 21 dodatne screenshot slike s viewportom 360×600 otkrio je da splash do automatskog prijelaza na početnu stranicu prikazuje samo dio dekoracije i logotipa, dok slogan može biti ispod vidljivog područja. Splash se sada ne tretira kao skrolabilni kratki sadržaj: cijeli dizajn visine 880 jedinica prilagođava se stvarnoj vidljivoj visini, uz horizontalno centriranje. Uklonjena je potreba da se na uvodnom zaslonu pomiče sadržaj koji automatski nestaje. Instrumentacijski test provjerava y-granicu slogana i izostanak skrolanja za 360×600, 941×1672 i 1080×2400.
