@@ -280,6 +280,46 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void buttonPressFeedbackAndReleaseSafety(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen screen=activity.screen;
+            String previous=activity.page;
+            try{
+                activity.page="home";
+                Bitmap bitmap=Bitmap.createBitmap(screen.getWidth(),screen.getHeight(),
+                    Bitmap.Config.ARGB_8888);
+                try{screen.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+                MainActivity.BoardScreen.Tap target=null;
+                for(MainActivity.BoardScreen.Tap tap:screen.taps)
+                    if("Postavke".equals(tap.label)){target=tap;break;}
+                assertNotNull("Settings shortcut missing",target);
+                long now=android.os.SystemClock.uptimeMillis();
+                float downX=screen.offX+(target.right-4)*screen.scale;
+                float upX=screen.offX+(target.right+7)*screen.scale;
+                float y=screen.offY+
+                    (target.top+(target.bottom-target.top)/2)*screen.scale;
+                MotionEvent down=MotionEvent.obtain(now,now,MotionEvent.ACTION_DOWN,
+                    downX,y,0);
+                screen.onTouchEvent(down);
+                assertNotNull("Pressed state should be visible",screen.pressedTap);
+                MotionEvent up=MotionEvent.obtain(now,now+80,MotionEvent.ACTION_UP,
+                    upX,y,0);
+                screen.onTouchEvent(up);down.recycle();up.recycle();
+                assertNull("Release clears pressed state",screen.pressedTap);
+                assertEquals("Release outside original card cannot navigate",
+                    "home",activity.page);
+                now=android.os.SystemClock.uptimeMillis();
+                float centerX=screen.offX+(target.left+target.right)/2*screen.scale;
+                down=MotionEvent.obtain(now,now,MotionEvent.ACTION_DOWN,centerX,y,0);
+                up=MotionEvent.obtain(now,now+75,MotionEvent.ACTION_UP,centerX,y,0);
+                screen.onTouchEvent(down);screen.onTouchEvent(up);
+                down.recycle();up.recycle();
+                assertEquals("Normal Settings tap must navigate",
+                    "settings",activity.page);
+            }finally{activity.page=previous;}
+        });
+    }
+
     @Test public void originalReferenceViewportMaintainsFullGameplayControls(){
         rule.getScenario().onActivity(activity->{
             // An offscreen instance avoids Activity relayout and device insets

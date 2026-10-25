@@ -117,3 +117,7 @@ Zaslon Teme i izgled sada ima zaseban kompaktni raspored: 3 tematske kartice s o
 ## v1.10 — dovršetak zaglavlja dnevnog izazova
 
 Zaglavlje dnevnog izazova sada koristi veliki dvoredni naslov **Dnevni / izazov** bez dodatnog logotipa, izdvojeni flame/streak panel s brojem uzastopnih dana, odvojenu datumsku kapsulu i koraljne zrake uz primarni gumb. Na prostranim telefonima ostaje i drugi motivacijski red, dok se na referentnom 941×1672 izostavlja radi preglednosti. Nije dodan novi hardkodirani datum: prikazuje se stvarni datum uređaja.
+
+## v1.11 — gumbi, siguran dodir i launcher
+
+Sve Canvas tipke i navigacijske kartice sada dijele povratnu informaciju na pritisak. ACTION_UP aktivira samo izvorno dodirnutu kontrolu kada je otpuštena unutar nje, dok pomicanje sadržaja i ACTION_CANCEL prekidaju interakciju. Regresijski instrumentacijski test pokriva otpuštanje izvan gumba i valjan klik. Za Android 13+ dodana je monokromatska tematska ikona s četiri pločice i dominantnim B te zasebna okrugla varijanta; obojena ikona zadržana je. Ove promjene ne dokazuju pikselnu jednakost 3D mockupu.

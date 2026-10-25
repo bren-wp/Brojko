@@ -120,3 +120,5 @@ Adaptive ikona dodatno ispunjava masku launchera; dominantno svijetlo slovo B do
 ## Vizualni polish v1.10
 
 Dnevni izazov sad ima kompaktan, funkcionalan kartični prikaz nagrade s originalno stiliziranom vektorskom ljubičastom poklon-kutijom i zlatnom vrpcom. Sadržaj se temelji na stvarnom datumu, rekordu, stanju ciljeva i osvojenoj dnevnoj nagradi. Tri zadatka, nagrada i gumb ostaju unutar referentne visine 941×1672. Misije i postignuća imaju pastelno odvojene dnevne, tjedne i trajne cjeline te semantičke ikone zadataka (pločice, meta, kalendar, kruna) umjesto jedne generičke ikone na svim redovima. Svjetla, tamna i živopisna tema snimaju se u Android UI QA za početnu, igru, postavke, dnevni izazov, misije, statistiku i teme. Izvorne ilustracije ostaju vizualni cilj; točna pikselna identičnost nije potvrđena.
+
+**v1.11 UI/UX:** vidljiva povratna informacija pritiskanja gumba, sprječavanje slučajnog klika izvan izvornog dodirnog cilja, posebna round launcher ikona i Android 13+ monokromatska tematska ikona.

@@ -473,6 +473,7 @@ public final class MainActivity extends Activity {
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
+        Tap pressedTap;
         int ink,muted,bg,card,shadow;
         final Typeface regularFont, boldFont, displayFont;
         Typeface makeTypeface(Typeface base,int weight){
@@ -966,6 +967,16 @@ public final class MainActivity extends Activity {
                     "Dostupni su način 4×4, 5×5",
                     "te poseban dnevni izazov.","brendigo.com"});break;
                 default:home();
+            }
+            // Shared press highlight for all visible interactive UI controls.
+            if(pressedTap!=null&&!pointerBoard&&!draggingScroll){
+                float w=pressedTap.right-pressedTap.left;
+                float h=pressedTap.bottom-pressedTap.top;
+                if(w>5&&h>5){
+                    shape(pressedTap.left+1,pressedTap.top+1,
+                        w-2,h-2,Math.min(20,Math.min(w,h)*.25f),
+                        theme==1?0x2dffffff:0x20051933);
+                }
             }
             c.restore();
         }
@@ -2062,7 +2073,15 @@ public final class MainActivity extends Activity {
                 draggingScroll=false;
                 pointerBoard=x>=gridX && x<=gridX+gridSize &&
                     y>=gridY&&y<=gridY+gridSize && "game".equals(page);
-                return true;
+                pressedTap=null;
+                if(!pointerBoard){
+                    for(Tap tap:new ArrayList<>(taps)){
+                        if(x>=tap.left&&x<=tap.right&&y>=tap.top&&y<=tap.bottom){
+                            pressedTap=tap;break;
+                        }
+                    }
+                }
+                invalidate();return true;
             }
             if(event.getActionMasked()==MotionEvent.ACTION_MOVE &&
                 maxScroll>0&&!pointerBoard){
@@ -2071,15 +2090,23 @@ public final class MainActivity extends Activity {
                 if(draggingScroll){
                     scrollOffset=Math.max(0,Math.min(maxScroll,
                         scrollOffset+(lastFingerY-event.getY())/Math.max(.1f,scale)));
-                    invalidate();
+                    pressedTap=null;invalidate();
+                }
+                if(pressedTap!=null&&
+                    (x<pressedTap.left||x>pressedTap.right||
+                     y<pressedTap.top||y>pressedTap.bottom)){
+                    pressedTap=null;invalidate();
                 }
                 lastFingerY=event.getY();
                 return true;
             }
             if(event.getActionMasked()==MotionEvent.ACTION_CANCEL){
-                pointerBoard=false;draggingScroll=false;return true;
+                pointerBoard=false;draggingScroll=false;pressedTap=null;
+                invalidate();return true;
             }
             if(event.getActionMasked()==MotionEvent.ACTION_UP){
+                Tap target=pressedTap;
+                pressedTap=null;invalidate();
                 if(draggingScroll){draggingScroll=false;return true;}
                 float dx=x-touchX,dy=y-touchY;
                 if(pointerBoard&&Math.max(Math.abs(dx),Math.abs(dy))>=25) {
@@ -2088,11 +2115,14 @@ public final class MainActivity extends Activity {
                         (dy<0?TileGame.UP:TileGame.DOWN));
                     pointerBoard=false;return true;
                 }
-                // A release after scrolling should never activate a button.
+                pointerBoard=false;
+                // A release never activates a different or unpressed button.
                 if(Math.max(Math.abs(dx),Math.abs(dy))>18)return true;
-                for(Tap t:new ArrayList<>(taps))if(x>=t.left&&x<=t.right&&
-                    y>=t.top&&y<=t.bottom){t.action.run();return true;}
-                performClick();return true;
+                if(target!=null&&x>=target.left&&x<=target.right&&
+                    y>=target.top&&y<=target.bottom){
+                    performClick();target.action.run();
+                }
+                return true;
             }
             return true;
         }

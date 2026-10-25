@@ -8,7 +8,7 @@ android {
   targetSdk 36
   testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   versionCode (System.getenv('GITHUB_RUN_NUMBER')?.toInteger() ?: 2)
-  versionName "1.10.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+  versionName "1.11.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
  }
  signingConfigs {
   release {
