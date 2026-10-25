@@ -179,6 +179,7 @@ public final class MainActivity extends Activity {
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
     }
     String compactDate(){return new SimpleDateFormat("dd.MM.yyyy.",new Locale("hr","HR")).format(new Date());}
+    String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
     String dailyLongDate(){
         return new SimpleDateFormat("d. MMMM yyyy.",new Locale("hr","HR")).format(new Date());
     }
@@ -234,7 +235,8 @@ public final class MainActivity extends Activity {
         try {
             JSONObject row=new JSONObject();
             row.put("score",game.score).put("moves",game.moves).put("peak",game.maxTile())
-                .put("mode",game.mode).put("day",compactDate()).put("won",game.reached2048);
+                .put("mode",game.mode).put("day",compactDate())
+                .put("time",compactTime()).put("won",game.reached2048);
             JSONArray old=new JSONArray(prefs.getString("history","[]"));
             JSONArray recent=new JSONArray();recent.put(row);
             for(int i=0;i<Math.min(19,old.length());i++)recent.put(old.getJSONObject(i));
@@ -2012,28 +2014,41 @@ public final class MainActivity extends Activity {
                         10,barSlot-4,muted,false);
                 }
             }
-            txt("Povijest partija",111,460,20,ink,true);
+            // One visual history panel as in the reference; row cards are flat,
+            // separated by a 4-unit gap, never five heavy elevated panels.
+            shape(16,443,368,265,23,theme==1?card:0xfffffdf9);
+            leftFitted("Povijest partija",30,462,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
-                card(22,466,356,62,16,card);
-                txt("Još nema dovršenih partija.",200,504,16,muted,false);
+                shape(25,471,350,43,13,theme==1?0xff34445f:0xfffaf5ee);
+                txt("Još nema dovršenih partija.",200,499,15,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=466+i*48,idx=i;
-                // 48-unit independent touch targets and visually separated 44-unit cards.
-                card(22,y,356,44,12,card);
-                fitted(row.optString("day",""),92,y+18,12,119,muted,false);
-                fitted(fmt(row.optInt("score")),237,y+28,18,123,
-                    i==0?CORAL:TEAL,true);
+                int y=467+i*48,idx=i;
+                int score=row.optInt("score");
+                boolean record=best>0&&score>=best;
+                shape(25,y,350,44,13,theme==1?0xff34445f:0xfffaf5ee);
+                leftFitted(row.optString("day",""),33,y+27,11.5f,83,muted,false);
+                String completedAt=row.optString("time","");
+                // Legacy archives have no time: keep the field empty, never
+                // fabricate a timestamp for past users.
+                if(!completedAt.isEmpty())
+                    leftFitted(completedAt,117,y+27,11.5f,46,muted,false);
+                fitted(fmt(score),207,y+29,17,87,record?CORAL:TEAL,true);
+                if(record)icon("crown",265,y+21,19,0xffff9e23);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
-                    shape(290,y+10,63,25,9,
-                        theme==1?0xff46416b:0xfff4e0ff);
-                    fitted(fmt(peak),321,y+28,13,56,0xff8a41bc,true);
+                    int tagBg=peak>=1024?0xffc7f7e6:
+                        peak>=512?0xffc7dfff:peak>=128?0xffefdbff:0xffffeacc;
+                    int tagFg=peak>=1024?0xff078e77:
+                        peak>=512?0xff2167c8:peak>=128?0xff9443bd:0xffc67914;
+                    shape(282,y+9,59,26,10,theme==1?0xff46416b:tagBg);
+                    fitted(Integer.toString(peak),311.5f,y+28,14,54,
+                        theme==1?WHITE:tagFg,true);
                 }
-                txt("›",368,y+29,22,muted,true);
+                icon("chevron-right",366,y+22,15,muted);
                 taps.add(new Tap(22,y,378,y+48,"Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }

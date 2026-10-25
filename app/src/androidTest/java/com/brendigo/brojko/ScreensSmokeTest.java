@@ -1124,6 +1124,8 @@ public class ScreensSmokeTest {
                         entry.put("score",scores[i]);
                         entry.put("peak",peaks[i]);
                         entry.put("day","12. tra 2024.");
+                        entry.put("time",new String[]{"14:32","13:11","20:45","18:22","09:16",
+                            "16:20","17:50","10:21","12:18","08:04"}[i]);
                     }catch(org.json.JSONException error){throw new AssertionError(error);}
                     history.put(entry);
                 }
@@ -1513,6 +1515,51 @@ public class ScreensSmokeTest {
                 activity.theme=originalTheme;
                 activity.page=originalPage;
                 activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void statisticsHistoryUsesRealCompletionTimeAndPreservesLegacyRecords(){
+        rule.getScenario().onActivity(activity->{
+            String previousHistory=activity.prefs.getString("history","[]");
+            String previousPage=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                assertTrue("New completion timestamps must be HH:mm",
+                    activity.compactTime().matches("[0-2][0-9]:[0-5][0-9]"));
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                activity.page="stats";
+                activity.prefs.edit().putString("history",
+                    "[{\"day\":\"12. tra 2024.\",\"score\":2560,\"peak\":128}]").commit();
+                Bitmap legacy=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                Bitmap withTime=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(legacy));
+                    activity.prefs.edit().putString("history",
+                        "[{\"day\":\"12. tra 2024.\",\"time\":\"14:32\","+
+                        "\"score\":2560,\"peak\":128}]").commit();
+                    board.draw(new Canvas(withTime));
+                    int differences=0;
+                    for(int y=488;y<505;y++)for(int x=270;x<380;x++){
+                        if(legacy.getPixel(x,y)!=withTime.getPixel(x,y))
+                            differences++;
+                    }
+                    assertTrue("Timestamp column must be visibly rendered",differences>40);
+                    assertEquals("History remains navigable",1,
+                        (int)board.taps.stream().filter(tap->
+                            tap.label.startsWith("Detalji partije")).count());
+                    assertTrue("Latest row is inside visible viewport",
+                        board.taps.stream().anyMatch(tap->
+                            tap.label.startsWith("Detalji partije")&&tap.bottom<=710));
+                    captureReference(activity,board,"stats-history-time-941x1672");
+                }finally{
+                    legacy.recycle();withTime.recycle();
+                }
+            }finally{
+                activity.prefs.edit().putString("history",previousHistory).commit();
+                activity.page=previousPage;activity.screen.invalidate();
             }
         });
     }
