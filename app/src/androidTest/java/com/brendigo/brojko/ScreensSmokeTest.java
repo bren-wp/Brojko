@@ -875,4 +875,65 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void allScreensKeepActionsReachableOnSmallPhones(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            TileGame originalGame=activity.game;
+            int originalHistoryIndex=activity.selectedHistoryIndex;
+            String originalHistory=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen compact=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",98234L);
+                activity.selectedHistoryIndex=0;
+                activity.prefs.edit().putString("history",
+                    "[{\"score\":100,\"peak\":16},{\"score\":200,\"peak\":32},"+
+                    "{\"score\":300,\"peak\":64},{\"score\":400,\"peak\":128},"+
+                    "{\"score\":500,\"peak\":256}]").commit();
+                compact.measure(View.MeasureSpec.makeMeasureSpec(360,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(600,View.MeasureSpec.EXACTLY));
+                compact.layout(0,0,360,600);
+                String[] pages={
+                    "splash","home","game","pause","win","over","confirm",
+                    "confirmEnd","dailyWin","dailyFail","daily","missions",
+                    "stats","historyDetail","themes","settings","language",
+                    "backup","help","privacy","about"
+                };
+                for(String page:pages){
+                    activity.page=page;
+                    Bitmap bmp=Bitmap.createBitmap(360,600,Bitmap.Config.ARGB_8888);
+                    try{
+                        compact.draw(new Canvas(bmp));
+                        File folder=new File(activity.getExternalFilesDir(null),
+                            "screenshots");
+                        assertTrue(folder.isDirectory()||folder.mkdirs());
+                        try(FileOutputStream out=new FileOutputStream(
+                                new File(folder,"compact-360x600-"+page+".png"))){
+                            assertTrue(bmp.compress(Bitmap.CompressFormat.PNG,100,out));
+                        }catch(java.io.IOException ex){throw new AssertionError(ex);}
+                    }finally{bmp.recycle();}
+                    float visible=600f/compact.scale;
+                    for(MainActivity.BoardScreen.Tap tap:compact.taps){
+                        assertTrue(page+": target crosses horizontal safe area: "+tap.label,
+                            tap.left>=0 && tap.right<=400 && tap.right>tap.left);
+                        assertTrue(page+": target has invalid vertical bounds: "+tap.label,
+                            tap.top>=0 && tap.bottom>tap.top);
+                        float firstScrollable=Math.max(0,tap.bottom-visible);
+                        float lastScrollable=Math.min(compact.maxScroll,tap.top);
+                        assertTrue(page+": target not fully reachable: "+tap.label+
+                            " scroll="+compact.maxScroll+" top="+tap.top+
+                            " bottom="+tap.bottom+" viewport="+visible,
+                            firstScrollable<=lastScrollable+1f);
+                    }
+                }
+            }finally{
+                activity.prefs.edit().putString("history",originalHistory).commit();
+                activity.page=originalPage;
+                activity.game=originalGame;
+                activity.selectedHistoryIndex=originalHistoryIndex;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
