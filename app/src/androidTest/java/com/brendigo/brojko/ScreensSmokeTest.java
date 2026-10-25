@@ -70,16 +70,27 @@ public class ScreensSmokeTest {
             int originalBest=activity.best;
             try{
                 activity.stars=0;activity.rewardFlags=0;
-                activity.todayMerges=20;activity.todayPoints=1000;
-                activity.playDayStreak=7;activity.recordTile=1024;activity.best=50000;
-                activity.updateRewards();
-                assertEquals(1800,activity.stars);
-                assertEquals(31,activity.rewardFlags);
-                activity.updateRewards();
-                assertEquals("Repeated refresh must not duplicate rewards",1800,activity.stars);
-                activity.statsDay="2000-01-01";
-                activity.ensureDay();
-                assertEquals("Daily flags must reset on a new day",28,activity.rewardFlags);
+                TileGame savedGame=activity.game;
+                int savedWeekPoints=activity.weekPoints;String savedWeek=activity.weekStart;
+                boolean savedUndo=activity.undoUsedThisGame;
+                try{
+                    activity.todayMerges=20;activity.todayPoints=1000;
+                    activity.weekStart=activity.currentWeekStart();activity.weekPoints=10000;
+                    activity.playDayStreak=7;activity.recordTile=1024;activity.best=50000;
+                    TileGame eligible=new TileGame("classic","",201L);
+                    eligible.peak=512;activity.game=eligible;activity.undoUsedThisGame=false;
+                    activity.updateRewards();
+                    assertEquals(2000,activity.stars);
+                    assertEquals(63,activity.rewardFlags);
+                    activity.updateRewards();
+                    assertEquals("Rewards must not duplicate",2000,activity.stars);
+                    activity.statsDay="2000-01-01";
+                    activity.ensureDay();
+                    assertEquals("Daily flags must reset on new day",60,activity.rewardFlags);
+                }finally{
+                    activity.game=savedGame;activity.weekPoints=savedWeekPoints;
+                    activity.weekStart=savedWeek;activity.undoUsedThisGame=savedUndo;
+                }
                 assertEquals(0,activity.todayMerges);
             }finally{
                 activity.stars=originalStars;activity.rewardFlags=originalFlags;
@@ -997,6 +1008,45 @@ public class ScreensSmokeTest {
                         firstContentEdge>=0);
                 }
             }finally{activity.page=oldPage;}
+        });
+    }
+
+    @Test public void referenceSixMissionsRewardOnlyActualProgress(){
+        rule.getScenario().onActivity(activity->{
+            TileGame prior=activity.game;
+            String prev=activity.page,week=activity.weekStart;
+            int flags=activity.rewardFlags,stars=activity.stars,points=activity.weekPoints;
+            boolean undo=activity.undoUsedThisGame;
+            try{
+                activity.game=new TileGame("classic","",807L);
+                activity.game.peak=512;
+                activity.weekStart=activity.currentWeekStart();
+                activity.weekPoints=10000;
+                activity.rewardFlags=0;activity.stars=0;
+                activity.undoUsedThisGame=true;
+                activity.updateRewards();
+                assertEquals("Weekly 10k grants 200",200,activity.stars);
+                assertEquals("Using Undo disqualifies 512",0,activity.rewardFlags&2);
+                activity.undoUsedThisGame=false;
+                activity.updateRewards();
+                assertEquals("512 without Undo adds 100",300,activity.stars);
+                activity.updateRewards();
+                assertEquals("Neither reward repeats",300,activity.stars);
+                activity.page="missions";
+                capture(activity,"original-six-missions");
+                MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+                screen.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                screen.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{screen.draw(new Canvas(bmp));}finally{bmp.recycle();}
+                assertTrue("Missions must have visible final card",
+                    screen.maxScroll<=180);
+            }finally{
+                activity.game=prior;activity.page=prev;activity.weekStart=week;
+                activity.rewardFlags=flags;activity.stars=stars;activity.weekPoints=points;
+                activity.undoUsedThisGame=undo;activity.persist();
+            }
         });
     }
 

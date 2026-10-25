@@ -213,3 +213,8 @@ Otklonjena je ovisnost brendiranog kvadrata 2 u logotipu te ukrasnih pločica sp
 ## Splash nije skrolabilan: potpuna vidljivost na kratkim zaslonima
 
 Pregled 21 dodatne screenshot slike s viewportom 360×600 otkrio je da splash do automatskog prijelaza na početnu stranicu prikazuje samo dio dekoracije i logotipa, dok slogan može biti ispod vidljivog područja. Splash se sada ne tretira kao skrolabilni kratki sadržaj: cijeli dizajn visine 880 jedinica prilagođava se stvarnoj vidljivoj visini, uz horizontalno centriranje. Uklonjena je potreba da se na uvodnom zaslonu pomiče sadržaj koji automatski nestaje. Instrumentacijski test provjerava y-granicu slogana i izostanak skrolanja za 360×600, 941×1672 i 1080×2400.
+
+
+## Reference 941×1672: obnovljeno svih šest izvornih misija (2026-10-25)
+
+Korisničke izvorne PNG reference pokazuju dvije dnevne, dvije tjedne i dvije kartice postignuća. UI je usklađen, uključujući dnevni cilj 512 bez Undo i tjednih 10.000 bodova, sa stvarnim dedupliciranim nagradama i trajanjem po danu/tjednu. Premješteni su svi redci, naslovne trake, ikone i progresne trake u kompaktni i visoki raspored. Lokalno su dodana polja za weekPoints, weekStart i undoUsedThisGame; prethodne sigurnosne kopije ostaju kompatibilne jer su novi ključevi neobvezni.

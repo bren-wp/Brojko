@@ -54,8 +54,9 @@ public final class MainActivity extends Activity {
     int selectedHistoryIndex=0;
     int chartMetric=0;
     int best, plays, total, wins, recordTile, totalMerges, streak, theme, tileStyle, animation=1;
-    int todayMerges, todayPoints, playDayStreak, lastScore, stars, rewardFlags;
-    String lastDaily="", statsDay="", lastPlayDay="", dailyRewardDate="";
+    int todayMerges, todayPoints, weekPoints, playDayStreak, lastScore, stars, rewardFlags;
+    String lastDaily="", statsDay="", weekStart="", lastPlayDay="", dailyRewardDate="";
+    boolean undoUsedThisGame=false;
     boolean sound=true, vibration=true, notifications=false;
     // UI-only state: distinguishes a newly awarded daily bonus from a replay.
     boolean dailyBonusGrantedThisAttempt=false;
@@ -79,6 +80,9 @@ public final class MainActivity extends Activity {
         lastDaily=prefs.getString("lastDaily","");
         dailyRewardDate=prefs.getString("dailyRewardDate","");
         statsDay=prefs.getString("statsDay","");
+        weekStart=prefs.getString("weekStart","");
+        weekPoints=prefs.getInt("weekPoints",0);
+        undoUsedThisGame=prefs.getBoolean("undoUsedThisGame",false);
         todayMerges=prefs.getInt("todayMerges",0);todayPoints=prefs.getInt("todayPoints",0);
         playDayStreak=prefs.getInt("playDayStreak",0);
         lastPlayDay=prefs.getString("lastPlayDay","");ensureDay();
@@ -126,11 +130,20 @@ public final class MainActivity extends Activity {
         }catch(Exception ignored){game=null;}
     }
     String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
+    String currentWeekStart(){
+        Calendar c=Calendar.getInstance();
+        c.add(Calendar.DAY_OF_YEAR,-((c.get(Calendar.DAY_OF_WEEK)+5)%7));
+        return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
+    }
     void ensureDay(){
         if(!today().equals(statsDay)){
             statsDay=today();todayMerges=0;todayPoints=0;
-            // Daily rewards may be earned once per local calendar day.
             rewardFlags &= ~3;
+        }
+        String currentWeek=currentWeekStart();
+        if(weekStart.isEmpty())weekStart=currentWeek;
+        else if(!weekStart.equals(currentWeek)){
+            weekStart=currentWeek;weekPoints=0;rewardFlags &= ~(4|32);
         }
     }
     void reward(int bit,int amount,boolean reached){
@@ -140,10 +153,11 @@ public final class MainActivity extends Activity {
     }
     void updateRewards(){
         reward(1,50,todayMerges>=20);
-        reward(2,100,todayPoints>=1000);
+        reward(2,100,game!=null&&game.peak>=512&&!undoUsedThisGame);
         reward(4,150,playDayStreak>=7);
         reward(8,500,recordTile>=1024);
         reward(16,1000,best>=50000);
+        reward(32,200,weekPoints>=10000);
     }
     String yesterday(){
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
@@ -170,7 +184,9 @@ public final class MainActivity extends Activity {
             .putInt("streak",streak).putString("lastDaily",lastDaily)
             .putString("dailyRewardDate",dailyRewardDate)
             .putInt("todayMerges",todayMerges).putInt("todayPoints",todayPoints)
-            .putString("statsDay",statsDay).putInt("playDayStreak",playDayStreak)
+            .putString("statsDay",statsDay).putString("weekStart",weekStart)
+            .putInt("weekPoints",weekPoints).putBoolean("undoUsedThisGame",undoUsedThisGame)
+            .putInt("playDayStreak",playDayStreak)
             .putString("lastPlayDay",lastPlayDay)
             .putInt("theme",theme).putInt("style",tileStyle).putInt("animation",animation)
             .putBoolean("sound",sound).putBoolean("vibrate",vibration)
@@ -213,6 +229,7 @@ public final class MainActivity extends Activity {
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
         game=new TileGame(mode,"daily".equals(mode)?today():"",seed);
+        undoUsedThisGame=false;
         dailyBonusGrantedThisAttempt=false;
         ensureDay();
         if(!today().equals(lastPlayDay)){
@@ -280,6 +297,7 @@ public final class MainActivity extends Activity {
         }
         ensureDay();total+=result.points;totalMerges+=result.merges;
         todayPoints+=result.points;todayMerges+=result.merges;
+        weekPoints+=result.points;
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
         if(result.first2048)wins++;
         updateRewards();
@@ -312,12 +330,13 @@ public final class MainActivity extends Activity {
     }
     void undo() {
         if(game==null||!game.canUndo())return;
-        ensureDay();
+        ensureDay();undoUsedThisGame=true;
         int mergeCount=game.merges;
         boolean hadWon=game.reached2048;
         int reverted=game.undo();
         total=Math.max(0,total-reverted);
         if(today().equals(statsDay))todayPoints=Math.max(0,todayPoints-reverted);
+        weekPoints=Math.max(0,weekPoints-reverted);
         int revertedMerges=mergeCount-game.merges;
         totalMerges=Math.max(0,totalMerges-revertedMerges);
         if(today().equals(statsDay))todayMerges=Math.max(0,todayMerges-revertedMerges);
@@ -345,7 +364,8 @@ public final class MainActivity extends Activity {
     private static final String[] BACKUP_KEYS={
         "best","games","total","wins","tile","totalMerges","streak",
         "stars","rewardFlags","lastScore",
-        "lastDaily","dailyRewardDate","statsDay","todayMerges","todayPoints","playDayStreak",
+        "lastDaily","dailyRewardDate","statsDay","todayMerges","todayPoints",
+        "weekStart","weekPoints","undoUsedThisGame","playDayStreak",
         "lastPlayDay","theme","style","animation","sound","vibrate","notifications",
         "session","history"
     };
@@ -402,7 +422,7 @@ public final class MainActivity extends Activity {
                     throw new IllegalArgumentException("Nevaljane postavke.");
             }
             if((key.equals("sound")||key.equals("vibrate")||
-                key.equals("notifications"))&&!(value instanceof Boolean))
+                (key.equals("notifications")||key.equals("undoUsedThisGame")))&&!(value instanceof Boolean))
                 throw new IllegalArgumentException("Nevaljane postavke.");
         }
         SharedPreferences.Editor editor=prefs.edit().clear();
@@ -1466,59 +1486,62 @@ public final class MainActivity extends Activity {
             int dailyTint=theme==1?0xff293b4c:0xffffedda;
             int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
             int achievementTint=theme==1?0xff24483f:0xffe0f9ec;
-            card(17,portrait?134:179,366,portrait?197:242,28,dailyTint);
-            card(17,portrait?335:439,366,portrait?114:145,28,weeklyTint);
-            card(17,portrait?461:598,366,portrait?206:265,28,
-                achievementTint);
+            card(17,portrait?134:179,366,portrait?185:209,28,dailyTint);
+            card(17,portrait?328:398,366,portrait?185:207,28,weeklyTint);
+            card(17,portrait?522:614,366,portrait?187:249,28,achievementTint);
             float rewardTop=portrait?117:154;
             card(260,rewardTop,117,portrait?39:44,18,
                 theme==1?card:0xffffefcc);
             icon("star",283,rewardTop+(portrait?20:23),26,0xffffae1d);
             fitted(fmt(stars),331,rewardTop+(portrait?26:31),20,70,ink,true);
-            txt("Dnevne",84,portrait?150:205,23,ink,true);
+            txt("Dnevne",84,portrait?150:204,23,ink,true);
             missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
-                todayMerges,20,50,portrait?161:214,TEAL);
-            missionRow("Skupi 1000 bodova","Dnevni rezultat",
-                todayPoints,1000,100,portrait?244:322,0xff468ff0);
-            txt("Tjedne",79,portrait?353:463,23,ink,true);
+                todayMerges,20,50,portrait?160:212,TEAL);
+            boolean noUndo512=(rewardFlags&2)!=0 ||
+                (game!=null&&game.peak>=512&&!undoUsedThisGame);
+            missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
+                noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
+            txt("Tjedne",79,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Sedam različitih dana",
-                playDayStreak,7,150,portrait?362:481,0xff3ecb8c);
-            txt("Postignuća",107,portrait?482:619,23,ink,true);
+                playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
+            missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
+                weekPoints,10000,200,portrait?434:516,0xffff934b);
+            txt("Postignuća",107,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Dosegni pločicu 1024",
-                recordTile,1024,500,portrait?492:644,0xffa663e4);
+                recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Osvoji 50.000 bodova",
-                best,50000,1000,portrait?578:752,0xffff934b);
+                best,50000,1000,portrait?627:741,0xffff934b);
         }
         void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
             boolean portrait=referencePortraitLayout;
-            int height=portrait?77:96;
+            int height=portrait?70:80;
             card(26,y,348,height,21,card);
-            shape(39,y+(portrait?11:14),portrait?49:58,
-                portrait?52:62,15,
+            shape(39,y+(portrait?9:10),portrait?46:52,
+                portrait?50:58,15,
                 theme==1?0xff35435d:lighten(accent,.80f));
             String taskGlyph=value>=target?"check":
                 name.contains("Kralj")?"crown":
                 name.contains("Igraj")?"calendar":
                 name.contains("Majstor")?"grid":
                 name.contains("Spoji")?"grid":"target";
-            icon(taskGlyph,portrait?63:68,y+(portrait?35:45),
-                portrait?27:32,accent);
-            fitted(name,portrait?194:198,y+(portrait?23:27),
-                portrait?16:18,188,ink,true);
-            fitted(sub,portrait?194:198,y+(portrait?41:48),
-                portrait?12:13,188,muted,false);
-            shape(106,y+(portrait?54:65),174,7,4,
+            icon(taskGlyph,portrait?62:65,y+(portrait?33:38),
+                portrait?26:31,accent);
+            fitted(name,portrait?194:198,y+(portrait?20:25),
+                portrait?15:17,188,ink,true);
+            fitted(sub,portrait?194:198,y+(portrait?37:45),
+                portrait?11:12,188,muted,false);
+            shape(106,y+(portrait?51:59),174,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             float fraction=Math.max(0,Math.min(1,(float)value/target));
-            if(fraction>0)shape(106,y+(portrait?54:65),
+            if(fraction>0)shape(106,y+(portrait?51:59),
                 174*fraction,7,4,accent);
             fitted(fmt(Math.min(value,target))+"/"+fmt(target),
-                196,y+(portrait?70:90),11,175,muted,true);
-            card(289,y+(portrait?7:12),71,portrait?63:73,15,
+                196,y+(portrait?65:75),11,175,muted,true);
+            card(289,y+(portrait?4:6),71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",323,y+(portrait?28:43),
-                portrait?25:27,0xffffad1a);
-            fitted("+"+fmt(reward),323,y+(portrait?57:70),
+            icon("star",323,y+(portrait?23:29),
+                portrait?24:27,0xffffad1a);
+            fitted("+"+fmt(reward),323,y+(portrait?53:62),
                 13,63,ink,true);
         }
         JSONArray history() {
