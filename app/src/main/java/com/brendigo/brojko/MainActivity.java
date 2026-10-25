@@ -1474,30 +1474,30 @@ public final class MainActivity extends Activity {
                 fitted("Pokaži koliko daleko možeš stići!",
                     200,237,16,337,muted,false);
             }
-            float boardY=portrait?171:250;
+            float boardY=portrait?165:250;
             // Decorative bursts live outside the board and stay below
             // the description, as in the supplied 941x1672 mockup.
             rays(51,boardY+(portrait?105:118),22,0xffffa83e);
             rays(349,boardY+(portrait?105:118),22,CORAL);
-            float boardSize=portrait?221:248;
-            card(portrait?89:76,boardY,portrait?222:248,boardSize,24,
+            float boardSize=portrait?229:248;
+            missionSurface(portrait?85.5f:76,boardY,boardSize,boardSize,24,
                 theme==1?0xff35455f:0xfff3e8da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int col=i%4,row=i/4;
-                float x=(portrait?96:83)+col*(portrait?53:59);
-                float y=boardY+7+row*(portrait?53:59);
+                float x=(portrait?93:83)+col*(portrait?54.5f:59);
+                float y=boardY+(portrait?8:7)+row*(portrait?54.5f:59);
                 int value=sample[i];
-                glossyTile(x,y,portrait?46:52,portrait?46:52,10,
-                    tileColor(value));
-                fitted(""+value,x+(portrait?23:26),
-                    y+(portrait?30:34),value>999?16:24,
-                    portrait?44:49,WHITE,true);
+                float cellSize=portrait?50:52;
+                glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
+                fitted(""+value,x+cellSize*.5f,
+                    y+(portrait?33:34),value>999?16:24,
+                    portrait?48:49,WHITE,true);
             }
             // Source art groups the three daily objectives inside one
             // quiet cream panel, with each individual white row above it.
             if(portrait){
-                shape(18,395,364,171,22,
+                shape(18,399,364,164,22,
                     theme==1?0xff273851:0xfffff2df);
             }else{
                 shape(18,506,364,232,22,
@@ -1506,17 +1506,17 @@ public final class MainActivity extends Activity {
             boolean active=game!=null&&"daily".equals(game.mode)&&
                 today().equals(game.day);
             boolean finished=today().equals(lastDaily);
-            dailyGoalRow("Dosegni 256","Spoji pločice do vrijednosti 256",
-                portrait?399:511,finished||(active&&game.peak>=256));
-            dailyGoalRow("Osvoji 3000 bodova","Prikupi najmanje 3000 bodova",
-                portrait?455:589,finished||(active&&game.score>=3000));
-            dailyGoalRow("Završi u 80 poteza","Ostvari oba cilja u 80 poteza",
-                portrait?511:667,finished);
+            dailyGoalRow("Dosegni 256","Spoji brojeve i dosegni pločicu 256.",
+                portrait?403:511,finished||(active&&game.peak>=256));
+            dailyGoalRow("Ostvari 3000 bodova","Skupi najmanje 3000 bodova.",
+                portrait?456:589,finished||(active&&game.score>=3000));
+            dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
+                portrait?509:667,finished);
             float rewardY=portrait?569:744;
-            card(28,rewardY,344,portrait?80:48,19,
+            missionSurface(28,rewardY,344,portrait?80:48,19,
                 theme==1?0xff3a3459:0xfff0e9ff);
-            icon("gift",portrait?76:65,rewardY+(portrait?41:24),
-                portrait?68:37,0xff9853e8);
+            dailyRewardGift(portrait?76:65,rewardY+(portrait?41:24),
+                portrait?70:37);
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     124,rewardY+17,12,225,muted,true);
@@ -1549,12 +1549,12 @@ public final class MainActivity extends Activity {
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
-            int height=portrait?51:72;
-            card(28,y,344,height,18,card);
+            int height=portrait?49:72;
+            missionSurface(28,y,344,height,18,card);
             float iconSize=portrait?41:46;
             float tileY=y+(height-iconSize)/2f;
             int goalColor=name.startsWith("Dosegni")?0xffff6f96:
-                name.startsWith("Osvoji")?0xffffb541:0xff3d98f0;
+                name.startsWith("Ostvari")?0xffffb541:0xff3d98f0;
             styledTile(40,tileY,iconSize,iconSize,13,
                 done?TEAL:goalColor,0);
             float glyphCenter=40+iconSize/2f;
@@ -1562,7 +1562,7 @@ public final class MainActivity extends Activity {
             else if(name.startsWith("Dosegni"))
                 fitted("256",glyphCenter,y+height/2f+7,
                     portrait?20:22,iconSize-3,WHITE,true);
-            else if(name.startsWith("Osvoji"))
+            else if(name.startsWith("Ostvari"))
                 icon("star",glyphCenter,y+height/2f,portrait?27:30,WHITE);
             else icon("swap",glyphCenter,y+height/2f,
                 portrait?27:30,WHITE);
@@ -1578,6 +1578,23 @@ public final class MainActivity extends Activity {
             fitted("?",353,helpCenterY+7,17,23,muted,true);
             taps.add(new Tap(322,y,376,y+height,"Pomoć za cilj: "+name,
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
+        }
+        void dailyRewardGift(float cx,float cy,float size){
+            // Draw an illustrated gift without adding an external image asset:
+            // purple lid/body, golden ribbons and two looped bow shapes.
+            float left=cx-size*.37f, top=cy-size*.11f;
+            gradient(left,top,size*.74f,size*.49f,8,0xffae78f9,0xff6439c6);
+            shape(cx-size*.09f,top,size*.18f,size*.49f,3,0xffffcf38);
+            gradient(cx-size*.44f,top-size*.15f,size*.88f,size*.22f,7,
+                0xffbe94fa,0xff7d42dd);
+            shape(cx-size*.09f,top-size*.15f,size*.18f,size*.22f,3,0xffffd746);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setColor(0xffffc936);p.setStrokeWidth(Math.max(3,size*.10f));
+            p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawOval(cx-size*.29f,cy-size*.51f,cx-size*.018f,cy-size*.24f,p);
+            c.drawOval(cx+size*.018f,cy-size*.51f,cx+size*.29f,cy-size*.24f,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
+            shape(cx-size*.10f,cy-size*.33f,size*.20f,size*.15f,5,0xffffda45);
         }
         void missionSurface(float x,float y,float width,float height,
                             float radius,int color){

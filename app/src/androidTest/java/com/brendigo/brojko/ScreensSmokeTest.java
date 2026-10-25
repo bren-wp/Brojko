@@ -1709,4 +1709,49 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyChallengeReferenceScreenAndRulesRemainFunctional(){
+        rule.getScenario().onActivity(activity->{
+            String priorPage=activity.page;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap screen=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(screen));}finally{screen.recycle();}
+                assertTrue("Daily challenge must fit the reference viewport",
+                    view.maxScroll<1.1f);
+                int help=0,cta=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if(tap.label.startsWith("Pomoć za cilj: ")){
+                        help++;
+                        assertTrue("Goal help remains touch-sized",
+                            tap.bottom-tap.top>=48f);
+                    }
+                    if(tap.label.contains("izazov")&&!tap.label.startsWith("Pomoć")){
+                        cta++;
+                        assertTrue("Primary CTA remains >=48 high",
+                            tap.bottom-tap.top>=48f);
+                    }
+                }
+                assertEquals("Three distinct goal explanations",3,help);
+                assertEquals("One primary action",1,cta);
+                captureReference(activity,view,"daily-refined-board-gift-941x1672");
+                TileGame rules=new TileGame("daily",activity.today(),421L);
+                rules.peak=256;rules.score=3000;rules.moves=80;
+                assertTrue("Both milestones within 80 moves must win",
+                    rules.isDailyGoalComplete());
+                rules.moves=81;
+                assertFalse("More than 80 moves cannot win",
+                    rules.isDailyGoalComplete());
+                rules.moves=80;rules.peak=128;
+                assertFalse("Score alone is not a completed challenge",
+                    rules.isDailyGoalComplete());
+            }finally{
+                activity.page=priorPage;activity.screen.invalidate();
+            }
+        });
+    }
+
 }
