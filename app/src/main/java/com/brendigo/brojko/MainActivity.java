@@ -1914,18 +1914,18 @@ public final class MainActivity extends Activity {
             // Source shows labels, explanations and dividers, not bare toggles.
             shape(208,565,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",220,587,29,ink);
-            leftFitted("Vibracija",245,590,18,123,ink,true);
-            leftFitted("Kada spojiš brojeve.",245,610,11,123,muted,false);
-            shape(324,570,43,27,14,vibration?CORAL:0xffb7c1cf);
-            shape(vibration?342:326,572,23,23,12,WHITE);
+            leftFitted("Vibracija",245,590,17,86,ink,true);
+            leftFitted("Kada spojiš brojeve.",245,610,10,86,muted,false);
+            shape(337,570,43,27,14,vibration?CORAL:0xffb7c1cf);
+            shape(vibration?355:339,572,23,23,12,WHITE);
             taps.add(new Tap(205,564,378,615,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,655,29,ink);
-            leftFitted("Zvukovi",245,658,18,123,ink,true);
-            leftFitted("Zvučni efekti u igri.",245,678,11,123,muted,false);
-            shape(324,636,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?342:326,638,23,23,12,WHITE);
+            leftFitted("Zvukovi",245,658,17,86,ink,true);
+            leftFitted("Zvučni efekti u igri.",245,678,10,86,muted,false);
+            shape(337,636,43,27,14,sound?CORAL:0xffb7c1cf);
+            shape(sound?355:339,638,23,23,12,WHITE);
             shape(208,696,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             taps.add(new Tap(205,628,378,683,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
@@ -2113,18 +2113,18 @@ public final class MainActivity extends Activity {
             }
             shape(208,461,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",219,476,26,ink);
-            leftFitted("Vibracija",245,480,16,123,ink,true);
-            leftFitted("Kada spojiš brojeve.",245,495,10.5f,123,muted,false);
-            shape(324,466,43,27,14,vibration?CORAL:0xffb7c1cf);
-            shape(vibration?342:326,468,23,23,12,WHITE);
+            leftFitted("Vibracija",245,480,15,86,ink,true);
+            leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+            shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
+            shape(vibration?355:339,468,23,23,12,WHITE);
             taps.add(new Tap(205,466,378,519,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
-            leftFitted("Zvukovi",245,523,16,123,ink,true);
-            leftFitted("Zvučni efekti u igri.",245,538,10.5f,123,muted,false);
-            shape(324,507,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?342:326,509,23,23,12,WHITE);
+            leftFitted("Zvukovi",245,523,15,86,ink,true);
+            leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+            shape(337,507,43,27,14,sound?CORAL:0xffb7c1cf);
+            shape(sound?355:339,509,23,23,12,WHITE);
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();

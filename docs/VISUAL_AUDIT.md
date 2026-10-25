@@ -300,3 +300,8 @@ Emulator snimka v1.12.70 potvrdila je novi raspored i 35/35 testova, ali korisni
 ## Ekran 2 — Teme i izgled (izvorni PNG reference)
 
 Usporedba je pokazala nedostajuće radio oznake ispod kartica **Zaobljene/Ravne/Staklaste** u standardnom layoutu; kompaktni ih je već imao. Dodana su tri jasno vidljiva kružića i bijela oznaka odabranog stila. Pritom je vodoravna razdjelna linija spuštena, a dodirni cilj svih stilova produžen do y=563, bez preklapanja s idućom funkcionalnom kontrolom Vibracija (počinje na y=564). Stil Staklaste sada prikazuje karakterističan bijeli dijagonalni odsjaj u oba layouta, pa se razlikuje od Zaobljenih na izvornom previewu. Uveden je Android screenshot i provjera odabranog radio kružića za sve tri vrijednosti stila na dva layouta, bez promjene stvarne igraće ploče, spremljene teme ili postavki.
+
+
+### Ispravak preklapanja opisa i prekidača nakon QA v1.12.72
+
+Stvarna nova snimka pokazala je da su opisi `Kada spojiš brojeve.` i `Zvučni efekti u igri.` ispisivani preko prekidača jer je renderer odobravao `leftFitted(..., maxWidth=123)` od x=245 sve do 368, iako je prekidač već počinjao na x=324. Oba standardna i kompaktna prikaza sada daju natpisima najveću širinu **86** logičkih jedinica, s preostalim razmakom od najmanje 6 jedinica do prekidača na **x=337..380**. Stvarno aktivno stanje, hrvatski tekst i puna dodirna zona ostali su nepromijenjeni. Ukupna širina panela ostaje do x=380; sada niti opis niti prekidač ne prelaze dopuštenu granicu. Vizualno verificirati na stvarnoj emulator snimci.
