@@ -150,3 +150,8 @@ Pregledan je `Brojko-real-device-UI` artefakt prethodnog uspješnog emulator wor
 - Dodan je instrumentacijski regresijski test za opise i veličine zona ikonografskih gumba, uz proširenje provjere dnevne nagrade.
 
 Ova revizija **nije potvrda apsolutne 1:1 podudarnosti**. Izvorni dizajnerski PNG-ovi još nisu u repozitoriju kao golden reference; za pixel-diff treba iste ulazne podatke, prikaz i izvorne grafičke slojeve. Testovi i novo izdanje ovise o uspješnom CI prolazu nakon commita.
+
+
+## Dodatna dorada nakon pregleda 70 snimki v1.12.41
+
+Emulator QA za v1.12.41 završio je uspješno. Na stvarnim snimkama potvrđeno je da su oznake teme unutar selekcijskih kartica i da novi testni prikazi pokrivaju ikonografske akcije. U modalu uspješnog dnevnog izazova posljednji gumb bio je poravnat uz sam donji rub panela; primarna i sekundarna akcija su podignute uz 18 dizajnerskih jedinica slobodnog prostora. Ovaj razmak sada provjerava regresijski test. Android launch tema na API 23–30 i API 31+ eksplicitno postavlja krem pozadinu `#FFF8EE` prije prvog Canvas kadra i koristi jedinstvenu koraljnu `#FF7A5B` boju naglaska. Time se smanjuje rizik bijelog početnog bljeska; snimka prvog stvarnog prikaza na različitim uređajima i dalje ostaje dio završnog manualnog QA.

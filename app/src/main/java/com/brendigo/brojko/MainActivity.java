@@ -1328,9 +1328,10 @@ public final class MainActivity extends Activity {
                 "+250 zvjezdica osvojeno!":"Današnja nagrada već preuzeta"):
                 "Pokušaj ponovno i dosegni 256.",200,534,17,310,
                 success?0xff259d85:muted,true);
-            button("Igraj ponovno","undo",53,558,294,62,CORAL,true,
+            // Leave clear space below the last action inside the rounded modal.
+            button("Igraj ponovno","undo",53,546,294,62,CORAL,true,
                 ()->newGame("daily"));
-            button("Izbornik","home",53,639,294,55,card,false,
+            button("Izbornik","home",53,621,294,55,card,false,
                 ()->navigate("home"));
         }
         void confirmEndOverlay(){

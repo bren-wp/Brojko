@@ -627,4 +627,42 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void launchBackgroundMatchesBrojkoCreamBeforeFirstFrame(){
+        rule.getScenario().onActivity(activity->{
+            android.util.TypedValue background=new android.util.TypedValue();
+            assertTrue("Startup theme must define a window background",
+                activity.getTheme().resolveAttribute(
+                    android.R.attr.windowBackground,background,true));
+            assertEquals("Avoid an unbranded white launch frame",
+                MainActivity.CREAM,background.data);
+        });
+    }
+
+    @Test public void dailyResultModalKeepsBottomActionInsideItsCard(){
+        rule.getScenario().onActivity(activity->{
+            TileGame priorGame=activity.game;
+            String priorPage=activity.page;
+            try{
+                activity.game=new TileGame("daily",activity.today(),901L);
+                activity.page="dailyWin";
+                capture(activity,"daily-modal-safe-padding");
+                boolean found=false;
+                for(MainActivity.BoardScreen.Tap tap:activity.screen.taps){
+                    if("Izbornik".equals(tap.label)){
+                        found=true;
+                        assertTrue("Bottom action needs inner modal padding",
+                            tap.bottom<=678);
+                        assertTrue("Bottom action must remain >= 48 units high",
+                            tap.bottom-tap.top>=48);
+                    }
+                }
+                assertTrue("Daily modal exit action missing",found);
+            }finally{
+                activity.game=priorGame;
+                activity.page=priorPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
