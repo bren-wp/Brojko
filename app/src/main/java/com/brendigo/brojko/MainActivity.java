@@ -961,12 +961,18 @@ public final class MainActivity extends Activity {
                 boolean prominent,Runnable action) {
             float radius=prominent?Math.min(38,h*.43f):Math.min(23,h*.27f);
             if(prominent){
-                // Elevated, pill-shaped coral CTA with warm specular highlight.
-                shape(x,y+5,w,h,radius,darken(color,.23f));
-                gradient(x,y,w,h-4,radius,lighten(color,.18f),color);
-                p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.2f);
+                // The original daily-start pill has a shallow lip, unlike the
+                // higher raised game buttons. Change ONLY this one CTA.
+                boolean flatDaily=page.equals("daily");
+                float lip=flatDaily?2.5f:5f;
+                shape(x,y+lip,w,h,radius,darken(color,flatDaily?.13f:.23f));
+                gradient(x,y,w,h-(flatDaily?2:4),radius,
+                    lighten(color,flatDaily?.10f:.18f),color);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeWidth(flatDaily?.9f:1.2f);
                 p.setColor(0x86ffffff);
-                c.drawRoundRect(x+3,y+2,x+w-3,y+h-8,radius-3,radius-3,p);
+                c.drawRoundRect(x+3,y+2,x+w-3,
+                    y+h-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
             }else card(x,y,w,h,radius,color);
             boolean hasSymbol=symbol!=null;
@@ -1439,6 +1445,15 @@ public final class MainActivity extends Activity {
             button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
             button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
         }
+        void dailyHeaderAccents(float cx,float cy){
+            // Source heading uses three solid coral confetti strokes rather
+            // than the tiny evenly spaced dots of the shared rays() utility.
+            c.save();c.rotate(-32,cx-13,cy+3);
+            shape(cx-16,cy-2,6,15,4,CORAL);c.restore();
+            shape(cx-3,cy-10,7,18,4,CORAL);
+            c.save();c.rotate(32,cx+15,cy+3);
+            shape(cx+12,cy-2,6,15,4,CORAL);c.restore();
+        }
         void daily(){
             boolean portrait=referencePortraitLayout;
             back();
@@ -1446,14 +1461,16 @@ public final class MainActivity extends Activity {
             fitted("Dnevni",184,portrait?65:90,portrait?43:48,223,ink,true);
             fitted("izazov",199,portrait?99:141,portrait?42:48,234,
                 CORAL,true);
-            rays(154,portrait?31:53,15,CORAL);
+            dailyHeaderAccents(154,portrait?16:39);
             float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
-            card(98,dateY,191,portrait?32:39,19,
+            // Reference date is a shallow capsule; the previous 32-unit
+            // pill touched the first description line on compact phones.
+            card(98,dateY,191,portrait?25:34,17,
                 theme==1?card:0xffffecdc);
-            icon("calendar",119,dateY+(portrait?16:21),19,muted);
-            leftFitted(dailyLongDate(),139,dateY+(portrait?22:27),
-                portrait?13:14,142,ink,true);
+            icon("calendar",119,dateY+(portrait?12:18),portrait?16:19,muted);
+            leftFitted(dailyLongDate(),139,dateY+(portrait?18:24),
+                portrait?11.5f:14,142,ink,true);
             float streakTop=portrait?33:66;
             card(291,streakTop,87,portrait?79:83,18,
                 theme==1?card:0xffffebd4);

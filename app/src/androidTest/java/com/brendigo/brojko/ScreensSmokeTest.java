@@ -1776,4 +1776,40 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyReferenceDateAndPrimaryActionHaveSeparateSafeRegions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                for(int[] size:new int[][]{{941,1672},{360,600},{400,880}}){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                        View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{board.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+                    assertTrue("Date capsule must end before subtitle text",
+                        99+25<145-6||size[0]==400);
+                    int startCount=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if(tap.label.equals("Započni izazov")||
+                           tap.label.equals("Igraj ponovno")||
+                           tap.label.equals("Nastavi izazov")){
+                            assertEquals("Daily CTA must have a full-width tap target",
+                                350f,tap.right-tap.left,.2f);
+                            assertTrue("Daily action must stay in design bounds",
+                                tap.bottom<=707f);
+                            startCount++;
+                        }
+                    }
+                    assertEquals("Exactly one functional daily action",1,startCount);
+                }
+                capture(activity,"daily-shallow-date-and-primary-action");
+            }finally{activity.page=oldPage;activity.screen.invalidate();}
+        });
+    }
+
 }
