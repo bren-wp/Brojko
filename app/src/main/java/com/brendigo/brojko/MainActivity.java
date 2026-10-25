@@ -933,6 +933,19 @@ public final class MainActivity extends Activity {
                     z.moveTo(17,8);z.quadTo(23,12,17,16);break;
                 case "phone":c.drawRoundRect(6,2,18,22,2,2,p);z.moveTo(10,19);
                     z.lineTo(14,19);break;
+                case "phone-vibrate":
+                    c.drawRoundRect(8,3,16,21,2,2,p);
+                    z.moveTo(5,7);z.quadTo(2,12,5,17);
+                    z.moveTo(19,7);z.quadTo(22,12,19,17);
+                    break;
+                case "cloud-backup":
+                    z.moveTo(7,18);z.cubicTo(2,18,2,11,7,10);
+                    z.cubicTo(9,4,16,5,18,9);
+                    z.cubicTo(24,10,24,18,18,18);
+                    z.lineTo(7,18);
+                    z.moveTo(10,14);z.cubicTo(11,11,15,11,16,13);
+                    z.moveTo(16,11);z.lineTo(16,14);z.lineTo(13,14);
+                    break;
                 case "shield":z.moveTo(12,2);z.lineTo(21,6);z.lineTo(20,14);
                     z.quadTo(18,19,12,22);z.quadTo(6,19,4,14);
                     z.lineTo(3,6);z.close();break;
@@ -992,6 +1005,9 @@ public final class MainActivity extends Activity {
                     "language".equals(page)||"backup".equals(page)||
                     "help".equals(page))?"settings":"home"));}
         void brand(float y,float size) {
+            brand(y,size,true);
+        }
+        void brand(float y,float size,boolean includeByline) {
             p.setTypeface(displayFont);
             p.setTextSize(size);
             float left=p.measureText("Br"),right=p.measureText("jko");
@@ -1005,7 +1021,8 @@ public final class MainActivity extends Activity {
             rays(bx+tile*.5f,y-size*.79f,size*.34f,CORAL);
             txt("2",bx+tile/2,y-size*.20f,size*.52f,WHITE,true);
             txt("jko",bx+tile+gap+right/2,y,size,ink,true);
-            txt("by Brendigo",265,y+Math.max(23,size*.43f),15,muted,true);
+            if(includeByline)
+                txt("by Brendigo",265,y+Math.max(23,size*.43f),15,muted,true);
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);c=canvas;palette();
@@ -1031,7 +1048,8 @@ public final class MainActivity extends Activity {
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
-                    :1120f):880f;
+                    :1120f):
+                (page.equals("settings")&&referencePortraitLayout?710f:880f);
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -2073,88 +2091,102 @@ public final class MainActivity extends Activity {
                     ()->navigate(destinations[index])));
             }
         }
+
+        // The reference settings screen has its own restrained cards/icons.
+        // Do not globally alter the raised tiles used in the actual game.
+        void settingsPanel(float x,float y,float width,float height,int radius,int color){
+            shape(x,y+2.5f,width,height,radius,
+                theme==1?0xff132038:0x22c5ad91);
+            gradient(x,y,width,height,radius,
+                theme==1?lighten(color,.09f):WHITE,
+                theme==1?color:0xfffffdfa);
+        }
+        void settingsIconTile(float x,float y,float size,int color,String glyph){
+            shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
+            gradient(x,y,size,size-1.5f,12,lighten(color,.12f),color);
+            icon(glyph,x+size/2f,y+size/2f,Math.min(27,size*.59f),WHITE);
+        }
         void settings(){
-            // The supplied reference is 941x1672. Keep every setting and
-            // the branded footer in one frame at this aspect ratio.
-            boolean shortView=referencePortraitLayout;
-            // The original settings screenshot has a centered title and rays,
-            // without an additional back button. Android system back remains.
-            txt("Postavke",200,shortView?84:108,47,ink,true);
-            rays(74,shortView?75:97,24,CORAL);
-            rays(331,shortView?75:97,24,CORAL);
-            int start=shortView?105:148, step=shortView?63:81;
-            settingsSwitch("Zvuk","sound",CORAL,start,sound,()->{
+            boolean compact=referencePortraitLayout;
+            // Source PNG spacing: four close rows, a slightly larger break,
+            // local backup, privacy and app info, and the footer byline.
+            int[] rowY=compact?
+                new int[]{97,161,223,286,360,433,498}:
+                new int[]{148,229,310,391,478,559,640};
+            txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
+            rays(74,compact?67:97,23,CORAL);
+            rays(331,compact?67:97,23,CORAL);
+            settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
-            settingsSwitch("Vibracija","phone",TEAL,start+step,vibration,()->{
+            settingsSwitch("Vibracija","phone-vibrate",TEAL,rowY[1],vibration,()->{
                 vibration=!vibration;persist();invalidate();
             });
-            settingsAction("Jezik","Hrvatski","globe",0xff378ef6,start+2*step,
+            settingsAction("Jezik","Hrvatski","globe",0xff378ef6,rowY[2],
                 ()->navigate("language"));
-            settingsSwitch("Obavijesti","bell",0xffffb630,start+3*step,
+            settingsSwitch("Obavijesti","bell",0xffffb630,rowY[3],
                 notifications,()->toggleNotifications());
-            settingsAction("Sinkronizacija napretka","Lokalna kopija","shield",
-                0xffa55ee5,start+4*step,()->navigate("backup"));
+            // No cloud service is connected: show honest local backup navigation,
+            // not the fictional enabled sync switch in the supplied illustration.
+            settingsAction("Sinkronizacija napretka","Lokalna kopija",
+                "cloud-backup",0xffa55ee5,rowY[4],()->navigate("backup"));
             settingsAction("Pravila privatnosti","›","shield",0xffff7969,
-                start+5*step,()->navigate("privacy"));
+                rowY[5],()->navigate("privacy"));
             settingsAction("O aplikaciji","›","info",0xff378ef6,
-                start+6*step,()->navigate("about"));
-            float footer=shortView?556:729;
-            card(22,footer,356,shortView?138:127,27,
+                rowY[6],()->navigate("about"));
+            float footerY=compact?566:729;
+            settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            brand(shortView?615:792,shortView?50:54);
-            fitted("v"+appVersion(),200,shortView?675:840,16,320,muted,false);
+            brand(compact?639:795,compact?54:53,false);
+            fitted("v"+appVersion(),200,compact?668:829,15,320,muted,false);
+            fitted("by Brendigo",200,compact?689:849,15,300,muted,true);
         }
         void settingsSwitch(String caption,String glyph,int accent,int y,boolean on,
                             Runnable action){
-            boolean shortView=referencePortraitLayout;
-            int height=shortView?57:71;
-            card(23,y,354,height,21,card);
-            float iconSize=shortView?43:51;
-            float iconY=y+(height-iconSize)/2f;
-            glossyTile(37,iconY,iconSize,iconSize,12,accent);
-            icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
-            leftFitted(caption,shortView?94:97,y+height*.62f,
-                shortView?19.5f:21,shortView?206:202,ink,true);
-            float toggleY=y+(height-32)/2f;
-            shape(309,toggleY,55,32,17,on?TEAL:0xffc6ced6);
-            shape(on?333:313,toggleY+3,26,26,15,WHITE);
-            taps.add(new Tap(23,y,377,y+height,
+            boolean compact=referencePortraitLayout;
+            int height=compact?57:71;
+            settingsPanel(18,y,364,height,20,card);
+            float iconSize=compact?47:51;
+            float iconX=compact?29:31;
+            settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
+            leftFitted(caption,compact?91:97,y+height*.62f,
+                compact?18.8f:21,compact?210:202,ink,true);
+            float switchY=y+(height-32)/2f;
+            shape(313,switchY,55,32,17,on?TEAL:0xffc6ced6);
+            shape(on?337:317,switchY+3,26,26,15,WHITE);
+            taps.add(new Tap(18,y,382,y+height,
                 caption+(on?" uključeno":" isključeno"),action));
         }
         void settingsAction(String caption,String value,String glyph,
                             int accent,int y,Runnable action){
-            boolean shortView=referencePortraitLayout;
-            int height=shortView?57:71;
-            card(23,y,354,height,21,card);
-            float iconSize=shortView?43:51;
-            float iconY=y+(height-iconSize)/2f;
-            glossyTile(37,iconY,iconSize,iconSize,12,accent);
-            icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
+            boolean compact=referencePortraitLayout;
+            int height=compact?57:71;
+            settingsPanel(18,y,364,height,20,card);
+            float iconSize=compact?47:51;
+            float iconX=compact?29:31;
+            settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
-                leftFitted(caption,shortView?94:97,y+(shortView?24:31),
-                    shortView?17:19,shortView?206:205,ink,true);
-                leftFitted(value,shortView?94:97,y+(shortView?45:55),
-                    shortView?12:13,shortView?202:205,muted,false);
-                // Secondary label describes the real local-backup feature;
-                // chevron makes it clear this row opens an action, not a sync toggle.
-                icon("chevron-right",350,y+height/2f,19,muted);
+                leftFitted(caption,compact?91:97,y+(compact?24:31),
+                    compact?17.6f:19,compact?218:212,ink,true);
+                leftFitted(value,compact?91:97,y+(compact?45:55),
+                    compact?12:13,compact?210:205,muted,false);
+                icon("chevron-right",355,y+height/2f,19,muted);
             }else{
-                leftFitted(caption,shortView?94:97,
-                    y+(shortView?36:43),shortView?19:20,
-                    "Jezik".equals(caption)?148:215,ink,true);
+                leftFitted(caption,compact?91:97,y+(compact?36:43),
+                    compact?18.8f:20,
+                    "Jezik".equals(caption)?145:215,ink,true);
                 if("Jezik".equals(caption)){
-                    float pillY=y+(shortView?9:14),pillH=shortView?39:44;
-                    shape(247,pillY,116,pillH,19,
+                    float pillY=y+(compact?9:14),pillH=compact?39:44;
+                    shape(245,pillY,124,pillH,19,
                         theme==1?0xff394a63:0xfffff2e2);
-                    fitted(value,293,y+(shortView?36:43),17,83,ink,true);
-                    icon("chevron-down",348,y+height/2f,17,muted);
+                    fitted(value,289,y+(compact?36:43),17,91,ink,true);
+                    icon("chevron-down",351,y+height/2f,17,muted);
                 }else if(hasValue){
-                    fitted(value,319,y+(shortView?35:44),14,90,muted,true);
-                }else txt("›",355,y+(shortView?39:49),35,muted,false);
+                    fitted(value,319,y+(compact?35:44),14,90,muted,true);
+                }else icon("chevron-right",355,y+height/2f,22,muted);
             }
-            taps.add(new Tap(23,y,377,y+height,caption,action));
+            taps.add(new Tap(18,y,382,y+height,caption,action));
         }
         void helpPage(){
             title("Kako igrati");

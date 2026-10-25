@@ -1252,4 +1252,67 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="settings";
+                int[][] sizes={{941,1672},{1080,2400},{360,600}};
+                for(int[] size:sizes){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                        View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,size[0],size[1]);
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{board.draw(new Canvas(image));}finally{image.recycle();}
+                    int[] expectedY=size[1]/(float)size[0]<1.85f?
+                        new int[]{97,161,223,286,360,433,498}:
+                        new int[]{148,229,310,391,478,559,640};
+                    String[] labels={"Zvuk","Vibracija","Jezik","Obavijesti",
+                        "Sinkronizacija napretka","Pravila privatnosti","O aplikaciji"};
+                    int i=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if(i>=7)break;
+                        assertTrue("Settings touch target must be labeled: "+tap.label,
+                            tap.label.startsWith(labels[i]));
+                        assertEquals("Row "+i+" must follow reference top",expectedY[i],
+                            tap.top,.1f);
+                        assertEquals("Entire card must be tappable on both sides",
+                            18f,tap.left,.1f);
+                        assertEquals(382f,tap.right,.1f);
+                        assertTrue("Height >= 48 design units",tap.bottom-tap.top>=48f);
+                        if(i>0)assertTrue("Settings cards must not overlap",
+                            tap.top>=board.taps.get(i-1).bottom);
+                        i++;
+                    }
+                    assertEquals("Exactly seven setting cards",7,i);
+                    if(size[0]==941)
+                        assertEquals("Reference screen must not need scrolling",
+                            0f,board.maxScroll,1.1f);
+                    if(size[0]==360)
+                        assertTrue("Compact phone retains access to entire footer",
+                            board.maxScroll>0);
+                    if(size[0]==941)
+                        captureReference(activity,board,
+                            "reference-settings-polished-941x1672");
+                }
+                activity.theme=1;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap dark=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(dark));}finally{dark.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
