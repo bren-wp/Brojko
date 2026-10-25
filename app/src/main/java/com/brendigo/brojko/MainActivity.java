@@ -1444,10 +1444,10 @@ public final class MainActivity extends Activity {
             back();
             // Reference: large two-line headline, separate streak/flame card.
             fitted("Dnevni",184,portrait?65:90,portrait?43:48,223,ink,true);
-            fitted("izazov",199,portrait?105:141,portrait?42:48,234,
+            fitted("izazov",199,portrait?99:141,portrait?42:48,234,
                 CORAL,true);
             rays(154,portrait?31:53,15,CORAL);
-            float dateY=portrait?114:164;
+            float dateY=portrait?108:164;
             // Keep the calendar glyph and locally formatted long date apart.
             card(98,dateY,191,portrait?32:39,19,
                 theme==1?card:0xffffecdc);
@@ -1461,12 +1461,24 @@ public final class MainActivity extends Activity {
             fitted(Integer.toString(streak),351,streakTop+40,
                 25,46,CORAL,true);
             fitted("dana zaredom",335,streakTop+65,12,83,muted,true);
-            fitted("Riješi današnji izazov i osvoji nagradu!",
-                200,portrait?164:218,17,337,muted,false);
-            if(!portrait)
+            if(portrait){
+                // The original portrait artwork has two subtitle lines,
+                // spaced between the date pill and the illustrative board.
+                fitted("Riješi današnji izazov i osvoji posebnu nagradu.",
+                    200,153,13,350,muted,false);
+                fitted("Pokaži koliko daleko možeš stići!",
+                    200,167,13,338,muted,false);
+            }else{
+                fitted("Riješi današnji izazov i osvoji nagradu!",
+                    200,218,17,337,muted,false);
                 fitted("Pokaži koliko daleko možeš stići!",
                     200,237,16,337,muted,false);
+            }
             float boardY=portrait?171:250;
+            // Decorative bursts live outside the board and stay below
+            // the description, as in the supplied 941x1672 mockup.
+            rays(51,boardY+(portrait?105:118),22,0xffffa83e);
+            rays(349,boardY+(portrait?105:118),22,CORAL);
             float boardSize=portrait?221:248;
             card(portrait?89:76,boardY,portrait?222:248,boardSize,24,
                 theme==1?0xff35455f:0xfff3e8da);
