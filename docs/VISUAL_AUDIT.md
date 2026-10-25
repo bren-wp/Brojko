@@ -315,3 +315,8 @@ Usporedba s izvornom 941×1672 referencom (`Slika ChatGPT ... 22_15_17-8(1).png`
 ### Ispravljena semantika petog statističkog KPI-ja
 
 Izvorna slika prikazuje **„Niz pobjeda”**, a implementacija je dosad na istome mjestu prikazivala `playDayStreak` (broj uzastopnih dana igranja), što je faktualno druga metrika. Sada se broj uzastopnih pobjeda računa iz postojećih spremljenih `history[].won` vrijednosti: svaka najnovija pobjeda povećava niz dok se ne naiđe na izgubljenu partiju. Nepostojeći legacy `won` flag tretira se kao nedokazana pobjeda (0), ne kao izmišljena pobjeda. Tjedne misije **Igraj 7 dana zaredom** i dalje koriste nepromijenjeni `playDayStreak`; podaci korisnika ostaju sačuvani. Maksimalno pouzdano prebrojavanje ograničeno je brojem spremljenih nedavnih rezultata. Dodan je regresijski test koji razlikuje niz od dviju pobjeda od kalendarskog niza od 12 dana.
+
+
+### Dopunsko poliranje statističkih površina i vremenskih zapisa
+
+Gornjih pet KPI kartica i roditelj grafikona koriste sada zasebni `statsSoftCard` sa suptilnom sjenom i pastelnim gradijentom, umjesto teškog 6-unit reljefnog ruba rezerviranog za igraće pločice. Barovi po izvornom uzorku izmjenjuju koraljnu i tirkiznu boju, pri čemu je rekordni maksimum koraljan. Redak povijesti u klasičnom/visokom prikazu i zaslon detalja sada pokazuju vrijeme samo ako ono stvarno postoji; naslijeđeni zapisi ostaju bez sata. Novo arhivirani zapisi koriste mjesec na hrvatskom (`d. MMM yyyy.`) i HH:mm umjesto 25.10.2026. Brojači, datum dosadašnjih zapisa i njihovi rezultati ostaju nepromijenjeni. Android instrumentacijski test potvrđuje da točno poznati datum i vrijeme daju `25. lis 2026. · 18:43`, dok stariji redak bez vremena ostaje neizmijenjen.

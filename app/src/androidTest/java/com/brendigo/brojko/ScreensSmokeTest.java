@@ -1595,4 +1595,21 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void statisticsArchiveDatesAndDetailsShowRealTimeWithoutBackfilling(){
+        rule.getScenario().onActivity(activity->{
+            org.json.JSONObject fresh=new org.json.JSONObject();
+            org.json.JSONObject old=new org.json.JSONObject();
+            try{
+                fresh.put("day","25. lis 2026.");
+                fresh.put("time","18:43");
+                old.put("day","10.9.2026.");
+                assertEquals("25. lis 2026. · 18:43",
+                    activity.screen.historyTimestamp(fresh));
+                assertEquals("10.9.2026.",activity.screen.historyTimestamp(old));
+                assertTrue("New Croatian history dates use month abbreviation",
+                    activity.historyDate().matches("[0-9]{1,2}\\. .+ [0-9]{4}\\."));
+            }catch(org.json.JSONException e){throw new AssertionError(e);}
+        });
+    }
+
 }

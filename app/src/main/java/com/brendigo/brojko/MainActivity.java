@@ -180,6 +180,7 @@ public final class MainActivity extends Activity {
     }
     String compactDate(){return new SimpleDateFormat("dd.MM.yyyy.",new Locale("hr","HR")).format(new Date());}
     String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
+    String historyDate(){return new SimpleDateFormat("d. MMM yyyy.",new Locale("hr","HR")).format(new Date());}
     String dailyLongDate(){
         return new SimpleDateFormat("d. MMMM yyyy.",new Locale("hr","HR")).format(new Date());
     }
@@ -235,7 +236,7 @@ public final class MainActivity extends Activity {
         try {
             JSONObject row=new JSONObject();
             row.put("score",game.score).put("moves",game.moves).put("peak",game.maxTile())
-                .put("mode",game.mode).put("day",compactDate())
+                .put("mode",game.mode).put("day",historyDate())
                 .put("time",compactTime()).put("won",game.reached2048);
             JSONArray old=new JSONArray(prefs.getString("history","[]"));
             JSONArray recent=new JSONArray();recent.put(row);
@@ -1660,6 +1661,12 @@ public final class MainActivity extends Activity {
             try{return new JSONArray(prefs.getString("history","[]"));}
             catch(Exception ignored){return new JSONArray();}
         }
+        String historyTimestamp(JSONObject row){
+            if(row==null)return "";
+            String day=row.optString("day","");
+            String time=row.optString("time","");
+            return time.isEmpty()?day:day+" · "+time;
+        }
         int consecutiveWins(){
             // Unlike playDayStreak (calendar days used by missions), this is
             // the actual number of consecutive victories in saved game order.
@@ -1683,7 +1690,7 @@ public final class MainActivity extends Activity {
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
-            card(22,399,356,219,24,card);
+            statsSoftCard(22,399,356,219,24,card);
             txt("Zadnjih 10 partija",114,432,19,ink,true);
             card(213,411,157,33,17,theme==1?0xff34445f:0xfff4ebdf);
             shape(215+(chartMetric==0?0:77),413,77,29,15,CORAL);
@@ -1716,7 +1723,7 @@ public final class MainActivity extends Activity {
                     float height=Math.max(4,112f*Math.max(0,val)/ceiling);
                     float x=chartLeft+i*barSlot+2,y=581-height;
                     shape(x,y,barSlot-6,height,Math.min(6,height/2),
-                        val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
+                        val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                     if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-9,9,barSlot+3,ink,true);
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,606,11,barSlot-4,
                         muted,false);
@@ -1733,7 +1740,7 @@ public final class MainActivity extends Activity {
                 if(row==null)continue;
                 int y=673+i*78,idx=i;
                 card(22,y,356,70,17,card);
-                txt(row.optString("day",""),88,y+27,14,muted,false);
+                fitted(historyTimestamp(row),102,y+27,13,158,muted,false);
                 fitted(labelMode(row.optString("mode","classic")),97,y+51,12,136,muted,false);
                 fitted(fmt(row.optInt("score")),242,y+43,22,128,
                     i==0?CORAL:TEAL,true);
@@ -1750,9 +1757,17 @@ public final class MainActivity extends Activity {
                 }));
             }
         }
+        void statsSoftCard(float x,float y,float width,float height,float radius,int color){
+            // Reference KPI cards use pastel surfaces and a subtle soft
+            // shadow, not the raised 6-unit extruded game-tile treatment.
+            shape(x,y+2.4f,width,height,radius,
+                theme==1?0xff142138:0x17b68c6a);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            gradient(x,y,width,height,radius,lighten(color,theme==1?.08f:.11f),color);
+        }
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
-            card(x,y,width,h,21,bg);
+            statsSoftCard(x,y,width,h,21,bg);
             String symbol=caption.contains("Najbolji")?"crown":
                 caption.contains("partija")?"gamepad":
                 caption.contains("pločica")?"grid":
@@ -1790,7 +1805,7 @@ public final class MainActivity extends Activity {
             txt("Rezultat",200,293,23,ink,true);
             fitted(fmt(row.optInt("score")),200,357,49,310,CORAL,true);
             fitted(labelMode(row.optString("mode","classic")),200,405,22,318,ink,true);
-            fitted(row.optString("day",""),200,448,17,318,muted,false);
+            fitted(historyTimestamp(row),200,448,17,318,muted,false);
             card(26,523,165,121,20,card);
             card(209,523,165,121,20,card);
             txt("Najveća pločica",108,565,17,muted,true);
@@ -1989,7 +2004,7 @@ public final class MainActivity extends Activity {
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);
-            card(22,297,356,142,22,card);
+            statsSoftCard(22,297,356,142,22,card);
             txt("Zadnjih 10 partija",113,323,18,ink,true);
             card(213,303,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
             shape(215+(chartMetric==0?0:77),305,77,25,13,CORAL);
@@ -2022,7 +2037,7 @@ public final class MainActivity extends Activity {
                     float barHeight=Math.max(4,72f*Math.max(0,val)/ceiling);
                     float x=42+i*barSlot+2,y=414-barHeight;
                     shape(x,y,barSlot-6,barHeight,Math.min(6,barHeight/2),
-                        val==ceiling?CORAL:(i%2==0?TEAL:0xff4699e8));
+                        val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                     if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-8,9,barSlot+3,ink,true);
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,431,
                         10,barSlot-4,muted,false);
