@@ -1049,7 +1049,8 @@ public final class MainActivity extends Activity {
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):
-                (page.equals("settings")&&referencePortraitLayout?710f:880f);
+                ((page.equals("settings")||page.equals("themes"))&&
+                    referencePortraitLayout?710f:880f);
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
