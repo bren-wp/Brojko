@@ -1145,7 +1145,8 @@ public class ScreensSmokeTest {
             String weekly=activity.timeRemainingInPeriod(true);
             assertTrue("Daily countdown must have hours",daily.contains("h "));
             assertTrue("Daily countdown must include minutes",daily.endsWith("min"));
-            assertTrue("Weekly countdown must have days",weekly.contains("d "));
+            assertTrue("Weekly countdown must show days or a final-day hour count",
+                weekly.contains("d ")||weekly.matches("[0-9]+h"));
             assertTrue("Weekly countdown must have hours",weekly.endsWith("h"));
             String original=activity.page;
             try{
