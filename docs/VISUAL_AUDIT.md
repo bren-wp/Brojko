@@ -181,3 +181,8 @@ Pregled adaptivne ikone nakon promjene proporcija središnjeg B u izdanju v1.12.
 ## Mikroispravak kontrola animacije — obje visine zaslona
 
 Natpisi Niska/Srednja/Visoka sada imaju uravnotežen razmak unutar kartice na standardnom i kompaktnom ekranu Teme i izgled. Tri dodirne zone su nepoklapajuće (208–261, 262–315, 316–378 dizajnerskih jedinica); položaji gumba i aktivna spremljena razina ostaju nepromijenjeni. Dodan je instrumentacijski test obje geometrije zaslona.
+
+
+## Potpuno snimanje sva tri načina igre
+
+UI workflow sada snima **stvarna stanja** sva tri načina igre, ne samo generičku klasičnu ploču: Klasično 4×4, Opušteno 5×5 i Dnevni izazov 4×4. Za svaki se stvara stvarni emulator screenshot i posebna referentna snimka renderera na 941×1672. Test mjeri broj ćelija, kvadratni izgled mreže, granice vidljivog boarda i postojanje aktivne kontrole Završi. Ti QA snimci ne podrazumijevaju da su referentni marketinški PNG-ovi učitani ili da je 1:1 usporedba provedena.

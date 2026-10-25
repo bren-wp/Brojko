@@ -797,4 +797,42 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void screenshotQaCoversAllThreeRealGameModes(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            MainActivity.BoardScreen reference=activity.new BoardScreen(activity);
+            try{
+                reference.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                reference.layout(0,0,941,1672);
+                String[] modes={"classic","relaxed","daily"};
+                int[] sizes={4,5,4};
+                for(int i=0;i<modes.length;i++){
+                    TileGame g=new TileGame(modes[i],
+                        i==2?activity.today():"",710L+i);
+                    activity.game=g;
+                    activity.page="game";
+                    capture(activity,"game-real-"+modes[i]);
+                    assertEquals("Board grid size",sizes[i]*sizes[i],g.cells.length);
+                    boolean finish=false;
+                    for(MainActivity.BoardScreen.Tap tap:activity.screen.taps)
+                        if("Završi".equals(tap.label))finish=true;
+                    assertTrue("Game mode must provide a functional finish button",finish);
+                    captureReference(activity,reference,
+                        "reference-941x1672-game-"+modes[i]);
+                    assertEquals("Board dimensions must stay square",
+                        368f,reference.gridSize,0.1f);
+                    assertTrue("Board must fit within the logical viewport",
+                        reference.gridX+reference.gridSize<=400);
+                }
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
