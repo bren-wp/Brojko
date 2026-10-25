@@ -113,3 +113,7 @@ Zaslon Teme i izgled sada ima zaseban kompaktni raspored: 3 tematske kartice s o
 - Misije imaju tri odvojena, tematski obojena pozadinska panela. Svi paneli dobivaju tamne ekvivalente na tamnoj temi. Progres i nagrade ostaju nepromijenjeni i stvarno se računaju.
 - Ikone redova razlikuju spajanje (mreža), dnevne bodove (meta), kontinuitet igranja (kalendar), 1024 (mreža) i rekord (kruna); osvojeni cilj ostaje označen kvačicom.
 - Emulator QA snima dodatno dnevni izazov, misije, statistiku i teme u sve tri teme. Preostale razlike uključuju ilustrativni 3D glow, sjene i fotografski izgled mockupova, za što bi trebale zasebne originalne grafičke datoteke.
+
+## v1.10 — dovršetak zaglavlja dnevnog izazova
+
+Zaglavlje dnevnog izazova sada koristi veliki dvoredni naslov **Dnevni / izazov** bez dodatnog logotipa, izdvojeni flame/streak panel s brojem uzastopnih dana, odvojenu datumsku kapsulu i koraljne zrake uz primarni gumb. Na prostranim telefonima ostaje i drugi motivacijski red, dok se na referentnom 941×1672 izostavlja radi preglednosti. Nije dodan novi hardkodirani datum: prikazuje se stvarni datum uređaja.

@@ -1298,20 +1298,30 @@ public final class MainActivity extends Activity {
         }
         void daily(){
             boolean portrait=referencePortraitLayout;
-            back();brand(portrait?38:63,35);
-            fitted("Dnevni",158,portrait?92:119,36,173,ink,true);
-            fitted("izazov",268,portrait?92:119,36,160,CORAL,true);
-            float dateY=portrait?108:142;
-            card(112,dateY,177,portrait?33:39,19,
+            back();
+            // Reference: large two-line headline, separate streak/flame card.
+            fitted("Dnevni",184,portrait?65:90,portrait?43:48,223,ink,true);
+            fitted("izazov",199,portrait?105:141,portrait?42:48,234,
+                CORAL,true);
+            rays(154,portrait?31:53,15,CORAL);
+            float dateY=portrait?114:164;
+            card(112,dateY,177,portrait?32:39,19,
                 theme==1?card:0xffffecdc);
-            icon("calendar",143,dateY+(portrait?17:21),21,muted);
-            fitted(compactDate(),208,dateY+(portrait?23:27),16,147,ink,true);
-            card(291,dateY,87,portrait?33:41,17,
+            icon("calendar",143,dateY+(portrait?16:21),21,muted);
+            fitted(compactDate(),208,dateY+(portrait?22:27),
+                16,147,ink,true);
+            float streakTop=portrait?33:66;
+            card(291,streakTop,87,portrait?79:83,18,
                 theme==1?card:0xffffebd4);
-            icon("crown",308,dateY+17,20,0xffffab23);
-            fitted(streak+" dana",343,dateY+23,15,66,CORAL,true);
+            icon("flame",315,streakTop+29,30,0xffff8b2c);
+            fitted(Integer.toString(streak),351,streakTop+40,
+                25,46,CORAL,true);
+            fitted("dana zaredom",335,streakTop+65,12,83,muted,true);
             fitted("Riješi današnji izazov i osvoji nagradu!",
-                200,portrait?158:218,17,337,muted,false);
+                200,portrait?164:218,17,337,muted,false);
+            if(!portrait)
+                fitted("Pokaži koliko daleko možeš stići!",
+                    200,237,16,337,muted,false);
             float boardY=portrait?171:250;
             float boardSize=portrait?221:248;
             card(portrait?89:76,boardY,portrait?222:248,boardSize,24,
@@ -1359,6 +1369,8 @@ public final class MainActivity extends Activity {
                     if(active&&!game.gameOver)navigate("game");
                     else requestNew("daily");
                 });
+            rays(16,portrait?677:831,16,CORAL);
+            rays(384,portrait?677:831,16,CORAL);
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
