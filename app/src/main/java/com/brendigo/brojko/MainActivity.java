@@ -1845,7 +1845,10 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,198.5f,x+114.5f,369.5f,21,21,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                shape(x+7,207,102,109,18,fills[i]);
+                if(i==2){
+                    p.setShader(null);p.setColor(WHITE);
+                    gradient(x+7,207,102,109,18,0xff984af0,0xff238ffa);
+                }else shape(x+7,207,102,109,18,fills[i]);
                 int[] cs=i==2?new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
@@ -1892,22 +1895,28 @@ public final class MainActivity extends Activity {
                     tileStyle=value;persist();invalidate();
                 }));
             }
-            // Native controls integrated into the same reference-style preview card.
-            icon("phone",220,593,30,TEAL);
-            txt("Vibracija",284,596,18,ink,true);
-            shape(324,577,43,27,14,vibration?CORAL:0xffb7c1cf);
-            shape(vibration?342:326,579,23,23,12,WHITE);
+            // Source shows labels, explanations and dividers, not bare toggles.
+            shape(208,556,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
+            icon("phone-vibrate",220,587,29,ink);
+            leftFitted("Vibracija",245,590,18,123,ink,true);
+            leftFitted("Kada spojiš brojeve.",245,610,11,123,muted,false);
+            shape(324,570,43,27,14,vibration?CORAL:0xffb7c1cf);
+            shape(vibration?342:326,572,23,23,12,WHITE);
             taps.add(new Tap(205,564,378,615,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
-            icon("sound",219,658,30,0xff4c9af3);
-            txt("Zvukovi",280,661,18,ink,true);
-            shape(324,642,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?342:326,644,23,23,12,WHITE);
+            icon("sound",219,655,29,ink);
+            leftFitted("Zvukovi",245,658,18,123,ink,true);
+            leftFitted("Zvučni efekti u igri.",245,678,11,123,muted,false);
+            shape(324,636,43,27,14,sound?CORAL:0xffb7c1cf);
+            shape(sound?342:326,638,23,23,12,WHITE);
+            shape(208,696,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             taps.add(new Tap(205,628,378,683,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
-            txt("Jačina animacija",286,730,19,ink,true);
+            leftFitted("Jačina animacija",208,720,18,162,ink,true);
+            leftFitted("Koliko su izražene animacije spajanja.",208,738,
+                10,166,muted,false);
             shape(211,756,159,9,5,theme==1?0xff536078:0xffe8ded1);
             shape(211,756,11+animation*68,9,5,CORAL);
             shape(211+animation*68,748,23,23,12,CORAL);
@@ -2031,7 +2040,10 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                shape(x+7,y+18,102,96,16,fills[i]);
+                if(i==2){
+                    p.setShader(null);p.setColor(WHITE);
+                    gradient(x+7,y+18,102,96,16,0xff984af0,0xff238ffa);
+                }else shape(x+7,y+18,102,96,16,fills[i]);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
@@ -2053,7 +2065,7 @@ public final class MainActivity extends Activity {
             leftFitted("Pregled",30,370,22,167,ink,true);
             leftFitted("Stil pločica",201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
-            shape(29,411,167,169,17,
+            shape(29,411,163,169,17,
                 theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
@@ -2083,21 +2095,27 @@ public final class MainActivity extends Activity {
                     tileStyle=value;persist();invalidate();
                 }));
             }
-            icon("phone",219,490,26,TEAL);
-            fitted("Vibracija",274,496,16,100,ink,true);
-            shape(324,478,43,27,14,vibration?CORAL:0xffb7c1cf);
-            shape(vibration?342:326,480,23,23,12,WHITE);
+            shape(208,461,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
+            icon("phone-vibrate",219,476,26,ink);
+            leftFitted("Vibracija",245,480,16,123,ink,true);
+            leftFitted("Kada spojiš brojeve.",245,495,10.5f,123,muted,false);
+            shape(324,466,43,27,14,vibration?CORAL:0xffb7c1cf);
+            shape(vibration?342:326,468,23,23,12,WHITE);
             taps.add(new Tap(205,466,378,519,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
-            icon("sound",219,537,26,0xff4c9af3);
-            fitted("Zvukovi",272,544,16,97,ink,true);
-            shape(324,526,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?342:326,528,23,23,12,WHITE);
+            icon("sound",219,520,26,ink);
+            leftFitted("Zvukovi",245,523,16,123,ink,true);
+            leftFitted("Zvučni efekti u igri.",245,538,10.5f,123,muted,false);
+            shape(324,507,43,27,14,sound?CORAL:0xffb7c1cf);
+            shape(sound?342:326,509,23,23,12,WHITE);
+            shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
-            fitted("Jačina animacija",287,580,17,170,ink,true);
+            leftFitted("Jačina animacija",208,570,17,162,ink,true);
+            leftFitted("Koliko su izražene animacije spajanja.",
+                208,588,9.5f,166,muted,false);
             shape(211,599,159,8,5,theme==1?0xff536078:0xffe8ded1);
             shape(211,599,11+animation*68,8,5,CORAL);
             shape(211+animation*68,592,22,22,11,CORAL);

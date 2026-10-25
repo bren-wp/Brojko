@@ -1434,4 +1434,41 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themesToggleDescriptionsStayInsideRealReferenceCard(){
+        rule.getScenario().onActivity(activity->{
+            String previous=activity.page;
+            MainActivity.BoardScreen layout=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                layout.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                layout.layout(0,0,941,1672);
+                Bitmap img=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{layout.draw(new Canvas(img));}
+                finally{img.recycle();}
+                boolean vibration=false,sound=false;
+                for(MainActivity.BoardScreen.Tap tap:layout.taps){
+                    if("Vibracija".equals(tap.label)){
+                        vibration=true;
+                        assertTrue(tap.bottom-tap.top>=48);
+                    }
+                    if("Zvukovi".equals(tap.label)){
+                        sound=true;
+                        assertTrue(tap.bottom-tap.top>=45);
+                    }
+                }
+                assertTrue("Vibration remains actionable",vibration);
+                assertTrue("Sound remains actionable",sound);
+                assertEquals("No phantom scroll on reference height",
+                    0f,layout.maxScroll,.01f);
+                captureReference(activity,layout,
+                    "themes-source-descriptions-and-divider-941x1672");
+            }finally{
+                activity.page=previous;activity.screen.invalidate();
+            }
+        });
+    }
+
 }
