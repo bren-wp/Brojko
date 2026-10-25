@@ -1671,4 +1671,42 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyReferenceHasNoGhostScrollAndStillFitsAllControls(){
+        rule.getScenario().onActivity(activity->{
+            String original=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                int[][] sizes={{941,1672},{360,600},{1080,2400}};
+                for(int[] sz:sizes){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(sz[0],
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(sz[1],
+                        View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,sz[0],sz[1]);
+                    Bitmap image=Bitmap.createBitmap(sz[0],sz[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{board.draw(new Canvas(image));}finally{image.recycle();}
+                    if(sz[0]==941)
+                        assertEquals("Reference daily must not scroll through blank space",
+                            0f,board.maxScroll,.9f);
+                    if(sz[0]==360)
+                        assertTrue("Short phones can reach CTA by scrolling",
+                            board.maxScroll>1);
+                    int help=0,primary=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if(tap.label.startsWith("Pomoć za cilj"))help++;
+                        if(tap.label.contains("Započni izazov")||
+                           tap.label.contains("Nastavi izazov")||
+                           tap.label.contains("Igraj ponovno"))primary++;
+                    }
+                    assertEquals("Three help controls preserved",3,help);
+                    assertEquals("Start/resume action preserved",1,primary);
+                    if(sz[0]==941)captureReference(activity,board,
+                        "daily-reward-description-reference-941x1672");
+                }
+            }finally{activity.page=original;activity.screen.invalidate();}
+        });
+    }
+
 }

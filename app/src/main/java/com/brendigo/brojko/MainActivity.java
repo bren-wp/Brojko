@@ -1053,7 +1053,8 @@ public final class MainActivity extends Activity {
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):
                 ((page.equals("settings")||page.equals("themes")||
-                    page.equals("missions"))&&referencePortraitLayout?710f:880f);
+                    page.equals("missions")||page.equals("daily"))&&
+                    referencePortraitLayout?710f:880f);
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -1481,6 +1482,15 @@ public final class MainActivity extends Activity {
                     y+(portrait?30:34),value>999?16:24,
                     portrait?44:49,WHITE,true);
             }
+            // Source art groups the three daily objectives inside one
+            // quiet cream panel, with each individual white row above it.
+            if(portrait){
+                shape(18,395,364,171,22,
+                    theme==1?0xff273851:0xfffff2df);
+            }else{
+                shape(18,506,364,232,22,
+                    theme==1?0xff273851:0xfffff2df);
+            }
             boolean active=game!=null&&"daily".equals(game.mode)&&
                 today().equals(game.day);
             boolean finished=today().equals(lastDaily);
@@ -1493,18 +1503,28 @@ public final class MainActivity extends Activity {
             float rewardY=portrait?569:744;
             card(28,rewardY,344,portrait?80:48,19,
                 theme==1?0xff3a3459:0xfff0e9ff);
-            icon("gift",portrait?78:65,rewardY+(portrait?41:24),
-                portrait?59:37,0xff9853e8);
+            icon("gift",portrait?76:65,rewardY+(portrait?41:24),
+                portrait?68:37,0xff9853e8);
             if(portrait){
-                fitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
-                    224,rewardY+26,14,210,muted,true);
-                fitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
-                    210,rewardY+54,21,214,ink,true);
-                fitted("+250",333,rewardY+54,18,69,0xffa65be2,true);
+                leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
+                    124,rewardY+17,12,225,muted,true);
+                leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
+                    124,rewardY+40,18,180,ink,true);
+                // Preserve the actual earned currency while retaining the
+                // reference's explanatory reward copy.
+                fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
+                leftFitted(finished?"Današnja nagrada već je preuzeta.":
+                    "Dovrši sva tri cilja i osvoji",124,rewardY+57,10.5f,
+                    238,muted,false);
+                if(!finished)
+                    leftFitted("posebnu nagradu!",124,rewardY+69,
+                        10.5f,222,muted,false);
             }else{
-                fitted(finished?"Nagrada osvojena!":"DANAŠNJA NAGRADA",
-                    200,rewardY+29,16,180,ink,true);
-                fitted("+250",327,rewardY+30,20,73,0xffa65be2,true);
+                leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
+                    100,rewardY+17,12,197,muted,true);
+                leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
+                    100,rewardY+34,16,185,ink,true);
+                fitted("+250",335,rewardY+30,18,69,0xffa65be2,true);
             }
             button(active&&!game.gameOver?"Nastavi izazov":
                 finished?"Igraj ponovno":"Započni izazov","play",
