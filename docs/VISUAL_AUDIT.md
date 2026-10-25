@@ -92,3 +92,9 @@ Kartice statistike sada koriste značenjski i vizualno dosljedne vektorske simbo
 ## v1.9 — referentni kompaktni raspored postavki i pobjede
 
 U dodatnoj vizualnoj kontroli primijećeno je da pri 941×1672 originalni raspored svih sedam redaka Postavki i footer logotipa zahtijeva previše visine, iako na visokom emulatoru sve izgleda uredno. Uski viewport sada koristi redove visine 57 jedinica i korak 63, s footerom na y=556–694. Prekidači i kartica jezika prate isti pomak i imaju najmanje 48 jedinica dodirne visine. Modal pobjede za uske ekrane zadržava sve tri radne akcije u jednome vidljivome okviru (panel y=181–684). Instrumentacijski test eksplicitno mjeri fizičke koordinate donjeg retka postavki i sva tri gumba pobjede, uz test ploče i tipografije.
+
+## v1.9 — referentni raspored početnog ekrana, izazova i misija
+
+Snimke na 941×1672 otkrile su da su donje četiri kartice početne stranice, nagrada dnevnog izazova i posljednja misija izlazile ispod granice referentne slike. U odgovoru na to dodana je sadržajna prilagodba za omjer stranica 16:9 (bez deformiranja fonta ili kartica): početni ekran raspoređuje rezultatske kartice, veliki CTA, tri moda i četiri prečaca unutar y=205–668 logičkih jedinica. Dnevni izazov koristi sažeti preview 4×4 i kraće kartice ciljeva te CTA do y=704. Misije su raspoređene u dnevne, tjedne i postignuća s preglednim progresom, svih pet stavki unutar y=161–655. Za visoke telefone zadržan je prostrani raspored.
+
+UI test u izoliranom 941×1672 prikazu provjerava da sva četiri prečaca i glavni gumb izazova imaju dodirne zone unutar kadra. Za 1:1 provjeru boja, logotipa i 3D detalja potrebna je dodatna usporedba odgovarajućih referentnih PNG-ova sa stvarnim snimkama istog stanja i tolerancijama.

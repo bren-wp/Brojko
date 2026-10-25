@@ -343,6 +343,35 @@ public class ScreensSmokeTest {
                 }
                 assertEquals("Victory must show all 3 functional buttons",
                     3,visibleActions);
+                activity.page="home";
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                int shortcuts=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Misije".equals(tap.label)||"Statistika".equals(tap.label)||
+                       "Teme".equals(tap.label)||"Postavke".equals(tap.label)){
+                        shortcuts++;
+                        assertTrue("Home shortcut is clipped: "+tap.label,
+                            view.offY+tap.bottom*view.scale<=1673);
+                    }
+                }
+                assertEquals("All four reference home shortcuts must be visible",
+                    4,shortcuts);
+                activity.page="daily";
+                bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                boolean challengeAction=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if(tap.label.contains("izazov")||"Igraj ponovno".equals(tap.label)){
+                        challengeAction=true;
+                        assertTrue("Daily challenge action is clipped",
+                            view.offY+tap.bottom*view.scale<=1673);
+                    }
+                }
+                assertTrue("Daily CTA must be visible and clickable",
+                    challengeAction);
             }finally{
                 activity.game=previousGame;
                 activity.page=previousPage;
