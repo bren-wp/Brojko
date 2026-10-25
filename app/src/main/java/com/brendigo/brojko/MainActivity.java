@@ -2097,12 +2097,16 @@ public final class MainActivity extends Activity {
         void settingsPanel(float x,float y,float width,float height,int radius,int color){
             shape(x,y+2.5f,width,height,radius,
                 theme==1?0xff132038:0x22c5ad91);
+            // A translucent shadow must not leak its Paint alpha into
+            // the subsequent opaque gradient fill.
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,width,height,radius,
                 theme==1?lighten(color,.09f):WHITE,
                 theme==1?color:0xfffffdfa);
         }
         void settingsIconTile(float x,float y,float size,int color,String glyph){
             shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,size,size-1.5f,12,lighten(color,.12f),color);
             icon(glyph,x+size/2f,y+size/2f,Math.min(27,size*.59f),WHITE);
         }

@@ -1315,4 +1315,38 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void settingsIconColorsAndCardSurfacesStayFullyOpaque(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="settings";activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int coral=bitmap.getPixel(80,270);
+                    int whiteCard=bitmap.getPixel(400,300);
+                    // Regression: an inherited low-alpha shadow made the coral
+                    // icon pastel and the reference-white card solid beige.
+                    assertTrue("The sound icon must retain saturated coral",
+                        android.graphics.Color.red(coral)>235 &&
+                        android.graphics.Color.red(coral)-
+                            android.graphics.Color.green(coral)>55);
+                    assertTrue("Settings cards must be opaque near white",
+                        android.graphics.Color.red(whiteCard)>=248 &&
+                        android.graphics.Color.green(whiteCard)>=247 &&
+                        android.graphics.Color.blue(whiteCard)>=245);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
