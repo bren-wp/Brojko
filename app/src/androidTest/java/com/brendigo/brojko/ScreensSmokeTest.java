@@ -1612,4 +1612,63 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void missionAchievementsCounterReflectsRealUnlocks(){
+        rule.getScenario().onActivity(activity->{
+            int oldFlags=activity.rewardFlags;
+            String oldPage=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";
+                for(int flags:new int[]{0,8,16,24,63}){
+                    activity.rewardFlags=flags;
+                    int expected=((flags&8)!=0?1:0)+((flags&16)!=0?1:0);
+                    assertEquals("Counter must not mistake currency for achievements",
+                        expected,board.completedAchievements());
+                }
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap img=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(img));}finally{img.recycle();}
+                assertTrue("All six mission rows fit at reference resolution",
+                    board.maxScroll<1.1f);
+            }finally{
+                activity.rewardFlags=oldFlags;activity.page=oldPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+    @Test public void missionReferenceProgressUsesRealUnderlyingGameState(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldTile=activity.recordTile;
+            int oldBest=activity.best,oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap img=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(img));}
+                finally{img.recycle();}
+                captureReference(activity,board,"missions-six-real-progress-941x1672");
+                assertTrue("Reference-sized viewport must show all six tasks",
+                    board.maxScroll<1.1f);
+            }finally{
+                activity.page=oldPage;activity.todayMerges=oldMerges;
+                activity.weekPoints=oldWeek;activity.playDayStreak=oldStreak;
+                activity.recordTile=oldTile;activity.best=oldBest;
+                activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

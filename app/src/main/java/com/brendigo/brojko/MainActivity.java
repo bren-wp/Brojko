@@ -1052,8 +1052,8 @@ public final class MainActivity extends Activity {
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):
-                ((page.equals("settings")||page.equals("themes"))&&
-                    referencePortraitLayout?710f:880f);
+                ((page.equals("settings")||page.equals("themes")||
+                    page.equals("missions"))&&referencePortraitLayout?710f:880f);
             maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
@@ -1547,6 +1547,24 @@ public final class MainActivity extends Activity {
             taps.add(new Tap(322,y,376,y+height,"Pomoć za cilj: "+name,
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
+        void missionSurface(float x,float y,float width,float height,
+                            float radius,int color){
+            // The illustrated mission rows have a restrained 2-unit soft
+            // shadow; applying raised game-tile bevels makes every row look
+            // twice as tall and puts shadows over neighboring content.
+            shape(x,y+2,width,height,radius,
+                theme==1?0xff162239:0x1cb0916d);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,width,height,radius,
+                theme==1?lighten(color,.07f):WHITE,
+                theme==1?color:0xfffffdf9);
+        }
+        int completedAchievements(){
+            int result=0;
+            if((rewardFlags&8)!=0)result++;
+            if((rewardFlags&16)!=0)result++;
+            return result;
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
             back();brand(portrait?38:63,32);
@@ -1557,9 +1575,9 @@ public final class MainActivity extends Activity {
             int dailyTint=theme==1?0xff293b4c:0xffffedda;
             int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
             int achievementTint=theme==1?0xff24483f:0xffe0f9ec;
-            card(17,portrait?134:179,366,portrait?185:209,28,dailyTint);
-            card(17,portrait?328:398,366,portrait?185:207,28,weeklyTint);
-            card(17,portrait?522:614,366,portrait?187:249,28,achievementTint);
+            missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
+            missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
+            missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
             float sunY=portrait?148:204;
             rays(43,sunY,19,0xffffb431);
             p.setShader(null);p.setColor(0xffffb431);
@@ -1569,11 +1587,14 @@ public final class MainActivity extends Activity {
             icon("calendar",43,portrait?346:420,23,0xff3d98f0);
             icon("crown",43,portrait?540:636,23,0xffffb431);
             missionPeriodPill("week",portrait?330:402);
-            // Keep the earned-stars counter without covering a mission row.
+            // The source layout counts achievements, not star currency.
+            // Only two achievements currently exist; don't display a fictive
+            // 4/20 or incorrectly label the total stars as achievements.
             float countTop=portrait?522:619;
-            card(287,countTop,90,27,14,theme==1?card:0xfffff1d8);
-            icon("star",304,countTop+13,17,0xffffae1d);
-            fitted(fmt(stars),344,countTop+20,15,55,ink,true);
+            missionSurface(299,countTop,76,25,13,
+                theme==1?card:0xfffff5e5);
+            fitted(completedAchievements()+"/2",337,countTop+18,
+                13,66,muted,true);
             missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
                 todayMerges,20,50,portrait?160:212,TEAL);
             boolean noUndo512=(rewardFlags&2)!=0 ||
@@ -1595,7 +1616,7 @@ public final class MainActivity extends Activity {
             boolean week="week".equals(period);
             float x=week?290:283;
             int width=week?87:94;
-            card(x,y,width,25,13,theme==1?card:0xfffffcf6);
+            missionSurface(x,y,width,25,13,theme==1?card:0xfffffcf6);
             icon("clock",x+15,y+12,15,muted);
             fitted(timeRemainingInPeriod(week),x+width/2+6,y+18,
                 11,width-32,muted,true);
@@ -1603,7 +1624,7 @@ public final class MainActivity extends Activity {
         void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
             boolean portrait=referencePortraitLayout;
             int height=portrait?70:80;
-            card(26,y,348,height,21,card);
+            missionSurface(26,y,348,height,19,card);
             shape(39,y+(portrait?9:10),portrait?46:52,
                 portrait?50:58,15,
                 theme==1?0xff35435d:lighten(accent,.80f));
@@ -1639,19 +1660,34 @@ public final class MainActivity extends Activity {
                 icon(taskGlyph,portrait?62:65,y+(portrait?33:38),
                     portrait?26:31,accent);
             }
-            fitted(name,portrait?194:198,y+(portrait?20:25),
-                portrait?15:17,188,ink,true);
-            fitted(sub,portrait?194:198,y+(portrait?37:45),
-                portrait?11:12,188,muted,false);
-            shape(106,y+(portrait?51:59),174,7,4,
+            // Original: titles and descriptions begin after the pictogram,
+            // rather than floating in the center of their entire row.
+            float titleBaseline=y+(portrait?21:26);
+            leftFitted(name,103,titleBaseline,portrait?15.5f:17.5f,
+                179,ink,true);
+            if(name.startsWith("Dosegni 512")){
+                leftFitted("Ostvari pločicu 512",103,
+                    y+(portrait?36:43),portrait?11:12,178,muted,false);
+                leftFitted("bez korištenja poništavanja",103,
+                    y+(portrait?46:55),portrait?10:11,177,muted,false);
+            }else{
+                leftFitted(sub,103,y+(portrait?38:48),
+                    portrait?11.5f:12.5f,177,muted,false);
+            }
+            shape(104,y+(portrait?52:61),171,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             float fraction=Math.max(0,Math.min(1,(float)value/target));
-            if(fraction>0)shape(106,y+(portrait?51:59),
-                174*fraction,7,4,accent);
-            fitted(fmt(Math.min(value,target))+"/"+fmt(target),
-                196,y+(portrait?65:75),11,175,muted,true);
-            card(289,y+(portrait?4:6),71,portrait?61:68,15,
-                theme==1?0xff3b3b4c:0xfffff0d5);
+            if(fraction>0)shape(104,y+(portrait?52:61),
+                171*fraction,7,4,accent);
+            // Existing 1024 tile milestone is binary; show 0/1 or 1/1
+            // instead of the misleading raw maxTile/1024 ratio.
+            boolean binaryMilestone=name.startsWith("Majstor");
+            int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
+            int displayTarget=binaryMilestone?1:target;
+            fitted(fmt(displayValue)+"/"+fmt(displayTarget),
+                192,y+(portrait?67:79),11,170,muted,true);
+            missionSurface(289,y+(portrait?4:6),71,
+                portrait?61:68,15,theme==1?0xff3b3b4c:0xfffff0d5);
             icon("star",323,y+(portrait?23:29),
                 portrait?24:27,0xffffad1a);
             fitted("+"+fmt(reward),323,y+(portrait?53:62),
