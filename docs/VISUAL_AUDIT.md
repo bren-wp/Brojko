@@ -248,3 +248,8 @@ Testno stanje 4×4 prema dostavljenom izvorniku (rezultat 1.316, najbolji 3.864)
 ## Korekcija sekcijskih ikona nakon konačne usporedne QA snimke
 
 Završna PNG snimka 941×1672 pokazala je da su novi simboli sekcija preklopili centrirane riječi Dnevne, Tjedne i Postignuća. Centri naslova pomaknuti su udesno, a vremenske i reward značke unutar sigurnih granica iznad redaka. Sunce na dnevnoj grupi više nije zvjezdica, a tjedni zadatak Igraj 7 dana koristi stvarni mali kalendar s čitljivom sedmicom, umjesto zvjezdice preko brojke. Kad je do ponedjeljka manje od 24 sata, odbrojivač prikazuje samo sate, a ne zbunjujući oblik 0d 21h. To su ciljani vizualni popravci zasnovani na usporedbi s izvornim PNG-ovima i stvarnim Android QA snimkama.
+
+
+## Nastavak usporedbe 10 originalnih PNG-a — rub klizača, opis tema i lokalna kopija
+
+Nakon usporedbe sa stvarnim emulator snimkama v1.12.60 utvrđeno je da klizač razine animacije Visoka u oba dizajnerska rasporeda prelazi preko desne granice kartice: lijevi rub bio je 368, a kružić je dosezao 391 (>380). Nova geometrija koristi kružić između x=211 i x=370, uz dosljedno punjenje staze i tri nepoklapajuće dodirne zone. Instrumentacijski test provjerava koraljni piksel unutar centra i izostanak prolijevanja izvan kartice na 400×880 i 941×1672. Opis lijevog pregleda stilova vraćen je u dva retka iznad mreže (umjesto sićušnog jednorednog teksta); mreža je spuštena bez ulaska u zvučne kontrole. Redak Sinkronizacija napretka otvoreno pokazuje sekundarni tekst Lokalna kopija i novu strelicu za navigaciju u sigurnosnu kopiju, bez lažnog aktiviranja cloud sinkronizacije. Provjereno da se otvara stvarna stranica Sigurnosna kopija.

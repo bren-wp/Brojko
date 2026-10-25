@@ -881,6 +881,8 @@ public final class MainActivity extends Activity {
             switch(type) {
                 case "chevron-down":
                     z.moveTo(5,9);z.lineTo(12,16);z.lineTo(19,9);break;
+                case "chevron-right":
+                    z.moveTo(9,5);z.lineTo(16,12);z.lineTo(9,19);break;
                 case "clock":
                     c.drawCircle(12,12,9,p);
                     z.moveTo(12,6);z.lineTo(12,12);z.lineTo(17,15);break;
@@ -1832,8 +1834,8 @@ public final class MainActivity extends Activity {
             }));
             txt("Jačina animacija",286,730,19,ink,true);
             shape(211,756,159,9,5,theme==1?0xff536078:0xffe8ded1);
-            shape(211,756,animation*79+4,9,5,CORAL);
-            shape(210+animation*79,748,23,23,12,CORAL);
+            shape(211,756,11+animation*68,9,5,CORAL);
+            shape(211+animation*68,748,23,23,12,CORAL);
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
@@ -1974,18 +1976,19 @@ public final class MainActivity extends Activity {
             card(20,335,360,293,26,card);
             txt("Pregled",102,351,22,ink,true);
             txt("Stil pločica",282,350,18,ink,true);
-            shape(29,401,167,155,17,
+            shape(29,411,167,147,17,
                 theme==1?0xff344157:0xfff3e9da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
-                float x=34+col*39.8f,y=406+row*35.5f;
+                float x=34+col*39.8f,y=416+row*35.5f;
                 glossyTile(x,y,36,32,
                     tileStyle==1?5:tileStyle==2?13:9,tileColor(val));
                 fitted(Integer.toString(val),x+18,y+23,
                     val>=1000?11:15,33,WHITE,true);
             }
-            fitted("Ovako će izgledati tvoja ploča.",113,389,11,171,muted,false);
+            leftFitted("Ovako će izgledati",30,384,12,159,muted,false);
+            leftFitted("tvoja ploča u odabranoj temi.",30,399,11,161,muted,false);
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
@@ -2025,8 +2028,8 @@ public final class MainActivity extends Activity {
             }));
             fitted("Jačina animacija",287,580,17,170,ink,true);
             shape(211,599,159,8,5,theme==1?0xff536078:0xffe8ded1);
-            shape(211,599,animation*79+4,8,5,CORAL);
-            shape(210+animation*79,592,22,22,11,CORAL);
+            shape(211,599,11+animation*68,8,5,CORAL);
+            shape(211+animation*68,592,22,22,11,CORAL);
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
@@ -2116,6 +2119,9 @@ public final class MainActivity extends Activity {
                     shortView?17:19,shortView?206:205,ink,true);
                 leftFitted(value,shortView?94:97,y+(shortView?45:55),
                     shortView?12:13,shortView?202:205,muted,false);
+                // Secondary label describes the real local-backup feature;
+                // chevron makes it clear this row opens an action, not a sync toggle.
+                icon("chevron-right",350,y+height/2f,19,muted);
             }else{
                 leftFitted(caption,shortView?94:97,
                     y+(shortView?36:43),shortView?19:20,

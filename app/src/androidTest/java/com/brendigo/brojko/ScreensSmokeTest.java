@@ -1156,4 +1156,66 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void animationHighKnobFitsInBothThemeLayouts(){
+        rule.getScenario().onActivity(activity->{
+            int oldAnimation=activity.animation;
+            String oldPage=activity.page;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.animation=2;
+                int[][] sizes={{400,880},{941,1672}};
+                for(int[] size:sizes){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap bmp=Bitmap.createBitmap(size[0],size[1],Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(bmp));
+                        boolean compact=size[0]==941;
+                        int sampleY=(int)((compact?601:759)*view.scale+view.offY);
+                        int centerX=(int)(358*view.scale+view.offX);
+                        int outsideX=(int)(387*view.scale+view.offX);
+                        assertEquals("High animation knob should be inside the panel",
+                            MainActivity.CORAL,bmp.getPixel(centerX,sampleY));
+                        assertNotEquals("Slider knob must not spill beyond panel",
+                            MainActivity.CORAL,bmp.getPixel(outsideX,sampleY));
+                    }finally{bmp.recycle();}
+                }
+            }finally{
+                activity.page=oldPage;activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void backupNavigationRowHasItsOwnVisibleRightChevron(){
+        rule.getScenario().onActivity(activity->{
+            String original=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="settings";
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(bmp));}finally{bmp.recycle();}
+                boolean found=false;
+                for(MainActivity.BoardScreen.Tap tap:board.taps){
+                    if("Sinkronizacija napretka".equals(tap.label)){
+                        found=true;
+                        assertTrue("Local-backup navigation needs a full-height target",
+                            tap.bottom-tap.top>=48);
+                        tap.action.run();
+                        assertEquals("backup",activity.page);
+                        break;
+                    }
+                }
+                assertTrue("Backup action must stay reachable",found);
+            }finally{activity.page=original;}
+        });
+    }
+
 }
