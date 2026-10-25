@@ -555,11 +555,15 @@ public final class MainActivity extends Activity {
         void glossyTile(float x,float y,float width,float height,float radius,int color){
             if(width<=0||height<=0)return;
             if(tileStyle==1){shape(x,y,width,height,radius,color);return;}
-            float depth=Math.min(5,Math.max(2,height*.075f));
+            float depth=Math.min(5.5f,Math.max(2,height*.082f));
+            // Warm extrusion and restrained shadow used across all themes.
+            shape(x+1.2f,y+depth+1.4f,Math.max(1,width-2.4f),
+                Math.max(1,height-depth),radius,
+                theme==1?0x60000000:0x28a35e46);
             shape(x,y+depth,width,Math.max(1,height-depth),radius,
-                darken(color,.22f));
+                darken(color,.23f));
             gradient(x,y,width,Math.max(1,height-depth),radius,
-                lighten(color,tileStyle==2?.32f:.24f),color);
+                lighten(color,tileStyle==2?.30f:.20f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
             p.setColor(0xb0ffffff);
@@ -569,7 +573,15 @@ public final class MainActivity extends Activity {
             p.setStyle(Paint.Style.FILL);
             if(width>=24&&height>=24){
                 shape(x+6,y+3,Math.max(1,width-12),
-                    Math.max(1,height*.055f),radius,0x38ffffff);
+                    Math.max(1,height*.055f),radius,0x3dffffff);
+                // Small upper-left reflective sweep, matching the glossy
+                // highlights of the supplied colored reference tiles.
+                p.setColor(0x4cffffff);p.setStyle(Paint.Style.STROKE);
+                p.setStrokeWidth(Math.min(2f,width*.027f));
+                Path glint=new Path();
+                glint.moveTo(x+radius*.62f,y+6);
+                glint.quadTo(x+6,y+6,x+5,y+radius*.78f);
+                c.drawPath(glint,p);p.setStyle(Paint.Style.FILL);
             }
             if(tileStyle==2 && width>=26 && height>=26){
                 shape(x+7,y+8,Math.max(1,width-14),
@@ -606,6 +618,20 @@ public final class MainActivity extends Activity {
             p.setTextSize(size);
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
             txt(content,x,baseline,size,color,bold);
+        }
+        // Reference screenshot typography is left-aligned in settings rows.
+        // Shrink only when the actual Nunito glyphs would overlap controls.
+        void leftFitted(String content,float left,float baseline,float size,
+                        float maxWidth,int color,boolean bold){
+            p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            while(p.measureText(content)>maxWidth&&size>10){
+                size-=.5f;p.setTextSize(size);
+            }
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setColor(color);p.setTextAlign(Paint.Align.LEFT);
+            p.setStrokeWidth(0);c.drawText(content,left,baseline,p);
+            p.setTextAlign(Paint.Align.CENTER);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
             c.save();c.translate(cx-width/2f,cy-width/2f);
@@ -1703,8 +1729,10 @@ public final class MainActivity extends Activity {
         }
 
         void statisticsCompact(){
-            title("Statistika");
-            rays(52,122,18,CORAL);rays(352,122,18,CORAL);
+            back();
+            brand(48,35);
+            fitted("Statistika",200,132,47,325,ink,true);
+            rays(49,122,21,CORAL);rays(351,122,21,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,145,114,94,CORAL);
             statCell("Ukupno partija",fmt(plays),143,145,114,94,TEAL);
             statCell("Najveća pločica",fmt(recordTile),266,145,114,94,0xffffb431);
@@ -1894,8 +1922,9 @@ public final class MainActivity extends Activity {
             // The supplied reference is 941x1672. Keep every setting and
             // the branded footer in one frame at this aspect ratio.
             boolean shortView=referencePortraitLayout;
-            back();
-            txt("Postavke",200,shortView?84:108,44,ink,true);
+            // The original settings screenshot has a centered title and rays,
+            // without an additional back button. Android system back remains.
+            txt("Postavke",200,shortView?84:108,47,ink,true);
             rays(74,shortView?75:97,24,CORAL);
             rays(331,shortView?75:97,24,CORAL);
             int start=shortView?105:148, step=shortView?63:81;
@@ -1930,8 +1959,8 @@ public final class MainActivity extends Activity {
             float iconY=y+(height-iconSize)/2f;
             glossyTile(37,iconY,iconSize,iconSize,12,accent);
             icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
-            fitted(caption,shortView?180:201,y+height*.61f,
-                shortView?20:21,shortView?183:203,ink,true);
+            leftFitted(caption,shortView?94:97,y+height*.62f,
+                shortView?19.5f:21,shortView?206:202,ink,true);
             float toggleY=y+(height-32)/2f;
             shape(309,toggleY,55,32,17,on?TEAL:0xffc6ced6);
             shape(on?333:313,toggleY+3,26,26,15,WHITE);
@@ -1949,14 +1978,14 @@ public final class MainActivity extends Activity {
             icon(glyph,37+iconSize/2,iconY+iconSize/2,shortView?25:29,WHITE);
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
-                fitted(caption,shortView?216:224,y+(shortView?24:31),
-                    shortView?15:16,shortView?236:240,ink,true);
-                fitted(value,shortView?216:224,y+(shortView?44:55),
-                    shortView?12:13,shortView?230:225,muted,false);
+                leftFitted(caption,shortView?94:97,y+(shortView?24:31),
+                    shortView?17:19,shortView?206:205,ink,true);
+                leftFitted(value,shortView?94:97,y+(shortView?45:55),
+                    shortView?12:13,shortView?202:205,muted,false);
             }else{
-                fitted(caption,caption.length()>13?206:189,
+                leftFitted(caption,shortView?94:97,
                     y+(shortView?36:43),shortView?19:20,
-                    caption.length()>13?189:150,ink,true);
+                    "Jezik".equals(caption)?148:215,ink,true);
                 if("Jezik".equals(caption)){
                     float pillY=y+(shortView?9:14),pillH=shortView?39:44;
                     shape(247,pillY,116,pillH,19,

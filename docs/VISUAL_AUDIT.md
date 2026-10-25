@@ -125,3 +125,11 @@ Sve Canvas tipke i navigacijske kartice sada dijele povratnu informaciju na prit
 ### Test ikone na stvarnom Android launcheru
 
 Novi Android UI test renderira adaptivnu i okruglu ikonu u PNG 512×512 te na Androidu 13+ i monokromatski sloj pod tematskom bojom. Test zahtijeva dostupne slojeve resursa i neprozirnu jezgru ikone; PNG snimke ulaze u GitHub Actions UI QA artefakt zajedno s 941×1672 prikazima svih ekrana. Time se dokazuje da launcher resursi nisu samo prisutni u kodu, nego se i mogu crtati na uređaju.
+
+## v1.12 — detaljna usporedba devet referentnih prikaza
+
+Izvorno dostavljeno devet ekraniziranih referenci plus zasebna brand ploča uspoređeni su s 941×1672 stvarnim Android QA snimkama v1.11.38. Prepoznata je jasna geometrijska razlika u Postavkama: nazivi su bili centrirani, dok original počinje poravnat s lijevim rubom teksta na x≈94 logičke jedinice. Ispravljeno je zajedničkom funkcijom za lijevo crtanje svih naziva te redova s dodatnom vrijednosti. U kompaktnim Statistika naslov je prevelikim odmakom djelovao presitno; sada se crta zasebni naslov od 47 jedinica ispod kompaktne brand oznake. Svaka numerička pločica koristi dodatni sjaj na gornjem lijevom rubu i ugrađenu sjenu/debljinu.
+
+**Launcher audit**: Stvarni Android adaptive render v1.11.38 zaklanjao je donje kutne brojeve masivnim B. B i njegov dubinski sloj smanjeni su na 84% unutar postojeće podloge, na sve četiri vektorske varijante (legacy, legacy-round, adaptive foreground i drawable). Provjeriti u naknadnom emulator UI zipu PNG slike adaptive/round/themed (sada već postoje u regresijskom testu).
+
+**Granica provjerljivosti**: reference prikazuju namještene odigrane ploče i statistiku, dok emulator koristi čiste ili programatski proizvedene podatke. Brojke, pločice i povijest moraju ostati stvarne i ne smiju se lažirati radi podudarnosti. Potpuna 1:1 jednakost 3D slika i tekstura nije utvrđena.

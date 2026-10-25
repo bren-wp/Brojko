@@ -36,6 +36,8 @@
  android:pathData="M17,66 H45 V69 H25 A6,6 0,0 0,19 76 H16 V72 A7,7 0,0 1,17 66 Z"/>
  <path android:fillColor="#48FFFFFF"
  android:pathData="M62,66 H90 V69 H62 Z"/>
+ <group android:scaleX="0.84" android:scaleY="0.84"
+  android:pivotX="54" android:pivotY="54">
  <group android:translateY="2.5">
   <path android:strokeColor="#963C2A" android:strokeWidth="18" android:strokeLineCap="round"
    android:strokeLineJoin="round"
@@ -47,4 +49,5 @@
  <path android:strokeColor="#FFFDF5" android:strokeWidth="11" android:strokeLineCap="round"
  android:strokeLineJoin="round"
  android:pathData="M43,31 L43,78 M43,33 L57,33 C71,33 70,53 57,53 L43,53 M43,53 L59,53 C75,53 73,77 57,77 L43,77"/>
+ </group>
 </vector>
