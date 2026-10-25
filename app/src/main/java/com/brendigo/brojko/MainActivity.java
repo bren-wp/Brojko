@@ -179,6 +179,9 @@ public final class MainActivity extends Activity {
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
     }
     String compactDate(){return new SimpleDateFormat("dd.MM.yyyy.",new Locale("hr","HR")).format(new Date());}
+    String dailyLongDate(){
+        return new SimpleDateFormat("d. MMMM yyyy.",new Locale("hr","HR")).format(new Date());
+    }
     String fmt(int x){return number.format(x);}
     String labelMode(String m) {
         return "relaxed".equals(m)?"Opušteno 5×5":"daily".equals(m)?"Dnevni izazov":"Klasično 4×4";
@@ -883,6 +886,11 @@ public final class MainActivity extends Activity {
                     z.moveTo(5,9);z.lineTo(12,16);z.lineTo(19,9);break;
                 case "chevron-right":
                     z.moveTo(9,5);z.lineTo(16,12);z.lineTo(9,19);break;
+                case "swap":
+                    z.moveTo(3,7);z.lineTo(21,7);z.lineTo(17,3);
+                    z.moveTo(21,7);z.lineTo(17,11);
+                    z.moveTo(21,17);z.lineTo(3,17);z.lineTo(7,13);
+                    z.moveTo(3,17);z.lineTo(7,21);break;
                 case "clock":
                     c.drawCircle(12,12,9,p);
                     z.moveTo(12,6);z.lineTo(12,12);z.lineTo(17,15);break;
@@ -1417,11 +1425,12 @@ public final class MainActivity extends Activity {
                 CORAL,true);
             rays(154,portrait?31:53,15,CORAL);
             float dateY=portrait?114:164;
-            card(112,dateY,177,portrait?32:39,19,
+            // Keep the calendar glyph and locally formatted long date apart.
+            card(98,dateY,191,portrait?32:39,19,
                 theme==1?card:0xffffecdc);
-            icon("calendar",143,dateY+(portrait?16:21),21,muted);
-            fitted(compactDate(),208,dateY+(portrait?22:27),
-                16,147,ink,true);
+            icon("calendar",119,dateY+(portrait?16:21),19,muted);
+            leftFitted(dailyLongDate(),139,dateY+(portrait?22:27),
+                portrait?13:14,142,ink,true);
             float streakTop=portrait?33:66;
             card(291,streakTop,87,portrait?79:83,18,
                 theme==1?card:0xffffebd4);
@@ -1501,12 +1510,20 @@ public final class MainActivity extends Activity {
                     portrait?20:22,iconSize-3,WHITE,true);
             else if(name.startsWith("Osvoji"))
                 icon("star",glyphCenter,y+height/2f,portrait?27:30,WHITE);
-            else icon("refresh",glyphCenter,y+height/2f,
+            else icon("swap",glyphCenter,y+height/2f,
                 portrait?27:30,WHITE);
-            fitted(name,231,y+(portrait?22:29),
-                portrait?18:19,274,ink,true);
-            fitted(description,231,y+(portrait?40:55),
-                portrait?12:13,274,muted,false);
+            // Reference goal cards use left-aligned text and a right-side help
+            // affordance; each target opens the actual goal explanation.
+            leftFitted(name,105,y+(portrait?22:29),
+                portrait?17:18,225,ink,true);
+            leftFitted(description,105,y+(portrait?40:55),
+                portrait?11:12,225,muted,false);
+            float helpCenterY=y+height/2f;
+            shape(340,helpCenterY-13,26,26,13,
+                theme==1?0xff445471:0xffede9e2);
+            fitted("?",353,helpCenterY+7,17,23,muted,true);
+            taps.add(new Tap(322,y,376,y+height,"Pomoć za cilj: "+name,
+                ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void missions() {
             boolean portrait=referencePortraitLayout;

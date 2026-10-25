@@ -1218,4 +1218,35 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGoalHelpTargetsMatchFunctionalReferenceLayout(){
+        rule.getScenario().onActivity(activity->{
+            String previous=activity.page;
+            try{
+                activity.page="daily";
+                capture(activity,"daily-goals-left-aligned-help");
+                int count=0;
+                for(MainActivity.BoardScreen.Tap tap:activity.screen.taps){
+                    if(tap.label.startsWith("Pomoć za cilj: ")){
+                        assertTrue("Help target must be at least 48 units wide",
+                            tap.right-tap.left>=48);
+                        assertTrue("Help target must cover most of the row",
+                            tap.bottom-tap.top>=48);
+                        assertTrue("Help target cannot exceed card bounds",
+                            tap.right<=378);
+                        count++;
+                    }
+                }
+                assertEquals("Each of the three goals needs real help",3,count);
+                String date=activity.dailyLongDate();
+                assertTrue("Daily challenge shows today's year",
+                    date.contains(Integer.toString(java.util.Calendar.getInstance()
+                        .get(java.util.Calendar.YEAR))));
+                assertTrue("Long Croatian date ends with a period",date.endsWith("."));
+            }finally{
+                activity.page=previous;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
