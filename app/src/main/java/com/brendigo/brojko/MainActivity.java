@@ -952,7 +952,8 @@ public final class MainActivity extends Activity {
             float start=200-total/2;
             txt("Br",start+left/2,y,size,ink,true);
             float bx=start+left+gap;
-            glossyTile(bx,y-size*.78f,tile,tile,Math.max(7,size*.16f),CORAL);
+            // Keep brand emblem independent of gameplay tile style.
+            styledTile(bx,y-size*.78f,tile,tile,Math.max(7,size*.16f),CORAL,0);
             rays(bx+tile*.5f,y-size*.79f,size*.34f,CORAL);
             txt("2",bx+tile/2,y-size*.20f,size*.52f,WHITE,true);
             txt("jko",bx+tile+gap+right/2,y,size,ink,true);
@@ -1035,22 +1036,22 @@ public final class MainActivity extends Activity {
         void splashPage(){
             // Programmatic branded splash based on the provided portrait reference.
             c.save();c.rotate(-19,59,140);
-            glossyTile(-18,74,133,124,25,TILES[1]);
+            styledTile(-18,74,133,124,25,TILES[1],0);
             txt("2",49,157,64,WHITE,true);c.restore();
             c.save();c.rotate(21,353,142);
-            glossyTile(288,79,129,121,24,TILES[2]);
+            styledTile(288,79,129,121,24,TILES[2],0);
             txt("4",353,155,64,WHITE,true);c.restore();
             c.save();c.rotate(-22,28,283);
-            glossyTile(-34,246,107,102,23,TILES[3]);
+            styledTile(-34,246,107,102,23,TILES[3],0);
             txt("8",20,316,57,WHITE,true);c.restore();
             c.save();c.rotate(18,379,297);
-            glossyTile(329,247,111,109,22,TILES[4]);
+            styledTile(329,247,111,109,22,TILES[4],0);
             txt("16",383,324,49,WHITE,true);c.restore();
             c.save();c.rotate(17,23,661);
-            glossyTile(-34,610,112,111,25,TILES[7]);
+            styledTile(-34,610,112,111,25,TILES[7],0);
             txt("64",21,679,46,WHITE,true);c.restore();
             c.save();c.rotate(-15,374,713);
-            glossyTile(327,666,118,111,23,TILES[8]);
+            styledTile(327,666,118,111,23,TILES[8],0);
             txt("256",386,734,38,WHITE,true);c.restore();
             brand(487,77);
             card(26,747,348,77,32,theme==1?card:0xfffff0db);
@@ -1060,16 +1061,16 @@ public final class MainActivity extends Activity {
         void home(){
             boolean portrait=referencePortraitLayout;
             c.save();c.rotate(-16,35,76);
-            glossyTile(-3,4,81,77,16,TILES[1]);
+            styledTile(-3,4,81,77,16,TILES[1],0);
             txt("2",38,57,42,WHITE,true);c.restore();
             c.save();c.rotate(15,365,56);
-            glossyTile(327,6,77,75,16,TILES[2]);
+            styledTile(327,6,77,75,16,TILES[2],0);
             txt("4",366,56,40,WHITE,true);c.restore();
             c.save();c.rotate(-12,11,176);
-            glossyTile(-37,144,69,66,14,TILES[3]);
+            styledTile(-37,144,69,66,14,TILES[3],0);
             txt("8",0,185,35,WHITE,true);c.restore();
             c.save();c.rotate(9,390,179);
-            glossyTile(360,149,76,69,14,TILES[4]);
+            styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
             brand(portrait?153:197,72);
             if(!portrait)

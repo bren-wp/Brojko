@@ -936,4 +936,38 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void splashBrandDoesNotChangeWithGameplayTileStyle(){
+        rule.getScenario().onActivity(activity->{
+            int oldStyle=activity.tileStyle;
+            String oldPage=activity.page;
+            MainActivity.BoardScreen branding=activity.new BoardScreen(activity);
+            try{
+                branding.measure(View.MeasureSpec.makeMeasureSpec(400,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(880,View.MeasureSpec.EXACTLY));
+                branding.layout(0,0,400,880);
+                int[] reference=null;
+                activity.page="splash";
+                for(int style=0;style<3;style++){
+                    activity.tileStyle=style;
+                    Bitmap bmp=Bitmap.createBitmap(400,880,Bitmap.Config.ARGB_8888);
+                    int[] pixels=new int[400*880];
+                    try{
+                        branding.draw(new Canvas(bmp));
+                        bmp.getPixels(pixels,0,400,0,0,400,880);
+                    }finally{bmp.recycle();}
+                    if(reference==null)reference=pixels;
+                    else assertArrayEquals(
+                        "Brand must not change when gameplay tile style changes",
+                        reference,pixels);
+                    capture(activity,"splash-brand-style-"+style);
+                }
+            }finally{
+                activity.tileStyle=oldStyle;
+                activity.page=oldPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

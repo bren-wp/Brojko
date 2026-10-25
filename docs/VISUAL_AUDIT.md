@@ -203,3 +203,8 @@ Na zaslonu Teme i izgled tri prikaza stila dobila su vidljivi broj 2, jednako ka
 ## Regresijska pokrivenost svih 21 zaslona na malom Android uređaju
 
 Za sve 21 podržano stanje (`splash`, početni, tri modalna završetka igre, potvrde, dnevni izazov, misije, statistiku i povijest, teme, postavke te pomoćne stranice) UI instrumentacija sada generira zasebne 360×600 PNG snimke. Za svaku stvarno interaktivnu površinu računa se dohvatljivost vertikalnim pomicanjem od 0 do `maxScroll` uz dopuštenu širinu dizajna 400 jedinica. Time su pokrivene geometrijske regresije koje nisu vidljive na visokom Pixel 6 emulatoru. Vizualna 1:1 usporedba s izvornim dizajnerskim PNG-ovima i dalje nije moguća bez usporedivih datoteka i istih stanja igre.
+
+
+## Konstantan Brojko logotip kroz sva tri stila igre
+
+Otklonjena je ovisnost brendiranog kvadrata 2 u logotipu te ukrasnih pločica splash/početnog zaslona o postavci stila igraće ploče. Brendirane ilustracije sada zadržavaju postojeći reljefni izgled, dok opcije Zaobljene, Ravne i Staklaste i dalje mijenjaju stvarnu igru i preglede stilova. Novi Android instrumentacijski test uspoređuje sve piksele splash renderera za sva tri stila i arhivira odgovarajuće snimke; time se čuva vizualni identitet pri promjenama korisničkih postavki.
