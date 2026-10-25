@@ -116,3 +116,7 @@ Adaptive ikona dodatno ispunjava masku launchera; dominantno svijetlo slovo B do
 **v1.9 UI polish:** Početni zaslon (oba rezultata, primarni gumb, tri igre i četiri prečaca), dnevni izazov (ploča, svi ciljevi, nagrada i gumb) te svih pet misija imaju poseban raspored za referentni omjer 941×1672. Kartice nisu rastezane vertikalno: promijenjeni su razmaci i stvarne pozicije elemenata. QA provjerava dostupnost prečaca i glavne radnje.
 
 **Kompaktne statistike i teme:** na uskim ekranima 16:9 sve metričke kartice, grafikon i pregled povijesti te sve opcije tema, kontrole zvuka/vibracije, animacije i donji tabovi raspoređeni su unutar vidljivog kadra bez vertikalnog izobličenja teksta. Na visokim telefonima zadržan je prostran dizajn.
+
+## Vizualni polish v1.10
+
+Dnevni izazov sad ima kompaktan, funkcionalan kartični prikaz nagrade s originalno stiliziranom vektorskom ljubičastom poklon-kutijom i zlatnom vrpcom. Sadržaj se temelji na stvarnom datumu, rekordu, stanju ciljeva i osvojenoj dnevnoj nagradi. Tri zadatka, nagrada i gumb ostaju unutar referentne visine 941×1672. Misije i postignuća imaju pastelno odvojene dnevne, tjedne i trajne cjeline te semantičke ikone zadataka (pločice, meta, kalendar, kruna) umjesto jedne generičke ikone na svim redovima. Svjetla, tamna i živopisna tema snimaju se u Android UI QA za početnu, igru, postavke, dnevni izazov, misije, statistiku i teme. Izvorne ilustracije ostaju vizualni cilj; točna pikselna identičnost nije potvrđena.

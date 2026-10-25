@@ -625,6 +625,28 @@ public final class MainActivity extends Activity {
                 c.drawCircle(12,3.3f,2.1f,p);
                 c.drawCircle(22.5f,7.7f,2.1f,p);
                 p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+            }else if("gift".equals(type)){
+                // Original-style purple reward box with gold bow.
+                p.setShader(new LinearGradient(3,9,21,24,
+                    0xffb27cff,0xff7840e1,Shader.TileMode.CLAMP));
+                c.drawRoundRect(2,10,22,22,3,3,p);p.setShader(null);
+                p.setColor(0xff6937ce);c.drawRoundRect(2,19,22,23,2,2,p);
+                p.setShader(new LinearGradient(0,8,0,14,
+                    0xffbf93ff,0xff9253ee,Shader.TileMode.CLAMP));
+                c.drawRoundRect(1,9,23,14,2,2,p);p.setShader(null);
+                p.setColor(0xffffc238);c.drawRoundRect(10.4f,9,13.6f,22,1,1,p);
+                c.drawRoundRect(1,10,23,12,1,1,p);
+                Path leftBow=new Path();
+                leftBow.moveTo(12,10);leftBow.cubicTo(3,-1,0,7,8,10);
+                leftBow.cubicTo(9,10.5f,11,11,12,10);
+                Path rightBow=new Path();
+                rightBow.moveTo(12,10);rightBow.cubicTo(21,-1,24,7,16,10);
+                rightBow.cubicTo(15,10.5f,13,11,12,10);
+                p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.8f);
+                p.setStrokeCap(Paint.Cap.ROUND);p.setColor(0xffffdb55);
+                c.drawPath(leftBow,p);c.drawPath(rightBow,p);
+                p.setStyle(Paint.Style.FILL);p.setColor(0xffffe379);
+                c.drawCircle(12,10,2.1f,p);
             }else if("gamepad".equals(type)){
                 Path pad=new Path();
                 pad.moveTo(6,6);pad.cubicTo(8,4,16,4,18,6);
@@ -769,7 +791,7 @@ public final class MainActivity extends Activity {
             if("crown".equals(type)||"stats".equals(type)||
                "gamepad".equals(type)||"grid".equals(type)||
                "star".equals(type)||"flame".equals(type)||
-               "target".equals(type)||"palette".equals(type)||
+               "gift".equals(type)||"target".equals(type)||"palette".equals(type)||
                "settings".equals(type)||"calendar".equals(type)||
                "play".equals(type)||"pause".equals(type)||
                "check".equals(type)||"bell".equals(type)||
@@ -1291,35 +1313,46 @@ public final class MainActivity extends Activity {
             fitted("Riješi današnji izazov i osvoji nagradu!",
                 200,portrait?158:218,17,337,muted,false);
             float boardY=portrait?171:250;
-            float boardSize=portrait?236:248;
-            card(76,boardY,248,boardSize,24,
+            float boardSize=portrait?221:248;
+            card(portrait?89:76,boardY,portrait?222:248,boardSize,24,
                 theme==1?0xff35455f:0xfff3e8da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int col=i%4,row=i/4;
-                float x=83+col*59,y=boardY+7+row*(portrait?56:59);
+                float x=(portrait?96:83)+col*(portrait?53:59);
+                float y=boardY+7+row*(portrait?53:59);
                 int value=sample[i];
-                glossyTile(x,y,52,portrait?49:52,10,tileColor(value));
-                fitted(""+value,x+26,y+(portrait?32:34),
-                    value>999?17:25,49,WHITE,true);
+                glossyTile(x,y,portrait?46:52,portrait?46:52,10,
+                    tileColor(value));
+                fitted(""+value,x+(portrait?23:26),
+                    y+(portrait?30:34),value>999?16:24,
+                    portrait?44:49,WHITE,true);
             }
             boolean active=game!=null&&"daily".equals(game.mode)&&
                 today().equals(game.day);
             boolean finished=today().equals(lastDaily);
             dailyGoalRow("Dosegni 256","Spoji pločice do vrijednosti 256",
-                portrait?413:511,finished||(active&&game.peak>=256));
+                portrait?399:511,finished||(active&&game.peak>=256));
             dailyGoalRow("Osvoji 3000 bodova","Prikupi najmanje 3000 bodova",
-                portrait?478:589,finished||(active&&game.score>=3000));
+                portrait?455:589,finished||(active&&game.score>=3000));
             dailyGoalRow("Završi u 80 poteza","Ostvari oba cilja u 80 poteza",
-                portrait?543:667,finished);
-            float rewardY=portrait?610:744;
-            card(28,rewardY,344,portrait?41:48,19,
+                portrait?511:667,finished);
+            float rewardY=portrait?569:744;
+            card(28,rewardY,344,portrait?80:48,19,
                 theme==1?0xff3a3459:0xfff0e9ff);
-            icon("star",65,rewardY+(portrait?21:25),
-                portrait?27:31,0xffffb62f);
-            fitted(finished?"Nagrada osvojena!":"DANAŠNJA NAGRADA",
-                194,rewardY+(portrait?26:23),16,190,ink,true);
-            txt("+250",318,rewardY+(portrait?28:31),21,0xffb069dc,true);
+            icon("gift",portrait?78:65,rewardY+(portrait?41:24),
+                portrait?59:37,0xff9853e8);
+            if(portrait){
+                fitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
+                    224,rewardY+26,14,210,muted,true);
+                fitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
+                    210,rewardY+54,21,214,ink,true);
+                fitted("+250",333,rewardY+54,18,69,0xffa65be2,true);
+            }else{
+                fitted(finished?"Nagrada osvojena!":"DANAŠNJA NAGRADA",
+                    200,rewardY+29,16,180,ink,true);
+                fitted("+250",327,rewardY+30,20,73,0xffa65be2,true);
+            }
             button(active&&!game.gameOver?"Nastavi izazov":
                 finished?"Igraj ponovno":"Započni izazov","play",
                 25,portrait?655:802,350,portrait?49:58,CORAL,true,()->{
@@ -1329,23 +1362,32 @@ public final class MainActivity extends Activity {
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
-            int height=portrait?59:72;
+            int height=portrait?51:72;
             card(28,y,344,height,18,card);
             float iconSize=portrait?41:46;
             glossyTile(40,y+(height-iconSize)/2,iconSize,iconSize,13,
                 done?TEAL:0xffffb754);
             icon(done?"check":"target",40+iconSize/2,y+height/2f,
                 portrait?24:26,WHITE);
-            fitted(name,231,y+(portrait?24:29),
+            fitted(name,231,y+(portrait?22:29),
                 portrait?18:19,274,ink,true);
-            fitted(description,231,y+(portrait?44:55),
+            fitted(description,231,y+(portrait?40:55),
                 portrait?12:13,274,muted,false);
         }
         void missions() {
             boolean portrait=referencePortraitLayout;
             back();brand(portrait?38:63,32);
-            fitted("Misije i",112,portrait?99:128,30,174,ink,true);
-            fitted("postignuća",273,portrait?99:128,30,209,CORAL,true);
+            // Keep both header words clear of the upper-left back button.
+            fitted("Misije i",132,portrait?99:128,29,135,ink,true);
+            fitted("postignuća",279,portrait?99:128,29,197,CORAL,true);
+            // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
+            int dailyTint=theme==1?0xff293b4c:0xffffedda;
+            int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
+            int achievementTint=theme==1?0xff24483f:0xffe0f9ec;
+            card(17,portrait?134:179,366,portrait?197:242,28,dailyTint);
+            card(17,portrait?335:439,366,portrait?114:145,28,weeklyTint);
+            card(17,portrait?461:598,366,portrait?206:265,28,
+                achievementTint);
             float rewardTop=portrait?117:154;
             card(260,rewardTop,117,portrait?39:44,18,
                 theme==1?card:0xffffefcc);
@@ -1372,8 +1414,12 @@ public final class MainActivity extends Activity {
             shape(39,y+(portrait?11:14),portrait?49:58,
                 portrait?52:62,15,
                 theme==1?0xff35435d:lighten(accent,.80f));
-            icon(value>=target?"check":"target",
-                portrait?63:68,y+(portrait?35:45),
+            String taskGlyph=value>=target?"check":
+                name.contains("Kralj")?"crown":
+                name.contains("Igraj")?"calendar":
+                name.contains("Majstor")?"grid":
+                name.contains("Spoji")?"grid":"target";
+            icon(taskGlyph,portrait?63:68,y+(portrait?35:45),
                 portrait?27:32,accent);
             fitted(name,portrait?194:198,y+(portrait?23:27),
                 portrait?16:18,188,ink,true);

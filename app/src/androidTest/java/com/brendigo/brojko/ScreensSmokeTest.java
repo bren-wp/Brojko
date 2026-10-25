@@ -188,6 +188,14 @@ public class ScreensSmokeTest {
                     activity.page="game";
                     if(activity.game==null)activity.newGame("classic");
                     capture(activity,"game-theme-"+theme);
+                    activity.page="daily";
+                    capture(activity,"daily-theme-"+theme);
+                    activity.page="missions";
+                    capture(activity,"missions-theme-"+theme);
+                    activity.page="themes";
+                    capture(activity,"themes-theme-"+theme);
+                    activity.page="stats";
+                    capture(activity,"stats-theme-"+theme);
                 }
                 // Scheduling an inexact local alarm must not require exact alarm
                 // permissions, any server, or login credentials.

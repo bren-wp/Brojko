@@ -104,3 +104,12 @@ UI test u izoliranom 941×1672 prikazu provjerava da sva četiri prečaca i glav
 Statistika sada ima dvije vrste rasporeda. Na kraćoj referentnoj visini pet metričkih kartica, prebacivanje grafikona, stupci do 10 partija i pet redaka povijesti smješteni su u y=145–704, uz funkcionalne dodirne zone za promjenu prikaza i povijest. Na višim telefonima ostaje postojeći prostrani raspored s većim grafom. U referentnom rasporedu onemogućen je nepotreban višak skrolanja za statistiku.
 
 Zaslon Teme i izgled sada ima zaseban kompaktni raspored: 3 tematske kartice s oznakom odabira, preview svih 16 brojeva, tri stila pločica, aktivne prekidače zvuka i vibracije, slider animacija i sve četiri stavke donje navigacije unutar y=158–704. Izvorni visoki raspored ostao je za telefone omjera 20:9. QA snima realni Android renderer u 941×1672 i provjerava da donji tab Postavke stane na ekran te da je grafikon statistike interaktivan.
+
+## v1.10 — Dnevni izazov i Misije, nagrade i ikone
+
+- Izvorne 941×1672 referentne snimke: donji dio Dnevnog izazova sadrži veliki ljubičasti poklon, naziv nagrade i istaknut CTA; prethodna aplikacija imala je samo usku traku s jednom zvijezdom.
+- Compact 16:9 preview ploče blago je smanjen (236→221 projektnih jedinica), a visina 3 cilja 59→51, čime se dobiva 80 jedinica visine za karticu nagrade bez skrivenog CTA gumba.
+- Dodana je vlastita SVG-like vektorska ilustracija ljubičaste poklon-kutije i zlatne vrpce izravno u Android Canvas ikonografski sustav, uz čitljiv natpis i stvarno stanje osvajanja (250 zvjezdica jednom dnevno).
+- Misije imaju tri odvojena, tematski obojena pozadinska panela. Svi paneli dobivaju tamne ekvivalente na tamnoj temi. Progres i nagrade ostaju nepromijenjeni i stvarno se računaju.
+- Ikone redova razlikuju spajanje (mreža), dnevne bodove (meta), kontinuitet igranja (kalendar), 1024 (mreža) i rekord (kruna); osvojeni cilj ostaje označen kvačicom.
+- Emulator QA snima dodatno dnevni izazov, misije, statistiku i teme u sve tri teme. Preostale razlike uključuju ilustrativni 3D glow, sjene i fotografski izgled mockupova, za što bi trebale zasebne originalne grafičke datoteke.
