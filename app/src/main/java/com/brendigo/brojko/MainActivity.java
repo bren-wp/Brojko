@@ -1660,6 +1660,19 @@ public final class MainActivity extends Activity {
             try{return new JSONArray(prefs.getString("history","[]"));}
             catch(Exception ignored){return new JSONArray();}
         }
+        int consecutiveWins(){
+            // Unlike playDayStreak (calendar days used by missions), this is
+            // the actual number of consecutive victories in saved game order.
+            // Missing legacy "won" flags are never assumed to be victories.
+            JSONArray recent=history();
+            int wins=0;
+            for(int i=0;i<recent.length();i++){
+                JSONObject row=recent.optJSONObject(i);
+                if(row==null||!row.optBoolean("won",false))break;
+                wins++;
+            }
+            return wins;
+        }
         void statistics(){
             if(referencePortraitLayout){statisticsCompact();return;}
             title("Statistika");
@@ -1669,7 +1682,7 @@ public final class MainActivity extends Activity {
             statCell("Najveća pločica",fmt(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
-            statCell("Niz dana igranja",fmt(playDayStreak),205,276,174,102,0xffa657de);
+            statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
             card(22,399,356,219,24,card);
             txt("Zadnjih 10 partija",114,432,19,ink,true);
             card(213,411,157,33,17,theme==1?0xff34445f:0xfff4ebdf);
@@ -1750,6 +1763,7 @@ public final class MainActivity extends Activity {
                 case "Ukupno partija":top="Ukupno";bottom="partija";break;
                 case "Najveća pločica":top="Najveća";bottom="pločica";break;
                 case "Prosjek bodova":top="Prosjek";bottom="bodova";break;
+                case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
                 default:top="Niz dana";bottom="igranja";
             }
             icon(symbol,x+25,y+29,width<=118?24:29,accent);
@@ -1974,7 +1988,7 @@ public final class MainActivity extends Activity {
             statCell("Najveća pločica",fmt(recordTile),266,126,114,83,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
-            statCell("Niz dana igranja",fmt(playDayStreak),205,215,174,75,0xffa657de);
+            statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);
             card(22,297,356,142,22,card);
             txt("Zadnjih 10 partija",113,323,18,ink,true);
             card(213,303,157,29,15,theme==1?0xff34445f:0xfff4ebdf);

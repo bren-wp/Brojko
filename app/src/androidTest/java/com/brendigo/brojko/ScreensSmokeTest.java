@@ -1126,6 +1126,7 @@ public class ScreensSmokeTest {
                         entry.put("day","12. tra 2024.");
                         entry.put("time",new String[]{"14:32","13:11","20:45","18:22","09:16",
                             "16:20","17:50","10:21","12:18","08:04"}[i]);
+                        entry.put("won",i<7);
                     }catch(org.json.JSONException error){throw new AssertionError(error);}
                     history.put(entry);
                 }
@@ -1564,6 +1565,32 @@ public class ScreensSmokeTest {
             }finally{
                 activity.prefs.edit().putString("history",previousHistory).commit();
                 activity.page=previousPage;activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void statsConsecutiveVictoriesAreNotCalendarDayStreaks(){
+        rule.getScenario().onActivity(activity->{
+            String oldHistory=activity.prefs.getString("history","[]");
+            int savedDayStreak=activity.playDayStreak;
+            try{
+                activity.playDayStreak=12;
+                activity.prefs.edit().putString("history",
+                    "[{\"score\":2048,\"won\":true},"+
+                    "{\"score\":3072,\"won\":true},"+
+                    "{\"score\":512,\"won\":false},"+
+                    "{\"score\":8192,\"won\":true}]").commit();
+                assertEquals("Only wins after the most recent loss count",2,
+                    activity.screen.consecutiveWins());
+                assertEquals("Weekly calendar streak remains untouched",12,
+                    activity.playDayStreak);
+                activity.prefs.edit().putString("history",
+                    "[{\"score\":800},{\"score\":2048,\"won\":true}]").commit();
+                assertEquals("Legacy rows without won flag are not fabricated wins",
+                    0,activity.screen.consecutiveWins());
+            }finally{
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.playDayStreak=savedDayStreak;
             }
         });
     }
