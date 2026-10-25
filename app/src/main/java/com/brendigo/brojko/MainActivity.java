@@ -170,7 +170,8 @@ public final class MainActivity extends Activity {
         end.set(Calendar.SECOND,0);end.set(Calendar.MILLISECOND,0);
         long remaining=Math.max(0,
             (end.getTimeInMillis()-now.getTimeInMillis())/60000);
-        return week?(remaining/1440)+"d "+((remaining%1440)/60)+"h":
+        return week?(remaining<1440?(remaining/60)+"h":
+            (remaining/1440)+"d "+((remaining%1440)/60)+"h"):
             (remaining/60)+"h "+(remaining%60)+"min";
     }
     String yesterday(){
@@ -1518,14 +1519,17 @@ public final class MainActivity extends Activity {
             card(17,portrait?134:179,366,portrait?185:209,28,dailyTint);
             card(17,portrait?328:398,366,portrait?185:207,28,weeklyTint);
             card(17,portrait?522:614,366,portrait?187:249,28,achievementTint);
-            icon("star",45,portrait?148:204,22,0xffffae1d);
-            txt("Dnevne",84,portrait?150:204,23,ink,true);
-            missionPeriodPill("day",portrait?136:182);
+            float sunY=portrait?148:204;
+            rays(43,sunY,19,0xffffb431);
+            p.setShader(null);p.setColor(0xffffb431);
+            p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
+            txt("Dnevne",110,portrait?150:204,23,ink,true);
+            missionPeriodPill("day",portrait?134:182);
             icon("calendar",43,portrait?346:420,23,0xff3d98f0);
             icon("crown",43,portrait?540:636,23,0xffffb431);
-            missionPeriodPill("week",portrait?334:402);
+            missionPeriodPill("week",portrait?330:402);
             // Keep the earned-stars counter without covering a mission row.
-            float countTop=portrait?527:619;
+            float countTop=portrait?522:619;
             card(287,countTop,90,27,14,theme==1?card:0xfffff1d8);
             icon("star",304,countTop+13,17,0xffffae1d);
             fitted(fmt(stars),344,countTop+20,15,55,ink,true);
@@ -1535,12 +1539,12 @@ public final class MainActivity extends Activity {
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
             missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
-            txt("Tjedne",79,portrait?348:422,23,ink,true);
+            txt("Tjedne",105,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Sedam različitih dana",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
             missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
-            txt("Postignuća",107,portrait?542:638,23,ink,true);
+            txt("Postignuća",132,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Dosegni pločicu 1024",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Osvoji 50.000 bodova",
@@ -1583,12 +1587,16 @@ public final class MainActivity extends Activity {
                     fitted(Integer.toString(mini[index]),mx+10,my+14,
                         mini[index]>9?9:11,18,WHITE,true);
                 }
+            }else if(name.startsWith("Igraj 7")){
+                // Original calendar pictogram shows a clearly readable 7.
+                shape(42,y+13,40,39,8,WHITE);
+                shape(42,y+13,40,13,7,CORAL);
+                shape(48,y+9,6,11,3,INK);
+                shape(69,y+9,6,11,3,INK);
+                fitted("7",62,y+48,23,34,INK,true);
             }else{
                 icon(taskGlyph,portrait?62:65,y+(portrait?33:38),
                     portrait?26:31,accent);
-                if(name.startsWith("Igraj 7"))
-                    fitted("7",portrait?62:65,y+(portrait?43:48),
-                        15,22,INK,true);
             }
             fitted(name,portrait?194:198,y+(portrait?20:25),
                 portrait?15:17,188,ink,true);

@@ -243,3 +243,8 @@ Originalna referenca pokazuje neovisne piktograme i satne oznake u Dnevnim i Tje
 ## Stvarni usporedni screenshot: brojke Najbolji/Rezultat
 
 Testno stanje 4×4 prema dostavljenom izvorniku (rezultat 1.316, najbolji 3.864) otkrilo je da dva broja imaju prevelike natpisne širine te se gotovo spajaju. Igra sada računa kompaktnije, nepoklapajuće score natpise u obje varijante headera. Testna referentna ploča dobiva stvarnu spremljenu Undo povijest prije injektiranja 16 brojeva, tako da gumb Poništi u njezinoj QA snimci ima aktivni izgled kao u originalnom dizajnu. Stvarni engine i spremljene korisničke partije nisu mijenjani.
+
+
+## Korekcija sekcijskih ikona nakon konačne usporedne QA snimke
+
+Završna PNG snimka 941×1672 pokazala je da su novi simboli sekcija preklopili centrirane riječi Dnevne, Tjedne i Postignuća. Centri naslova pomaknuti su udesno, a vremenske i reward značke unutar sigurnih granica iznad redaka. Sunce na dnevnoj grupi više nije zvjezdica, a tjedni zadatak Igraj 7 dana koristi stvarni mali kalendar s čitljivom sedmicom, umjesto zvjezdice preko brojke. Kad je do ponedjeljka manje od 24 sata, odbrojivač prikazuje samo sate, a ne zbunjujući oblik 0d 21h. To su ciljani vizualni popravci zasnovani na usporedbi s izvornim PNG-ovima i stvarnim Android QA snimkama.
