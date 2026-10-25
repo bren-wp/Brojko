@@ -1532,24 +1532,26 @@ public final class MainActivity extends Activity {
             dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
                 portrait?509:667,finished);
             float rewardY=portrait?569:744;
-            missionSurface(28,rewardY,344,portrait?80:48,19,
-                theme==1?0xff3a3459:0xfff0e9ff);
-            dailyRewardGift(portrait?76:65,rewardY+(portrait?41:24),
-                portrait?70:37);
+            missionSurface(portrait?18:28,rewardY,portrait?364:344,
+                portrait?80:48,19,theme==1?0xff3a3459:0xfff0e9ff);
+            // The illustration fills the left third of the source card.
+            // Keep all copy to its right, including the real earned amount.
+            dailyRewardGift(portrait?91:65,rewardY+(portrait?38:24),
+                portrait?80:37);
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
-                    124,rewardY+17,12,225,muted,true);
+                    158,rewardY+17,12,190,muted,true);
                 leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
-                    124,rewardY+40,18,180,ink,true);
+                    158,rewardY+40,18,157,ink,true);
                 // Preserve the actual earned currency while retaining the
                 // reference's explanatory reward copy.
                 fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
                 leftFitted(finished?"Današnja nagrada već je preuzeta.":
-                    "Dovrši sva tri cilja i osvoji",124,rewardY+57,10.5f,
-                    238,muted,false);
+                    "Dovrši sva tri cilja i osvoji",158,rewardY+57,10.5f,
+                    198,muted,false);
                 if(!finished)
-                    leftFitted("posebnu nagradu!",124,rewardY+69,
-                        10.5f,222,muted,false);
+                    leftFitted("posebnu nagradu!",158,rewardY+69,
+                        10.5f,194,muted,false);
             }else{
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     100,rewardY+17,12,197,muted,true);
@@ -1599,21 +1601,46 @@ public final class MainActivity extends Activity {
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void dailyRewardGift(float cx,float cy,float size){
-            // Draw an illustrated gift without adding an external image asset:
-            // purple lid/body, golden ribbons and two looped bow shapes.
-            float left=cx-size*.37f, top=cy-size*.11f;
-            gradient(left,top,size*.74f,size*.49f,8,0xffae78f9,0xff6439c6);
-            shape(cx-size*.09f,top,size*.18f,size*.49f,3,0xffffcf38);
-            gradient(cx-size*.44f,top-size*.15f,size*.88f,size*.22f,7,
-                0xffbe94fa,0xff7d42dd);
-            shape(cx-size*.09f,top-size*.15f,size*.18f,size*.22f,3,0xffffd746);
-            p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setColor(0xffffc936);p.setStrokeWidth(Math.max(3,size*.10f));
-            p.setStrokeCap(Paint.Cap.ROUND);
-            c.drawOval(cx-size*.29f,cy-size*.51f,cx-size*.018f,cy-size*.24f,p);
-            c.drawOval(cx+size*.018f,cy-size*.51f,cx+size*.29f,cy-size*.24f,p);
-            p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
-            shape(cx-size*.10f,cy-size*.33f,size*.20f,size*.15f,5,0xffffda45);
+            // Layered vector approximation of the supplied purple/gold gift.
+            // Dynamic challenge reward remains a real label, not baked art.
+            float left=cx-size*.37f,top=cy-size*.11f;
+            shape(left,top+size*.06f,size*.74f,size*.49f,9,0x41652e96);
+            gradient(left,top,size*.74f,size*.49f,9,
+                0xffb77bf5,0xff6738c8);
+            // Ribbons span both the lid and the body.
+            shape(cx-size*.085f,top,size*.17f,size*.49f,3,0xfffcb72d);
+            gradient(cx-size*.44f,top-size*.15f,size*.88f,size*.22f,8,
+                0xffce9cff,0xff8748e0);
+            gradient(cx-size*.085f,top-size*.15f,size*.17f,size*.64f,3,
+                0xffffe76a,0xffffb523);
+            // Folded gold bow petals replace the old thin outlined circles.
+            p.setShader(new LinearGradient(cx,cy-size*.54f,cx,cy-size*.21f,
+                0xffffe877,0xffffa71c,Shader.TileMode.CLAMP));
+            p.setStyle(Paint.Style.FILL);
+            Path leftBow=new Path();
+            leftBow.moveTo(cx,cy-size*.27f);
+            leftBow.cubicTo(cx-size*.32f,cy-size*.72f,
+                cx-size*.62f,cy-size*.50f,cx-size*.37f,cy-size*.31f);
+            leftBow.cubicTo(cx-size*.25f,cy-size*.23f,
+                cx-size*.10f,cy-size*.22f,cx,cy-size*.27f);
+            leftBow.close();
+            c.drawPath(leftBow,p);
+            Path rightBow=new Path();
+            rightBow.moveTo(cx,cy-size*.27f);
+            rightBow.cubicTo(cx+size*.32f,cy-size*.72f,
+                cx+size*.62f,cy-size*.50f,cx+size*.37f,cy-size*.31f);
+            rightBow.cubicTo(cx+size*.25f,cy-size*.23f,
+                cx+size*.10f,cy-size*.22f,cx,cy-size*.27f);
+            rightBow.close();
+            c.drawPath(rightBow,p);
+            p.setShader(null);
+            p.setColor(0xfffff2a1);
+            c.drawOval(cx-size*.41f,cy-size*.48f,
+                cx-size*.17f,cy-size*.32f,p);
+            c.drawOval(cx+size*.17f,cy-size*.48f,
+                cx+size*.41f,cy-size*.32f,p);
+            gradient(cx-size*.13f,cy-size*.32f,size*.26f,size*.16f,8,
+                0xffffec73,0xffffb326);
         }
         void missionSurface(float x,float y,float width,float height,
                             float radius,int color){
