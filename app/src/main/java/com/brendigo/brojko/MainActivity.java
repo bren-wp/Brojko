@@ -1825,6 +1825,19 @@ public final class MainActivity extends Activity {
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
                 Math.max(2,radius-1),Math.max(2,radius-1),p);
             p.setStyle(Paint.Style.FILL);
+            if(style==2){
+                // Glass tile is visibly different from the rounded tile,
+                // with a diagonal white corner reflection as in the design.
+                p.setShader(null);p.setStrokeWidth(Math.max(1.4f,w*.075f));
+                p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
+                p.setColor(0xd5ffffff);p.setStyle(Paint.Style.STROKE);
+                Path shine=new Path();
+                shine.moveTo(x+w*.17f,y+h*.32f);
+                shine.quadTo(x+w*.17f,y+h*.13f,x+w*.37f,y+h*.13f);
+                c.drawPath(shine,p);
+                p.setStrokeCap(Paint.Cap.BUTT);
+                p.setStyle(Paint.Style.FILL);
+            }
         }
         void themes(){
             if(referencePortraitLayout){themesCompact();return;}
@@ -1891,12 +1904,15 @@ public final class MainActivity extends Activity {
                 }
                 themePreviewTile(x+6,465,39,44,TILES[1],i);
                 fitted(styles[i],x+25,537,9.5f,49,ink,true);
-                taps.add(new Tap(x,456,x+51,549,styles[i],()->{
+                // Original source shows a radio badge beneath each swatch.
+                shape(x+19,546,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
+                if(tileStyle==i)icon("check",x+25.5f,552.5f,9,WHITE);
+                taps.add(new Tap(x,456,x+51,563,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
             }
             // Source shows labels, explanations and dividers, not bare toggles.
-            shape(208,556,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
+            shape(208,565,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",220,587,29,ink);
             leftFitted("Vibracija",245,590,18,123,ink,true);
             leftFitted("Kada spojiš brojeve.",245,610,11,123,muted,false);

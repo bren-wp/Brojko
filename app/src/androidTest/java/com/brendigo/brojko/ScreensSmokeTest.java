@@ -1471,4 +1471,50 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void tileStyleSwatchesMatchReferenceRadioSelectionInBothLayouts(){
+        rule.getScenario().onActivity(activity->{
+            int originalStyle=activity.tileStyle;
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;
+                int[][] sizes={{400,880},{941,1672}};
+                for(int[] sz:sizes){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(sz[0],View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(sz[1],View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,sz[0],sz[1]);
+                    for(int selected=0;selected<3;selected++){
+                        activity.tileStyle=selected;
+                        Bitmap bitmap=Bitmap.createBitmap(sz[0],sz[1],Bitmap.Config.ARGB_8888);
+                        try{
+                            board.draw(new Canvas(bitmap));
+                            float sy=(sz[0]==400?552.5f:446.5f);
+                            for(int i=0;i<3;i++){
+                                float sx=(210+i*56)+25.5f;
+                                int px=bitmap.getPixel(
+                                    Math.round(board.offX+sx*board.scale),
+                                    Math.round(board.offY+sy*board.scale));
+                                if(i==selected)
+                                    assertTrue("Selected style must show a white check",
+                                        android.graphics.Color.red(px)>=235);
+                                else
+                                    assertTrue("Unselected style badge is neutral gray",
+                                        Math.abs(android.graphics.Color.red(px)-
+                                            android.graphics.Color.green(px))<12);
+                            }
+                        }finally{bitmap.recycle();}
+                        capture(activity,"themes-reference-style-"+selected+
+                            (sz[0]==400?"-standard":"-compact"));
+                    }
+                }
+            }finally{
+                activity.tileStyle=originalStyle;
+                activity.theme=originalTheme;
+                activity.page=originalPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
