@@ -1556,8 +1556,7 @@ public final class MainActivity extends Activity {
                 theme==1?0xff162239:0x1cb0916d);
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,width,height,radius,
-                theme==1?lighten(color,.07f):WHITE,
-                theme==1?color:0xfffffdf9);
+                lighten(color,theme==1?.07f:.27f),color);
         }
         int completedAchievements(){
             int result=0;
