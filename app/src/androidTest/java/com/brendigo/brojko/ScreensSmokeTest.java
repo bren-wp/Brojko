@@ -1134,4 +1134,20 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void periodicMissionBadgesReflectRealLocalBoundaries(){
+        rule.getScenario().onActivity(activity->{
+            String daily=activity.timeRemainingInPeriod(false);
+            String weekly=activity.timeRemainingInPeriod(true);
+            assertTrue("Daily countdown must have hours",daily.contains("h "));
+            assertTrue("Daily countdown must include minutes",daily.endsWith("min"));
+            assertTrue("Weekly countdown must have days",weekly.contains("d "));
+            assertTrue("Weekly countdown must have hours",weekly.endsWith("h"));
+            String original=activity.page;
+            try{
+                activity.page="missions";
+                capture(activity,"original-mission-period-header");
+            }finally{activity.page=original;}
+        });
+    }
+
 }

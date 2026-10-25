@@ -159,6 +159,20 @@ public final class MainActivity extends Activity {
         reward(16,1000,best>=50000);
         reward(32,200,weekPoints>=10000);
     }
+    String timeRemainingInPeriod(boolean week){
+        Calendar now=Calendar.getInstance();
+        Calendar end=(Calendar)now.clone();
+        if(week){
+            int daysUntilMonday=(Calendar.MONDAY-end.get(Calendar.DAY_OF_WEEK)+7)%7;
+            end.add(Calendar.DAY_OF_YEAR,daysUntilMonday==0?7:daysUntilMonday);
+        }else end.add(Calendar.DAY_OF_YEAR,1);
+        end.set(Calendar.HOUR_OF_DAY,0);end.set(Calendar.MINUTE,0);
+        end.set(Calendar.SECOND,0);end.set(Calendar.MILLISECOND,0);
+        long remaining=Math.max(0,
+            (end.getTimeInMillis()-now.getTimeInMillis())/60000);
+        return week?(remaining/1440)+"d "+((remaining%1440)/60)+"h":
+            (remaining/60)+"h "+(remaining%60)+"min";
+    }
     String yesterday(){
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
@@ -866,6 +880,9 @@ public final class MainActivity extends Activity {
             switch(type) {
                 case "chevron-down":
                     z.moveTo(5,9);z.lineTo(12,16);z.lineTo(19,9);break;
+                case "clock":
+                    c.drawCircle(12,12,9,p);
+                    z.moveTo(12,6);z.lineTo(12,12);z.lineTo(17,15);break;
                 case "back":z.moveTo(16,4);z.lineTo(8,12);z.lineTo(16,20);break;
                 case "refresh":
                     z.arcTo(new RectF(4,4,21,21),-40,300,false);
@@ -1499,12 +1516,17 @@ public final class MainActivity extends Activity {
             card(17,portrait?134:179,366,portrait?185:209,28,dailyTint);
             card(17,portrait?328:398,366,portrait?185:207,28,weeklyTint);
             card(17,portrait?522:614,366,portrait?187:249,28,achievementTint);
-            float rewardTop=portrait?117:154;
-            card(260,rewardTop,117,portrait?39:44,18,
-                theme==1?card:0xffffefcc);
-            icon("star",283,rewardTop+(portrait?20:23),26,0xffffae1d);
-            fitted(fmt(stars),331,rewardTop+(portrait?26:31),20,70,ink,true);
+            icon("star",45,portrait?148:204,22,0xffffae1d);
             txt("Dnevne",84,portrait?150:204,23,ink,true);
+            missionPeriodPill("day",portrait?136:182);
+            icon("calendar",43,portrait?346:420,23,0xff3d98f0);
+            icon("crown",43,portrait?540:636,23,0xffffb431);
+            missionPeriodPill("week",portrait?334:402);
+            // Keep the earned-stars counter without covering a mission row.
+            float countTop=portrait?527:619;
+            card(287,countTop,90,27,14,theme==1?card:0xfffff1d8);
+            icon("star",304,countTop+13,17,0xffffae1d);
+            fitted(fmt(stars),344,countTop+20,15,55,ink,true);
             missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
                 todayMerges,20,50,portrait?160:212,TEAL);
             boolean noUndo512=(rewardFlags&2)!=0 ||
@@ -1521,6 +1543,15 @@ public final class MainActivity extends Activity {
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Osvoji 50.000 bodova",
                 best,50000,1000,portrait?627:741,0xffff934b);
+        }
+        void missionPeriodPill(String period,int y){
+            boolean week="week".equals(period);
+            float x=week?290:283;
+            int width=week?87:94;
+            card(x,y,width,25,13,theme==1?card:0xfffffcf6);
+            icon("clock",x+15,y+12,15,muted);
+            fitted(timeRemainingInPeriod(week),x+width/2+6,y+18,
+                11,width-32,muted,true);
         }
         void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
             boolean portrait=referencePortraitLayout;

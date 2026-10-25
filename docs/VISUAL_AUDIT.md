@@ -233,3 +233,8 @@ Kada je izvorni PNG dostupan, njegovi detalji imaju prednost pred prethodnim gen
 ## Referentna stanja radi stvarne provjere 1:1 na 941×1672
 
 U Android testove uvedena su reprezentativna, **samo testna** stanja iz originalnog screenshot dizajna: klasična 4×4 ploča s 16 zadanih brojeva i rezultatom 1.316, pobjednički modal te statistika s 10 uzoraka, rezultatom 12.560 i 248 partija. Stvarna korisnička pohrana se nakon testnih snimki vraća i ne mijenja. Dodani su brojevi bodova iznad svih stupaca grafikona u oba layouta, jer se vide na referenci, a dosad su nedostajali. Logo ima više unutarnjeg prostora između slova s descenderom i natpisa by Brendigo. Ovi testni screenshotovi služe za usporedbu s korisničkim izvorima, no same po sebi ne dokazuju jednakost rasterskih piksela.
+
+
+## Sekcijski headeri i stvarne periodičke oznake u Misijama
+
+Originalna referenca pokazuje neovisne piktograme i satne oznake u Dnevnim i Tjednim misijama. Dodani su izvoru bliži simboli za dnevne/tjedne ciljeve te mali neutralni satni badge s stvarnim vremenom do sljedeće lokalne ponoći ili idućeg ponedjeljka. Ukupan broj skupljenih zvjezdica premješten je u naslovni dio Postignuća, tako da više ne prelazi preko prve dnevne kartice. Vrijeme nije hardkodirano i ne tvrdi da je cloud sinkronizacija omogućena. Izračun se temelji na lokalnom vremenu telefona i prikazuje se pri idućem iscrtavanju zaslona.
