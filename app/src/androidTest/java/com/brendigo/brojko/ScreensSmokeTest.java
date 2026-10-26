@@ -1002,11 +1002,16 @@ public class ScreensSmokeTest {
                     try{view.draw(new Canvas(bitmap));}
                     finally{bitmap.recycle();}
                     assertEquals("Splash cannot require scrolling",0f,view.maxScroll,.01f);
-                    float lastSloganEdge=view.offY+824f*view.scale;
+                    // Compact source portrait uses a separate 628-unit
+                    // slogan edge. The old 824-unit assertion measured the
+                    // superseded tall layout, not the actual rendered caption.
+                    float actualSloganBottom=view.referencePortraitLayout?628f:824f;
+                    float lastSloganEdge=view.offY+actualSloganBottom*view.scale;
                     assertTrue("Brand slogan clipped at "+
                         size[0]+"x"+size[1]+": "+lastSloganEdge,
                         lastSloganEdge<=size[1]+1f);
-                    float firstContentEdge=view.offY+74f*view.scale;
+                    float firstContentEdge=view.offY+
+                        (view.referencePortraitLayout?58f:74f)*view.scale;
                     assertTrue("Splash upper decoration must stay visible",
                         firstContentEdge>=0);
                 }
@@ -2118,6 +2123,58 @@ public class ScreensSmokeTest {
                             "splash-full-width-portrait-reference-941x1672");
                 }
             }finally{activity.page=old;activity.screen.invalidate();}
+        });
+    }
+
+
+    @Test public void launcherRetainsFourSourceColorsAndDominantWhiteB(){
+        rule.getScenario().onActivity(activity->{
+            if(android.os.Build.VERSION.SDK_INT<26)return;
+            try{
+                android.graphics.drawable.Drawable icon=activity.getPackageManager()
+                    .getApplicationIcon(activity.getPackageName());
+                assertTrue(icon instanceof android.graphics.drawable.AdaptiveIconDrawable);
+                Bitmap bitmap=Bitmap.createBitmap(512,512,Bitmap.Config.ARGB_8888);
+                try{
+                    icon.setBounds(0,0,512,512);
+                    icon.draw(new Canvas(bitmap));
+                    int[] quadrants=new int[4];
+                    int brightB=0;
+                    for(int y=60;y<452;y+=8)for(int x=60;x<452;x+=8){
+                        int c=bitmap.getPixel(x,y);
+                        int red=android.graphics.Color.red(c);
+                        int green=android.graphics.Color.green(c);
+                        int blue=android.graphics.Color.blue(c);
+                        if(x<240&&y<240&&red>215&&green>80&&green<180&&blue<150)
+                            quadrants[0]++;
+                        if(x>=272&&y<240&&green>145&&blue>130&&red<145)
+                            quadrants[1]++;
+                        if(x<240&&y>=272&&blue>175&&red<165)
+                            quadrants[2]++;
+                        if(x>=272&&y>=272&&red>205&&green>120&&blue<150)
+                            quadrants[3]++;
+                        if(x>=175&&x<=339&&y>=153&&y<=350&&
+                            red>240&&green>240&&blue>229)
+                            brightB++;
+                    }
+                    for(int q=0;q<4;q++)
+                        assertTrue("Tile "+q+" must retain its assigned strong color",
+                            quadrants[q]>8);
+                    assertTrue("The central white B must remain visibly prominent",
+                        brightB>35);
+                    // Save the exact Android-drawn vector, not a mock launcher image.
+                    File folder=new File(activity.getExternalFilesDir(null),"screenshots");
+                    assertTrue(folder.isDirectory()||folder.mkdirs());
+                    try(FileOutputStream stream=new FileOutputStream(
+                            new File(folder,"launcher-four-tiles-B-reference-512.png"))){
+                        assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));
+                    }catch(java.io.IOException failure){
+                        throw new AssertionError("Unable to save launcher reference",failure);
+                    }
+                }finally{bitmap.recycle();}
+            }catch(android.content.pm.PackageManager.NameNotFoundException failure){
+                throw new AssertionError("Installed Brojko adaptive icon missing",failure);
+            }
         });
     }
 

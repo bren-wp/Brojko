@@ -31,3 +31,9 @@ Ikona zadržava originalni četverobojni motiv (2, 4, 8, 16) i dominantno svijet
 ## Nunito font — v1.7
 
 Aplikacija u CI-u uključuje **Nunito Variable** s potvrđenog izvornog Google Fonts commita (SIL OFL 1.1). Skripta `scripts/prepare-nunito.sh` verificira SHA-1 Git blob izvornog fonta i licence te ih umeće u Android `assets`. Glavni tekst koristi težinu 500, oznake kartica 800, istaknuti naslovi i logotip 950. Pri lokalnoj izgradnji prvo pokrenuti skriptu. Font se ne preuzima u aplikaciji i nije potrebno mrežno dopuštenje.
+
+## Launcher ikona — izvorni portretni brending v1.12.97
+
+Obje bojene Android VectorDrawable varijante (`ic_brojko.xml` i `ic_brojko_foreground.xml`) koriste četiri individualno zaobljene, odvojene pločice 2/4/8/16 s originalnom coral/teal/blue/yellow paletom, finim donjim rubom te dominantno većim svijetlim slovom **B** s koraljnom granicom. Nisu uvedeni bitmap placeholderi; svi oblici ostaju skalabilni unutar Android adaptive/round maske. Android 13 monochrome sloj ostaje zaseban za sistemsko temiranje; naziv i autor zadržavaju **Brojko** i **Brendigo** (veliko B).
+
+Pregled provode stvarni Android emulator screenshotovi launcher-adaptive, launcher-round, launcher-android13-monochrome te `launcher-four-tiles-B-reference-512.png`. Izvornu marketinšku ilustraciju nemoguće je potpuno preslikati u Android VectorDrawable bez njezine napredne 3D rasvjete, ali struktura i brend motiv trebaju ostati dosljedni. 
