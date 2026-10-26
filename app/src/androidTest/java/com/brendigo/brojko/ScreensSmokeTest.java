@@ -1349,6 +1349,12 @@ public class ScreensSmokeTest {
                         android.graphics.Color.red(whiteCard)>=248 &&
                         android.graphics.Color.green(whiteCard)>=247 &&
                         android.graphics.Color.blue(whiteCard)>=245);
+                    int brandFooter=bitmap.getPixel(823,1418);
+                    assertTrue("Footer should have the warm cream from the source",
+                        android.graphics.Color.blue(brandFooter)<
+                            android.graphics.Color.blue(whiteCard)-5 &&
+                        android.graphics.Color.green(brandFooter)<
+                            android.graphics.Color.green(whiteCard));
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=oldPage;activity.theme=oldTheme;
@@ -2174,6 +2180,69 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }catch(android.content.pm.PackageManager.NameNotFoundException failure){
                 throw new AssertionError("Installed Brojko adaptive icon missing",failure);
+            }
+        });
+    }
+
+
+    @Test public void googlePlayMinimumSdkAndTargetSdkMatchDeviceManifest(){
+        rule.getScenario().onActivity(activity->{
+            android.content.pm.ApplicationInfo info=activity.getApplicationInfo();
+            assertEquals("Brojko package identifier is stable for Play updates",
+                "com.brendigo.brojko",activity.getPackageName());
+            assertTrue("Play Automatic Protection requires minSdk >= API 24",
+                info.minSdkVersion>=24);
+            assertTrue("Play phone app submissions require target API 36 in 2026",
+                info.targetSdkVersion>=36);
+        });
+    }
+
+    @Test public void portraitHomeHasNoEmptyScrollAndCompactShortcutsRemainReachable(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";
+                int[][] viewports={{941,1672},{360,600}};
+                for(int[] viewport:viewports){
+                    int width=viewport[0],height=viewport[1];
+                    view.measure(View.MeasureSpec.makeMeasureSpec(width,
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(height,
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,width,height);
+                    Bitmap bitmap=Bitmap.createBitmap(width,height,
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+                    assertTrue("Home uses the portrait reference layout",
+                        view.referencePortraitLayout);
+                    if(width==941){
+                        assertEquals("No phantom scrolling after Home navigation",
+                            0f,view.maxScroll,1f);
+                    }else{
+                        assertTrue("Small phone must scroll to reveal lower cards",
+                            view.maxScroll>0f);
+                    }
+                    int shortcuts=0;
+                    float visibleLogicalHeight=height/view.scale;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Misije".equals(tap.label)||
+                           "Statistika".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label)){
+                            shortcuts++;
+                            assertTrue("Home shortcut must stay fully reachable: "+tap.label,
+                                tap.bottom<=visibleLogicalHeight+view.maxScroll+1f);
+                        }
+                    }
+                    assertEquals("All four destinations remain actionable",4,shortcuts);
+                    if(width==941)
+                        captureReference(activity,view,
+                            "home-no-ghost-scroll-941x1672");
+                }
+            }finally{
+                activity.page=originalPage;
+                activity.screen.invalidate();
             }
         });
     }

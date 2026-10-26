@@ -672,6 +672,21 @@ public final class MainActivity extends Activity {
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
             txt(content,x,baseline,size,color,bold);
         }
+        // Home shortcut captions must never run into neighboring cards.
+        // Preserve their intended font size: only compress the horizontal
+        // glyph advance when a long localized caption exceeds its card.
+        void strictCaption(String content,float x,float baseline,
+                           float size,float maxWidth,int color){
+            p.setTypeface(regularFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(size);
+            float actualWidth=p.measureText(content);
+            if(actualWidth>maxWidth){
+                c.save();c.translate(x,baseline);
+                c.scale(maxWidth/actualWidth,1f);
+                txt(content,0,0,size,color,false);
+                c.restore();
+            }else txt(content,x,baseline,size,color,false);
+        }
         // Reference screenshot typography is left-aligned in settings rows.
         // Shrink only when the actual Nunito glyphs would overlap controls.
         void leftFitted(String content,float left,float baseline,float size,
@@ -1078,9 +1093,14 @@ public final class MainActivity extends Activity {
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):
+                // All Home shortcuts end at y=690 plus their card shadows.
+                // The old 880-unit height caused ~170 units of empty scrolling
+                // at the original 941x1672 reference viewport. Preserve real
+                // scrolling on shorter devices without cropping any shortcut.
+                (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f);
+                    referencePortraitLayout?710f:880f));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -1281,10 +1301,10 @@ public final class MainActivity extends Activity {
                 glyph.equals("stats")?0xff344868:
                 glyph.equals("palette")?0xffb05de9:ink);
             fitted(label,x+w/2,y+(portrait?70:91),portrait?15:16,w-5,ink,true);
-            fitted(sub1,x+w/2,y+(portrait?87:115),portrait?11:12,w-6,
-                muted,false);
-            fitted(sub2,x+w/2,y+(portrait?101:132),portrait?11:12,w-6,
-                muted,false);
+            strictCaption(sub1,x+w/2,y+(portrait?87:115),
+                portrait?11:12,w-6,muted);
+            strictCaption(sub2,x+w/2,y+(portrait?101:132),
+                portrait?11:12,w-6,muted);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
@@ -2535,9 +2555,14 @@ public final class MainActivity extends Activity {
             // A translucent shadow must not leak its Paint alpha into
             // the subsequent opaque gradient fill.
             p.setShader(null);p.setColor(WHITE);
+            // Distinguish the footer's cream surface from seven white
+            // setting rows, as in the supplied 941x1672 Settings reference.
+            boolean creamFooter=theme!=1&&color==0xfffff3e6;
             gradient(x,y,width,height,radius,
-                theme==1?lighten(color,.09f):WHITE,
-                theme==1?color:0xfffffdfa);
+                theme==1?lighten(color,.09f):
+                    (creamFooter?0xfffffbf3:WHITE),
+                theme==1?color:
+                    (creamFooter?0xfffff3e6:0xfffffdfa));
         }
         void settingsIconTile(float x,float y,float size,int color,String glyph){
             shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
@@ -2553,8 +2578,8 @@ public final class MainActivity extends Activity {
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
             txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
-            rays(74,compact?67:97,23,CORAL);
-            rays(331,compact?67:97,23,CORAL);
+            rays(74,compact?67:97,compact?34:29,CORAL);
+            rays(331,compact?67:97,compact?34:29,CORAL);
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
