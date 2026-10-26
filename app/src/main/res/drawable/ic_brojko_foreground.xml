@@ -5,10 +5,19 @@
  android:pivotX="54" android:pivotY="54">
  <path android:fillColor="#FFF8EE" android:pathData="M23,3 H85 A20,20 0,0 1,105 23 V85 A20,20 0,0 1,85 105 H23 A20,20 0,0 1,3 85 V23 A20,20 0,0 1,23 3 Z"/>
  <path android:fillColor="#DF593C" android:pathData="M25,9 H83 A16,16 0,0 1,99 25 V83 A16,16 0,0 1,83 99 H25 A16,16 0,0 1,9 83 V25 A16,16 0,0 1,25 9 Z"/>
- <path android:fillColor="#FF7A5B" android:pathData="M25,14 H50 V50 H14 V25 A11,11 0,0 1,25 14 Z"/>
- <path android:fillColor="#2EC4B6" android:pathData="M58,14 H83 A11,11 0,0 1,94 25 V50 H58 Z"/>
- <path android:fillColor="#3D98F0" android:pathData="M14,58 H50 V94 H25 A11,11 0,0 1,14 83 Z"/>
- <path android:fillColor="#FFBB4A" android:pathData="M58,58 H94 V83 A11,11 0,0 1,83 94 H58 Z"/>
+ <path android:fillColor="#FF7A5B" android:pathData="M24,14 H40 C46,14 50,18 50,24 V40 C50,46 46,50 40,50 H24 C18,50 14,46 14,40 V24 C14,18 18,14 24,14 Z"/>
+ <path android:fillColor="#2EC4B6" android:pathData="M68,14 H84 C90,14 94,18 94,24 V40 C94,46 90,50 84,50 H68 C62,50 58,46 58,40 V24 C58,18 62,14 68,14 Z"/>
+ <path android:fillColor="#3D98F0" android:pathData="M24,58 H40 C46,58 50,62 50,68 V84 C50,90 46,94 40,94 H24 C18,94 14,90 14,84 V68 C14,62 18,58 24,58 Z"/>
+ <path android:fillColor="#FFBB4A" android:pathData="M68,58 H84 C90,58 94,62 94,68 V84 C94,90 90,94 84,94 H68 C62,94 58,90 58,84 V68 C58,62 62,58 68,58 Z"/>
+ <!-- Four subtle lower tile lips preserve the raised source tiles. -->
+ <path android:fillColor="#29AE381E"
+ android:pathData="M17,42 C19,48 21,48 27,48 H39 C44,48 47,46 48,41 V44 C48,48 45,50 40,50 H24 C19,50 16,48 16,43 Z"/>
+ <path android:fillColor="#268A483E"
+ android:pathData="M60,42 C62,47 64,48 70,48 H83 C88,48 91,46 92,41 V44 C92,48 89,50 84,50 H68 C63,50 60,48 60,43 Z"/>
+ <path android:fillColor="#21437DC3"
+ android:pathData="M17,86 C20,90 23,92 28,92 H39 C44,92 47,89 48,85 V87 C48,92 45,94 40,94 H24 C19,94 16,91 16,86 Z"/>
+ <path android:fillColor="#2BBA742B"
+ android:pathData="M60,86 C63,91 65,92 70,92 H83 C88,92 91,90 92,85 V87 C92,92 89,94 84,94 H68 C63,94 60,91 60,86 Z"/>
  <group android:scaleX="0.83" android:scaleY="0.83"
   android:pivotX="29" android:pivotY="31"
   android:translateX="-3" android:translateY="-2">
@@ -59,9 +68,9 @@
  <path android:fillColor="#48FFFFFF"
  android:pathData="M62,66 H90 V69 H62 Z"/>
  <!-- Keep the B central while revealing the bottom 8 and 16 glyphs. -->
- <group android:scaleX="0.66" android:scaleY="0.66"
+ <group android:scaleX="0.83" android:scaleY="0.83"
   android:pivotX="54" android:pivotY="54"
-  android:translateY="-7">
+  android:translateY="-4">
  <group android:translateY="2.5">
   <path android:strokeColor="#963C2A" android:strokeWidth="18" android:strokeLineCap="round"
    android:strokeLineJoin="round"
