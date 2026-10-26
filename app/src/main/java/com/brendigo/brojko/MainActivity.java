@@ -1086,7 +1086,10 @@ public final class MainActivity extends Activity {
                 case "home":home();break;
                 case "game":gameScreen();break;
                 case "pause":gameScreen();taps.clear();pauseOverlay();break;
-                case "win":gameScreen();taps.clear();resultOverlay(true);break;
+                case "win":
+                    if(referencePortraitLayout)victoryBackdropPortrait();
+                    else gameScreen();
+                    taps.clear();resultOverlay(true);break;
                 case "over":gameScreen();taps.clear();resultOverlay(false);break;
                 case "confirm":gameScreen();taps.clear();confirmOverlay();break;
                 case "confirmEnd":gameScreen();taps.clear();confirmEndOverlay();break;
@@ -1388,6 +1391,58 @@ public final class MainActivity extends Activity {
             button("Nastavi","play",52,443,296,65,CORAL,true,()->navigate("game"));
             button("Izbornik","home",52,532,296,61,card,false,()->navigate("home"));
         }
+        // Source artwork uses a quiet post-game summary behind the modal:
+        // the real frozen board, compact brand / score HUD and bottom shortcuts.
+        // No game state is reset; all background taps are cleared before the modal.
+        void victoryBackdropPortrait(){
+            c.save();c.translate(-96,0);
+            brand(66,43,true);
+            c.restore();
+            card(205,18,81,78,15,card);
+            card(297,18,81,78,15,card);
+            icon("crown",245,37,24,0xffffb52b);
+            fitted("Najbolji",245,56,12,78,muted,true);
+            fitted(fmt(best),245,79,20,75,ink,true);
+            icon("stats",335,37,23,muted);
+            fitted("Rezultat",335,56,12,77,muted,true);
+            fitted(fmt(game.score),335,79,20,75,ink,true);
+            float prevGridY=gridY;
+            gridY=112;
+            drawGrid();
+            gridY=prevGridY;
+            card(18,620,114,77,17,card);
+            card(143,620,114,77,17,card);
+            card(268,620,114,77,17,card);
+            icon("refresh",75,645,33,ink);
+            icon("crown",200,645,31,ink);
+            icon("settings",325,645,30,ink);
+            fitted("Novo",75,685,15,105,muted,true);
+            fitted("Rekordi",200,685,15,105,muted,true);
+            fitted("Postavke",325,685,15,105,muted,true);
+        }
+        void compactVictoryCard(){
+            // Source: deliberately narrower and shorter than the generic
+            // game-over overlay. Keep its three actual actions tappable.
+            card(59,213,282,405,29,theme==1?0xff293956:CREAM);
+            icon("crown",200,205,93,0xffffbb37);
+            txt("Bravo!",200,294,58,ink,true);
+            card(95,305,210,36,18,theme==1?card:0xffffeddb);
+            fitted("Dosegnuli ste",161,330,20,133,CORAL,true);
+            fitted("2048!",258,330,21,88,TEAL,true);
+            card(76,351,120,72,19,card);
+            card(204,351,120,72,19,card);
+            txt("Tvoj rezultat",136,374,13,muted,false);
+            fitted(fmt(game.score),136,410,33,113,ink,true);
+            txt("Osvojene zvjezdice",264,374,11,muted,false);
+            for(int i=0;i<3;i++)icon("star",229+i*35,401,26,0xffffb526);
+            button("Nastavi igrati","play",74,444,252,51,CORAL,true,()->{
+                game.winAcknowledged=true;persist();navigate("game");
+            });
+            button("Nova igra","refresh",74,504,252,48,card,false,
+                ()->newGame(game.mode));
+            button("Podijeli rezultat","share",74,560,252,49,
+                theme==1?0xff3269b5:0xff3b95ee,true,()->share());
+        }
         void resultOverlay(boolean winning){
             dim();
             boolean narrow=referencePortraitLayout;
@@ -1399,6 +1454,12 @@ public final class MainActivity extends Activity {
                     shape(x,y,7,18,4,confetti[i%4]);c.restore();
                 }
             }
+            if(winning&&narrow){
+                compactVictoryCard();
+                return;
+            }
+            // Non-portrait and game-over states retain their established
+            // responsive layout and navigation behavior.
             // At the reference phone's aspect ratio, the victory card and
             // all three real buttons fit in one frame without vertical cropping.
             float panelTop=narrow?181:159;
