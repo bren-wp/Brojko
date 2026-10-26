@@ -53,14 +53,18 @@ jobs:
             # from the release workflow that triggered this job.
             adb shell dumpsys package com.brendigo.brojko | grep -F "versionName=1.12.$BROJKO_BUILD_NUMBER"
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
-            grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
+            # Preserve the failing test output and any generated screenshots
+            # so a regression can be diagnosed directly from the PR artifact.
+            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
             mkdir -p android-screenshots
-            adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/
+            adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
+            grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
       - name: Upload real Android screen captures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Brojko-real-device-UI
           if-no-files-found: warn
-          path: android-screenshots/
+          path: |
+            android-screenshots/
+            instrumentation-results.txt

@@ -649,6 +649,24 @@ public final class MainActivity extends Activity {
                 c.restore();
             }
         }
+        // The home hero uses three substantial coral accent strokes on each
+        // side, not the tiny radial dots used by small headings and badges.
+        // Keep them completely outside the play button and its touch zone.
+        void homeAccentRays(float playY,boolean onRight){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setColor(CORAL);p.setStrokeWidth(6f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            // The reference has two broad marks at each side: one tilted
+            // above and one horizontal beside the CTA (not a third below).
+            float[][] strokes={{33,11,48,25},{22,40,43,40}};
+            for(float[] endpoints:strokes){
+                float x1=onRight?400-endpoints[0]:endpoints[0];
+                float x2=onRight?400-endpoints[2]:endpoints[2];
+                c.drawLine(x1,playY+endpoints[1],
+                    x2,playY+endpoints[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void txt(String content,float x,float baseline,float size,int color,boolean bold) {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);
@@ -988,10 +1006,12 @@ public final class MainActivity extends Activity {
                 // The original daily-start pill has a shallow lip, unlike the
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
-                float lip=flatDaily?2.5f:5f;
-                shape(x,y+lip,w,h,radius,darken(color,flatDaily?.13f:.23f));
-                gradient(x,y,w,h-(flatDaily?2:4),radius,
-                    lighten(color,flatDaily?.10f:.18f),color);
+                boolean homeHero=page.equals("home")&&w>=300;
+                float lip=flatDaily?2.5f:homeHero?3.5f:5f;
+                shape(x,y+lip,w,h,radius,darken(color,
+                    flatDaily?.13f:homeHero?.10f:.23f));
+                gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
+                    lighten(color,flatDaily?.10f:homeHero?.07f:.18f),color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:1.2f);
                 p.setColor(0x86ffffff);
@@ -1006,7 +1026,9 @@ public final class MainActivity extends Activity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=300;
-                if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
+                if(hasSymbol)icon(symbol,x+(prominent?
+                    (page.equals("daily")&&referencePortraitLayout&&w>=300?
+                        80:Math.min(58,w*.21f)):25),
                     y+h/2,Math.min(prominent?
                         (page.equals("daily")?34:homeHero?43:33):23,
                         h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
@@ -1268,11 +1290,18 @@ public final class MainActivity extends Activity {
             boolean resumable=game!=null&&!game.archived&&!game.gameOver;
             float playY=portrait?293:372;
             float playH=portrait?82:86;
+            // Reference orange hero pill is about 285 design units wide,
+            // leaving room for the large bursts on both sides.
             button(resumable?"Nastavi igru":"Nova igra","play",
-                43,playY,314,playH,CORAL,true,
+                portrait?58:43,playY,portrait?284:314,playH,CORAL,true,
                 ()->{if(resumable)navigate("game");else requestNew("classic");});
-            rays(24,playY+playH*.45f,21,CORAL);
-            rays(376,playY+playH*.45f,21,CORAL);
+            if(portrait){
+                homeAccentRays(playY,false);
+                homeAccentRays(playY,true);
+            }else{
+                rays(24,playY+playH*.45f,21,CORAL);
+                rays(376,playY+playH*.45f,21,CORAL);
+            }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
             modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xffffe9de,false,
@@ -1632,6 +1661,21 @@ public final class MainActivity extends Activity {
                 c.restore();
             }
         }
+        // The portrait daily CTA has three large side bursts, but only
+        // 49 logical units of height near the screen's safe bottom edge.
+        // The decorative lines stay outside x=25..375 (the real button).
+        void dailyStartRays(float startY,boolean right){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(5f);p.setStrokeCap(Paint.Cap.ROUND);
+            p.setColor(CORAL);
+            float[][] strokes={{23,3,34,12},{18,26,33,26}};
+            for(float[] stroke:strokes){
+                float x1=right?400-stroke[0]:stroke[0];
+                float x2=right?400-stroke[2]:stroke[2];
+                c.drawLine(x1,startY+stroke[1],x2,startY+stroke[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void dailyHeaderAccents(float cx,float cy){
             // Source heading uses three solid coral confetti strokes rather
             // than the tiny evenly spaced dots of the shared rays() utility.
@@ -1759,12 +1803,18 @@ public final class MainActivity extends Activity {
             }
             button(active&&!game.gameOver?"Nastavi izazov":
                 finished?"Igraj ponovno":"Započni izazov","play",
-                25,portrait?655:802,350,portrait?49:58,0xffff684f,true,()->{
+                portrait?43:25,portrait?655:802,portrait?314:350,
+                portrait?49:58,0xffff684f,true,()->{
                     if(active&&!game.gameOver)navigate("game");
                     else requestNew("daily");
                 });
-            rays(16,portrait?677:831,16,CORAL);
-            rays(384,portrait?677:831,16,CORAL);
+            if(portrait){
+                dailyStartRays(655,false);
+                dailyStartRays(655,true);
+            }else{
+                rays(16,831,16,CORAL);
+                rays(384,831,16,CORAL);
+            }
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
@@ -2274,7 +2324,11 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,457.5f,x+49.5f,547.5f,14,14,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                themePreviewTile(x+6,465,39,44,TILES[1],i);
+                // Use the warm peach sample from the supplied swatch cards,
+                // not the game's much redder numbered "2" tile.
+                int swatchColor=i==2?0xffffc8ad:
+                    (i==1?0xffffa87d:0xffffad6a);
+                themePreviewTile(x+6,465,39,44,swatchColor,i);
                 fitted(styles[i],x+25,537,9.5f,49,ink,true);
                 // Original source shows a radio badge beneath each swatch.
                 shape(x+19,546,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
@@ -2488,7 +2542,9 @@ public final class MainActivity extends Activity {
                     c.drawRoundRect(x+1.5f,372.5f,x+49.5f,438.5f,12,12,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                themePreviewTile(x+6,383,39,39,TILES[1],i);
+                int swatchColor=i==2?0xffffc8ad:
+                    (i==1?0xffffa87d:0xffffad6a);
+                themePreviewTile(x+6,383,39,39,swatchColor,i);
                 fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);

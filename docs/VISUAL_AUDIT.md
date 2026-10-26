@@ -437,3 +437,54 @@ Novi `launcherRetainsFourSourceColorsAndDominantWhiteB` instrumentacijski test r
 ### V1.12.96 — opaženi CI pad i ispravak zastarjele provjere
 
 GitHub build v1.12.96 prošao je, ali emulator QA #87 (`40255630343`) imao je **1 pad od 53 instrumentacijska testa**: `brandedSplashFitsCompletelyOnShortAndReferencePhones` koristio je staru pretpostavku da je zadnji rub slogana uvijek na logičkoj koordinati Y=824. Novi portretni splash je namjerno kraći i slogan završava na Y=628; stara provjera zato je lažno prijavila rub 741,6 px na telefonu 360×600. Sama nova provjera `portraitSplashFillsWidthWithoutScrollingOrClippingSlogan` prošla je. Sada se za oba raspona eksplicitno izračunava odgovarajući kraj: 628 za kratki portret, 824 za visoki raspored. Ponovno pokrenuti cijeli emulator QA nakon integracije, ne koristiti v1.12.96 kao dokaz uspješnog instrumentacijskog paketa.
+
+
+## Iteracija v1.12.99 — ciljane razlike prema stvarnim PNG referencama
+
+Korišteni su korisnički izvori pri **941×1672** (24. 10. 2026.) i stvarni Android emulator renderovi nakon v1.12.97–98. Bez izmišljanja gotovih piksela ili prikazivanja ilustracije kao UI-ja.
+
+### Kvantitativno početno stanje
+
+Srednja apsolutna RGB razlika (`MAE` u rasponu 0–255, prije ovih izmjena), uspoređujući izvorni PNG i postojeću stvarnu aplikacijsku snimku istih dimenzija:
+
+| Ekran | Referenca | Stvarni prethodni render | RGB MAE |
+|---|---|---|---:|
+| Početna | `22_15_13-3` | `home-no-ghost-scroll-941x1672.png` iz PR #9 QA | 29,12 |
+| Teme i izgled | `22_15_18-9` | `reference-941x1672-themes.png` v1.12.97 | 25,16 |
+| Statistika | `22_15_17-8` | `reference-941x1672-stats.png` v1.12.97 | 23,55 |
+| Postavke | `22_15_19-10` | `reference-941x1672-settings.png` iz PR #9 QA | 16,54 |
+
+Za izračun se uzima aritmetički prosjek `abs(R1-R2),abs(G1-G2),abs(B1-B2)` za sve piksele. To je **gruba, nedirektno poravnata** usporedba koja uključuje razlike u stvarnim bodovima, prisutnosti partija i animacijama; ne smije se tumačiti kao funkcionalna regresija. Potpuna 1:1 identičnost vektorskog Canvas renderera ilustraciji nije dokazana.
+
+### Izmjene u ovom PR-u
+
+1. **Početni zaslon:** dorađeni su odvojeni veći koraljni potezi lijevo i desno od glavnog gumba. Stari sitni ukrasi odgovarali su točkicama umjesto izrazitim izduženim potezima iz izvornika; novi crtež nije dio dodirne površine i ne prekriva gumb.
+2. **Home CTA:** svijetli koraljni gradijent i znatno manji kontrast duboke donje sjene približeni su izvorniku, bez mijenjanja ostalih gumba (uključujući dnevni izazov).
+3. **Teme / stilovi pločica:** uzorci Zaobljene, Ravne i Staklaste više ne koriste crvenkastu igraču pločicu `2`; dobili su neovisne nijanse tople marelice i bisernog stakla za kompaktni i visoki raspored. Samo preview boje, ne vrijednosti niti stvarne boje igre.
+4. **Regresija:** screenshot `home-source-accent-rays-941x1672.png` i `themes-peach-style-swatches-941x1672.png` iz instrumentacijskih testova; testiraju obostrane koraljne poteze, tri međusobno različita stila i funkcionalne dodirne zone.
+
+### Preostali posao
+
+Za završni pixel audit preostaje usporediti novi emulator QA i utvrditi razlike po regijama (logo, CTA, izbor teme, preview, statistika, postavke, modali i mali telefoni). Izvori su primjeri ispunjenih ploča i rezultata; aplikacija mora zadržati **stvarne** zapise, prave datume i sigurnu lokalnu pohranu. Google Play sukladnost zahtijeva i validan potpis i provjeru objave u Play Console, ne samo uspješno sastavljanje Gradlea.
+
+
+### Stvarni emulator rezultat za prethodnu iteraciju
+
+Emulator QA #94 za commit `713cc739` završio je uspješno. Usporedba novih PNG-ova na 941×1672 sa **istim** referencama pokazala je:
+- Početna: RGB MAE **29,12 → 28,82** (manji = bolje), uz najveći doprinos koraljnih ukrasa i manjeg crnog obruba glavnog gumba.
+- Teme i izgled: RGB MAE **25,16 → 24,80** nakon toplijih, međusobno različitih uzoraka stilova pločica.
+
+To su mala, ali mjerljiva poboljšanja pojedinih područja, a ne potpuna identičnost svih piksela.
+
+### Dodatna iteracija Dnevni izazov
+
+Uz postojeće velike rubne poteze ilustrativne ploče, koraljni ukrasi neposredno uz primarni donji gumb na portretnom Dnevnom izazovu sada su dvije izdužene linije sa svake strane, poravnate uz referencu, umjesto niza sitnih točaka. Zadržana je stvarna radnja `Započni izazov` / `Nastavi izazov` / `Igraj ponovno` i dodan test `dailyPrimaryActionHasSafeSourceLikeSideAccents`, uključujući novi emulator PNG `daily-large-safe-primary-rays-941x1672.png`. Ukrasi ne ulaze u interaktivni okvir gumba i ne prelaze donji rub na 941×1672.
+
+
+### Geometrijska korekcija nakon izravne usporedbe CTA cropova
+
+Izvorni početni CTA počinje oko x=137 px i završava oko x=795 px; prethodni emulator gumb bio je od x=101 do oko x=840 px. Zato je portretni `Home` gumb sužen s `x=43,width=314` na `x=58,width=284` dizajnerskih jedinica, a dekoracija je smanjena na **dva** poteza sa svake strane i pomaknuta uz bokove. Ovo je izvorniku bliže od prvog povećanja svih triju poteza.
+
+Na izvornom Dnevnom izazovu CTA ima približno x=101–839 px; emulator prije korekcije imao je oko x=59–881 px. Portretni CTA sužen je s `x=25,width=350` na `x=43,width=314`, Play ikona pomaknuta unutar gumba u položaj bliži izvorniku, a dvije umjesto tri rubne crte bolje slijede referencu. Interaktivna zona ostaje široka preko 300 dizajnerskih jedinica i ne uključuje crte. Privremena verzija s tri poteza nije poboljšala RGB MAE i nije ostavljena kao završna geometrija.
+
+Potrebno je provjeriti **novi** emulator screenshot nakon tih promjena prije zaključka o njihovoj točnoj brojčanoj koristi. Starije MAE vrijednosti gore odnose se na raniji commit u istom PR-u.
