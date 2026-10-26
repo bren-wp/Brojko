@@ -1448,7 +1448,7 @@ public final class MainActivity extends Activity {
         // Three broad, slanted rays at either side of the daily illustration,
         // matching the provided PNG instead of the shared tiny ray dots.
         void dailyBoardBursts(float cx,float cy,boolean right,int color){
-            float sign=right?-1f:1f;
+            float sign=right?1f:-1f;
             for(int i=-1;i<=1;i++){
                 c.save();
                 c.rotate(sign*(i*29f+90f),cx,cy);

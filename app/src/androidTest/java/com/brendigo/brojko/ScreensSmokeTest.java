@@ -1860,8 +1860,8 @@ public class ScreensSmokeTest {
                 try{
                     preview.draw(new Canvas(bitmap));
                     for(int row=1;row<=2;row++){
-                        int y=(row==1?456:509)+24;
-                        int px=Math.round(preview.offX+44*preview.scale);
+                        int y=(row==1?456:509)+12;
+                        int px=Math.round(preview.offX+47*preview.scale);
                         int py=Math.round(preview.offY+y*preview.scale);
                         int c=bitmap.getPixel(px,py);
                         assertTrue("Gold star and blue arrows must have a pale row " +
