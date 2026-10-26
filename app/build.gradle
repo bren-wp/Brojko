@@ -4,7 +4,8 @@ android {
  compileSdk 36
  defaultConfig {
   applicationId 'com.brendigo.brojko'
-  minSdk 23
+  // Google Play automatic protection requires minSdk >= 24.
+  minSdk 24
   targetSdk 36
   testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   // QA uses the release workflow's run number, not its own run number.
