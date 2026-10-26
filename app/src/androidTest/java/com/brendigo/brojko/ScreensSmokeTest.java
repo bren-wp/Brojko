@@ -2366,8 +2366,8 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     screen.draw(new Canvas(bitmap));
-                    int y=Math.round(screen.offY+666f*screen.scale);
-                    for(float x:new float[]{14f,386f}){
+                    int y=Math.round(screen.offY+663f*screen.scale);
+                    for(float x:new float[]{28f,372f}){
                         int px=Math.round(screen.offX+x*screen.scale);
                         int pixel=bitmap.getPixel(px,y);
                         assertTrue("Daily accent must be coral on both sides",
@@ -2382,7 +2382,7 @@ public class ScreensSmokeTest {
                            "Igraj ponovno".equals(tap.label)){
                             startActions++;
                             assertTrue("Accents cannot cover Daily CTA hitbox",
-                                tap.left>=25&&tap.right<=375);
+                                tap.left>=42&&tap.right<=358);
                             assertTrue("Bottom action remains fully on screen",
                                 screen.offY+tap.bottom*screen.scale<=1673);
                         }
