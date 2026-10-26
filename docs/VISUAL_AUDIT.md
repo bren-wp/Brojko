@@ -410,3 +410,12 @@ Korisnička referenca: `Slika ChatGPT 24. lis 2026. 22_15_13-3(3).png` na 941×1
 Povećan je portretni logotip uz zadržavanje byline potpisa, povećani su samo ikona i slova glavnog CTA gumba, produljene tri kartice načina igre i spuštene/produljene četiri donje navigacijske kartice. U pozadini ostaju prave vrijednosti `best`/`lastScore`; kartice rezultata sada su stvarne dostupne radnje prema Statistici, a posljednja sadrži izvorni chevron. Kalendar kartice „Dnevni izazov” povećan je bez zamjene postojećeg ilustrativnog motiva. Ako spremljena aktivna partija postoji, glavni gumb i dalje ispravno prikazuje „Nastavi igru”, a ne lažno „Nova igra”.
 
 Novi instrumentacijski test `portraitHomeHasFunctionalScoreCardsAndAllFourShortcuts` provjerava obadva rezultatska shortcut gumba, jedinstvenu radnju Nova/Nastavi, četiri donje navigacijske kartice i njihove rubove na 941×1672; snima `home-hero-and-score-shortcuts-941x1672.png`. Konačni prolaz i vizualna usporedba ovise o Build/Android UI QA uspjehu.
+
+
+## Ekran 9 — Splash: puni portretni raspon 941×1672 bez odrezanog slogana
+
+Uspoređeni su izvorni portretni PNG `Slika ChatGPT 24. lis 2026. 22_15_06-2(3).png` i stvarni Android screenshot `reference-941x1672-splash.png` iz v1.12.93. Stari splash uvijek je računao skalu iz visokoga 400×880 nacrta: na referentnom 941×1672 koristio je samo ~760 px širine, čime su svi logo, tipografija i numerirane pločice izgledali znatno premalo i okruženi većim prazninama.
+
+Dodan je zaseban portretni Canvas raspored kada je omjer visine/širine <1,85: skala sada slijedi stvarnu širinu, veliki Brojko brend sa „by Brendigo” potpisom nalazi se u optičkom središtu, a kartica slogana „Spajaj brojeve. Ruši rekorde.” ostaje vidljiva u manje od 630 logičkih jedinica. Povećane i položene su pločice 2, 4, 8, 16 te donji ukrasi 64 i 256; dodane su diskretne transparencije ambijentalnih oblika bez raster ilustracija. Rubne ilustracije smiju biti dijelom izvan viewporta kao u izvorniku, ali logotip i slogan ne. Visoki zasloni zadržavaju postojeći 400×880 nacrt.
+
+Test `portraitSplashFillsWidthWithoutScrollingOrClippingSlogan` renderira stvarni `BoardScreen` na 941×1672, 360×600, 400×880 i 1080×2400; provjerava skalu po širini za kratke omjere, nulto skrolanje i puni prikaz slogan kartice, uz referentni screenshot `splash-full-width-portrait-reference-941x1672.png`. Konačni QA zahtijeva GitHub Android instrumentacijsko izvođenje.
