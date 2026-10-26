@@ -1002,11 +1002,16 @@ public class ScreensSmokeTest {
                     try{view.draw(new Canvas(bitmap));}
                     finally{bitmap.recycle();}
                     assertEquals("Splash cannot require scrolling",0f,view.maxScroll,.01f);
-                    float lastSloganEdge=view.offY+824f*view.scale;
+                    // Compact source portrait uses a separate 628-unit
+                    // slogan edge. The old 824-unit assertion measured the
+                    // superseded tall layout, not the actual rendered caption.
+                    float actualSloganBottom=view.referencePortraitLayout?628f:824f;
+                    float lastSloganEdge=view.offY+actualSloganBottom*view.scale;
                     assertTrue("Brand slogan clipped at "+
                         size[0]+"x"+size[1]+": "+lastSloganEdge,
                         lastSloganEdge<=size[1]+1f);
-                    float firstContentEdge=view.offY+74f*view.scale;
+                    float firstContentEdge=view.offY+
+                        (view.referencePortraitLayout?58f:74f)*view.scale;
                     assertTrue("Splash upper decoration must stay visible",
                         firstContentEdge>=0);
                 }
