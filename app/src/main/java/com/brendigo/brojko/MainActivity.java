@@ -1057,7 +1057,7 @@ public final class MainActivity extends Activity {
             // genuinely taller content (statistics/history) must always scroll.
             referencePortraitLayout=usableHeight/usableWidth<1.85f;
             compactBoardLayout=inGame&&referencePortraitLayout;
-            gridY=compactBoardLayout?171:222;
+            gridY=compactBoardLayout&&game!=null&&game.size==4?159:(compactBoardLayout?171:222);
             boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
             // outside the board rather than scaling the whole game to tiny size.
@@ -1261,20 +1261,28 @@ public final class MainActivity extends Activity {
             fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
                 105,89,daily?32:43,201,ink,true);
             if(!daily) {
-                card(39,108,141,50,19,CORAL);
-                txt(relaxed?"5×5":"4×4",110,144,35,WHITE,true);
-                rays(34,134,16,CORAL);rays(190,134,16,CORAL);
+                if(narrow&&!relaxed){
+                    card(60,100,93,43,18,CORAL);
+                    txt("4×4",106.5f,133,35,WHITE,true);
+                    rays(49,120,16,CORAL);rays(165,120,16,CORAL);
+                }else{
+                    card(39,108,141,50,19,CORAL);
+                    txt(relaxed?"5×5":"4×4",110,144,35,WHITE,true);
+                    rays(34,134,16,CORAL);rays(190,134,16,CORAL);
+                }
             }else{
                 fitted("izazov",103,135,36,195,CORAL,true);
             }
             // Both score labels have independent, non-overlapping bounds even
             // for 5+ digit values shown in the original populated 4x4 artwork.
-            icon("crown",narrow?214:224,70,24,0xffffb43d);
-            fitted("NAJBOLJI",narrow?219:255,100,12,narrow?66:70,muted,true);
-            fitted(fmt(best),narrow?219:255,129,24,narrow?64:70,ink,true);
+            icon("crown",narrow?231:224,70,24,0xffffb43d);
+            fitted("Najbolji",narrow?230:255,100,12,narrow?66:70,muted,true);
+            fitted(fmt(best),narrow?230:255,129,24,narrow?64:70,ink,true);
             icon("stats",narrow?299:313,69,23,muted);
-            fitted("REZULTAT",narrow?301:334,101,12,narrow?65:70,muted,true);
+            fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
             fitted(fmt(game.score),narrow?301:334,129,23,narrow?64:70,ink,true);
+            if(narrow&&!relaxed)
+                shape(262,58,1,65,0,theme==1?0xff526078:0xffe1d8cc);
             if(narrow){
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.
@@ -1290,20 +1298,23 @@ public final class MainActivity extends Activity {
                 fitted("DNEVNI IZAZOV • "+remaining+" POTEZA PREOSTALO",
                     200,narrow?561:624,15,351,remaining<=10?CORAL:muted,true);
             }
-            float actionsY=narrow?(daily?578:555):647;
-            float actionsH=narrow?82:91;
-            button("Novo","refresh",22,actionsY,113,actionsH,card,false,
+            boolean portraitFour=compactBoardLayout&&game.size==4;
+            float actionsY=narrow?(portraitFour?(daily?578:577):555):647;
+            float actionsH=portraitFour?94:(narrow?82:91);
+            float firstX=portraitFour?17:22,undoX=portraitFour?139:144;
+            float finishX=portraitFour?258:265;
+            button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
                 ()->requestNew(game.mode));
             if(game.canUndo())
-                button("Poništi","undo",144,actionsY,112,actionsH,card,false,()->undo());
+                button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
             else {
-                card(144,actionsY,112,actionsH,20,
+                card(undoX,actionsY,112,actionsH,20,
                     theme==1?0xff29364a:0xffeae5de);
-                icon("undo",200,actionsY+27,25,muted);
-                txt("Poništi",200,actionsY+actionsH-15,17,muted,true);
+                icon("undo",undoX+56,actionsY+27,25,muted);
+                txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
             }
-            button("Završi","check",265,actionsY,113,actionsH,CORAL,true,
-                ()->navigate("confirmEnd"));
+            button("Završi","check",finishX,actionsY,portraitFour?120:113,
+                actionsH,CORAL,true,()->navigate("confirmEnd"));
             if(!narrow){
                 button("Izbornik","home",22,757,171,64,card,false,
                     ()->navigate("home"));
@@ -1324,26 +1335,33 @@ public final class MainActivity extends Activity {
         void drawGrid(){
             if(game==null)return;
             int n=game.size;
-            card(gridX-4,gridY-4,gridSize+8,gridSize+8,23,
+            boolean tallFour=compactBoardLayout&&n==4;
+            // Source 4×4 artwork has taller tiles and a lower cream frame.
+            // Leave the existing 5×5 cell geometry unchanged.
+            float left=gridX-(tallFour?2.5f:0f);
+            card(left-4,gridY-4,gridSize+8,gridSize+(tallFour?34:8),23,
                 theme==1?0xff354661:0xfff2e5d3);
-            float gap=n==4?9:6;
+            float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
+            float tileHeight=tallFour?89:tile;
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
-                float rx=gridX+gap+(tile+gap)*x;
-                float ry=gridY+gap+(tile+gap)*y;
+                float rx=left+gap+(tile+gap)*x;
+                float ry=gridY+(tallFour?10:gap)+
+                    (tallFour?94:tile+gap)*y;
                 int color=tileColor(value);
                 float delta=animation==0?1:pulse;
                 float inset=value>0?(1-delta)*tile/2:0;
                 float round=tileStyle==1?7:tileStyle==2?24:15;
-                if(value==0)shape(rx,ry,tile,tile,round,color);
+                if(value==0)shape(rx,ry,tile,tileHeight,round,color);
                 else {
-                    glossyTile(rx+inset,ry+inset,tile-2*inset,tile-2*inset,round,color);
+                    glossyTile(rx+inset,ry+inset,tile-2*inset,
+                        tileHeight-2*inset,round,color);
                     String str=Integer.toString(value);
                     int digits=str.length();
                     float fontsize=(n==5?33:44)-(digits>3?(digits-3)*7:0);
-                    fitted(str,rx+tile/2,ry+tile*.62f,fontsize,tile-7,
-                        WHITE,true);
+                    fitted(str,rx+tile/2,ry+tileHeight*.62f,
+                        fontsize,tile-7,WHITE,true);
                 }
             }
         }
@@ -2578,8 +2596,11 @@ public final class MainActivity extends Activity {
                 touchX=x;touchY=y;
                 lastFingerY=event.getY();initialFingerY=event.getY();
                 draggingScroll=false;
-                pointerBoard=x>=gridX && x<=gridX+gridSize &&
-                    y>=gridY&&y<=gridY+gridSize && "game".equals(page);
+                // Pointer area follows the enlarged last row of 4×4 tiles.
+                float hitHeight=compactBoardLayout&&game!=null&&game.size==4?
+                    402:gridSize;
+                pointerBoard=x>=gridX-3 && x<=gridX+gridSize &&
+                    y>=gridY&&y<=gridY+hitHeight && "game".equals(page);
                 pressedTap=null;
                 if(!pointerBoard){
                     for(Tap tap:new ArrayList<>(taps)){
