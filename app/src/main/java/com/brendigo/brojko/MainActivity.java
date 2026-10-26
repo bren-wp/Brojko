@@ -656,7 +656,9 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setColor(CORAL);p.setStrokeWidth(6f);
             p.setStrokeCap(Paint.Cap.ROUND);
-            float[][] strokes={{20,11,34,25},{16,40,33,40},{20,68,34,56}};
+            // The reference has two broad marks at each side: one tilted
+            // above and one horizontal beside the CTA (not a third below).
+            float[][] strokes={{33,11,48,25},{22,40,43,40}};
             for(float[] endpoints:strokes){
                 float x1=onRight?400-endpoints[0]:endpoints[0];
                 float x2=onRight?400-endpoints[2]:endpoints[2];
@@ -1286,8 +1288,10 @@ public final class MainActivity extends Activity {
             boolean resumable=game!=null&&!game.archived&&!game.gameOver;
             float playY=portrait?293:372;
             float playH=portrait?82:86;
+            // Reference orange hero pill is about 285 design units wide,
+            // leaving room for the large bursts on both sides.
             button(resumable?"Nastavi igru":"Nova igra","play",
-                43,playY,314,playH,CORAL,true,
+                portrait?58:43,playY,portrait?284:314,playH,CORAL,true,
                 ()->{if(resumable)navigate("game");else requestNew("classic");});
             if(portrait){
                 homeAccentRays(playY,false);
