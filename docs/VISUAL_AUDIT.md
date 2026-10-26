@@ -478,4 +478,13 @@ To su mala, ali mjerljiva poboljšanja pojedinih područja, a ne potpuna identi�
 
 ### Dodatna iteracija Dnevni izazov
 
-Uz postojeće velike rubne poteze ilustrativne ploče, koraljni ukrasi neposredno uz primarni donji gumb na portretnom Dnevnom izazovu sada su tri izdužene linije sa svake strane, poravnate uz referencu, umjesto niza sitnih točaka. Zadržana je stvarna radnja `Započni izazov` / `Nastavi izazov` / `Igraj ponovno` i dodan test `dailyPrimaryActionHasSafeSourceLikeSideAccents`, uključujući novi emulator PNG `daily-large-safe-primary-rays-941x1672.png`. Ukrasi ne ulaze u interaktivni okvir gumba i ne prelaze donji rub na 941×1672.
+Uz postojeće velike rubne poteze ilustrativne ploče, koraljni ukrasi neposredno uz primarni donji gumb na portretnom Dnevnom izazovu sada su dvije izdužene linije sa svake strane, poravnate uz referencu, umjesto niza sitnih točaka. Zadržana je stvarna radnja `Započni izazov` / `Nastavi izazov` / `Igraj ponovno` i dodan test `dailyPrimaryActionHasSafeSourceLikeSideAccents`, uključujući novi emulator PNG `daily-large-safe-primary-rays-941x1672.png`. Ukrasi ne ulaze u interaktivni okvir gumba i ne prelaze donji rub na 941×1672.
+
+
+### Geometrijska korekcija nakon izravne usporedbe CTA cropova
+
+Izvorni početni CTA počinje oko x=137 px i završava oko x=795 px; prethodni emulator gumb bio je od x=101 do oko x=840 px. Zato je portretni `Home` gumb sužen s `x=43,width=314` na `x=58,width=284` dizajnerskih jedinica, a dekoracija je smanjena na **dva** poteza sa svake strane i pomaknuta uz bokove. Ovo je izvorniku bliže od prvog povećanja svih triju poteza.
+
+Na izvornom Dnevnom izazovu CTA ima približno x=101–839 px; emulator prije korekcije imao je oko x=59–881 px. Portretni CTA sužen je s `x=25,width=350` na `x=43,width=314`, Play ikona pomaknuta unutar gumba u položaj bliži izvorniku, a dvije umjesto tri rubne crte bolje slijede referencu. Interaktivna zona ostaje široka preko 300 dizajnerskih jedinica i ne uključuje crte. Privremena verzija s tri poteza nije poboljšala RGB MAE i nije ostavljena kao završna geometrija.
+
+Potrebno je provjeriti **novi** emulator screenshot nakon tih promjena prije zaključka o njihovoj točnoj brojčanoj koristi. Starije MAE vrijednosti gore odnose se na raniji commit u istom PR-u.
