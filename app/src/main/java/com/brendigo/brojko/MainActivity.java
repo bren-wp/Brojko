@@ -1655,6 +1655,21 @@ public final class MainActivity extends Activity {
                 c.restore();
             }
         }
+        // The portrait daily CTA has three large side bursts, but only
+        // 49 logical units of height near the screen's safe bottom edge.
+        // The decorative lines stay outside x=25..375 (the real button).
+        void dailyStartRays(float startY,boolean right){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(5f);p.setStrokeCap(Paint.Cap.ROUND);
+            p.setColor(CORAL);
+            float[][] strokes={{10,7,19,15},{6,25,19,25},{10,44,19,36}};
+            for(float[] stroke:strokes){
+                float x1=right?400-stroke[0]:stroke[0];
+                float x2=right?400-stroke[2]:stroke[2];
+                c.drawLine(x1,startY+stroke[1],x2,startY+stroke[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void dailyHeaderAccents(float cx,float cy){
             // Source heading uses three solid coral confetti strokes rather
             // than the tiny evenly spaced dots of the shared rays() utility.
@@ -1786,8 +1801,13 @@ public final class MainActivity extends Activity {
                     if(active&&!game.gameOver)navigate("game");
                     else requestNew("daily");
                 });
-            rays(16,portrait?677:831,16,CORAL);
-            rays(384,portrait?677:831,16,CORAL);
+            if(portrait){
+                dailyStartRays(655,false);
+                dailyStartRays(655,true);
+            }else{
+                rays(16,831,16,CORAL);
+                rays(384,831,16,CORAL);
+            }
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
