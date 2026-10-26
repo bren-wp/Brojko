@@ -437,3 +437,32 @@ Novi `launcherRetainsFourSourceColorsAndDominantWhiteB` instrumentacijski test r
 ### V1.12.96 — opaženi CI pad i ispravak zastarjele provjere
 
 GitHub build v1.12.96 prošao je, ali emulator QA #87 (`40255630343`) imao je **1 pad od 53 instrumentacijska testa**: `brandedSplashFitsCompletelyOnShortAndReferencePhones` koristio je staru pretpostavku da je zadnji rub slogana uvijek na logičkoj koordinati Y=824. Novi portretni splash je namjerno kraći i slogan završava na Y=628; stara provjera zato je lažno prijavila rub 741,6 px na telefonu 360×600. Sama nova provjera `portraitSplashFillsWidthWithoutScrollingOrClippingSlogan` prošla je. Sada se za oba raspona eksplicitno izračunava odgovarajući kraj: 628 za kratki portret, 824 za visoki raspored. Ponovno pokrenuti cijeli emulator QA nakon integracije, ne koristiti v1.12.96 kao dokaz uspješnog instrumentacijskog paketa.
+
+
+## Iteracija v1.12.99 — ciljane razlike prema stvarnim PNG referencama
+
+Korišteni su korisnički izvori pri **941×1672** (24. 10. 2026.) i stvarni Android emulator renderovi nakon v1.12.97–98. Bez izmišljanja gotovih piksela ili prikazivanja ilustracije kao UI-ja.
+
+### Kvantitativno početno stanje
+
+Srednja apsolutna RGB razlika (`MAE` u rasponu 0–255, prije ovih izmjena), uspoređujući izvorni PNG i postojeću stvarnu aplikacijsku snimku istih dimenzija:
+
+| Ekran | Referenca | Stvarni prethodni render | RGB MAE |
+|---|---|---|---:|
+| Početna | `22_15_13-3` | `home-no-ghost-scroll-941x1672.png` iz PR #9 QA | 29,12 |
+| Teme i izgled | `22_15_18-9` | `reference-941x1672-themes.png` v1.12.97 | 25,16 |
+| Statistika | `22_15_17-8` | `reference-941x1672-stats.png` v1.12.97 | 23,55 |
+| Postavke | `22_15_19-10` | `reference-941x1672-settings.png` iz PR #9 QA | 16,54 |
+
+Za izračun se uzima aritmetički prosjek `abs(R1-R2),abs(G1-G2),abs(B1-B2)` za sve piksele. To je **gruba, nedirektno poravnata** usporedba koja uključuje razlike u stvarnim bodovima, prisutnosti partija i animacijama; ne smije se tumačiti kao funkcionalna regresija. Potpuna 1:1 identičnost vektorskog Canvas renderera ilustraciji nije dokazana.
+
+### Izmjene u ovom PR-u
+
+1. **Početni zaslon:** dorađeni su odvojeni veći koraljni potezi lijevo i desno od glavnog gumba. Stari sitni ukrasi odgovarali su točkicama umjesto izrazitim izduženim potezima iz izvornika; novi crtež nije dio dodirne površine i ne prekriva gumb.
+2. **Home CTA:** svijetli koraljni gradijent i znatno manji kontrast duboke donje sjene približeni su izvorniku, bez mijenjanja ostalih gumba (uključujući dnevni izazov).
+3. **Teme / stilovi pločica:** uzorci Zaobljene, Ravne i Staklaste više ne koriste crvenkastu igraču pločicu `2`; dobili su neovisne nijanse tople marelice i bisernog stakla za kompaktni i visoki raspored. Samo preview boje, ne vrijednosti niti stvarne boje igre.
+4. **Regresija:** screenshot `home-source-accent-rays-941x1672.png` i `themes-peach-style-swatches-941x1672.png` iz instrumentacijskih testova; testiraju obostrane koraljne poteze, tri međusobno različita stila i funkcionalne dodirne zone.
+
+### Preostali posao
+
+Za završni pixel audit preostaje usporediti novi emulator QA i utvrditi razlike po regijama (logo, CTA, izbor teme, preview, statistika, postavke, modali i mali telefoni). Izvori su primjeri ispunjenih ploča i rezultata; aplikacija mora zadržati **stvarne** zapise, prave datume i sigurnu lokalnu pohranu. Google Play sukladnost zahtijeva i validan potpis i provjeru objave u Play Console, ne samo uspješno sastavljanje Gradlea.
