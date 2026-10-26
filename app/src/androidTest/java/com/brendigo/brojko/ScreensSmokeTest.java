@@ -2088,4 +2088,37 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void portraitSplashFillsWidthWithoutScrollingOrClippingSlogan(){
+        rule.getScenario().onActivity(activity->{
+            String old=activity.page;
+            MainActivity.BoardScreen splash=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";
+                int[][] sizes={{941,1672},{360,600},{400,880},{1080,2400}};
+                for(int[] size:sizes){
+                    splash.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                        View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                        View.MeasureSpec.EXACTLY));
+                    splash.layout(0,0,size[0],size[1]);
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{splash.draw(new Canvas(image));}finally{image.recycle();}
+                    assertEquals("Splash must never scroll",0f,splash.maxScroll,.01f);
+                    boolean compact=size[1]/(float)size[0]<1.85f;
+                    if(compact){
+                        assertEquals("Portrait brand should scale by width",
+                            size[0]/400f,splash.scale,.01f);
+                        assertTrue("Slogan must remain on short phone",
+                            splash.offY+628*splash.scale<=size[1]);
+                    }
+                    if(size[0]==941)
+                        captureReference(activity,splash,
+                            "splash-full-width-portrait-reference-941x1672");
+                }
+            }finally{activity.page=old;activity.screen.invalidate();}
+        });
+    }
+
 }
