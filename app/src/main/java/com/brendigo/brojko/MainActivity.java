@@ -990,13 +990,16 @@ public final class MainActivity extends Activity {
                 icon(symbol,x+w/2,y+h*.30f,29,iconColor);
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
+                boolean homeHero=page.equals("home")&&prominent&&w>=300;
                 if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
-                    y+h/2,Math.min(prominent?(page.equals("daily")?34:33):23,
-                        h*(page.equals("daily")?.65f:.52f)),iconColor);
+                    y+h/2,Math.min(prominent?
+                        (page.equals("daily")?34:homeHero?43:33):23,
+                        h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
                 float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
                 int labelColor=prominent?WHITE:ink;
                 float font=prominent?
-                    (page.equals("daily")?Math.min(24,h*.44f):Math.min(27,h*.34f)):
+                    (page.equals("daily")?Math.min(24,h*.44f):
+                        homeHero?Math.min(36,h*.44f):Math.min(27,h*.34f)):
                     (h>=66?18:16);
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
@@ -1167,7 +1170,7 @@ public final class MainActivity extends Activity {
             c.save();c.rotate(9,390,179);
             styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
-            brand(portrait?153:197,72);
+            brand(portrait?164:197,portrait?83:72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
@@ -1178,8 +1181,17 @@ public final class MainActivity extends Activity {
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
             fitted(fmt(best),128,scoresY+60,27,123,ink,true);
             icon("stats",236,scoresY+30,27,0xff63799d);
-            fitted("Zadnji rezultat",319,scoresY+29,13,116,muted,true);
-            fitted(fmt(lastScore),311,scoresY+60,27,125,ink,true);
+            fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
+                13,portrait?104:116,muted,true);
+            fitted(fmt(lastScore),portrait?296:311,scoresY+60,
+                27,portrait?113:125,ink,true);
+            if(portrait)
+                icon("chevron-right",365,scoresY+39,17,muted);
+            // Source score cards are actual shortcuts, not dead display art.
+            taps.add(new Tap(21,scoresY,192,scoresY+scoresH,
+                "Najbolji rezultat",()->navigate("stats")));
+            taps.add(new Tap(207,scoresY,378,scoresY+scoresH,
+                "Zadnji rezultat",()->navigate("stats")));
             boolean resumable=game!=null&&!game.archived&&!game.gameOver;
             float playY=portrait?293:372;
             float playH=portrait?82:86;
@@ -1189,15 +1201,15 @@ public final class MainActivity extends Activity {
             rays(24,playY+playH*.45f,21,CORAL);
             rays(376,playY+playH*.45f,21,CORAL);
             float modeY=portrait?386:483;
-            float modeH=portrait?163:187;
+            float modeH=portrait?171:187;
             modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xffffe9de,false,
                 ()->requestNew("classic"));
             modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffddf9f5,false,
                 ()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Novi izazov svaki dan!",
                 267,modeY,117,modeH,0xfffff4d7,true,()->navigate("daily"));
-            float shortcutY=portrait?560:687;
-            float shortcutH=portrait?108:144;
+            float shortcutY=portrait?570:687;
+            float shortcutH=portrait?120:144;
             shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
                 16,shortcutY,88,shortcutH,card,()->navigate("missions"));
             shortcut("Statistika","stats","Prati svoj","napredak.",
@@ -1227,7 +1239,7 @@ public final class MainActivity extends Activity {
             boolean portrait=referencePortraitLayout;
             card(x,y,w,h,22,theme==1?card:fill);
             if(daily){
-                icon("calendar",x+w/2,y+(portrait?68:77),portrait?59:69,CORAL);
+                icon("calendar",x+w/2,y+(portrait?68:77),portrait?69:69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;

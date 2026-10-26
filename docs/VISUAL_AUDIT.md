@@ -401,3 +401,12 @@ Referenca: `Slika ChatGPT 24. lis 2026. 22_15_14-5(3).png` (941×1672). Polazna 
 Portretni `win` sad renderira poseban post-game backdrop s očuvanom stvarnom pločom i rezultatima, bez izmjene spremljene partije. Modal koristi samostalan prilagođeni layout samo za pobjedu u portretnom omjeru: kartica x=59..341 / y=213..618 logičkih jedinica, veliki Nunito naslov, dvobojnu čestitku (coral/teal), stvarni format rezultata, tri vektorske zvjezdice i tri gumba za nastavak, ponovno pokretanje i Android dijeljenje. Ostala stanja (`over`, `dailyWin`, `dailyFail`, široki prikaz) ostaju na postojećem rasporedu.
 
 Regresijski test `portraitVictoryReferenceHasThreeReachableRealActions` stvara referentni 941×1672 prikaz, provjerava tri aktivna gumba, njihove dodirne zone od najmanje 48 jedinica i rubove ekrana te snima `victory-source-modal-reference-941x1672.png`. Tek nakon uspješnog Build/QA workflowa usporediti konačne PNG-ove; ova početna izmjena ne predstavlja tvrdnju o apsolutnoj 1:1 podudarnosti zbog razlika u ilustrativnim sjenama i reljefima.
+
+
+## Ekran 8 — početni zaslon: hero, rezultat i navigacija
+
+Korisnička referenca: `Slika ChatGPT 24. lis 2026. 22_15_13-3(3).png` na 941×1672; stvarna prethodna Android referenca: `reference-941x1672-home.png` iz v1.12.93. Izvor ima nešto veći, niže smješten Brojko logotip, naglašeniji koraljni CTA, veći kalendar dnevnog izazova i niže pozicionirane četiri navigacijske kartice. Početni rezultati u screenshotu su demonstracijske brojke: aplikacija mora nastaviti prikazivati **stvarne** korisnikove rekorde i sačuvati mogućnost nastavka partije.
+
+Povećan je portretni logotip uz zadržavanje byline potpisa, povećani su samo ikona i slova glavnog CTA gumba, produljene tri kartice načina igre i spuštene/produljene četiri donje navigacijske kartice. U pozadini ostaju prave vrijednosti `best`/`lastScore`; kartice rezultata sada su stvarne dostupne radnje prema Statistici, a posljednja sadrži izvorni chevron. Kalendar kartice „Dnevni izazov” povećan je bez zamjene postojećeg ilustrativnog motiva. Ako spremljena aktivna partija postoji, glavni gumb i dalje ispravno prikazuje „Nastavi igru”, a ne lažno „Nova igra”.
+
+Novi instrumentacijski test `portraitHomeHasFunctionalScoreCardsAndAllFourShortcuts` provjerava obadva rezultatska shortcut gumba, jedinstvenu radnju Nova/Nastavi, četiri donje navigacijske kartice i njihove rubove na 941×1672; snima `home-hero-and-score-shortcuts-941x1672.png`. Konačni prolaz i vizualna usporedba ovise o Build/Android UI QA uspjehu.
