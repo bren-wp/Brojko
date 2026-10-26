@@ -62,6 +62,26 @@ public class ScreensSmokeTest {
         }finally{bitmap.recycle();}
     }
 
+    // Sample a complete decorative region, not one antialiased pixel.
+    // Stroke edges differ between Android GPU/CPU rasterizers and densities.
+    private static int countCoralPixels(Bitmap bitmap,MainActivity.BoardScreen view,
+                                        float left,float top,float right,float bottom){
+        int result=0;
+        for(float ly=top;ly<=bottom;ly+=2f){
+            int py=Math.round(view.offY+ly*view.scale);
+            if(py<0||py>=bitmap.getHeight())continue;
+            for(float lx=left;lx<=right;lx+=2f){
+                int px=Math.round(view.offX+lx*view.scale);
+                if(px<0||px>=bitmap.getWidth())continue;
+                int rgb=bitmap.getPixel(px,py);
+                if(android.graphics.Color.red(rgb)>225 &&
+                   android.graphics.Color.green(rgb)<170 &&
+                   android.graphics.Color.blue(rgb)<150)result++;
+            }
+        }
+        return result;
+    }
+
     @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
         rule.getScenario().onActivity(activity->{
             int originalStars=activity.stars,originalFlags=activity.rewardFlags;
@@ -1809,10 +1829,16 @@ public class ScreensSmokeTest {
                         if(tap.label.equals("Započni izazov")||
                            tap.label.equals("Igraj ponovno")||
                            tap.label.equals("Nastavi izazov")){
-                            assertEquals("Daily CTA must have a full-width tap target",
-                                350f,tap.right-tap.left,.2f);
                             boolean compactViewport=
                                 size[1]/(float)size[0]<1.85f;
+                            float expectedWidth=compactViewport?314f:350f;
+                            float expectedX=compactViewport?43f:25f;
+                            assertEquals("Daily CTA width must match this viewport",
+                                expectedWidth,tap.right-tap.left,.2f);
+                            assertEquals("Daily CTA starts at safe reference inset",
+                                expectedX,tap.left,.2f);
+                            assertTrue("Daily primary CTA must stay touch-sized",
+                                tap.bottom-tap.top>=48f);
                             assertTrue("Daily CTA must fit its own layout height",
                                 tap.bottom<=(compactViewport?710f:880f));
                             startCount++;
@@ -2263,15 +2289,10 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     preview.draw(new Canvas(bitmap));
-                    for(float logicalX:new float[]{41f,359f}){
-                        int px=Math.round(preview.offX+logicalX*preview.scale);
-                        int py=Math.round(preview.offY+311f*preview.scale);
-                        int sample=bitmap.getPixel(px,py);
-                        assertTrue("Home hero rays should be saturated coral, not dots",
-                            android.graphics.Color.red(sample)>225 &&
-                            android.graphics.Color.green(sample)<160 &&
-                            android.graphics.Color.blue(sample)<140);
-                    }
+                    assertTrue("Left Home ray pair must be coral and visible",
+                        countCoralPixels(bitmap,preview,20,297,53,341)>=12);
+                    assertTrue("Right Home ray pair must be coral and visible",
+                        countCoralPixels(bitmap,preview,347,297,380,341)>=12);
                     int hero=0;
                     for(MainActivity.BoardScreen.Tap tap:preview.taps){
                         if("Nova igra".equals(tap.label)||
@@ -2366,15 +2387,10 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     screen.draw(new Canvas(bitmap));
-                    int y=Math.round(screen.offY+663f*screen.scale);
-                    for(float x:new float[]{28f,372f}){
-                        int px=Math.round(screen.offX+x*screen.scale);
-                        int pixel=bitmap.getPixel(px,y);
-                        assertTrue("Daily accent must be coral on both sides",
-                            android.graphics.Color.red(pixel)>220 &&
-                            android.graphics.Color.green(pixel)<170 &&
-                            android.graphics.Color.blue(pixel)<140);
-                    }
+                    assertTrue("Left Daily CTA accents must be visibly coral",
+                        countCoralPixels(bitmap,screen,14,654,37,684)>=10);
+                    assertTrue("Right Daily CTA accents must be visibly coral",
+                        countCoralPixels(bitmap,screen,363,654,386,684)>=10);
                     int startActions=0;
                     for(MainActivity.BoardScreen.Tap tap:screen.taps){
                         if("Započni izazov".equals(tap.label)||
