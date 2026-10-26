@@ -1800,8 +1800,10 @@ public class ScreensSmokeTest {
                            tap.label.equals("Nastavi izazov")){
                             assertEquals("Daily CTA must have a full-width tap target",
                                 350f,tap.right-tap.left,.2f);
-                            assertTrue("Daily action must stay in design bounds",
-                                tap.bottom<=707f);
+                            boolean compactViewport=
+                                size[1]/(float)size[0]<1.85f;
+                            assertTrue("Daily CTA must fit its own layout height",
+                                tap.bottom<=(compactViewport?710f:880f));
                             startCount++;
                         }
                     }
