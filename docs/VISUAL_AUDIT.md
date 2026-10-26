@@ -424,3 +424,11 @@ Test `portraitSplashFillsWidthWithoutScrollingOrClippingSlogan` renderira stvarn
 ### Korekcija nakon stvarnog Android screenshot-a v1.12.95
 
 Emulator QA v1.12.95 prošao je, ali izmjerena razlika izvornog PNG-a i screenshot-a `reference-941x1672-home.png` pokazala je regresiju u području logotipa nakon pretjeranog povećanja: cijeli zaslon RGB MAE 29,89 (v1.12.93) → 30,90 (v1.12.95), dok je donja navigacija poboljšana 20,42 → 17,32. Stoga je **veličina logotipa vraćena**, a samo dulji tekst hero CTA gumba smanjuje se kako ne bi dodirivao Play ikonu. Funkcionalne rezultatske kartice, veći dnevni kalendar i bolje položena donja navigacija ostaju. Završnu raster-usporedbu i regresijske testove provesti na sljedećem emulator izdanju; rezultati za v1.12.95 ne proglašavaju cijeli ekran vizualno identičnim.
+
+## Ekran 10 — launcher/adaptive/monochrome ikone
+
+Originalna korisnička referenca je `Slika ChatGPT 24. lis 2026. 22_15_05-1(3).png` (brending i glavna 512×512 ikona). Polazni screenshot v1.12.95 (`launcher-adaptive.png`) prikazao je ispravne brojeve i krupno B, ali su kvartalni obojeni blokovi bili povezani ravnim unutarnjim uglovima i s nedovoljno izraženim obrubom. Android maska kružne ikone i mono B ispravno su postojali; nisu ponovno izmišljeni.
+
+`ic_brojko.xml` i `ic_brojko_foreground.xml` sada daju svakoj pločici zasebne zaobljene rubove i donji tonirani rub, a središnji vektorski B skaliran je na približno 0,83 umjesto 0,66 (relativna skaliranja). Izvorne četiri brojke ostaju odvojene, a vanjski adaptive foreground zadržava postojeći Android mask-safe omjer. Ostali launcheri mogu prikazivati round ili squircle okvir prema vlastitoj platformi; nema tvrdnje da je proizvoljna sistemska maska identična originalnoj reklamnoj ilustraciji.
+
+Novi `launcherRetainsFourSourceColorsAndDominantWhiteB` instrumentacijski test renderira pravi instalirani adaptive launcher u 512×512 i provjerava sadržaj boja u sva četiri kvadranta i prepoznatljivo središnje bijelo B. Postojeći Android test za round i monochrome također ostaje obvezan. Novi screenshot: `launcher-four-tiles-B-reference-512.png`. Objavljivanje releasea tek nakon uspješnih Gradle, lint i Android emulator provjera.
