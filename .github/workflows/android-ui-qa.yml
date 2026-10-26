@@ -1,5 +1,7 @@
 name: Android UI smoke and screenshot QA
 on:
+  pull_request:
+    branches: [main]
   workflow_run:
     workflows: [Build and release Android]
     types: [completed]
