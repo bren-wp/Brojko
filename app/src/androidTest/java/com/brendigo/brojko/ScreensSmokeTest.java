@@ -1887,4 +1887,60 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void dailySourceHeaderAndGoalRowsKeepIndependentTouchRegions(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(bitmap));
+                    int backs=0,helps=0;
+                    float lastBottom=-1f;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Natrag".equals(tap.label)){
+                            backs++;
+                            assertTrue("Daily return should align with source top",
+                                tap.top<=17f);
+                            assertTrue("Back control needs at least a 48-unit hitbox",
+                                tap.bottom-tap.top>=48f);
+                        }
+                        if(tap.label.startsWith("Pomoć za cilj: ")){
+                            helps++;
+                            assertTrue("Help must remain touch-sized after tightening rows",
+                                tap.bottom-tap.top>=48f);
+                            assertTrue("Adjacent help targets must never overlap",
+                                tap.top>=lastBottom);
+                            lastBottom=tap.bottom;
+                        }
+                    }
+                    assertEquals("Exactly one return action",1,backs);
+                    assertEquals("Three independent help actions",3,helps);
+                    assertTrue("Reference portrait must not scroll beyond its content",
+                        preview.maxScroll<1.1f);
+                    // Calendar center must show the cream date capsule, not
+                    // the filled red header and yellow star of the shared pictogram.
+                    int px=Math.round(preview.offX+119*preview.scale);
+                    int py=Math.round(preview.offY+111*preview.scale);
+                    int iconCenter=bitmap.getPixel(px,py);
+                    assertTrue("Daily date uses an outline calendar",
+                        android.graphics.Color.green(iconCenter)>190 &&
+                        android.graphics.Color.blue(iconCenter)>165);
+                    captureReference(activity,preview,
+                        "daily-header-board-goal-geometry-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.screen.invalidate();
+            }
+        });
+    }
+
 }

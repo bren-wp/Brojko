@@ -370,3 +370,14 @@ Izvorna datoteka `Slika ChatGPT 24. lis 2026. 22_15_15-6(1).png` i Android `refe
 ### Primarni gumb Dnevnog izazova
 
 Na referentnom ekranu bijela riječ **Započni izazov** i ikona reprodukcije zauzimaju veći dio koraljnoga gumba nego na v1.12.88, gdje su se prikazivali previše sitno. U zajednički crtač gumba dodana je **isključivo za `page="daily"`** posebna veličina slova (do 24 logičke jedinice; otprilike 21,6 na referentnih 941×1672) i ikone (do 34 jedinice), a sve ostale gumbe i njihove komande ostavlja nepromijenjenima. Povećanje ne mijenja položaj ni veličinu same klikabilne površine, pa ostaje dostupna i na 360×600.
+
+
+## Ekran 5 — Dnevni izazov: usporedba izvornog PNG-a i emulatora v1.12.91
+
+Izvor: korisnička datoteka `Slika ChatGPT 24. lis 2026. 22_15_15-6(3).png` (941×1672). Stvarni QA raster: `reference-941x1672-daily.png` iz uspješnog GitHub Actions workflowa **40249742805**, commit `65bbefc5`, izdanje **v1.12.91**. Usporedba je rađena na oba PNG-a, ne na simuliranom maketu.
+
+**Uočeno i ciljano promijenjeno:** gumb Natrag u emulatoru bio je oko 65 piksela niže od izvornika; poravnat je na gornji rub samo na portretnom Dnevnom izazovu. Dvoredni naslov povećan je i približen izvornim koordinatama, a kartica niza dana sužena i pomaknuta udesno. U kapsuli datuma zamijenjen je ilustrativni kalendar sa zvjezdicom linijskom kalendarskom ikonom. Kremasti okvir uzorka 4×4 proširen je do vanjskog područja izvornog mockupa uz zasebno pomicanje pločica po osi Y i nešto gušći redni razmak. Grupa triju ciljeva pomaknuta je naniže, bijele kartice visinom su približene referenci, a interaktivne zone gumba pomoći i dalje imaju **najmanje 48 logičkih jedinica** bez međusobnog preklapanja.
+
+**Nije mijenjano:** lokalni datum, vrijednosti statičnog demo-uzorka, stvarni dnevni seed, pragovi 256/3000/80, nagrada +250 samo jednom po danu, pohrana napretka, geste i logika pokretanja/nastavka igre. Uveden je zaseban regresijski emulator-test za položaj povratka, kalendar i sva tri pristupačna gumba pomoći te novi QA screenshot `daily-header-board-goal-geometry-941x1672.png`.
+
+**Granice provjere:** početne promjene uspoređene su s izvornim PNG-om i prethodnim stvarnim QA screenshotom v1.12.91. Status novog builda i emulatora treba provjeriti na CI-u nakon integracije. Ne tvrdi se matematička identičnost svih piksela: Nunito rasterizacija, složeni 3D reljefi, zlatne mašne i rasvjetne sjene iz ilustracije i dalje su kvalitativno različiti od vektorskog Canvas prikaza. Kratki uređaji smiju vertikalno skrolati radi pristupa donjem CTA gumbu.
