@@ -921,6 +921,15 @@ public final class MainActivity extends Activity {
                         if(i==0)z.moveTo(px,py);else z.lineTo(px,py);
                     }
                     z.close();p.setStyle(Paint.Style.FILL);break;
+                case "calendar-outline":
+                    // Daily-date capsule uses the simple navy line-calendar
+                    // from the source, not the decorated calendar/star emblem.
+                    p.setStrokeWidth(2.3f);
+                    c.drawRoundRect(3,5,21,21,3,3,p);
+                    z.moveTo(3,10);z.lineTo(21,10);
+                    z.moveTo(8,2);z.lineTo(8,8);
+                    z.moveTo(16,2);z.lineTo(16,8);
+                    break;
                 case "calendar":p.setStrokeWidth(2.3f);c.drawRoundRect(3,5,21,21,3,3,p);
                     z.moveTo(3,10);z.lineTo(21,10);z.moveTo(8,2);z.lineTo(8,8);
                     z.moveTo(16,2);z.lineTo(16,8);break;
@@ -1470,11 +1479,16 @@ public final class MainActivity extends Activity {
         }
         void daily(){
             boolean portrait=referencePortraitLayout;
-            back();
-            // Reference: large two-line headline, separate streak/flame card.
-            fitted("Dnevni",184,portrait?65:90,portrait?43:48,223,ink,true);
-            fitted("izazov",199,portrait?99:141,portrait?42:48,234,
-                CORAL,true);
+            // The reference back control sits above the first title line.
+            // Keep its action and touch padding identical to shared back().
+            if(portrait)
+                button("","back",14,16,48,48,card,false,()->navigate("home"));
+            else back();
+            // Reference: dominant two-line title with compact line spacing.
+            fitted("Dnevni",portrait?196:184,portrait?54:90,
+                portrait?51:48,portrait?240:223,ink,true);
+            fitted("izazov",portrait?205:199,portrait?99:141,
+                portrait?49:48,234,CORAL,true);
             dailyHeaderAccents(154,portrait?16:39);
             float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
@@ -1482,16 +1496,18 @@ public final class MainActivity extends Activity {
             // pill touched the first description line on compact phones.
             card(98,dateY,191,portrait?25:34,17,
                 theme==1?card:0xffffecdc);
-            icon("calendar",119,dateY+(portrait?12:18),portrait?16:19,muted);
+            icon(portrait?"calendar-outline":"calendar",119,
+                dateY+(portrait?12:18),portrait?16:19,muted);
             leftFitted(dailyLongDate(),139,dateY+(portrait?18:24),
                 portrait?11.5f:14,142,ink,true);
-            float streakTop=portrait?33:66;
-            card(291,streakTop,87,portrait?79:83,18,
-                theme==1?card:0xffffebd4);
-            icon("flame",315,streakTop+29,30,0xffff8b2c);
-            fitted(Integer.toString(streak),351,streakTop+40,
+            float streakTop=portrait?38:66;
+            card(portrait?302:291,streakTop,portrait?80:87,
+                portrait?72:83,18,theme==1?card:0xffffebd4);
+            icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
+            fitted(Integer.toString(streak),portrait?358:351,streakTop+40,
                 25,46,CORAL,true);
-            fitted("dana zaredom",335,streakTop+65,12,83,muted,true);
+            fitted("dana zaredom",portrait?344:335,streakTop+
+                (portrait?60:65),12,83,muted,true);
             if(portrait){
                 // The original portrait artwork has two subtitle lines,
                 // spaced between the date pill and the illustrative board.
@@ -1514,16 +1530,18 @@ public final class MainActivity extends Activity {
                 false,0xffffb23f);
             dailyBoardBursts(349,boardY+(portrait?105:118),
                 true,CORAL);
-            float boardSize=portrait?229:248;
-            missionSurface(portrait?85.5f:76,boardY,boardSize,boardSize,24,
+            // The source card extends beyond the edge tiles; the previous
+            // 229-unit square made this cream frame visibly too narrow.
+            missionSurface(portrait?75:76,boardY+(portrait?2:0),
+                portrait?247:248,portrait?235:248,24,
                 theme==1?0xff35455f:0xfff3e8da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int col=i%4,row=i/4;
                 float x=(portrait?93:83)+col*(portrait?54.5f:59);
-                float y=boardY+(portrait?8:7)+row*(portrait?54.5f:59);
+                float y=boardY+(portrait?16:7)+row*(portrait?53:59);
                 int value=sample[i];
-                float cellSize=portrait?50:52;
+                float cellSize=portrait?51:52;
                 glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
                 fitted(""+value,x+cellSize*.5f,
                     y+(portrait?33:34),value>999?16:24,
@@ -1532,7 +1550,7 @@ public final class MainActivity extends Activity {
             // Source art groups the three daily objectives inside one
             // quiet cream panel, with each individual white row above it.
             if(portrait){
-                shape(18,399,364,164,22,
+                shape(18,412,364,151,22,
                     theme==1?0xff273851:0xfffff2df);
             }else{
                 shape(18,506,364,232,22,
@@ -1542,11 +1560,11 @@ public final class MainActivity extends Activity {
                 today().equals(game.day);
             boolean finished=today().equals(lastDaily);
             dailyGoalRow("Dosegni 256","Spoji brojeve i dosegni pločicu 256.",
-                portrait?403:511,finished||(active&&game.peak>=256));
+                portrait?417:511,finished||(active&&game.peak>=256));
             dailyGoalRow("Ostvari 3000 bodova","Skupi najmanje 3000 bodova.",
-                portrait?456:589,finished||(active&&game.score>=3000));
+                portrait?465:589,finished||(active&&game.score>=3000));
             dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
-                portrait?509:667,finished);
+                portrait?513:667,finished);
             float rewardY=portrait?569:744;
             missionSurface(portrait?18:28,rewardY,portrait?364:344,
                 portrait?80:48,19,theme==1?0xff3a3459:0xfff0e9ff);
@@ -1586,7 +1604,7 @@ public final class MainActivity extends Activity {
         }
         void dailyGoalRow(String name,String description,int y,boolean done){
             boolean portrait=referencePortraitLayout;
-            int height=portrait?49:72;
+            int height=portrait?45:72;
             missionSurface(28,y,344,height,18,card);
             float iconSize=portrait?41:46;
             float tileY=y+(height-iconSize)/2f;
@@ -1622,7 +1640,9 @@ public final class MainActivity extends Activity {
             shape(340,helpCenterY-13,26,26,13,
                 theme==1?0xff445471:0xffede9e2);
             fitted("?",353,helpCenterY+7,17,23,muted,true);
-            taps.add(new Tap(322,y,376,y+height,"Pomoć za cilj: "+name,
+            // The tighter visual card must not shrink the 48-unit help target.
+            taps.add(new Tap(322,y,376,y+(portrait?48:height),
+                "Pomoć za cilj: "+name,
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void dailyRewardGift(float cx,float cy,float size){
