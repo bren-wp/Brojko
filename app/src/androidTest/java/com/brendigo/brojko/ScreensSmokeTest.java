@@ -416,7 +416,7 @@ public class ScreensSmokeTest {
                 assertEquals(1672,view.getHeight());
                 assertTrue("Reference aspect must use compact board",
                     view.compactBoardLayout);
-                assertEquals(171f,view.gridY,.1f);
+                assertEquals(activity.game.size==4?159f:171f,view.gridY,.1f);
                 boolean newButton=false,finishButton=false;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Novo".equals(tap.label)||"Završi".equals(tap.label)){
@@ -1939,6 +1939,62 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=previousPage;activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void portraitClassicBoardKeepsFinalTileInteractiveAndButtonsVisible(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",554L);
+                java.util.Arrays.fill(activity.game.cells,0);
+                activity.game.cells[12]=2;
+                activity.game.cells[13]=2;
+                activity.page="game";
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                assertEquals("Source 4x4 board top",159f,board.gridY,.1f);
+                int primary=0;
+                for(MainActivity.BoardScreen.Tap tap:board.taps){
+                    if("Novo".equals(tap.label)||"Završi".equals(tap.label)){
+                        primary++;
+                        assertTrue("Game controls must be tall enough to tap",
+                            tap.bottom-tap.top>=90f);
+                        assertTrue("Controls must stay within the reference viewport",
+                            board.offY+tap.bottom*board.scale<=1673f);
+                    }
+                }
+                assertEquals(2,primary);
+                // Last row extends below the old square hit area. A real swipe
+                // starting there must still merge the two adjacent 2 tiles.
+                long time=android.os.SystemClock.uptimeMillis();
+                float touchY=board.offY+(board.gridY+375)*board.scale;
+                float startX=board.offX+290*board.scale;
+                float endX=board.offX+67*board.scale;
+                MotionEvent down=MotionEvent.obtain(time,time,
+                    MotionEvent.ACTION_DOWN,startX,touchY,0);
+                MotionEvent up=MotionEvent.obtain(time,time+80,
+                    MotionEvent.ACTION_UP,endX,touchY,0);
+                try{
+                    board.onTouchEvent(down);board.onTouchEvent(up);
+                }finally{down.recycle();up.recycle();}
+                assertEquals("Expanded final row remains swipeable",4,
+                    activity.game.score);
+                assertEquals(1,activity.game.moves);
+                captureReference(activity,board,
+                    "classic-four-by-four-reference-941x1672");
+            }finally{
+                activity.game=previousGame;activity.page=previousPage;
+                activity.screen.invalidate();
             }
         });
     }
