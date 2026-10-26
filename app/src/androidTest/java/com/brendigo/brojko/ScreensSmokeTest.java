@@ -2263,7 +2263,7 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     preview.draw(new Canvas(bitmap));
-                    for(float logicalX:new float[]{27f,373f}){
+                    for(float logicalX:new float[]{41f,359f}){
                         int px=Math.round(preview.offX+logicalX*preview.scale);
                         int py=Math.round(preview.offY+311f*preview.scale);
                         int sample=bitmap.getPixel(px,py);
@@ -2278,7 +2278,7 @@ public class ScreensSmokeTest {
                            "Nastavi igru".equals(tap.label)){
                             hero++;
                             assertTrue("Hero touch box must not cover exterior rays",
-                                tap.left>=42 && tap.right<=358);
+                                tap.left>=57 && tap.right<=343);
                             assertTrue("Hero target remains accessible",
                                 tap.bottom-tap.top>=80);
                         }
