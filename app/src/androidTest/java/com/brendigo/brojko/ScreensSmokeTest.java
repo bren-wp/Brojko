@@ -1349,6 +1349,12 @@ public class ScreensSmokeTest {
                         android.graphics.Color.red(whiteCard)>=248 &&
                         android.graphics.Color.green(whiteCard)>=247 &&
                         android.graphics.Color.blue(whiteCard)>=245);
+                    int brandFooter=bitmap.getPixel(823,1418);
+                    assertTrue("Footer should have the warm cream from the source",
+                        android.graphics.Color.blue(brandFooter)<
+                            android.graphics.Color.blue(whiteCard)-5 &&
+                        android.graphics.Color.green(brandFooter)<
+                            android.graphics.Color.green(whiteCard));
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=oldPage;activity.theme=oldTheme;
