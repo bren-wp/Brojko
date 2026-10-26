@@ -1842,4 +1842,49 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyReferenceGoalGlyphsDoNotHaveFakeNumberTileBackgrounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            String oldLast=activity.lastDaily;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                activity.lastDaily="";
+                activity.game=null;
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(bitmap));
+                    for(int row=1;row<=2;row++){
+                        int y=(row==1?456:509)+24;
+                        int px=Math.round(preview.offX+44*preview.scale);
+                        int py=Math.round(preview.offY+y*preview.scale);
+                        int c=bitmap.getPixel(px,py);
+                        assertTrue("Gold star and blue arrows must have a pale row " +
+                                "background, not a tinted game tile",
+                            android.graphics.Color.red(c)>=225 &&
+                            android.graphics.Color.green(c)>=220 &&
+                            android.graphics.Color.blue(c)>=215);
+                    }
+                    int firstX=Math.round(preview.offX+47*preview.scale);
+                    int firstY=Math.round(preview.offY+426*preview.scale);
+                    int tile=bitmap.getPixel(firstX,firstY);
+                    assertTrue("256 goal still uses its vivid pink tile",
+                        android.graphics.Color.red(tile)>205 &&
+                        android.graphics.Color.green(tile)<195);
+                }finally{bitmap.recycle();}
+                captureReference(activity,preview,
+                    "daily-reference-pictograms-and-bursts-941x1672");
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.lastDaily=oldLast;activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }

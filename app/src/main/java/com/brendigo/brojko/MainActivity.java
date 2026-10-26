@@ -1445,6 +1445,17 @@ public final class MainActivity extends Activity {
             button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
             button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
         }
+        // Three broad, slanted rays at either side of the daily illustration,
+        // matching the provided PNG instead of the shared tiny ray dots.
+        void dailyBoardBursts(float cx,float cy,boolean right,int color){
+            float sign=right?-1f:1f;
+            for(int i=-1;i<=1;i++){
+                c.save();
+                c.rotate(sign*(i*29f+90f),cx,cy);
+                shape(cx-3.4f,cy-35f,6.8f,19f,3.4f,color);
+                c.restore();
+            }
+        }
         void dailyHeaderAccents(float cx,float cy){
             // Source heading uses three solid coral confetti strokes rather
             // than the tiny evenly spaced dots of the shared rays() utility.
@@ -1496,8 +1507,10 @@ public final class MainActivity extends Activity {
             // Do not move the board upward without leaving its text margin.
             // Decorative bursts live outside the board and stay below
             // the description, as in the supplied 941x1672 mockup.
-            rays(51,boardY+(portrait?105:118),22,0xffffa83e);
-            rays(349,boardY+(portrait?105:118),22,CORAL);
+            dailyBoardBursts(51,boardY+(portrait?105:118),
+                false,0xffffb23f);
+            dailyBoardBursts(349,boardY+(portrait?105:118),
+                true,CORAL);
             float boardSize=portrait?229:248;
             missionSurface(portrait?85.5f:76,boardY,boardSize,boardSize,24,
                 theme==1?0xff35455f:0xfff3e8da);
@@ -1547,10 +1560,10 @@ public final class MainActivity extends Activity {
                 // reference's explanatory reward copy.
                 fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
                 leftFitted(finished?"Današnja nagrada već je preuzeta.":
-                    "Dovrši sva tri cilja i osvoji",158,rewardY+57,10.5f,
+                    "Dovrši sve ciljeve i osvoji",158,rewardY+57,10.5f,
                     198,muted,false);
                 if(!finished)
-                    leftFitted("posebnu nagradu!",158,rewardY+69,
+                    leftFitted("jedinstvenu nagradu!",158,rewardY+69,
                         10.5f,194,muted,false);
             }else{
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
@@ -1561,7 +1574,7 @@ public final class MainActivity extends Activity {
             }
             button(active&&!game.gameOver?"Nastavi izazov":
                 finished?"Igraj ponovno":"Započni izazov","play",
-                25,portrait?655:802,350,portrait?49:58,CORAL,true,()->{
+                25,portrait?655:802,350,portrait?49:58,0xffff684f,true,()->{
                     if(active&&!game.gameOver)navigate("game");
                     else requestNew("daily");
                 });
@@ -1576,17 +1589,26 @@ public final class MainActivity extends Activity {
             float tileY=y+(height-iconSize)/2f;
             int goalColor=name.startsWith("Dosegni")?0xffff6f96:
                 name.startsWith("Ostvari")?0xffffb541:0xff3d98f0;
-            styledTile(40,tileY,iconSize,iconSize,13,
-                done?TEAL:goalColor,0);
             float glyphCenter=40+iconSize/2f;
-            if(done)icon("check",glyphCenter,y+height/2f,portrait?24:26,WHITE);
-            else if(name.startsWith("Dosegni"))
+            if(done){
+                // Completed challenges communicate state, not a decorative star.
+                shape(40,tileY,iconSize,iconSize,12,TEAL);
+                icon("check",glyphCenter,y+height/2f,portrait?25:28,WHITE);
+            }else if(name.startsWith("Dosegni")){
+                // Only the numeric 256 pictogram is a numbered game tile.
+                styledTile(40,tileY,iconSize,iconSize,12,goalColor,0);
                 fitted("256",glyphCenter,y+height/2f+7,
                     portrait?20:22,iconSize-3,WHITE,true);
-            else if(name.startsWith("Ostvari"))
-                icon("star",glyphCenter,y+height/2f,portrait?27:30,WHITE);
-            else icon("swap",glyphCenter,y+height/2f,
-                portrait?27:30,WHITE);
+            }else if(name.startsWith("Ostvari")){
+                // The reference draws the earned-star symbol on the white card,
+                // not a separate orange square tile.
+                icon("star",glyphCenter,y+height/2f,
+                    portrait?35:39,0xffffb51a);
+            }else{
+                // Blue opposite-facing arrows directly on the row background.
+                icon("swap",glyphCenter,y+height/2f,
+                    portrait?34:38,0xff268fec);
+            }
             // Reference goal cards use left-aligned text and a right-side help
             // affordance; each target opens the actual goal explanation.
             leftFitted(name,105,y+(portrait?22:29),
