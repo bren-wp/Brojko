@@ -982,10 +982,13 @@ public final class MainActivity extends Activity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
-                    y+h/2,Math.min(prominent?33:23,h*.52f),iconColor);
+                    y+h/2,Math.min(prominent?(page.equals("daily")?34:33):23,
+                        h*(page.equals("daily")?.65f:.52f)),iconColor);
                 float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
                 int labelColor=prominent?WHITE:ink;
-                float font=prominent?Math.min(27,h*.34f):(h>=66?18:16);
+                float font=prominent?
+                    (page.equals("daily")?Math.min(24,h*.44f):Math.min(27,h*.34f)):
+                    (h>=66?18:16);
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
             }
