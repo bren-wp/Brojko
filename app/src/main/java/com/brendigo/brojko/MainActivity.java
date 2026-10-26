@@ -995,11 +995,15 @@ public final class MainActivity extends Activity {
                     y+h/2,Math.min(prominent?
                         (page.equals("daily")?34:homeHero?43:33):23,
                         h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
-                float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
+                float textCenter=x+(hasSymbol?(prominent?
+                    (homeHero&&label.length()>10?w*.62f:w*.58f):
+                    (w+38)/2):w/2);
                 int labelColor=prominent?WHITE:ink;
                 float font=prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
-                        homeHero?Math.min(36,h*.44f):Math.min(27,h*.34f)):
+                        homeHero?(label.length()>10?
+                            Math.min(30,h*.37f):Math.min(36,h*.44f)):
+                            Math.min(27,h*.34f)):
                     (h>=66?18:16);
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
@@ -1217,7 +1221,9 @@ public final class MainActivity extends Activity {
             c.save();c.rotate(9,390,179);
             styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
-            brand(portrait?164:197,portrait?83:72);
+            // Golden comparison confirmed the earlier logo's vertical
+            // position was closer than the enlarged v1.12.95 experiment.
+            brand(portrait?153:197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
