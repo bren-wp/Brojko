@@ -1026,7 +1026,9 @@ public final class MainActivity extends Activity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=300;
-                if(hasSymbol)icon(symbol,x+(prominent?Math.min(58,w*.21f):25),
+                if(hasSymbol)icon(symbol,x+(prominent?
+                    (page.equals("daily")&&referencePortraitLayout&&w>=300?
+                        80:Math.min(58,w*.21f)):25),
                     y+h/2,Math.min(prominent?
                         (page.equals("daily")?34:homeHero?43:33):23,
                         h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
@@ -1666,7 +1668,7 @@ public final class MainActivity extends Activity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(5f);p.setStrokeCap(Paint.Cap.ROUND);
             p.setColor(CORAL);
-            float[][] strokes={{10,7,19,15},{6,25,19,25},{10,44,19,36}};
+            float[][] strokes={{23,3,34,12},{18,26,33,26}};
             for(float[] stroke:strokes){
                 float x1=right?400-stroke[0]:stroke[0];
                 float x2=right?400-stroke[2]:stroke[2];
@@ -1801,7 +1803,8 @@ public final class MainActivity extends Activity {
             }
             button(active&&!game.gameOver?"Nastavi izazov":
                 finished?"Igraj ponovno":"Započni izazov","play",
-                25,portrait?655:802,350,portrait?49:58,0xffff684f,true,()->{
+                portrait?43:25,portrait?655:802,portrait?314:350,
+                portrait?49:58,0xffff684f,true,()->{
                     if(active&&!game.gameOver)navigate("game");
                     else requestNew("daily");
                 });
