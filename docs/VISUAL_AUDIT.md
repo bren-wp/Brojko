@@ -392,3 +392,12 @@ Na portretnom 4×4 zaslonu pomaknuta je geometrija mreže, prilagođeni razmaci 
 Regresija dodana u `ScreensSmokeTest.portraitClassicBoardKeepsFinalTileInteractiveAndButtonsVisible`: testira portret 941×1672, visinu i rubove primarnih gumba, swipe unutar četvrtoga reda, stvarni spoj i snima `classic-four-by-four-reference-941x1672.png`. Ranija očekivana Y-koordinata ploče prilagođena je novom rasporedu bez promjene njezine širine 368 logičkih jedinica.
 
 **Status:** izmjene su pripremljene za GitHub build + Android emulator; prolaz nije potvrđen dok Actions ne završi. Preostale dopuštene razlike: meki 3D reljef, refleksije, te proizvodna rasterizacija fonta. Referentni PNG nije kopiran u sučelje kao pozadinska slika.
+
+
+## Ekran 7 — pobjeda „Bravo!”: prilagodba izvornoj referenci
+
+Referenca: `Slika ChatGPT 24. lis 2026. 22_15_14-5(3).png` (941×1672). Polazna Android QA snimka: `golden-state-win-941x1672.png` iz v1.12.92 emulator artefakta. U referenci je slavlje kraće i uže od postojećeg punog modala, s velikim naslovom „Bravo!”, krunom iznad gornjeg ruba, dvije manje rezultatske kartice, punim zlatnim zvjezdicama i tri kompaktna zasebna gumba.
+
+Portretni `win` sad renderira poseban post-game backdrop s očuvanom stvarnom pločom i rezultatima, bez izmjene spremljene partije. Modal koristi samostalan prilagođeni layout samo za pobjedu u portretnom omjeru: kartica x=59..341 / y=213..618 logičkih jedinica, veliki Nunito naslov, dvobojnu čestitku (coral/teal), stvarni format rezultata, tri vektorske zvjezdice i tri gumba za nastavak, ponovno pokretanje i Android dijeljenje. Ostala stanja (`over`, `dailyWin`, `dailyFail`, široki prikaz) ostaju na postojećem rasporedu.
+
+Regresijski test `portraitVictoryReferenceHasThreeReachableRealActions` stvara referentni 941×1672 prikaz, provjerava tri aktivna gumba, njihove dodirne zone od najmanje 48 jedinica i rubove ekrana te snima `victory-source-modal-reference-941x1672.png`. Tek nakon uspješnog Build/QA workflowa usporediti konačne PNG-ove; ova početna izmjena ne predstavlja tvrdnju o apsolutnoj 1:1 podudarnosti zbog razlika u ilustrativnim sjenama i reljefima.
