@@ -2043,4 +2043,49 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void portraitHomeHasFunctionalScoreCardsAndAllFourShortcuts(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{preview.draw(new Canvas(image));}finally{image.recycle();}
+                int stats=0,shortcuts=0,hero=0;
+                for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                    if("Najbolji rezultat".equals(tap.label)||
+                       "Zadnji rezultat".equals(tap.label)){
+                        stats++;
+                        assertTrue("Score shortcuts remain touch-sized",
+                            tap.bottom-tap.top>=70f);
+                    }
+                    if("Misije".equals(tap.label)||
+                       "Statistika".equals(tap.label)||
+                       "Teme".equals(tap.label)||
+                       "Postavke".equals(tap.label)){
+                        shortcuts++;
+                        assertTrue("Bottom shortcut inside source phone viewport",
+                            preview.offY+tap.bottom*preview.scale<=1672);
+                    }
+                    if("Nova igra".equals(tap.label)||
+                       "Nastavi igru".equals(tap.label)){
+                        hero++;
+                        assertTrue("Main game action remains a real touch zone",
+                            tap.bottom-tap.top>=80f);
+                    }
+                }
+                assertEquals("Both score cards must have functional actions",2,stats);
+                assertEquals("All four lower navigation shortcuts visible",4,shortcuts);
+                assertEquals("Start/resume must be a single action",1,hero);
+                captureReference(activity,preview,
+                    "home-hero-and-score-shortcuts-941x1672");
+            }finally{activity.page=oldPage;activity.screen.invalidate();}
+        });
+    }
+
 }
