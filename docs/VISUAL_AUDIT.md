@@ -466,3 +466,16 @@ Za izračun se uzima aritmetički prosjek `abs(R1-R2),abs(G1-G2),abs(B1-B2)` za 
 ### Preostali posao
 
 Za završni pixel audit preostaje usporediti novi emulator QA i utvrditi razlike po regijama (logo, CTA, izbor teme, preview, statistika, postavke, modali i mali telefoni). Izvori su primjeri ispunjenih ploča i rezultata; aplikacija mora zadržati **stvarne** zapise, prave datume i sigurnu lokalnu pohranu. Google Play sukladnost zahtijeva i validan potpis i provjeru objave u Play Console, ne samo uspješno sastavljanje Gradlea.
+
+
+### Stvarni emulator rezultat za prethodnu iteraciju
+
+Emulator QA #94 za commit `713cc739` završio je uspješno. Usporedba novih PNG-ova na 941×1672 sa **istim** referencama pokazala je:
+- Početna: RGB MAE **29,12 → 28,82** (manji = bolje), uz najveći doprinos koraljnih ukrasa i manjeg crnog obruba glavnog gumba.
+- Teme i izgled: RGB MAE **25,16 → 24,80** nakon toplijih, međusobno različitih uzoraka stilova pločica.
+
+To su mala, ali mjerljiva poboljšanja pojedinih područja, a ne potpuna identičnost svih piksela.
+
+### Dodatna iteracija Dnevni izazov
+
+Uz postojeće velike rubne poteze ilustrativne ploče, koraljni ukrasi neposredno uz primarni donji gumb na portretnom Dnevnom izazovu sada su tri izdužene linije sa svake strane, poravnate uz referencu, umjesto niza sitnih točaka. Zadržana je stvarna radnja `Započni izazov` / `Nastavi izazov` / `Igraj ponovno` i dodan test `dailyPrimaryActionHasSafeSourceLikeSideAccents`, uključujući novi emulator PNG `daily-large-safe-primary-rays-941x1672.png`. Ukrasi ne ulaze u interaktivni okvir gumba i ne prelaze donji rub na 941×1672.
