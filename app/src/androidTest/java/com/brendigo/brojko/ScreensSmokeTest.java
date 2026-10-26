@@ -1999,4 +1999,48 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame saved=activity.game;
+            String oldPage=activity.page;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",650L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap img=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(img));}finally{img.recycle();}
+                assertTrue(view.referencePortraitLayout);
+                int buttons=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Nastavi igrati".equals(tap.label)||
+                        "Nova igra".equals(tap.label)||
+                        "Podijeli rezultat".equals(tap.label)){
+                        buttons++;
+                        assertTrue("Compact modal button must have >=48-unit target",
+                            tap.bottom-tap.top>=48f);
+                        assertTrue("Victory control must remain on screen",
+                            view.offY+tap.bottom*view.scale<=1672);
+                        assertTrue("No modal action can be covered by status bar",
+                            view.offY+tap.top*view.scale>0);
+                    }
+                }
+                assertEquals("Victory must preserve all three actual actions",
+                    3,buttons);
+                captureReference(activity,view,
+                    "victory-source-modal-reference-941x1672");
+            }finally{
+                activity.game=saved;activity.page=oldPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
