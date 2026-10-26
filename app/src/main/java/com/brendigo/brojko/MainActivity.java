@@ -2555,9 +2555,14 @@ public final class MainActivity extends Activity {
             // A translucent shadow must not leak its Paint alpha into
             // the subsequent opaque gradient fill.
             p.setShader(null);p.setColor(WHITE);
+            // Distinguish the footer's cream surface from seven white
+            // setting rows, as in the supplied 941x1672 Settings reference.
+            boolean creamFooter=theme!=1&&color==0xfffff3e6;
             gradient(x,y,width,height,radius,
-                theme==1?lighten(color,.09f):WHITE,
-                theme==1?color:0xfffffdfa);
+                theme==1?lighten(color,.09f):
+                    (creamFooter?0xfffffbf3:WHITE),
+                theme==1?color:
+                    (creamFooter?0xfffff3e6:0xfffffdfa));
         }
         void settingsIconTile(float x,float y,float size,int color,String glyph){
             shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
@@ -2573,8 +2578,8 @@ public final class MainActivity extends Activity {
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
             txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
-            rays(74,compact?67:97,23,CORAL);
-            rays(331,compact?67:97,23,CORAL);
+            rays(74,compact?67:97,compact?34:29,CORAL);
+            rays(331,compact?67:97,compact?34:29,CORAL);
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
