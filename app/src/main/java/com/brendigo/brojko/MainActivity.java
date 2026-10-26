@@ -672,6 +672,21 @@ public final class MainActivity extends Activity {
             while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
             txt(content,x,baseline,size,color,bold);
         }
+        // Home shortcut captions must never run into neighboring cards.
+        // Preserve their intended font size: only compress the horizontal
+        // glyph advance when a long localized caption exceeds its card.
+        void strictCaption(String content,float x,float baseline,
+                           float size,float maxWidth,int color){
+            p.setTypeface(regularFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(size);
+            float actualWidth=p.measureText(content);
+            if(actualWidth>maxWidth){
+                c.save();c.translate(x,baseline);
+                c.scale(maxWidth/actualWidth,1f);
+                txt(content,0,0,size,color,false);
+                c.restore();
+            }else txt(content,x,baseline,size,color,false);
+        }
         // Reference screenshot typography is left-aligned in settings rows.
         // Shrink only when the actual Nunito glyphs would overlap controls.
         void leftFitted(String content,float left,float baseline,float size,
@@ -1078,9 +1093,14 @@ public final class MainActivity extends Activity {
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
                     :1120f):
+                // All Home shortcuts end at y=690 plus their card shadows.
+                // The old 880-unit height caused ~170 units of empty scrolling
+                // at the original 941x1672 reference viewport. Preserve real
+                // scrolling on shorter devices without cropping any shortcut.
+                (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f);
+                    referencePortraitLayout?710f:880f));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -1281,10 +1301,10 @@ public final class MainActivity extends Activity {
                 glyph.equals("stats")?0xff344868:
                 glyph.equals("palette")?0xffb05de9:ink);
             fitted(label,x+w/2,y+(portrait?70:91),portrait?15:16,w-5,ink,true);
-            fitted(sub1,x+w/2,y+(portrait?87:115),portrait?11:12,w-6,
-                muted,false);
-            fitted(sub2,x+w/2,y+(portrait?101:132),portrait?11:12,w-6,
-                muted,false);
+            strictCaption(sub1,x+w/2,y+(portrait?87:115),
+                portrait?11:12,w-6,muted);
+            strictCaption(sub2,x+w/2,y+(portrait?101:132),
+                portrait?11:12,w-6,muted);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
