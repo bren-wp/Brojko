@@ -2350,4 +2350,52 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void dailyPrimaryActionHasSafeSourceLikeSideAccents(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                screen.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                screen.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    screen.draw(new Canvas(bitmap));
+                    int y=Math.round(screen.offY+666f*screen.scale);
+                    for(float x:new float[]{14f,386f}){
+                        int px=Math.round(screen.offX+x*screen.scale);
+                        int pixel=bitmap.getPixel(px,y);
+                        assertTrue("Daily accent must be coral on both sides",
+                            android.graphics.Color.red(pixel)>220 &&
+                            android.graphics.Color.green(pixel)<170 &&
+                            android.graphics.Color.blue(pixel)<140);
+                    }
+                    int startActions=0;
+                    for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                        if("Započni izazov".equals(tap.label)||
+                           "Nastavi izazov".equals(tap.label)||
+                           "Igraj ponovno".equals(tap.label)){
+                            startActions++;
+                            assertTrue("Accents cannot cover Daily CTA hitbox",
+                                tap.left>=25&&tap.right<=375);
+                            assertTrue("Bottom action remains fully on screen",
+                                screen.offY+tap.bottom*screen.scale<=1673);
+                        }
+                    }
+                    assertEquals("Exactly one genuine Daily CTA",1,startActions);
+                    captureReference(activity,screen,
+                        "daily-large-safe-primary-rays-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
 }
