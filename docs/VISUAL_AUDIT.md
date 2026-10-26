@@ -381,3 +381,14 @@ Izvor: korisnička datoteka `Slika ChatGPT 24. lis 2026. 22_15_15-6(3).png` (941
 **Nije mijenjano:** lokalni datum, vrijednosti statičnog demo-uzorka, stvarni dnevni seed, pragovi 256/3000/80, nagrada +250 samo jednom po danu, pohrana napretka, geste i logika pokretanja/nastavka igre. Uveden je zaseban regresijski emulator-test za položaj povratka, kalendar i sva tri pristupačna gumba pomoći te novi QA screenshot `daily-header-board-goal-geometry-941x1672.png`.
 
 **Granice provjere:** početne promjene uspoređene su s izvornim PNG-om i prethodnim stvarnim QA screenshotom v1.12.91. Status novog builda i emulatora treba provjeriti na CI-u nakon integracije. Ne tvrdi se matematička identičnost svih piksela: Nunito rasterizacija, složeni 3D reljefi, zlatne mašne i rasvjetne sjene iz ilustracije i dalje su kvalitativno različiti od vektorskog Canvas prikaza. Kratki uređaji smiju vertikalno skrolati radi pristupa donjem CTA gumbu.
+
+
+## Ekran 6 — Klasična igra 4×4: ciljano poravnanje na original (v1.12.93)
+
+Referenca je korisnička datoteka `Slika ChatGPT 24. lis 2026. 22_15_13-4(3).png` (941×1672); polazna Android snimka stvarnog instrumentacijskog rendera je `golden-state-game-941x1672.png` iz uspješnog emulator workflowa v1.12.92. Referentna ilustracija prikazuje širi/tall 4×4 raspored, kremasti okvir produljen prema dolje, veće brojeve, tanje međuprostore i tri niža gumba; prethodni renderer imao je manji kvadratni raster i previsoku donju alatnu traku.
+
+Na portretnom 4×4 zaslonu pomaknuta je geometrija mreže, prilagođeni razmaci i blago produljena visina ćelija, povećan je vanjski okvir, podešena kapsula „4×4”, natpisi bodovanja i položaj donjih funkcionalnih gumba. Ista geometrija sada se primjenjuje i na dohvat poteza prstom; posljednji red više ne može ostati izvan stvarnog dodirnog područja. Način 5×5 i pravila spajanja nisu promijenjeni.
+
+Regresija dodana u `ScreensSmokeTest.portraitClassicBoardKeepsFinalTileInteractiveAndButtonsVisible`: testira portret 941×1672, visinu i rubove primarnih gumba, swipe unutar četvrtoga reda, stvarni spoj i snima `classic-four-by-four-reference-941x1672.png`. Ranija očekivana Y-koordinata ploče prilagođena je novom rasporedu bez promjene njezine širine 368 logičkih jedinica.
+
+**Status:** izmjene su pripremljene za GitHub build + Android emulator; prolaz nije potvrđen dok Actions ne završi. Preostale dopuštene razlike: meki 3D reljef, refleksije, te proizvodna rasterizacija fonta. Referentni PNG nije kopiran u sučelje kao pozadinska slika.
