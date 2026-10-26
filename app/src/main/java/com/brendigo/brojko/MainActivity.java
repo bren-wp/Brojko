@@ -995,11 +995,15 @@ public final class MainActivity extends Activity {
                     y+h/2,Math.min(prominent?
                         (page.equals("daily")?34:homeHero?43:33):23,
                         h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
-                float textCenter=x+(hasSymbol?(prominent?w*.58f:(w+38)/2):w/2);
+                float textCenter=x+(hasSymbol?(prominent?
+                    (homeHero&&label.length()>10?w*.62f:w*.58f):
+                    (w+38)/2):w/2);
                 int labelColor=prominent?WHITE:ink;
                 float font=prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
-                        homeHero?Math.min(36,h*.44f):Math.min(27,h*.34f)):
+                        homeHero?(label.length()>10?
+                            Math.min(30,h*.37f):Math.min(36,h*.44f)):
+                            Math.min(27,h*.34f)):
                     (h>=66?18:16);
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
@@ -1064,10 +1068,11 @@ public final class MainActivity extends Activity {
             boolean extended=page.equals("stats");
             // Keep buttons touch-sized on 16:9 screens; permit scrolling
             // outside the board rather than scaling the whole game to tiny size.
-            // Splash is time-limited and has no scroll gestures: fit the whole
-            // illustrated logo and slogan instead of cropping on short phones.
-            boolean compact=!page.equals("splash") &&
-                (extended || usableHeight/usableWidth<1.85f);
+            // Splash uses its own width-fitted short-portrait arrangement.
+            // Using the 880-unit tall layout shrank the reference by ~19%.
+            // Decorative edge tiles may be cropped, but logo/slogan must fit.
+            boolean compact=referencePortraitLayout||
+                (!page.equals("splash")&&extended);
             scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
@@ -1076,7 +1081,10 @@ public final class MainActivity extends Activity {
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
                     referencePortraitLayout?710f:880f);
-            maxScroll=compact?Math.max(0,contentHeight-usableHeight/scale):0;
+            // Splash must never scroll; its compact lettering fits a 360x600
+            // viewport while longer non-splash pages still scroll as needed.
+            maxScroll=page.equals("splash")?0:
+                (compact?Math.max(0,contentHeight-usableHeight/scale):0);
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
             offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
@@ -1131,7 +1139,50 @@ public final class MainActivity extends Activity {
             c.restore();
         }
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
+        void splashAmbient(float x,float y,float width,float height,
+                           float rotation,int color){
+            c.save();c.rotate(rotation,x+width/2,y+height/2);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);p.setShader(null);
+            p.setColor(color);p.setShadowLayer(20f,0,0,color);
+            c.drawRoundRect(x,y,x+width,y+height,17,17,p);
+            p.clearShadowLayer();c.restore();
+        }
         void splashPage(){
+            if(referencePortraitLayout){
+                // Source 941x1672 uses full width; only edge decorations crop.
+                // All information stays inside the 400x~667 compact viewport.
+                splashAmbient(159,41,38,42,-20,0x28ffb174);
+                splashAmbient(166,190,34,38,14,0x1deabb93);
+                splashAmbient(83,476,70,71,-17,0x252ec4b6);
+                splashAmbient(312,449,78,82,20,0x21ff7a5b);
+                splashAmbient(110,633,66,67,13,0x30ffba30);
+                splashAmbient(173,636,65,65,29,0x302ec4b6);
+                c.save();c.rotate(-18,99,108);
+                styledTile(49,58,106,104,25,TILES[1],0);
+                txt("2",102,131,58,WHITE,true);c.restore();
+                c.save();c.rotate(17,289,123);
+                styledTile(235,72,107,106,24,TILES[2],0);
+                txt("4",289,145,57,WHITE,true);c.restore();
+                c.save();c.rotate(-17,42,236);
+                styledTile(-13,184,110,105,22,TILES[3],0);
+                txt("8",43,254,56,WHITE,true);c.restore();
+                c.save();c.rotate(18,374,234);
+                styledTile(322,181,106,107,24,TILES[4],0);
+                txt("16",371,258,46,WHITE,true);c.restore();
+                c.save();c.rotate(16,21,509);
+                styledTile(-26,455,96,105,23,TILES[7],0);
+                txt("64",21,523,46,WHITE,true);c.restore();
+                c.save();c.rotate(-13,394,682);
+                styledTile(328,621,131,126,22,TILES[8],0);
+                txt("256",393,702,43,WHITE,true);c.restore();
+                brand(399,116,false);
+                txt("by Brendigo",289,428,19,muted,true);
+                card(17,562,366,66,33,theme==1?card:0xfffff0db);
+                fitted("Spajaj brojeve.",110,604,23,187,CORAL,true);
+                fitted("Ruši rekorde.",292,604,23,179,TEAL,true);
+                return;
+            }
+            // Taller devices retain the full-height composition.
             // Programmatic branded splash based on the provided portrait reference.
             c.save();c.rotate(-19,59,140);
             styledTile(-18,74,133,124,25,TILES[1],0);
@@ -1170,7 +1221,9 @@ public final class MainActivity extends Activity {
             c.save();c.rotate(9,390,179);
             styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
-            brand(portrait?164:197,portrait?83:72);
+            // Golden comparison confirmed the earlier logo's vertical
+            // position was closer than the enlarged v1.12.95 experiment.
+            brand(portrait?153:197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
