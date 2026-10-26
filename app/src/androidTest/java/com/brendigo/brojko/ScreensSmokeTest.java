@@ -2247,4 +2247,107 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void homeSourceDecorationsAreActualVisibleCoralStrokes(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(bitmap));
+                    for(float logicalX:new float[]{27f,373f}){
+                        int px=Math.round(preview.offX+logicalX*preview.scale);
+                        int py=Math.round(preview.offY+311f*preview.scale);
+                        int sample=bitmap.getPixel(px,py);
+                        assertTrue("Home hero rays should be saturated coral, not dots",
+                            android.graphics.Color.red(sample)>225 &&
+                            android.graphics.Color.green(sample)<160 &&
+                            android.graphics.Color.blue(sample)<140);
+                    }
+                    int hero=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Nova igra".equals(tap.label)||
+                           "Nastavi igru".equals(tap.label)){
+                            hero++;
+                            assertTrue("Hero touch box must not cover exterior rays",
+                                tap.left>=42 && tap.right<=358);
+                            assertTrue("Hero target remains accessible",
+                                tap.bottom-tap.top>=80);
+                        }
+                    }
+                    assertEquals("Exactly one playable home hero",1,hero);
+                    captureReference(activity,preview,
+                        "home-source-accent-rays-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void themeStyleSwatchesUseDistinctWarmReferenceMaterials(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            int previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.theme=0;
+                activity.tileStyle=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int[] swatches=new int[3];
+                    for(int i=0;i<3;i++){
+                        float logicalX=235.5f+i*56f;
+                        int px=Math.round(board.offX+logicalX*board.scale);
+                        int py=Math.round(board.offY+402f*board.scale);
+                        swatches[i]=bitmap.getPixel(px,py);
+                    }
+                    assertTrue("Rounded preview should be warm apricot",
+                        android.graphics.Color.red(swatches[0])>230 &&
+                        android.graphics.Color.green(swatches[0])>135);
+                    assertTrue("Flat swatch must be visually different",
+                        android.graphics.Color.blue(swatches[1])>
+                            android.graphics.Color.blue(swatches[0])+8);
+                    assertTrue("Glass swatch should be pearlier and lighter",
+                        android.graphics.Color.blue(swatches[2])>
+                            android.graphics.Color.blue(swatches[1])+18);
+                    int selectors=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if("Zaobljene".equals(tap.label)||
+                           "Ravne".equals(tap.label)||
+                           "Staklaste".equals(tap.label)){
+                            selectors++;
+                            assertTrue("Style radio card must be easy to touch",
+                                tap.bottom-tap.top>=48);
+                        }
+                    }
+                    assertEquals("Three functional styles",3,selectors);
+                    captureReference(activity,board,
+                        "themes-peach-style-swatches-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.tileStyle=previousStyle;activity.screen.invalidate();
+            }
+        });
+    }
+
 }
