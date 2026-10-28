@@ -2070,6 +2070,66 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void portraitVictoryModalAlignsWithGoldenGeometryAndNeutralBackdrop(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previous=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.theme=0;
+                activity.game=new TileGame("classic","",103L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // The source image uses a nearly neutral grey behind
+                    // the modal, not the blue cast of other overlays.
+                    int background=bitmap.getPixel(10,10);
+                    assertTrue("Victory backdrop must be neutral charcoal",
+                        Math.abs(android.graphics.Color.red(background)-
+                            android.graphics.Color.blue(background))<16);
+                    assertTrue("Victory backdrop must remain dimmed",
+                        android.graphics.Color.red(background)<150);
+                }finally{bitmap.recycle();}
+                int actions=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Nastavi igrati".equals(tap.label)){
+                        assertEquals("Primary action top matches source",417f,tap.top,.1f);
+                        assertEquals("Primary action width matches source",
+                            252f,tap.right-tap.left,.1f);
+                        actions++;
+                    }else if("Nova igra".equals(tap.label)){
+                        assertEquals("Secondary action top matches source",478f,tap.top,.1f);
+                        actions++;
+                    }else if("Podijeli rezultat".equals(tap.label)){
+                        assertEquals("Share action top matches source",532f,tap.top,.1f);
+                        assertTrue("All actions fit inside reference modal",
+                            tap.bottom<=597f);
+                        actions++;
+                    }
+                }
+                assertEquals("All three actions remain functional",3,actions);
+                captureReference(activity,view,
+                    "portrait-victory-aligned-941x1672");
+            }finally{
+                activity.game=previous;
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
