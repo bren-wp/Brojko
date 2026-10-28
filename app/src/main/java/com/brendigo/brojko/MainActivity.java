@@ -1276,7 +1276,13 @@ public final class MainActivity extends Activity {
                 c.save();c.rotate(-13,394,682);
                 styledTile(328,621,131,126,22,TILES[8],0);
                 txt("256",393,702,43,WHITE,true);c.restore();
+                // The reference logo is tall and compact. The unscaled
+                // Nunito glyph advances otherwise run off both side edges.
+                // Scale only this splash wordmark, not the touch/UI layout.
+                c.save();
+                c.scale(.80f,1.19f,200f,405f);
                 brand(399,116,false);
+                c.restore();
                 txt("by Brendigo",289,428,19,muted,true);
                 card(17,562,366,66,33,theme==1?card:0xfffff0db);
                 fitted("Spajaj brojeve.",110,604,23,187,CORAL,true);
