@@ -2137,18 +2137,21 @@ public final class MainActivity extends Activity {
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
             }
-            shape(104,y+(portrait?49:59),171,5,3,
+            // Thicker progress track and a separate adjacent counter: the
+            // reference places progress and 12 / 20 on a common baseline.
+            float progressY=y+(portrait?50:59);
+            shape(104,progressY,151,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             float fraction=Math.max(0,Math.min(1,(float)value/target));
-            if(fraction>0)shape(104,y+(portrait?49:59),
-                171*fraction,5,3,accent);
+            if(fraction>0)shape(104,progressY,
+                151*fraction,7,4,accent);
             // Existing 1024 tile milestone is binary; show 0/1 or 1/1
             // instead of the misleading raw maxTile/1024 ratio.
             boolean binaryMilestone=name.startsWith("Majstor");
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
-                192,y+(portrait?67:79),11,170,muted,true);
+                270,y+(portrait?59:68),11,45,muted,true);
             missionSurface(289,y+(portrait?4:6),71,
                 portrait?61:68,15,theme==1?0xff3b3b4c:0xfffff0d5);
             icon("star",323,y+(portrait?23:29),
