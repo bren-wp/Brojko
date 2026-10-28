@@ -1222,6 +1222,39 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void importedBackupSurvivesOldActivityLifecyclePause(){
+        final byte[][] original=new byte[1][];
+        final int[] expectedBest=new int[1];
+        rule.getScenario().onActivity(activity->{
+            try{
+                activity.persist();
+                original[0]=activity.getBackupBytes();
+                org.json.JSONObject backup=new org.json.JSONObject(new String(original[0],
+                    java.nio.charset.StandardCharsets.UTF_8));
+                expectedBest[0]=activity.best==19001?19002:19001;
+                backup.getJSONObject("data").put("best",expectedBest[0]);
+                activity.readBackupBytes(backup.toString().getBytes(
+                    java.nio.charset.StandardCharsets.UTF_8));
+            }catch(Exception ex){throw new AssertionError("Cannot restore test backup",ex);}
+        });
+        try{
+            // onPause used to persist the stale in-memory score after import.
+            rule.getScenario().moveToState(androidx.lifecycle.Lifecycle.State.CREATED);
+            android.content.SharedPreferences stored=
+                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                    .getTargetContext().getSharedPreferences("brojko",
+                        android.content.Context.MODE_PRIVATE);
+            assertEquals("Imported best score must survive onPause",
+                expectedBest[0],stored.getInt("best",-1));
+        }finally{
+            rule.getScenario().moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
+            rule.getScenario().onActivity(activity->{
+                try{activity.readBackupBytes(original[0]);}
+                catch(Exception ex){throw new AssertionError("Cannot restore original backup",ex);}
+            });
+        }
+    }
+
     @Test public void backupNavigationRowHasItsOwnVisibleRightChevron(){
         rule.getScenario().onActivity(activity->{
             String original=activity.page;
