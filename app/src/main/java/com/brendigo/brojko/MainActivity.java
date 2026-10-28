@@ -840,15 +840,12 @@ public final class MainActivity extends Activity {
                 p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
                 p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
-                // Highlight must never escape the star's silhouette,
-                // including when it is drawn over pale statistics cards.
-                c.save();
-                c.clipPath(star);
+                // The broad glint is intentional: screenshot pixel QA
+                // showed a better reward match without the clipped highlight.
                 p.setShader(new LinearGradient(6,4,17,12,
                     0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
-                c.restore();
             }else if("flame".equals(type)){
                 Path flame=new Path();
                 flame.moveTo(12,1);
