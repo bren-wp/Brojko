@@ -2249,6 +2249,16 @@ public class ScreensSmokeTest {
                 assertTrue("3D star must have substantial golden face",gold>150);
                 assertTrue("3D star must have an orange extrusion",warm>12);
                 assertTrue("3D star must have a light highlight",bright>12);
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.polishedIcon("star",56,54,74,0xff478df4);
+                int blue=0;
+                for(int y=12;y<100;y++)for(int x=12;x<100;x++){
+                    int px=result.getPixel(x,y);
+                    if(android.graphics.Color.blue(px)>180&&
+                        android.graphics.Color.blue(px)>
+                            android.graphics.Color.red(px)+35)blue++;
+                }
+                assertTrue("Statistics star must keep its blue material",blue>100);
             }finally{result.recycle();}
         });
     }
