@@ -2195,7 +2195,7 @@ public final class MainActivity extends Activity {
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
             statCell("Ukupno partija",fmt(plays),143,151,114,112,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),266,151,114,112,0xffffb431);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
@@ -2528,7 +2528,7 @@ public final class MainActivity extends Activity {
             rays(80,121,17,CORAL);rays(352,121,17,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
             statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),266,126,114,83,0xffffb431);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,126,114,83,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);
