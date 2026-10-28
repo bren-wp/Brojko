@@ -2130,6 +2130,102 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void corruptLegacyHistoryCannotLoseLatestCompletedGame(){
+        rule.getScenario().onActivity(activity->{
+            TileGame originalGame=activity.game;
+            int originalLastScore=activity.lastScore;
+            String originalHistory=activity.prefs.getString("history","[]");
+            try{
+                assertTrue(activity.prefs.edit().putString("history",
+                    "{bad old archive").commit());
+                TileGame finished=new TileGame("classic","",2026L);
+                finished.cells[0]=2048;
+                finished.score=2048;
+                finished.peak=2048;
+                finished.moves=25;
+                finished.reached2048=true;
+                activity.game=finished;
+                assertTrue("Archiving a valid game must survive malformed history",
+                    activity.archive());
+                assertTrue("Game is marked archived only after disk save",
+                    finished.archived);
+                org.json.JSONArray history=new org.json.JSONArray(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Latest game must be at the top",history.length()>0);
+                assertEquals(2048,history.getJSONObject(0).getInt("score"));
+                assertEquals("classic",history.getJSONObject(0).getString("mode"));
+                assertEquals(2048,activity.lastScore);
+            }catch(Exception e){
+                throw new AssertionError("New session could not be archived",e);
+            }finally{
+                activity.prefs.edit().putString("history",originalHistory).commit();
+                activity.game=originalGame;
+                activity.lastScore=originalLastScore;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void compactThemesSoundSwitchNeverActivatesVibration(){
+        rule.getScenario().onActivity(activity->{
+            boolean originalSound=activity.sound;
+            boolean originalVibration=activity.vibration;
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(image));}finally{image.recycle();}
+                assertTrue("Themes must use reference portrait layout",
+                    view.referencePortraitLayout);
+                MainActivity.BoardScreen.Tap soundTap=null, vibrationTap=null;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Zvukovi".equals(tap.label))soundTap=tap;
+                    if("Vibracija".equals(tap.label))vibrationTap=tap;
+                }
+                assertNotNull("Sound action must exist",soundTap);
+                assertNotNull("Vibration action must exist",vibrationTap);
+                assertTrue("Vibration target must be at least 48 design units",
+                    vibrationTap.bottom-vibrationTap.top>=48);
+                assertTrue("Sound target must be at least 48 design units",
+                    soundTap.bottom-soundTap.top>=48);
+                assertTrue("Vibration and sound actions cannot overlap",
+                    vibrationTap.bottom<=soundTap.top);
+                // At logical y=510, the Sound control is painted, but
+                // previously its Vibration hit region extended to y=519.
+                float x=view.offX+359*view.scale;
+                float y=view.offY+510*view.scale;
+                long now=android.os.SystemClock.uptimeMillis();
+                MotionEvent down=MotionEvent.obtain(now,now,
+                    MotionEvent.ACTION_DOWN,x,y,0);
+                MotionEvent up=MotionEvent.obtain(now,now+40,
+                    MotionEvent.ACTION_UP,x,y,0);
+                try{
+                    view.onTouchEvent(down);
+                    view.onTouchEvent(up);
+                }finally{down.recycle();up.recycle();}
+                assertEquals("Sound switch must toggle sound only",
+                    !originalSound,activity.sound);
+                assertEquals("Sound switch must not toggle Vibration",
+                    originalVibration,activity.vibration);
+            }finally{
+                activity.sound=originalSound;
+                activity.vibration=originalVibration;
+                activity.theme=originalTheme;
+                activity.page=originalPage;
+                activity.persist();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;

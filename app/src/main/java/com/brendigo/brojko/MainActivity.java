@@ -232,23 +232,36 @@ public final class MainActivity extends Activity {
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
     }
-    void archive(){
-        if(game==null||game.archived||game.moves==0)return;
-        game.archived=true;
-        lastScore=game.score;
+    boolean archive(){
+        if(game==null||game.archived||game.moves==0)return true;
         try {
             JSONObject row=new JSONObject();
             row.put("score",game.score).put("moves",game.moves).put("peak",game.maxTile())
                 .put("mode",game.mode).put("day",historyDate())
                 .put("time",compactTime()).put("won",game.reached2048);
-            JSONArray old=new JSONArray(prefs.getString("history","[]"));
+            // Preserve a finished game even if legacy history is malformed.
+            JSONArray old;
+            try{old=new JSONArray(prefs.getString("history","[]"));}
+            catch(Exception invalidHistory){old=new JSONArray();}
             JSONArray recent=new JSONArray();recent.put(row);
-            for(int i=0;i<Math.min(19,old.length());i++)recent.put(old.getJSONObject(i));
-            prefs.edit().putString("history",recent.toString()).apply();
-        }catch(Exception ignored){}
+            for(int i=0;i<Math.min(200,old.length())&&recent.length()<20;i++){
+                JSONObject prior=old.optJSONObject(i);
+                if(prior!=null)recent.put(prior);
+            }
+            // A completed game must reach disk before replacing its session.
+            if(!prefs.edit().putString("history",recent.toString()).commit())
+                return false;
+            game.archived=true;
+            lastScore=game.score;
+            return true;
+        }catch(Exception error){return false;}
     }
     void newGame(String mode) {
-        archive();
+        if(!archive()){
+            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
         long seed="daily".equals(mode)?
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
@@ -349,7 +362,11 @@ public final class MainActivity extends Activity {
         persist();animate();
     }
     void endSession(){
-        if(game!=null)archive();
+        if(!archive()){
+            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
         game=null;page="home";persist();screen.invalidate();
     }
     void undo() {
@@ -615,7 +632,7 @@ public final class MainActivity extends Activity {
                         int color,int previewStyle){
             if(width<=0||height<=0)return;
             if(previewStyle==1){shape(x,y,width,height,radius,color);return;}
-            float depth=Math.min(5.5f,Math.max(2,height*.082f));
+            float depth=Math.min(4.5f,Math.max(2,height*.067f));
             // Warm extrusion and restrained shadow used across all themes.
             shape(x+1.2f,y+depth+1.4f,Math.max(1,width-2.4f),
                 Math.max(1,height-depth),radius,
@@ -626,7 +643,7 @@ public final class MainActivity extends Activity {
                 lighten(color,previewStyle==2?.30f:.20f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
-            p.setColor(0xb0ffffff);
+            p.setColor(0x65ffffff);
             c.drawRoundRect(x+1.5f,y+1.5f,x+width-1.5f,
                 y+height-depth-1.3f,Math.max(2,radius-1.5f),
                 Math.max(2,radius-1.5f),p);
@@ -636,7 +653,7 @@ public final class MainActivity extends Activity {
                     Math.max(1,height*.055f),radius,0x3dffffff);
                 // Small upper-left reflective sweep, matching the glossy
                 // highlights of the supplied colored reference tiles.
-                p.setColor(0x4cffffff);p.setStyle(Paint.Style.STROKE);
+                p.setColor(0x34ffffff);p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(Math.min(2f,width*.027f));
                 Path glint=new Path();
                 glint.moveTo(x+radius*.62f,y+6);
@@ -1987,10 +2004,10 @@ public final class MainActivity extends Activity {
         }
         void missions() {
             boolean portrait=referencePortraitLayout;
-            back();brand(portrait?38:63,32);
+            back();brand(portrait?45:67,39);
             // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",132,portrait?99:128,29,135,ink,true);
-            fitted("postignuća",279,portrait?99:128,29,197,CORAL,true);
+            fitted("Misije i",132,portrait?99:128,33,142,ink,true);
+            fitted("postignuća",279,portrait?99:128,33,203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xffffedda;
             int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
@@ -2613,7 +2630,7 @@ public final class MainActivity extends Activity {
                 fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
-                taps.add(new Tap(x,371,x+51,466,styles[i],()->{
+                taps.add(new Tap(x,371,x+51,461,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
             }
@@ -2623,16 +2640,16 @@ public final class MainActivity extends Activity {
             leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
             shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?355:339,468,23,23,12,WHITE);
-            taps.add(new Tap(205,466,378,519,"Vibracija",()->{
+            taps.add(new Tap(205,461,378,509,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
             leftFitted("Zvukovi",245,523,15,86,ink,true);
             leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
-            shape(337,507,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?355:339,509,23,23,12,WHITE);
+            shape(337,511,43,27,14,sound?CORAL:0xffb7c1cf);
+            shape(sound?355:339,513,23,23,12,WHITE);
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
+            taps.add(new Tap(205,509,378,557,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
             leftFitted("Jačina animacija",208,570,17,162,ink,true);

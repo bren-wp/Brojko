@@ -130,6 +130,40 @@ public class TileGameTest {
         badTile.getJSONArray("cells").put(0,3);
         assertNull(TileGame.fromJson(badTile));
     }
+    @Test public void deterministicStressAcrossModesNeverCorruptsGameOrUndo() {
+        // More than 4,000 reproducible real merges/turns across 4×4, 5×5,
+        // and daily modes. Catches accidental loss of deterministic state.
+        for(String mode:new String[]{"classic","relaxed","daily"}){
+            for(long seed=1;seed<=16;seed++){
+                TileGame game=new TileGame(mode,
+                    "daily".equals(mode)?"2026-10-28":"",seed*72319L);
+                for(int turn=0;turn<220&&!game.gameOver;turn++){
+                    int[] before=game.cells.clone();
+                    int score=game.score,moves=game.moves;
+                    TileGame.Result result=game.move((turn*7+(int)seed)%4);
+                    assertTrue("Score cannot decrease",game.score>=score);
+                    assertEquals("Valid moves increment exactly once",
+                        moves+(result.changed?1:0),game.moves);
+                    assertEquals("Board keeps the configured size",
+                        game.size*game.size,game.cells.length);
+                    for(int tile:game.cells)
+                        assertTrue("Tile values must be powers of two or zero",
+                            tile==0 || (tile>=2 && (tile&(tile-1))==0));
+                    if(!result.changed)
+                        assertArrayEquals("Blocked move cannot change tiles",
+                            before,game.cells);
+                    if(turn%17==0){
+                        TileGame clone=TileGame.fromJson(game.toJson());
+                        assertNotNull("A saved active game must load",clone);
+                        assertArrayEquals(game.cells,clone.cells);
+                        assertEquals(game.score,clone.score);
+                        assertEquals(game.moves,clone.moves);
+                        assertEquals(game.canUndo(),clone.canUndo());
+                    }
+                }
+            }
+        }
+    }
     @Test public void fiveByFiveMode() {
         TileGame g=new TileGame("relaxed","",41L);
         assertEquals(5,g.size);assertEquals(25,g.cells.length);
