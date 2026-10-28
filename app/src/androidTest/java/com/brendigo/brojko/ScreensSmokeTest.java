@@ -2130,6 +2130,53 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void compactThemesSoundSwitchNeverActivatesVibration(){
+        rule.getScenario().onActivity(activity->{
+            boolean originalSound=activity.sound;
+            boolean originalVibration=activity.vibration;
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(image));}finally{image.recycle();}
+                assertTrue("Themes must use reference portrait layout",
+                    view.referencePortraitLayout);
+                // At logical y=510, the Sound control is painted, but
+                // previously its Vibration hit region extended to y=519.
+                float x=view.offX+359*view.scale;
+                float y=view.offY+510*view.scale;
+                long now=android.os.SystemClock.uptimeMillis();
+                MotionEvent down=MotionEvent.obtain(now,now,
+                    MotionEvent.ACTION_DOWN,x,y,0);
+                MotionEvent up=MotionEvent.obtain(now,now+40,
+                    MotionEvent.ACTION_UP,x,y,0);
+                try{
+                    view.onTouchEvent(down);
+                    view.onTouchEvent(up);
+                }finally{down.recycle();up.recycle();}
+                assertEquals("Sound switch must toggle sound only",
+                    !originalSound,activity.sound);
+                assertEquals("Sound switch must not toggle Vibration",
+                    originalVibration,activity.vibration);
+            }finally{
+                activity.sound=originalSound;
+                activity.vibration=originalVibration;
+                activity.theme=originalTheme;
+                activity.page=originalPage;
+                activity.persist();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
