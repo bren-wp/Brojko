@@ -232,23 +232,36 @@ public final class MainActivity extends Activity {
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
     }
-    void archive(){
-        if(game==null||game.archived||game.moves==0)return;
-        game.archived=true;
-        lastScore=game.score;
+    boolean archive(){
+        if(game==null||game.archived||game.moves==0)return true;
         try {
             JSONObject row=new JSONObject();
             row.put("score",game.score).put("moves",game.moves).put("peak",game.maxTile())
                 .put("mode",game.mode).put("day",historyDate())
                 .put("time",compactTime()).put("won",game.reached2048);
-            JSONArray old=new JSONArray(prefs.getString("history","[]"));
+            // Preserve a finished game even if legacy history is malformed.
+            JSONArray old;
+            try{old=new JSONArray(prefs.getString("history","[]"));}
+            catch(Exception invalidHistory){old=new JSONArray();}
             JSONArray recent=new JSONArray();recent.put(row);
-            for(int i=0;i<Math.min(19,old.length());i++)recent.put(old.getJSONObject(i));
-            prefs.edit().putString("history",recent.toString()).apply();
-        }catch(Exception ignored){}
+            for(int i=0;i<Math.min(200,old.length())&&recent.length()<20;i++){
+                JSONObject prior=old.optJSONObject(i);
+                if(prior!=null)recent.put(prior);
+            }
+            // A completed game must reach disk before replacing its session.
+            if(!prefs.edit().putString("history",recent.toString()).commit())
+                return false;
+            game.archived=true;
+            lastScore=game.score;
+            return true;
+        }catch(Exception error){return false;}
     }
     void newGame(String mode) {
-        archive();
+        if(!archive()){
+            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
         long seed="daily".equals(mode)?
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
@@ -349,7 +362,11 @@ public final class MainActivity extends Activity {
         persist();animate();
     }
     void endSession(){
-        if(game!=null)archive();
+        if(!archive()){
+            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
         game=null;page="home";persist();screen.invalidate();
     }
     void undo() {
