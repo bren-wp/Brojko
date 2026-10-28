@@ -2149,6 +2149,19 @@ public class ScreensSmokeTest {
                 try{view.draw(new Canvas(image));}finally{image.recycle();}
                 assertTrue("Themes must use reference portrait layout",
                     view.referencePortraitLayout);
+                MainActivity.BoardScreen.Tap soundTap=null, vibrationTap=null;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Zvukovi".equals(tap.label))soundTap=tap;
+                    if("Vibracija".equals(tap.label))vibrationTap=tap;
+                }
+                assertNotNull("Sound action must exist",soundTap);
+                assertNotNull("Vibration action must exist",vibrationTap);
+                assertTrue("Vibration target must be at least 48 design units",
+                    vibrationTap.bottom-vibrationTap.top>=48);
+                assertTrue("Sound target must be at least 48 design units",
+                    soundTap.bottom-soundTap.top>=48);
+                assertTrue("Vibration and sound actions cannot overlap",
+                    vibrationTap.bottom<=soundTap.top);
                 // At logical y=510, the Sound control is painted, but
                 // previously its Vibration hit region extended to y=519.
                 float x=view.offX+359*view.scale;
