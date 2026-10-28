@@ -2367,7 +2367,28 @@ public class ScreensSmokeTest {
                     splash.layout(0,0,size[0],size[1]);
                     Bitmap image=Bitmap.createBitmap(size[0],size[1],
                         Bitmap.Config.ARGB_8888);
-                    try{splash.draw(new Canvas(image));}finally{image.recycle();}
+                    try{
+                        splash.draw(new Canvas(image));
+                        if(size[0]==941){
+                            // The tall Brojko wordmark should not clip on
+                            // either edge at the owner's reference size.
+                            int minX=941,maxX=-1;
+                            for(int yy=730;yy<970;yy+=3){
+                                for(int xx=0;xx<941;xx+=3){
+                                    int rgb=image.getPixel(xx,yy);
+                                    int red=android.graphics.Color.red(rgb);
+                                    int green=android.graphics.Color.green(rgb);
+                                    int blue=android.graphics.Color.blue(rgb);
+                                    if(red<72&&green<102&&blue<144&&blue>=red){
+                                        minX=Math.min(minX,xx);
+                                        maxX=Math.max(maxX,xx);
+                                    }
+                                }
+                            }
+                            assertTrue("Logo must not be cut off on the left",minX>=65);
+                            assertTrue("Logo must not be cut off on the right",maxX<=880);
+                        }
+                    }finally{image.recycle();}
                     assertEquals("Splash must never scroll",0f,splash.maxScroll,.01f);
                     boolean compact=size[1]/(float)size[0]<1.85f;
                     if(compact){
