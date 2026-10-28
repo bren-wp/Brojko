@@ -2290,8 +2290,10 @@ public final class MainActivity extends Activity {
                 case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
                 default:top="Niz dana";bottom="igranja";
             }
+            int iconColor=caption.contains("partija")?ink:
+                caption.contains("pločica")?0xffff8b15:accent;
             icon(symbol,x+(width<=118?29:31),y+(width<=118?29:38),
-                width<=118?33:43,accent);
+                width<=118?33:43,iconColor);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
@@ -2304,8 +2306,13 @@ public final class MainActivity extends Activity {
                 caption.contains("pločica")?0xffee7b12:
                 caption.contains("Prosjek")?0xff1170e9:
                 caption.contains("pobjeda")?0xff8628d0:accent;
-            fitted(value,x+width/2,y+h-(dense?9:17),
-                dense?29:35,width-12,theme==1?lighten(valueColor,.22f):valueColor,true);
+            // Wide summary cards keep their large number to the right of
+            // the 3D pictogram; centering across the entire card overlapped it.
+            float valueX=x+(width<=118?width/2f:width*.69f);
+            float valueWidth=width<=118?width-12:width*.58f;
+            fitted(value,valueX,y+h-(dense?9:17),
+                dense?29:35,valueWidth,
+                theme==1?lighten(valueColor,.22f):valueColor,true);
         }
         void historyDetail(){
             title("Detalji partije");
