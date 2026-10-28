@@ -60,6 +60,8 @@ public final class MainActivity extends Activity {
     boolean sound=true, vibration=true, notifications=false;
     // UI-only state: distinguishes a newly awarded daily bonus from a replay.
     boolean dailyBonusGrantedThisAttempt=false;
+    // After a successful restore the old Activity must not overwrite imported preferences.
+    boolean skipPersistOnPauseAfterImport=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -455,6 +457,7 @@ public final class MainActivity extends Activity {
             else editor.putString(key,(String)value);
         }
         if(!editor.commit())throw new IllegalStateException("Neuspješno spremanje.");
+        skipPersistOnPauseAfterImport=true;
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
@@ -511,7 +514,10 @@ public final class MainActivity extends Activity {
         else if(page.equals("home"))super.onBackPressed();
         else navigate("home");
     }
-    @Override protected void onPause(){persist();super.onPause();}
+    @Override protected void onPause(){
+        if(!skipPersistOnPauseAfterImport)persist();
+        super.onPause();
+    }
     @Override protected void onDestroy(){if(tones!=null){tones.release();tones=null;}super.onDestroy();}
 
     final class BoardScreen extends View {
