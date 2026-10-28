@@ -1541,31 +1541,89 @@ public final class MainActivity extends Activity {
             fitted("Rekordi",200,685,15,105,muted,true);
             fitted("Postavke",325,685,15,105,muted,true);
         }
+        void victoryCrown(float cx,float cy,float size){
+            // Soft three-peak silhouette with an ivory outline, in real Canvas
+            // geometry: no non-interactive bitmap of the reference screen.
+            c.save();
+            c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            Path crown=new Path();
+            crown.moveTo(2.8f,9.4f);
+            crown.cubicTo(1.0f,6.6f,3.3f,6.1f,5.1f,8.8f);
+            crown.cubicTo(7.5f,12.5f,8.0f,10.8f,9.1f,8.4f);
+            crown.cubicTo(10.2f,5.9f,10.3f,2.6f,12f,2.6f);
+            crown.cubicTo(13.7f,2.6f,14.1f,7.6f,15.1f,9.7f);
+            crown.cubicTo(16.2f,12.1f,17.9f,7.5f,19.7f,7.8f);
+            crown.cubicTo(22.8f,6.8f,23.2f,9.5f,21.3f,11.8f);
+            crown.lineTo(19.8f,18.2f);
+            crown.quadTo(19.7f,19.2f,18.4f,19.2f);
+            crown.lineTo(5.8f,19.2f);
+            crown.quadTo(4.5f,19.2f,4.2f,18.1f);
+            crown.close();
+            p.setShader(null);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(2.4f);
+            p.setColor(0x55ffffff);
+            c.drawPath(crown,p);
+            p.setStrokeWidth(1.35f);
+            p.setColor(WHITE);
+            c.drawPath(crown,p);
+            p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(0,3,0,19,
+                0xffffeb7c,0xffffb324,Shader.TileMode.CLAMP));
+            c.drawPath(crown,p);
+            p.setShader(null);
+            p.setColor(0xffff8f16);
+            c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
+            p.setColor(0xffffce46);
+            c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
+            c.restore();
+        }
+        void victoryHeading(){
+            // Nunito lettering in the reference is taller than Android's
+            // regular glyph metrics. Scale the text only, not its tap targets.
+            c.save();
+            c.scale(1.02f,1.25f,200,288);
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
+            p.setTextSize(60);p.setFakeBoldText(false);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.7f);
+            p.setColor(WHITE);c.drawText("Bravo!",200,288,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
+            p.setColor(ink);c.drawText("Bravo!",200,288,p);
+            c.restore();
+        }
         void compactVictoryCard(){
-            // Source: deliberately narrower and shorter than the generic
-            // game-over overlay. Keep its three actual actions tappable.
-            card(59,213,282,405,29,theme==1?0xff293956:CREAM);
-            icon("crown",200,205,93,0xffffbb37);
-            txt("Bravo!",200,294,58,ink,true);
-            card(95,305,210,36,18,theme==1?card:0xffffeddb);
-            fitted("Dosegnuli ste",161,330,20,133,CORAL,true);
-            fitted("2048!",258,330,21,88,TEAL,true);
-            card(76,351,120,72,19,card);
-            card(204,351,120,72,19,card);
-            txt("Tvoj rezultat",136,374,13,muted,false);
-            fitted(fmt(game.score),136,410,33,113,ink,true);
-            txt("Osvojene zvjezdice",264,374,11,muted,false);
-            for(int i=0;i<3;i++)icon("star",229+i*35,401,26,0xffffb526);
-            button("Nastavi igrati","play",74,444,252,51,CORAL,true,()->{
+            // Match the 941x1672 portrait illustration while retaining all
+            // three working actions and readable real scores.
+            card(59,200,282,397,29,theme==1?0xff293956:CREAM);
+            victoryCrown(200,195,103);
+            victoryHeading();
+            card(95,295,210,33,18,theme==1?card:0xffffeddb);
+            fitted("Dosegnuli ste",161,318,20,133,CORAL,true);
+            fitted("2048!",258,318,21,88,TEAL,true);
+            card(76,337,120,69,19,card);
+            card(204,337,120,69,19,card);
+            txt("Tvoj rezultat",136,356,13,muted,false);
+            fitted(fmt(game.score),136,392,33,113,ink,true);
+            txt("Osvojene zvjezdice",264,356,11,muted,false);
+            for(int i=0;i<3;i++)icon("star",229+i*35,382,30,0xffffb526);
+            button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
-            button("Nova igra","refresh",74,504,252,48,card,false,
+            button("Nova igra","refresh",74,478,252,49,card,false,
                 ()->newGame(game.mode));
-            button("Podijeli rezultat","share",74,560,252,49,
+            button("Podijeli rezultat","share",74,532,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         void resultOverlay(boolean winning){
-            dim();
+            // Reference victory backdrop is charcoal-neutral rather than blue.
+            // Keep the original overlay for loss and wide-device modals.
+            if(winning&&referencePortraitLayout)c.drawColor(0x88000000);
+            else dim();
             boolean narrow=referencePortraitLayout;
             if(winning){
                 int[] confetti={CORAL,TEAL,0xff428fea,0xffffbd4e};
