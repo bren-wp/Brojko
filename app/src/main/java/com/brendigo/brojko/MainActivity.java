@@ -2613,7 +2613,7 @@ public final class MainActivity extends Activity {
                 fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
-                taps.add(new Tap(x,371,x+51,466,styles[i],()->{
+                taps.add(new Tap(x,371,x+51,458,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
             }
@@ -2623,7 +2623,7 @@ public final class MainActivity extends Activity {
             leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
             shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?355:339,468,23,23,12,WHITE);
-            taps.add(new Tap(205,466,378,506,"Vibracija",()->{
+            taps.add(new Tap(205,458,378,506,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
@@ -2632,7 +2632,7 @@ public final class MainActivity extends Activity {
             shape(337,507,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?355:339,509,23,23,12,WHITE);
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,506,378,550,"Zvukovi",()->{
+            taps.add(new Tap(205,506,378,554,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
             leftFitted("Jačina animacija",208,570,17,162,ink,true);
