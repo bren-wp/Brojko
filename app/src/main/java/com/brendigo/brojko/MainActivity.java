@@ -2297,29 +2297,16 @@ public final class MainActivity extends Activity {
                 case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
                 default:top="Niz dana";bottom="igranja";
             }
-            int iconColor=caption.contains("partija")?ink:
-                caption.contains("pločica")?0xffff8b15:accent;
-            icon(symbol,x+(width<=118?29:31),y+(width<=118?29:38),
-                width<=118?33:43,iconColor);
+            // Pixel comparison showed that the earlier native KPI scale
+            // matches the owner reference better than enlarging everything.
+            icon(symbol,x+25,y+29,width<=118?24:29,accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
             fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
             fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
-            // References use substantially stronger contrast than the
-            // pastel card surfaces; size and color do not imply mock data.
-            int valueColor=caption.contains("Najbolji")?0xffff5137:
-                caption.contains("partija")?0xff00a9b0:
-                caption.contains("pločica")?0xffee7b12:
-                caption.contains("Prosjek")?0xff1170e9:
-                caption.contains("pobjeda")?0xff8628d0:accent;
-            // Wide summary cards keep their large number to the right of
-            // the 3D pictogram; centering across the entire card overlapped it.
-            float valueX=x+(width<=118?width/2f:width*.69f);
-            float valueWidth=width<=118?width-12:width*.58f;
-            fitted(value,valueX,y+h-(dense?9:17),
-                dense?29:35,valueWidth,
-                theme==1?lighten(valueColor,.22f):valueColor,true);
+            fitted(value,x+width/2,y+h-(dense?9:17),
+                dense?21:29,width-12,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
