@@ -2226,6 +2226,33 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void embossedRewardStarHasRealGoldenFillAndWarmShadow(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap result=Bitmap.createBitmap(112,112,Bitmap.Config.ARGB_8888);
+            try{
+                Canvas canvas=new Canvas(result);
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.c=canvas;
+                view.palette();
+                view.polishedIcon("star",56,54,74,0xffffb526);
+                int gold=0,warm=0,bright=0;
+                for(int y=12;y<100;y++)for(int x=12;x<100;x++){
+                    int px=result.getPixel(x,y);
+                    int r=android.graphics.Color.red(px);
+                    int g=android.graphics.Color.green(px);
+                    int b=android.graphics.Color.blue(px);
+                    if(r>220&&g>155&&g<245&&b<180)gold++;
+                    if(r>180&&g>80&&g<160&&b<90)warm++;
+                    if(r>245&&g>215&&b>125&&b<230)bright++;
+                }
+                assertTrue("3D star must have substantial golden face",gold>150);
+                assertTrue("3D star must have an orange extrusion",warm>12);
+                assertTrue("3D star must have a light highlight",bright>12);
+            }finally{result.recycle();}
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
