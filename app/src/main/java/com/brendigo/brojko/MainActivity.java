@@ -615,7 +615,7 @@ public final class MainActivity extends Activity {
                         int color,int previewStyle){
             if(width<=0||height<=0)return;
             if(previewStyle==1){shape(x,y,width,height,radius,color);return;}
-            float depth=Math.min(5.5f,Math.max(2,height*.082f));
+            float depth=Math.min(4.5f,Math.max(2,height*.067f));
             // Warm extrusion and restrained shadow used across all themes.
             shape(x+1.2f,y+depth+1.4f,Math.max(1,width-2.4f),
                 Math.max(1,height-depth),radius,
@@ -626,7 +626,7 @@ public final class MainActivity extends Activity {
                 lighten(color,previewStyle==2?.30f:.20f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
-            p.setColor(0xb0ffffff);
+            p.setColor(0x65ffffff);
             c.drawRoundRect(x+1.5f,y+1.5f,x+width-1.5f,
                 y+height-depth-1.3f,Math.max(2,radius-1.5f),
                 Math.max(2,radius-1.5f),p);
@@ -636,7 +636,7 @@ public final class MainActivity extends Activity {
                     Math.max(1,height*.055f),radius,0x3dffffff);
                 // Small upper-left reflective sweep, matching the glossy
                 // highlights of the supplied colored reference tiles.
-                p.setColor(0x4cffffff);p.setStyle(Paint.Style.STROKE);
+                p.setColor(0x34ffffff);p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(Math.min(2f,width*.027f));
                 Path glint=new Path();
                 glint.moveTo(x+radius*.62f,y+6);
@@ -1272,7 +1272,7 @@ public final class MainActivity extends Activity {
             txt("16",392,191,31,WHITE,true);c.restore();
             // Golden comparison confirmed the earlier logo's vertical
             // position was closer than the enlarged v1.12.95 experiment.
-            brand(portrait?153:197,72);
+            brand(portrait?153:197,81);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
@@ -1483,7 +1483,7 @@ public final class MainActivity extends Activity {
                         tileHeight-2*inset,round,color);
                     String str=Integer.toString(value);
                     int digits=str.length();
-                    float fontsize=(n==5?33:44)-(digits>3?(digits-3)*7:0);
+                    float fontsize=(n==5?36:50)-(digits>3?(digits-3)*8:0);
                     fitted(str,rx+tile/2,ry+tileHeight*.62f,
                         fontsize,tile-7,WHITE,true);
                 }
@@ -1987,10 +1987,10 @@ public final class MainActivity extends Activity {
         }
         void missions() {
             boolean portrait=referencePortraitLayout;
-            back();brand(portrait?38:63,32);
+            back();brand(portrait?45:67,39);
             // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",132,portrait?99:128,29,135,ink,true);
-            fitted("postignuća",279,portrait?99:128,29,197,CORAL,true);
+            fitted("Misije i",132,portrait?99:128,33,142,ink,true);
+            fitted("postignuća",279,portrait?99:128,33,203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xffffedda;
             int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
@@ -2455,8 +2455,8 @@ public final class MainActivity extends Activity {
 
         void statisticsCompact(){
             back();
-            brand(40,35);
-            fitted("Statistika",200,114,43,325,ink,true);
+            brand(45,43);
+            fitted("Statistika",200,114,47,325,ink,true);
             rays(80,121,17,CORAL);rays(352,121,17,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
             statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
@@ -2544,10 +2544,10 @@ public final class MainActivity extends Activity {
         }
         void themesCompact(){
             // Measured against original supplied 941x1672 screen.
-            brand(52,42);
+            brand(57,48);
             themesTitlePill(85,53);
-            fitted("Teme i",158,125,36,165,ink,true);
-            fitted("izgled",276,125,36,166,CORAL,true);
+            fitted("Teme i",158,125,40,168,ink,true);
+            fitted("izgled",276,125,40,168,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
@@ -2623,7 +2623,7 @@ public final class MainActivity extends Activity {
             leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
             shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?355:339,468,23,23,12,WHITE);
-            taps.add(new Tap(205,466,378,519,"Vibracija",()->{
+            taps.add(new Tap(205,466,378,506,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
@@ -2632,7 +2632,7 @@ public final class MainActivity extends Activity {
             shape(337,507,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?355:339,509,23,23,12,WHITE);
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,519,378,564,"Zvukovi",()->{
+            taps.add(new Tap(205,506,378,550,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
             leftFitted("Jačina animacija",208,570,17,162,ink,true);
@@ -2698,9 +2698,9 @@ public final class MainActivity extends Activity {
             int[] rowY=compact?
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
-            txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
-            rays(74,compact?67:97,compact?34:29,CORAL);
-            rays(331,compact?67:97,compact?34:29,CORAL);
+            txt("Postavke",200,compact?75:108,compact?49:49,ink,true);
+            rays(74,compact?67:97,compact?39:31,CORAL);
+            rays(331,compact?67:97,compact?39:31,CORAL);
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
@@ -2722,7 +2722,7 @@ public final class MainActivity extends Activity {
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            brand(compact?639:795,compact?54:53,false);
+            brand(compact?639:795,compact?61:59,false);
             fitted("v"+appVersion(),200,compact?668:829,15,320,muted,false);
             fitted("by Brendigo",200,compact?689:849,15,300,muted,true);
         }
