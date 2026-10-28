@@ -1289,7 +1289,7 @@ public final class MainActivity extends Activity {
             txt("16",392,191,31,WHITE,true);c.restore();
             // Golden comparison confirmed the earlier logo's vertical
             // position was closer than the enlarged v1.12.95 experiment.
-            brand(portrait?153:197,81);
+            brand(portrait?153:197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
@@ -1500,7 +1500,7 @@ public final class MainActivity extends Activity {
                         tileHeight-2*inset,round,color);
                     String str=Integer.toString(value);
                     int digits=str.length();
-                    float fontsize=(n==5?36:50)-(digits>3?(digits-3)*8:0);
+                    float fontsize=(n==5?33:44)-(digits>3?(digits-3)*7:0);
                     fitted(str,rx+tile/2,ry+tileHeight*.62f,
                         fontsize,tile-7,WHITE,true);
                 }
@@ -2472,8 +2472,8 @@ public final class MainActivity extends Activity {
 
         void statisticsCompact(){
             back();
-            brand(45,43);
-            fitted("Statistika",200,114,47,325,ink,true);
+            brand(40,35);
+            fitted("Statistika",200,114,43,325,ink,true);
             rays(80,121,17,CORAL);rays(352,121,17,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
             statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
@@ -2561,10 +2561,10 @@ public final class MainActivity extends Activity {
         }
         void themesCompact(){
             // Measured against original supplied 941x1672 screen.
-            brand(57,48);
+            brand(52,42);
             themesTitlePill(85,53);
-            fitted("Teme i",158,125,40,168,ink,true);
-            fitted("izgled",276,125,40,168,CORAL,true);
+            fitted("Teme i",158,125,36,165,ink,true);
+            fitted("izgled",276,125,36,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
@@ -2715,9 +2715,9 @@ public final class MainActivity extends Activity {
             int[] rowY=compact?
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
-            txt("Postavke",200,compact?75:108,compact?49:49,ink,true);
-            rays(74,compact?67:97,compact?39:31,CORAL);
-            rays(331,compact?67:97,compact?39:31,CORAL);
+            txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
+            rays(74,compact?67:97,compact?34:29,CORAL);
+            rays(331,compact?67:97,compact?34:29,CORAL);
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
@@ -2739,7 +2739,7 @@ public final class MainActivity extends Activity {
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            brand(compact?639:795,compact?61:59,false);
+            brand(compact?639:795,compact?54:53,false);
             fitted("v"+appVersion(),200,compact?668:829,15,320,muted,false);
             fitted("by Brendigo",200,compact?689:849,15,300,muted,true);
         }
