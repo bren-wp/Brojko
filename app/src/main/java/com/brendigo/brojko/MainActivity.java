@@ -2161,10 +2161,12 @@ public final class MainActivity extends Activity {
                 270,y+(portrait?59:68),11,45,muted,true);
             missionSurface(289,y+(portrait?4:6),71,
                 portrait?61:68,15,theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",323,y+(portrait?23:29),
-                portrait?24:27,0xffffad1a);
-            fitted("+"+fmt(reward),323,y+(portrait?53:62),
-                13,63,ink,true);
+            // Reward emblem is visually prominent on the reference cards,
+            // while the reward amount stays below it in the same hit-free pane.
+            icon("star",323,y+(portrait?24:29),
+                portrait?32:29,0xffffad1a);
+            fitted("+"+fmt(reward),323,y+(portrait?54:62),
+                portrait?15:13,63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
