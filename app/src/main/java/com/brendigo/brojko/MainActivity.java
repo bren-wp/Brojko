@@ -92,7 +92,8 @@ public final class MainActivity extends Activity {
         tileStyle=prefs.getInt("style",0);animation=prefs.getInt("animation",1);
         sound=prefs.getBoolean("sound",true);vibration=prefs.getBoolean("vibrate",true);
         notifications=prefs.getBoolean("notifications",false);
-        if(notifications)AppReminder.configure(this,true);
+        // Reconcile alarm state after importing a backup that disables notifications.
+        AppReminder.configure(this,notifications);
         try {
             String saved=prefs.getString("session","");
             if(!saved.isEmpty())game=TileGame.fromJson(new JSONObject(saved));
