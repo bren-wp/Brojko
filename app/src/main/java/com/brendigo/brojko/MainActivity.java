@@ -829,7 +829,9 @@ public final class MainActivity extends Activity {
                     Color.green(color)>100&&Color.blue(color)<140;
                 int rim=golden?0xffe48408:darken(color,.28f);
                 int top=golden?0xffffed87:lighten(color,.43f);
-                int edge=golden?0xfffff7c5:lighten(color,.69f);
+                // Reference's golden rewards have an orange rounded
+                // bevel, not a pale nearly-white perimeter.
+                int edge=golden?0xffff9f19:lighten(color,.69f);
                 c.save();c.translate(0,1.6f);
                 p.setColor(rim);c.drawPath(star,p);
                 c.restore();
