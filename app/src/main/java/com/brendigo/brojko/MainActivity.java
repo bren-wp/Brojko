@@ -802,15 +802,41 @@ public final class MainActivity extends Activity {
                         c.drawRoundRect(2+col*11,2+row*11,11+col*11,
                             11+row*11,2.5f,2.5f,p);
             }else if("star".equals(type)){
-                Path star=new Path();
+                // Rounded, raised golden star used for *earned* rewards.
+                // Its geometry remains vector-drawn at every Android density.
+                float[] xs=new float[10],ys=new float[10];
                 for(int i=0;i<10;i++){
                     double angle=-Math.PI/2+i*Math.PI/5;
-                    float rr=i%2==0?11f:5.3f;
-                    float px=12+(float)Math.cos(angle)*rr;
-                    float py=12+(float)Math.sin(angle)*rr;
-                    if(i==0)star.moveTo(px,py);else star.lineTo(px,py);
+                    float radius=i%2==0?10.6f:5.35f;
+                    xs[i]=12+(float)Math.cos(angle)*radius;
+                    ys[i]=12+(float)Math.sin(angle)*radius;
                 }
-                star.close();p.setColor(color);c.drawPath(star,p);
+                Path star=new Path();
+                for(int i=0;i<10;i++){
+                    int prev=(i+9)%10,next=(i+1)%10;
+                    float startX=xs[i]*.82f+xs[prev]*.18f;
+                    float startY=ys[i]*.82f+ys[prev]*.18f;
+                    float endX=xs[i]*.82f+xs[next]*.18f;
+                    float endY=ys[i]*.82f+ys[next]*.18f;
+                    if(i==0)star.moveTo(startX,startY);
+                    else star.lineTo(startX,startY);
+                    star.quadTo(xs[i],ys[i],endX,endY);
+                }
+                star.close();
+                c.save();c.translate(0,1.6f);
+                p.setColor(0xffe48408);c.drawPath(star,p);
+                c.restore();
+                p.setShader(new LinearGradient(0,2,0,23,
+                    0xffffed87,color,Shader.TileMode.CLAMP));
+                c.drawPath(star,p);p.setShader(null);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
+                p.setColor(0xfffff7c5);c.drawPath(star,p);
+                p.setStyle(Paint.Style.FILL);
+                p.setShader(new LinearGradient(6,4,17,12,
+                    0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                c.drawOval(6,5,17,10,p);
+                p.setShader(null);
             }else if("flame".equals(type)){
                 Path flame=new Path();
                 flame.moveTo(12,1);
@@ -2254,14 +2280,22 @@ public final class MainActivity extends Activity {
                 case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
                 default:top="Niz dana";bottom="igranja";
             }
-            icon(symbol,x+25,y+29,width<=118?24:29,accent);
+            icon(symbol,x+(width<=118?29:31),y+(width<=118?29:38),
+                width<=118?33:43,accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
             fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
             fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
+            // References use substantially stronger contrast than the
+            // pastel card surfaces; size and color do not imply mock data.
+            int valueColor=caption.contains("Najbolji")?0xffff5137:
+                caption.contains("partija")?0xff00a9b0:
+                caption.contains("pločica")?0xffee7b12:
+                caption.contains("Prosjek")?0xff1170e9:
+                caption.contains("pobjeda")?0xff8628d0:accent;
             fitted(value,x+width/2,y+h-(dense?9:17),
-                dense?21:29,width-12,accent,true);
+                dense?29:35,width-12,theme==1?lighten(valueColor,.22f):valueColor,true);
         }
         void historyDetail(){
             title("Detalji partije");
