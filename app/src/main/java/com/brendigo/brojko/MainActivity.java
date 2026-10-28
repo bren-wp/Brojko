@@ -823,15 +823,22 @@ public final class MainActivity extends Activity {
                     star.quadTo(xs[i],ys[i],endX,endY);
                 }
                 star.close();
+                // Statistics uses a BLUE star; mission rewards are gold.
+                // Respect the supplied accent instead of recoloring every star.
+                boolean golden=Color.red(color)>200 &&
+                    Color.green(color)>100&&Color.blue(color)<140;
+                int rim=golden?0xffe48408:darken(color,.28f);
+                int top=golden?0xffffed87:lighten(color,.43f);
+                int edge=golden?0xfffff7c5:lighten(color,.69f);
                 c.save();c.translate(0,1.6f);
-                p.setColor(0xffe48408);c.drawPath(star,p);
+                p.setColor(rim);c.drawPath(star,p);
                 c.restore();
                 p.setShader(new LinearGradient(0,2,0,23,
-                    0xffffed87,color,Shader.TileMode.CLAMP));
+                    top,color,Shader.TileMode.CLAMP));
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
-                p.setColor(0xfffff7c5);c.drawPath(star,p);
+                p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
                 p.setShader(new LinearGradient(6,4,17,12,
                     0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
