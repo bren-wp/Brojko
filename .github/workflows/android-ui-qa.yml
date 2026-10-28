@@ -60,6 +60,23 @@ jobs:
             adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
+            # A green instrumented test run is not enough if UI screenshots
+            # were silently lost. Require all nine reference-matched screens.
+            for capture in \
+              splash-full-width-portrait-reference-941x1672.png \
+              home-source-accent-rays-941x1672.png \
+              golden-state-game-941x1672.png \
+              golden-state-win-941x1672.png \
+              daily-large-safe-primary-rays-941x1672.png \
+              missions-six-real-progress-941x1672.png \
+              golden-state-stats-941x1672.png \
+              themes-peach-style-swatches-941x1672.png \
+              reference-settings-polished-941x1672.png; do
+              if [ ! -s "android-screenshots/screenshots/$capture" ]; then
+                echo "::error::Missing real screenshot: $capture"
+                exit 1
+              fi
+            done
             grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
       - name: Retry emulator if the first boot failed before instrumenting
         id: emulator-retry
@@ -84,6 +101,23 @@ jobs:
             adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
+            # A green instrumented test run is not enough if UI screenshots
+            # were silently lost. Require all nine reference-matched screens.
+            for capture in \
+              splash-full-width-portrait-reference-941x1672.png \
+              home-source-accent-rays-941x1672.png \
+              golden-state-game-941x1672.png \
+              golden-state-win-941x1672.png \
+              daily-large-safe-primary-rays-941x1672.png \
+              missions-six-real-progress-941x1672.png \
+              golden-state-stats-941x1672.png \
+              themes-peach-style-swatches-941x1672.png \
+              reference-settings-polished-941x1672.png; do
+              if [ ! -s "android-screenshots/screenshots/$capture" ]; then
+                echo "::error::Missing real screenshot: $capture"
+                exit 1
+              fi
+            done
             grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
       - name: Require a successful emulator test run
         if: always()
