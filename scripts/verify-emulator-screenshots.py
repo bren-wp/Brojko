@@ -24,6 +24,17 @@ CAPTURES = (
     "reference-settings-polished-941x1672.png",
 )
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+COMPACT_CAPTURES = (
+    "compact-360x600-home.png",
+    "compact-360x600-game.png",
+    "compact-360x600-daily.png",
+    "compact-360x600-missions.png",
+    "compact-360x600-stats.png",
+    "compact-360x600-themes.png",
+    "compact-360x600-settings.png",
+)
+MINIMUM_TOTAL_CAPTURES = 145
+
 
 
 def verify() -> None:
@@ -36,7 +47,14 @@ def verify() -> None:
     count = int(matched.group(1))
     if count < 64:
         raise ValueError(f"Only {count} tests passed; 64 is the regression baseline")
-    for name in CAPTURES:
+    captures = list(ROOT.glob("*.png"))
+    if len(captures) < MINIMUM_TOTAL_CAPTURES:
+        raise ValueError(f"Expected at least {MINIMUM_TOTAL_CAPTURES} screen captures, "
+                         f"found {len(captures)}")
+    for name, expected_size in (
+        *((name, (941, 1672)) for name in CAPTURES),
+        *((name, (360, 600)) for name in COMPACT_CAPTURES),
+    ):
         path = ROOT / name
         if not path.is_file():
             raise ValueError(f"Missing real Android screenshot: {path}")
@@ -47,9 +65,10 @@ def verify() -> None:
         if header[12:16] != b"IHDR":
             raise ValueError(f"Missing PNG IHDR: {path}")
         width, height = struct.unpack(">II", header[16:24])
-        if (width, height) != (941, 1672):
+        if (width, height) != expected_size:
             raise ValueError(f"Wrong screenshot size {width}x{height}: {path}")
-    print(f"Android QA: {count} tests passed; {len(CAPTURES)} authentic 941x1672 PNGs validated")
+    print(f"Android QA: {count} tests; {len(captures)} PNGs including "
+          f"{len(CAPTURES)} reference and {len(COMPACT_CAPTURES)} compact screens")
 
 
 if __name__ == "__main__":
