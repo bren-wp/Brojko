@@ -2130,6 +2130,42 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void corruptLegacyHistoryCannotLoseLatestCompletedGame(){
+        rule.getScenario().onActivity(activity->{
+            TileGame originalGame=activity.game;
+            int originalLastScore=activity.lastScore;
+            String originalHistory=activity.prefs.getString("history","[]");
+            try{
+                assertTrue(activity.prefs.edit().putString("history",
+                    "{bad old archive").commit());
+                TileGame finished=new TileGame("classic","",2026L);
+                finished.cells[0]=2048;
+                finished.score=2048;
+                finished.peak=2048;
+                finished.moves=25;
+                finished.reached2048=true;
+                activity.game=finished;
+                assertTrue("Archiving a valid game must survive malformed history",
+                    activity.archive());
+                assertTrue("Game is marked archived only after disk save",
+                    finished.archived);
+                org.json.JSONArray history=new org.json.JSONArray(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Latest game must be at the top",history.length()>0);
+                assertEquals(2048,history.getJSONObject(0).getInt("score"));
+                assertEquals("classic",history.getJSONObject(0).getString("mode"));
+                assertEquals(2048,activity.lastScore);
+            }catch(Exception e){
+                throw new AssertionError("New session could not be archived",e);
+            }finally{
+                activity.prefs.edit().putString("history",originalHistory).commit();
+                activity.game=originalGame;
+                activity.lastScore=originalLastScore;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void compactThemesSoundSwitchNeverActivatesVibration(){
         rule.getScenario().onActivity(activity->{
             boolean originalSound=activity.sound;
