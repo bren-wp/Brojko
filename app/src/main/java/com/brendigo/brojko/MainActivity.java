@@ -1436,9 +1436,12 @@ public final class MainActivity extends ComponentActivity {
                 txt("256",393,702,43,WHITE,true);c.restore();
                 splashWordmark();
                 txt("by Brendigo",284,417,19,muted,true);
-                card(17,562,366,66,33,theme==1?card:0xfffff0db);
-                fitted("Spajaj brojeve.",110,604,23,187,CORAL,true);
-                fitted("Ruši rekorde.",292,604,23,179,TEAL,true);
+                // Native 941x1672 reference: cream slogan pill and both
+                // phrases sit about 10 design units higher than before.
+                // Keep the source's compact gap between coral and teal.
+                card(17,552,366,58,30,theme==1?card:0xfffff0db);
+                fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
+                fitted("Ruši rekorde.",287,594,23.8f,179,TEAL,true);
                 return;
             }
             // Taller devices retain the full-height composition.
