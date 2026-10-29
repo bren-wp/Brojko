@@ -30,6 +30,8 @@ import android.view.View;
 import android.view.MotionEvent;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import android.view.accessibility.AccessibilityEvent;
@@ -45,7 +47,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /** Brojko: offline, native number-merging game. Every visible action is functional. */
-public final class MainActivity extends Activity {
+public final class MainActivity extends ComponentActivity {
     static final int INK=0xff1e2a44, CREAM=0xfffff8ee,
         LIGHT_CANVAS=0xfffefcf6, CORAL=0xffff7a5b,
         TEAL=0xff2ec4b6, MUTED=0xff77849a, WHITE=Color.WHITE;
@@ -77,6 +79,10 @@ public final class MainActivity extends Activity {
         // Android 15+ draws under transparent system bars. Enable the same
         // contract on older versions and place controls inside safe insets.
         WindowCompat.enableEdgeToEdge(getWindow());
+        // Android 16 predictive back gestures do not invoke Activity.onBackPressed.
+        getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){
+            @Override public void handleOnBackPressed(){handleBackNavigation();}
+        });
         prefs=getSharedPreferences("brojko",MODE_PRIVATE);
         best=prefs.getInt("best",0);plays=prefs.getInt("games",0);total=prefs.getInt("total",0);
         lastScore=prefs.getInt("lastScore",0);
@@ -543,7 +549,7 @@ public final class MainActivity extends Activity {
         }
         return super.onKeyDown(keyCode,event);
     }
-    @Override public void onBackPressed(){
+    void handleBackNavigation(){
         if(page.equals("game"))navigate("pause");
         else if(page.equals("pause"))navigate("game");
         else if(page.equals("historyDetail"))navigate("stats");
@@ -553,7 +559,7 @@ public final class MainActivity extends Activity {
         else if(page.equals("confirm")||page.equals("confirmEnd"))navigate(game==null?"home":"game");
         else if(page.equals("win")||page.equals("over")||page.equals("dailyWin")||page.equals("dailyFail"))navigate("home");
         else if(page.equals("splash"))navigate("home");
-        else if(page.equals("home"))super.onBackPressed();
+        else if(page.equals("home"))finish();
         else navigate("home");
     }
     @Override protected void onSaveInstanceState(Bundle out){
