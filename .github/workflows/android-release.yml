@@ -56,15 +56,8 @@ jobs:
         run: |
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/release/*.apk
-      - name: Generate SHA256 checksums
-        run: |
-          {
-            find app/build/outputs/apk -type f -name '*.apk'
-            find app/build/outputs/bundle -type f -name '*.aab'
-          } | LC_ALL=C sort | while IFS= read -r file; do
-            printf '%s  %s\n' "$(sha256sum "$file" | cut -d ' ' -f1)" "$(basename "$file")"
-          done > SHA256SUMS
-          test -s SHA256SUMS
+      - name: Generate verified portable SHA256 checksums
+        run: bash scripts/generate-checksums.sh
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
