@@ -25,7 +25,9 @@ android {
  }
  buildTypes {
   release {
-   minifyEnabled false
+   minifyEnabled true
+   shrinkResources true
+   proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
    if (System.getenv('BROJKO_KEYSTORE_FILE')) signingConfig signingConfigs.release
   }
  }
@@ -33,6 +35,7 @@ android {
  testOptions { unitTests.returnDefaultValues=true }
 }
 dependencies {
+ implementation 'androidx.core:core:1.17.0'
  testImplementation 'junit:junit:4.13.2'
  testImplementation 'org.json:json:20240303'
  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
