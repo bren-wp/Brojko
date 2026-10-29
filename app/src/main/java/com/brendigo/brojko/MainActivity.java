@@ -1170,7 +1170,15 @@ public final class MainActivity extends ComponentActivity {
                 c.drawRoundRect(x+3,y+2,x+w-3,
                     y+h-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
-            }else card(x,y,w,h,radius,color);
+            }else {
+                // Game action cards in the supplied 4x4 screenshot have a
+                // warm, raised cream surface; the previous near-white fill
+                // blended into the canvas. Leave small header controls and
+                // every other screen unchanged.
+                boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
+                card(x,y,w,h,radius,
+                    raisedGameAction&&theme!=1?0xfffff3e5:color);
+            }
             boolean hasSymbol=symbol!=null;
             int iconColor=prominent?WHITE:ink;
             if(hasSymbol&&w<150&&h>=77){
@@ -2251,8 +2259,8 @@ public final class MainActivity extends ComponentActivity {
             // Original: titles and descriptions begin after the pictogram,
             // rather than floating in the center of their entire row.
             float titleBaseline=y+(portrait?21:26);
-            leftFitted(name,103,titleBaseline,portrait?15.5f:17.5f,
-                179,ink,true);
+            leftFitted(name,103,titleBaseline,portrait?17.5f:17.5f,
+                portrait?198:179,ink,true);
             if(name.startsWith("Dosegni 512")){
                 leftFitted("Ostvari pločicu 512",103,
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
@@ -2284,9 +2292,9 @@ public final class MainActivity extends ComponentActivity {
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
             icon("star",rewardCenter,y+(portrait?24:29),
-                portrait?27:29,0xffffad1a);
+                portrait?30:29,0xffffad1a);
             fitted("+"+fmt(reward),rewardCenter,y+(portrait?54:62),
-                portrait?13:13,portrait?49:63,ink,true);
+                portrait?15:13,portrait?49:63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
