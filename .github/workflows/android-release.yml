@@ -58,7 +58,12 @@ jobs:
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/release/*.apk
       - name: Generate SHA256 checksums
         run: |
-          find app/build/outputs/apk app/build/outputs/bundle -type f \\( -name '*.apk' -o -name '*.aab' \\) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          {
+            find app/build/outputs/apk -type f -name '*.apk'
+            find app/build/outputs/bundle -type f -name '*.aab'
+          } | LC_ALL=C sort | while IFS= read -r file; do
+            printf '%s  %s\n' "$(sha256sum "$file" | cut -d ' ' -f1)" "$(basename "$file")"
+          done > SHA256SUMS
           test -s SHA256SUMS
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
