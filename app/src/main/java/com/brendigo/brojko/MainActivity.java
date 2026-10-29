@@ -1354,6 +1354,58 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(x,y,x+width,y+height,17,17,p);
             p.clearShadowLayer();c.restore();
         }
+        // Splash-only wordmark: the source uses wider rounded lettering,
+        // a shorter coral number tile and three pronounced accent strokes.
+        // Never substitute a reference bitmap: draw each part natively so
+        // the screen remains responsive and the brand is theme-aware.
+        void splashWordmark(){
+            final float y=399f,size=116f;
+            p.setTypeface(displayFont);
+            p.setTextSize(size);
+            p.setTextScaleX(1f);
+            float left=p.measureText("Br"),right=p.measureText("jko");
+            float gap=size*.09f,tile=size*.74f;
+            float start=200f-(left+right+tile+2f*gap)/2f;
+            float bx=start+left+gap;
+
+            c.save();
+            c.scale(.80f,1.19f,200f,405f);
+            // The navy B/r in the reference have a broader silhouette.
+            c.save();
+            c.translate(-10.6f,0);
+            c.scale(1.185f,1f,3.6f,y);
+            txt("Br",start+left/2f,y,size,ink,true);
+            c.restore();
+
+            // Reference: coral 2 tile about 146 x 158 native pixels.
+            // Preserve its native shaded bevel, but remove the old extra
+            // vertical stretch and align its bottom with the letterforms.
+            c.save();
+            c.translate(-4.25f,2.2f);
+            c.scale(.90f,.66f,137.6f,394.36f);
+            styledTile(bx,y-size*.78f,tile,tile,
+                Math.max(7,size*.16f),CORAL,0);
+            txt("2",bx+tile/2f,y-size*.20f,size*.52f,WHITE,true);
+            c.restore();
+
+            // The source's jko starts immediately after the number tile.
+            c.save();
+            c.translate(-36.2f,0);
+            c.scale(1.25f,.92f,228f,316f);
+            txt("jko",bx+tile+gap+right/2f,y,size,ink,true);
+            c.restore();
+            c.restore();
+
+            // Accent strokes must sit *above* the number tile, not behind it.
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);p.setColor(CORAL);
+            p.setStrokeWidth(8.5f);p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawLine(133,310,148,322,p);
+            c.drawLine(155,283,166,307,p);
+            c.drawLine(195,282,184,307,p);
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setStyle(Paint.Style.FILL);
+        }
         void splashPage(){
             if(referencePortraitLayout){
                 // Source 941x1672 uses full width; only edge decorations crop.
@@ -1382,14 +1434,8 @@ public final class MainActivity extends ComponentActivity {
                 c.save();c.rotate(-13,394,682);
                 styledTile(328,621,131,126,22,TILES[8],0);
                 txt("256",393,702,43,WHITE,true);c.restore();
-                // The reference logo is tall and compact. The unscaled
-                // Nunito glyph advances otherwise run off both side edges.
-                // Scale only this splash wordmark, not the touch/UI layout.
-                c.save();
-                c.scale(.80f,1.19f,200f,405f);
-                brand(399,116,false);
-                c.restore();
-                txt("by Brendigo",289,428,19,muted,true);
+                splashWordmark();
+                txt("by Brendigo",284,417,19,muted,true);
                 card(17,562,366,66,33,theme==1?card:0xfffff0db);
                 fitted("Spajaj brojeve.",110,604,23,187,CORAL,true);
                 fitted("Ruši rekorde.",292,604,23,179,TEAL,true);
