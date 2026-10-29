@@ -94,19 +94,28 @@ public class ScreensSmokeTest {
             try{
                 activity.page="settings";
                 activity.theme=0;
+                activity.updateBars();
                 view.draw(new Canvas(screenshot));
                 assertEquals("Portrait reference background must not be tinted cream",
                     MainActivity.LIGHT_CANVAS,screenshot.getPixel(2,200));
                 assertEquals(MainActivity.LIGHT_CANVAS,view.bg);
+                assertEquals("Status bar must match the light UI canvas",
+                    MainActivity.LIGHT_CANVAS,activity.getWindow().getStatusBarColor());
+                assertEquals("Navigation bar must match the light UI canvas",
+                    MainActivity.LIGHT_CANVAS,activity.getWindow().getNavigationBarColor());
                 activity.theme=1;
+                activity.updateBars();
                 view.draw(new Canvas(screenshot));
                 assertEquals("Changing the light background must never affect dark mode",
                     0xff14233a,screenshot.getPixel(2,200));
                 assertEquals(0xff14233a,view.bg);
+                assertEquals(0xff14233a,activity.getWindow().getStatusBarColor());
+                assertEquals(0xff14233a,activity.getWindow().getNavigationBarColor());
             }finally{
                 screenshot.recycle();
                 activity.page=originalPage;
                 activity.theme=originalTheme;
+                activity.updateBars();
                 activity.screen.invalidate();
             }
         });
