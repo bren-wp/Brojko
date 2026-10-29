@@ -194,7 +194,7 @@ public final class MainActivity extends Activity {
     }
     void updateBars() {
         boolean dark=theme==1;
-        int base=dark?0xff14233a:CREAM;
+        int base=dark?0xff14233a:LIGHT_CANVAS;
         getWindow().setStatusBarColor(base);getWindow().setNavigationBarColor(base);
         int flags=dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
         getWindow().getDecorView().setSystemUiVisibility(flags);
