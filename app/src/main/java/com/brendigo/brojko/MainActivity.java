@@ -2368,17 +2368,15 @@ public final class MainActivity extends Activity {
             }
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
-            icon(symbol,x+25,y+29,width<=118?29:34,
+            icon(symbol,x+25,y+29,width<=118?24:29,
                 "gamepad".equals(symbol)?ink:accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
             fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
             fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
-            // Reference portrait KPI numerals are larger than the
-            // earlier compact font, but still fit their real card bounds.
-            fitted(value,x+width/2,y+h-(dense?7:17),
-                dense?26:29,width-12,accent,true);
+            fitted(value,x+width/2,y+h-(dense?9:17),
+                dense?21:29,width-12,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
