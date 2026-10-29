@@ -602,12 +602,16 @@ public final class MainActivity extends Activity {
             p.setColor(color);c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
         }
         void card(float x,float y,float w,float h,float radius,int color) {
-            // One elevation/outline treatment for ALL selectable cards.
-            shape(x,y+6,w,h,radius,theme==1?0xff0d192b:0xffe9d9c7);
-            shape(x+1,y+3,w-2,h,radius,shadow);
-            gradient(x,y,w,h,radius,lighten(color,theme==1?.10f:.07f),color);
+            // Softer cream elevation matches the supplied portrait cards;
+            // keep the existing dark-mode elevation and all hit rectangles.
+            boolean dark=theme==1;
+            shape(x,y+(dark?6f:4f),w,h,radius,
+                dark?0xff0d192b:0xfff2e7d9);
+            shape(x+1,y+(dark?3f:2f),w-2,h,radius,
+                dark?shadow:0xfff1e8dd);
+            gradient(x,y,w,h,radius,lighten(color,dark?.10f:.07f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(1f);p.setColor(theme==1?0x30ffffff:0x85ffffff);
+            p.setStrokeWidth(1f);p.setColor(dark?0x30ffffff:0x72ffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,Math.max(1,radius-1),
                 Math.max(1,radius-1),p);
             p.setStyle(Paint.Style.FILL);
