@@ -25,7 +25,15 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.3.1'
+          gradle-version: '9.6.0'
+      - name: Block known non-monotonic Google Play version codes
+        env:
+          RELEASE_NUMBER: ${{ github.run_number }}
+        run: |
+          if [ "$RELEASE_NUMBER" -le 110 ]; then
+            echo "::error::Release run number $RELEASE_NUMBER is not above known Play release 110. Verify the actual highest used versionCode before publishing."
+            exit 1
+          fi
       - name: Configure signing, if secrets exist
         env:
           STORE: ${{ secrets.BROJKO_KEYSTORE_B64 }}
@@ -48,12 +56,17 @@ jobs:
         run: |
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/release/*.apk
+      - name: Generate SHA256 checksums
+        run: |
+          find app/build/outputs/apk app/build/outputs/bundle -type f \\( -name '*.apk' -o -name '*.aab' \\) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          test -s SHA256SUMS
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Brojko-Android-v1.12-${{ github.run_number }}
           if-no-files-found: error
           path: |
+            SHA256SUMS
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
@@ -68,6 +81,7 @@ jobs:
             Android build with gameplay, local progress, three game modes, challenges, statistics and visual refinements.
             **Signing:** debug APK is installed with a debug key. Release APK/AAB are production-signable only when repository keystore secrets are configured.
           files: |
+            SHA256SUMS
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab

@@ -31,7 +31,7 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.3.1'
+          gradle-version: '9.6.0'
       - name: Prepare and verify Nunito font + OFL license
         run: bash scripts/prepare-nunito.sh
       - name: Enable KVM
@@ -57,7 +57,8 @@ jobs:
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             # Preserve the failing test output and any generated screenshots
             # so a regression can be diagnosed directly from the PR artifact.
-            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
+            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
+            grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
             python3 scripts/verify-emulator-screenshots.py
@@ -81,7 +82,8 @@ jobs:
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             # Preserve the failing test output and any generated screenshots
             # so a regression can be diagnosed directly from the PR artifact.
-            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
+            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
+            grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
             python3 scripts/verify-emulator-screenshots.py

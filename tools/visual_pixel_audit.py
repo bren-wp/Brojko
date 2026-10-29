@@ -27,12 +27,16 @@ SCREENS = {
 # must not hide deteriorating controls, digits or raised tile details.
 REGIONS = {
     "Splash": [("Logotip", (110, 580, 835, 1100))],
-    "Početni": [("Glavni gumb", (120, 665, 820, 910))],
+    "Početni": [("Logotip", (130, 160, 805, 450)),
+                 ("Glavni gumb", (120, 665, 820, 910)),
+                 ("Načini igre", (30, 910, 915, 1320))],
     "Igra 4×4": [("Ploča", (35, 365, 920, 1325)),
-                 ("Pločice", (45, 410, 910, 1285))],
+                 ("Pločice", (45, 410, 910, 1285)),
+                 ("Donje kontrole", (35, 1320, 920, 1600))],
     "Pobjeda": [("Rezultat i akcije", (135, 450, 805, 1415))],
     "Dnevni izazov": [("Ploča", (195, 360, 755, 970))],
-    "Misije": [("Kartice nagrada", (720, 345, 920, 1580))],
+    "Misije": [("Tekst i napredak", (220, 345, 730, 1580)),
+               ("Kartice nagrada", (720, 345, 920, 1580))],
     "Statistika": [("KPI kartice", (30, 300, 915, 760))],
     "Teme": [("Kartice tema", (40, 380, 900, 800)),
              ("Pretpregled pločica", (55, 940, 900, 1385))],
@@ -64,7 +68,8 @@ def main():
     parser.add_argument("--reference-dir", type=Path, required=True)
     parser.add_argument("--artifact", type=Path, required=True)
     parser.add_argument("--baseline-artifact", type=Path)
-    parser.add_argument("--reference-copy-index", default="7")
+    parser.add_argument("--reference-copy-index",
+                        help="Optional exact suffix for multiple copies, e.g. 9")
     parser.add_argument("--markdown", type=Path)
     parser.add_argument("--include-regions", action="store_true",
                         help="Also report important real-pixel subregions per screen")
@@ -86,8 +91,10 @@ def main():
             previous = None
         try:
             for label, (token, name) in SCREENS.items():
-                found = sorted(args.reference_dir.glob(
-                    f"Slika ChatGPT*{token}({args.reference_copy_index}).png"))
+                pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
+                           if args.reference_copy_index is not None
+                           else f"Slika ChatGPT*{token}*.png")
+                found = sorted(args.reference_dir.glob(pattern))
                 if len(found) != 1:
                     raise ValueError(f"Expected one reference for {token}; found {len(found)}")
                 with Image.open(found[0]) as image:
