@@ -33,6 +33,14 @@ COMPACT_CAPTURES = (
     "compact-360x600-themes.png",
     "compact-360x600-settings.png",
 )
+# These are functional states, not source mockups: require a real capture
+# for each independently reachable mode, dialog, and settings subpage.
+REQUIRED_STATES = (
+    "game-real-classic.png", "game-real-relaxed.png", "game-real-daily.png",
+    "pause.png", "over.png", "win.png", "confirm.png", "confirmEnd.png",
+    "dailyWin.png", "dailyFail.png", "historyDetail.png",
+    "backup.png", "privacy.png", "about.png", "language.png", "help.png",
+)
 MINIMUM_TOTAL_CAPTURES = 145
 
 
@@ -51,6 +59,17 @@ def verify() -> None:
     if len(captures) < MINIMUM_TOTAL_CAPTURES:
         raise ValueError(f"Expected at least {MINIMUM_TOTAL_CAPTURES} screen captures, "
                          f"found {len(captures)}")
+    for name in REQUIRED_STATES:
+        path = ROOT / name
+        if not path.is_file():
+            raise ValueError(f"Missing real screen or modal capture: {path}")
+        with path.open("rb") as capture:
+            header = capture.read(24)
+        if len(header) != 24 or header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
+            raise ValueError(f"Invalid real screen PNG: {path}")
+        width, height = struct.unpack(">II", header[16:24])
+        if width < 100 or height < 100:
+            raise ValueError(f"Unusable screen capture {width}x{height}: {path}")
     for name, expected_size in (
         *((name, (941, 1672)) for name in CAPTURES),
         *((name, (360, 600)) for name in COMPACT_CAPTURES),
