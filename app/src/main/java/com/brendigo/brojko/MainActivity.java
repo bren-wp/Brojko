@@ -1445,8 +1445,20 @@ public final class MainActivity extends Activity {
             boolean relaxed="relaxed".equals(game.mode);
             boolean daily="daily".equals(game.mode);
             boolean narrow=compactBoardLayout;
-            fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
-                105,89,daily?32:43,201,ink,true);
+            if(narrow&&!daily&&!relaxed){
+                // The source's classic portrait heading is deliberately tall:
+                // stretch only its drawn glyphs, not the text hit regions or
+                // neighboring score columns. Keep the 4x4 tag independent.
+                c.save();
+                c.scale(1f,1.40f,105f,60f);
+                fitted("Klasično",105,89,43,201,ink,true);
+                c.restore();
+                // Three coral rays above the reference title's upper accents.
+                rays(110,67,35,CORAL);
+            }else{
+                fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
+                    105,89,daily?32:43,201,ink,true);
+            }
             if(!daily) {
                 if(narrow&&!relaxed){
                     card(60,100,93,43,18,CORAL);
