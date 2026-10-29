@@ -82,6 +82,36 @@ public class ScreensSmokeTest {
         return result;
     }
 
+    @Test public void lightCanvasMatchesReferenceAndDarkPaletteIsPreserved(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+            view.layout(0,0,941,1672);
+            Bitmap screenshot=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="settings";
+                activity.theme=0;
+                view.draw(new Canvas(screenshot));
+                assertEquals("Portrait reference background must not be tinted cream",
+                    MainActivity.LIGHT_CANVAS,screenshot.getPixel(2,200));
+                assertEquals(MainActivity.LIGHT_CANVAS,view.bg);
+                activity.theme=1;
+                view.draw(new Canvas(screenshot));
+                assertEquals("Changing the light background must never affect dark mode",
+                    0xff14233a,screenshot.getPixel(2,200));
+                assertEquals(0xff14233a,view.bg);
+            }finally{
+                screenshot.recycle();
+                activity.page=originalPage;
+                activity.theme=originalTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
         rule.getScenario().onActivity(activity->{
             int originalStars=activity.stars,originalFlags=activity.rewardFlags;
