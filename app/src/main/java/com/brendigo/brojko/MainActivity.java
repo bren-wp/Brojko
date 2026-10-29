@@ -952,13 +952,8 @@ public final class MainActivity extends Activity {
                     if(i==0)gear.moveTo(x,y);else gear.lineTo(x,y);
                 }
                 gear.close();
-                int gearColor=color==ink?0xff172b4f:color;
-                c.save();c.translate(0,1.1f);
-                p.setColor(0x3009122a);c.drawPath(gear,p);c.restore();
-                p.setShader(new LinearGradient(3,2,21,23,
-                    lighten(gearColor,.22f),darken(gearColor,.12f),
-                    Shader.TileMode.CLAMP));
-                c.drawPath(gear,p);p.setShader(null);
+                p.setColor(color==ink?0xff172b4f:color);
+                c.drawPath(gear,p);
                 p.setColor(theme==1?0xff263653:CREAM);
                 c.drawCircle(12,12,4.1f,p);
             }else if("calendar".equals(type)){
