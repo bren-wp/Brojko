@@ -2114,48 +2114,13 @@ public final class MainActivity extends Activity {
                 name.contains("Majstor")?"grid":
                 name.contains("Spoji")?"grid":"target";
             if(name.startsWith("Dosegni 512")){
-                // Tilted glossy purple number tile and accent ticks from the
-                // supplied mission pictogram rather than a flat square.
-                c.save();
-                c.rotate(-7,62,y+32);
                 styledTile(42,y+12,40,40,10,0xffa663e4,0);
                 fitted("512",62,y+40,18,39,WHITE,true);
-                c.restore();
-                p.setShader(null);p.setColor(0xffffad2c);
-                c.save();c.rotate(24,88,y+20);
-                c.drawRoundRect(85,y+10,90,y+22,2.5f,2.5f,p);
-                c.restore();
             }else if(name.startsWith("Spoji 20")){
-                // Real vector gesture decoration remains crisp on every DPI.
-                c.save();c.rotate(-11,52,y+27);
                 styledTile(42,y+15,21,24,6,CORAL,0);
-                fitted("2",52,y+33,16,19,WHITE,true);
-                c.restore();
-                c.save();c.rotate(9,72,y+27);
                 styledTile(62,y+15,21,24,6,TEAL,0);
+                fitted("2",52,y+33,16,19,WHITE,true);
                 fitted("4",72,y+33,16,19,WHITE,true);
-                c.restore();
-                if(portrait){
-                    Path finger=new Path();
-                    finger.moveTo(70,y+52);
-                    finger.lineTo(62,y+42);
-                    finger.quadTo(60,y+38,63,y+36);
-                    finger.quadTo(66,y+34,69,y+38);
-                    finger.lineTo(65,y+27);
-                    finger.quadTo(64,y+23,67,y+22);
-                    finger.quadTo(71,y+21,72,y+26);
-                    finger.lineTo(75,y+36);
-                    finger.quadTo(79,y+33,81,y+37);
-                    finger.quadTo(85,y+35,87,y+40);
-                    finger.lineTo(87,y+49);
-                    finger.quadTo(82,y+58,75,y+56);
-                    finger.close();
-                    p.setStyle(Paint.Style.FILL);p.setShader(null);
-                    p.setColor(0xff263c64);c.drawPath(finger,p);
-                    c.save();c.translate(0,-1.5f);
-                    p.setColor(WHITE);c.drawPath(finger,p);
-                    c.restore();
-                }
             }else if(name.startsWith("Majstor")){
                 int[] mini={2,4,8,16};
                 for(int index=0;index<4;index++){
