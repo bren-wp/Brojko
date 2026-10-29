@@ -1434,9 +1434,16 @@ public final class MainActivity extends ComponentActivity {
             c.save();c.rotate(9,390,179);
             styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
-            // Golden comparison confirmed the earlier logo's vertical
-            // position was closer than the enlarged v1.12.95 experiment.
-            brand(portrait?153:197,72);
+            // Reference wordmark has almost the same width as our lettering,
+            // but its navy silhouette is significantly taller. Scale only
+            // the drawn portrait glyphs, not layout/touch areas or the byline.
+            if(portrait){
+                c.save();
+                c.scale(1.03f,1.24f,200f,134f);
+                brand(153,72,false);
+                c.restore();
+                txt("by Brendigo",265,184,15,muted,true);
+            }else brand(197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
