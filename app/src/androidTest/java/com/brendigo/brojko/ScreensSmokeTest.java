@@ -82,14 +82,15 @@ public class ScreensSmokeTest {
         return result;
     }
 
-    private static void assertPlatformSystemBarColor(
-            String label,int expected,int actual){
-        // Android 15/API 35 uses transparent edge-to-edge system bars.
-        // Their composited appearance comes from the already tested UI
-        // canvas, so a transparent bar is not a wrong cream background.
-        if(android.os.Build.VERSION.SDK_INT>=35 &&
-                actual==android.graphics.Color.TRANSPARENT)return;
-        assertEquals(label,expected,actual);
+    private static void assertSystemBarIconContrast(MainActivity activity,boolean light){
+        androidx.core.view.WindowInsetsControllerCompat controller=
+            androidx.core.view.WindowCompat.getInsetsController(
+                activity.getWindow(),activity.getWindow().getDecorView());
+        assertEquals("Status icon contrast must match canvas",light,
+            controller.isAppearanceLightStatusBars());
+        if(android.os.Build.VERSION.SDK_INT>=26)
+            assertEquals("Navigation icon contrast must match canvas",light,
+                controller.isAppearanceLightNavigationBars());
     }
 
     @Test public void lightCanvasMatchesReferenceAndDarkPaletteIsPreserved(){
@@ -109,25 +110,64 @@ public class ScreensSmokeTest {
                 assertEquals("Portrait reference background must not be tinted cream",
                     MainActivity.LIGHT_CANVAS,screenshot.getPixel(2,200));
                 assertEquals(MainActivity.LIGHT_CANVAS,view.bg);
-                assertPlatformSystemBarColor("Light status bar should match its canvas",
-                    MainActivity.LIGHT_CANVAS,activity.getWindow().getStatusBarColor());
-                assertPlatformSystemBarColor("Light navigation bar should match its canvas",
-                    MainActivity.LIGHT_CANVAS,activity.getWindow().getNavigationBarColor());
+                assertSystemBarIconContrast(activity,true);
                 activity.theme=1;
                 activity.updateBars();
                 view.draw(new Canvas(screenshot));
                 assertEquals("Changing the light background must never affect dark mode",
                     0xff14233a,screenshot.getPixel(2,200));
                 assertEquals(0xff14233a,view.bg);
-                assertPlatformSystemBarColor("Dark status bar should match its canvas",
-                    0xff14233a,activity.getWindow().getStatusBarColor());
-                assertPlatformSystemBarColor("Dark navigation bar should match its canvas",
-                    0xff14233a,activity.getWindow().getNavigationBarColor());
+                assertSystemBarIconContrast(activity,false);
             }finally{
                 screenshot.recycle();
                 activity.page=originalPage;
                 activity.theme=originalTheme;
                 activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void edgeToEdgeInsetsAreAppliedBeforeScreenControls(){
+        rule.getScenario().onActivity(activity->{
+            androidx.core.view.WindowInsetsCompat insets=
+                androidx.core.view.ViewCompat.getRootWindowInsets(activity.screen);
+            assertNotNull("A laid-out activity must receive window insets",insets);
+            androidx.core.graphics.Insets safe=insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()|
+                androidx.core.view.WindowInsetsCompat.Type.displayCutout());
+            assertEquals(safe.left,activity.screen.getPaddingLeft());
+            assertEquals(safe.top,activity.screen.getPaddingTop());
+            assertEquals(safe.right,activity.screen.getPaddingRight());
+            assertEquals(safe.bottom,activity.screen.getPaddingBottom());
+        });
+    }
+
+    @Test public void rotationRecreationPreservesCurrentGameAndNavigation(){
+        final String[] oldPage=new String[1];
+        final String[] oldSession=new String[1];
+        rule.getScenario().onActivity(activity->{
+            oldPage[0]=activity.page;
+            oldSession[0]=activity.game==null?"":activity.game.toJson().toString();
+            activity.game=new TileGame("classic","",123456L);
+            activity.game.score=256;
+            activity.page="game";
+            activity.screen.renderedPage="game";
+            activity.screen.invalidate();
+        });
+        rule.getScenario().recreate();
+        rule.getScenario().onActivity(activity->{
+            try{
+                assertEquals("game",activity.page);
+                assertNotNull(activity.game);
+                assertEquals("Board state must survive Activity recreation",256,activity.game.score);
+            }finally{
+                try{
+                    activity.game=oldSession[0].isEmpty()?null:
+                        TileGame.fromJson(new org.json.JSONObject(oldSession[0]));
+                }catch(Exception e){throw new AssertionError(e);}
+                activity.page=oldPage[0];
+                activity.persist();
                 activity.screen.invalidate();
             }
         });
