@@ -632,28 +632,28 @@ public final class MainActivity extends Activity {
                         int color,int previewStyle){
             if(width<=0||height<=0)return;
             if(previewStyle==1){shape(x,y,width,height,radius,color);return;}
-            float depth=Math.min(4.5f,Math.max(2,height*.067f));
+            float depth=Math.min(3.2f,Math.max(1.7f,height*.047f));
             // Warm extrusion and restrained shadow used across all themes.
             shape(x+1.2f,y+depth+1.4f,Math.max(1,width-2.4f),
                 Math.max(1,height-depth),radius,
-                theme==1?0x60000000:0x28a35e46);
+                theme==1?0x60000000:0x1fa35e46);
             shape(x,y+depth,width,Math.max(1,height-depth),radius,
-                darken(color,.23f));
+                darken(color,.17f));
             gradient(x,y,width,Math.max(1,height-depth),radius,
                 lighten(color,previewStyle==2?.30f:.20f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(Math.max(.6f,Math.min(1.7f,width*.025f)));
-            p.setColor(0x65ffffff);
+            p.setStrokeWidth(Math.max(.5f,Math.min(1.1f,width*.014f)));
+            p.setColor(0x49ffffff);
             c.drawRoundRect(x+1.5f,y+1.5f,x+width-1.5f,
                 y+height-depth-1.3f,Math.max(2,radius-1.5f),
                 Math.max(2,radius-1.5f),p);
             p.setStyle(Paint.Style.FILL);
             if(width>=24&&height>=24){
                 shape(x+6,y+3,Math.max(1,width-12),
-                    Math.max(1,height*.055f),radius,0x3dffffff);
+                    Math.max(1,height*.043f),radius,0x24ffffff);
                 // Small upper-left reflective sweep, matching the glossy
                 // highlights of the supplied colored reference tiles.
-                p.setColor(0x34ffffff);p.setStyle(Paint.Style.STROKE);
+                p.setColor(0x24ffffff);p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(Math.min(2f,width*.027f));
                 Path glint=new Path();
                 glint.moveTo(x+radius*.62f,y+6);
