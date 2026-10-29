@@ -133,6 +133,41 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void extraLongCroatianLabelsStayWithinCenteredAndLeftAlignedCards(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(400,140,Bitmap.Config.ARGB_8888);
+            try{
+                Canvas canvas=new Canvas(bitmap);
+                view.c=canvas;
+                view.palette();
+                String label="Sinkronizacija napretka, pravila privatnosti i postavke aplikacije";
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.fitted(label,200,62,31,130,android.graphics.Color.BLACK,true);
+                int inside=0;
+                for(int y=20;y<68;y++)for(int x=0;x<400;x++){
+                    int rgb=bitmap.getPixel(x,y);
+                    if(rgb==android.graphics.Color.WHITE)continue;
+                    if(x<134||x>266)
+                        fail("Centered text escaped its 130-unit card at x="+x);
+                    inside++;
+                }
+                assertTrue("Long centered label should still be visible",inside>25);
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.leftFitted(label,40,118,27,125,android.graphics.Color.BLACK,true);
+                inside=0;
+                for(int y=80;y<127;y++)for(int x=0;x<400;x++){
+                    int rgb=bitmap.getPixel(x,y);
+                    if(rgb==android.graphics.Color.WHITE)continue;
+                    if(x<39||x>166)
+                        fail("Left-aligned text escaped its 125-unit card at x="+x);
+                    inside++;
+                }
+                assertTrue("Long left-aligned label should still be visible",inside>25);
+            }finally{bitmap.recycle();}
+        });
+    }
+
     @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
         rule.getScenario().onActivity(activity->{
             int originalStars=activity.stars,originalFlags=activity.rewardFlags;
