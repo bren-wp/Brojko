@@ -802,15 +802,52 @@ public final class MainActivity extends Activity {
                         c.drawRoundRect(2+col*11,2+row*11,11+col*11,
                             11+row*11,2.5f,2.5f,p);
             }else if("star".equals(type)){
-                Path star=new Path();
+                // Rounded, raised golden star used for *earned* rewards.
+                // Its geometry remains vector-drawn at every Android density.
+                float[] xs=new float[10],ys=new float[10];
                 for(int i=0;i<10;i++){
                     double angle=-Math.PI/2+i*Math.PI/5;
-                    float rr=i%2==0?11f:5.3f;
-                    float px=12+(float)Math.cos(angle)*rr;
-                    float py=12+(float)Math.sin(angle)*rr;
-                    if(i==0)star.moveTo(px,py);else star.lineTo(px,py);
+                    float radius=i%2==0?10.6f:5.35f;
+                    xs[i]=12+(float)Math.cos(angle)*radius;
+                    ys[i]=12+(float)Math.sin(angle)*radius;
                 }
-                star.close();p.setColor(color);c.drawPath(star,p);
+                Path star=new Path();
+                for(int i=0;i<10;i++){
+                    int prev=(i+9)%10,next=(i+1)%10;
+                    float startX=xs[i]*.82f+xs[prev]*.18f;
+                    float startY=ys[i]*.82f+ys[prev]*.18f;
+                    float endX=xs[i]*.82f+xs[next]*.18f;
+                    float endY=ys[i]*.82f+ys[next]*.18f;
+                    if(i==0)star.moveTo(startX,startY);
+                    else star.lineTo(startX,startY);
+                    star.quadTo(xs[i],ys[i],endX,endY);
+                }
+                star.close();
+                // Statistics uses a BLUE star; mission rewards are gold.
+                // Respect the supplied accent instead of recoloring every star.
+                boolean golden=Color.red(color)>200 &&
+                    Color.green(color)>100&&Color.blue(color)<140;
+                int rim=golden?0xffe48408:darken(color,.28f);
+                int top=golden?0xffffed87:lighten(color,.43f);
+                // Reference's golden rewards have an orange rounded
+                // bevel, not a pale nearly-white perimeter.
+                int edge=golden?0xffff9f19:lighten(color,.69f);
+                c.save();c.translate(0,1.6f);
+                p.setColor(rim);c.drawPath(star,p);
+                c.restore();
+                p.setShader(new LinearGradient(0,2,0,23,
+                    top,color,Shader.TileMode.CLAMP));
+                c.drawPath(star,p);p.setShader(null);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
+                p.setColor(edge);c.drawPath(star,p);
+                p.setStyle(Paint.Style.FILL);
+                // The broad glint is intentional: screenshot pixel QA
+                // showed a better reward match without the clipped highlight.
+                p.setShader(new LinearGradient(6,4,17,12,
+                    0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                c.drawOval(6,5,17,10,p);
+                p.setShader(null);
             }else if("flame".equals(type)){
                 Path flame=new Path();
                 flame.moveTo(12,1);
@@ -1241,7 +1278,13 @@ public final class MainActivity extends Activity {
                 c.save();c.rotate(-13,394,682);
                 styledTile(328,621,131,126,22,TILES[8],0);
                 txt("256",393,702,43,WHITE,true);c.restore();
+                // The reference logo is tall and compact. The unscaled
+                // Nunito glyph advances otherwise run off both side edges.
+                // Scale only this splash wordmark, not the touch/UI layout.
+                c.save();
+                c.scale(.80f,1.19f,200f,405f);
                 brand(399,116,false);
+                c.restore();
                 txt("by Brendigo",289,428,19,muted,true);
                 card(17,562,366,66,33,theme==1?card:0xfffff0db);
                 fitted("Spajaj brojeve.",110,604,23,187,CORAL,true);
@@ -2111,24 +2154,29 @@ public final class MainActivity extends Activity {
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
             }
-            shape(104,y+(portrait?49:59),171,5,3,
+            // Thicker progress track and a separate adjacent counter: the
+            // reference places progress and 12 / 20 on a common baseline.
+            float progressY=y+(portrait?50:59);
+            shape(104,progressY,151,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             float fraction=Math.max(0,Math.min(1,(float)value/target));
-            if(fraction>0)shape(104,y+(portrait?49:59),
-                171*fraction,5,3,accent);
+            if(fraction>0)shape(104,progressY,
+                151*fraction,7,4,accent);
             // Existing 1024 tile milestone is binary; show 0/1 or 1/1
             // instead of the misleading raw maxTile/1024 ratio.
             boolean binaryMilestone=name.startsWith("Majstor");
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
-                192,y+(portrait?67:79),11,170,muted,true);
+                270,y+(portrait?59:68),11,45,muted,true);
             missionSurface(289,y+(portrait?4:6),71,
                 portrait?61:68,15,theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",323,y+(portrait?23:29),
-                portrait?24:27,0xffffad1a);
-            fitted("+"+fmt(reward),323,y+(portrait?53:62),
-                13,63,ink,true);
+            // Reward emblem is visually prominent on the reference cards,
+            // while the reward amount stays below it in the same hit-free pane.
+            icon("star",323,y+(portrait?24:29),
+                portrait?32:29,0xffffad1a);
+            fitted("+"+fmt(reward),323,y+(portrait?54:62),
+                portrait?15:13,63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
@@ -2159,7 +2207,7 @@ public final class MainActivity extends Activity {
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
             statCell("Ukupno partija",fmt(plays),143,151,114,112,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),266,151,114,112,0xffffb431);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
@@ -2254,6 +2302,8 @@ public final class MainActivity extends Activity {
                 case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
                 default:top="Niz dana";bottom="igranja";
             }
+            // Pixel comparison showed that the earlier native KPI scale
+            // matches the owner reference better than enlarging everything.
             icon(symbol,x+25,y+29,width<=118?24:29,accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
@@ -2477,7 +2527,7 @@ public final class MainActivity extends Activity {
             rays(80,121,17,CORAL);rays(352,121,17,CORAL);
             statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
             statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
-            statCell("Najveća pločica",fmt(recordTile),266,126,114,83,0xffffb431);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,126,114,83,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);

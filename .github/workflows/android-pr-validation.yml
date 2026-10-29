@@ -10,6 +10,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Validate screenshot checker syntax
+        run: python3 -m py_compile scripts/verify-emulator-screenshots.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

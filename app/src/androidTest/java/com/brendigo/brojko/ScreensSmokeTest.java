@@ -2226,6 +2226,43 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void embossedRewardStarHasRealGoldenFillAndWarmShadow(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap result=Bitmap.createBitmap(112,112,Bitmap.Config.ARGB_8888);
+            try{
+                Canvas canvas=new Canvas(result);
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.c=canvas;
+                view.palette();
+                view.polishedIcon("star",56,54,74,0xffffb526);
+                int gold=0,warm=0,bright=0;
+                for(int y=12;y<100;y++)for(int x=12;x<100;x++){
+                    int px=result.getPixel(x,y);
+                    int r=android.graphics.Color.red(px);
+                    int g=android.graphics.Color.green(px);
+                    int b=android.graphics.Color.blue(px);
+                    if(r>220&&g>155&&g<245&&b<180)gold++;
+                    if(r>180&&g>80&&g<160&&b<90)warm++;
+                    if(r>245&&g>215&&b>125&&b<230)bright++;
+                }
+                assertTrue("3D star must have substantial golden face",gold>150);
+                assertTrue("3D star must have an orange extrusion",warm>12);
+                assertTrue("3D star must have a light highlight",bright>12);
+                canvas.drawColor(android.graphics.Color.WHITE);
+                view.polishedIcon("star",56,54,74,0xff478df4);
+                int blue=0;
+                for(int y=12;y<100;y++)for(int x=12;x<100;x++){
+                    int px=result.getPixel(x,y);
+                    if(android.graphics.Color.blue(px)>180&&
+                        android.graphics.Color.blue(px)>
+                            android.graphics.Color.red(px)+35)blue++;
+                }
+                assertTrue("Statistics star must keep its blue material",blue>100);
+            }finally{result.recycle();}
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
@@ -2330,7 +2367,28 @@ public class ScreensSmokeTest {
                     splash.layout(0,0,size[0],size[1]);
                     Bitmap image=Bitmap.createBitmap(size[0],size[1],
                         Bitmap.Config.ARGB_8888);
-                    try{splash.draw(new Canvas(image));}finally{image.recycle();}
+                    try{
+                        splash.draw(new Canvas(image));
+                        if(size[0]==941){
+                            // The tall Brojko wordmark should not clip on
+                            // either edge at the owner's reference size.
+                            int minX=941,maxX=-1;
+                            for(int yy=730;yy<970;yy+=3){
+                                for(int xx=0;xx<941;xx+=3){
+                                    int rgb=image.getPixel(xx,yy);
+                                    int red=android.graphics.Color.red(rgb);
+                                    int green=android.graphics.Color.green(rgb);
+                                    int blue=android.graphics.Color.blue(rgb);
+                                    if(red<72&&green<102&&blue<144&&blue>=red){
+                                        minX=Math.min(minX,xx);
+                                        maxX=Math.max(maxX,xx);
+                                    }
+                                }
+                            }
+                            assertTrue("Logo must not be cut off on the left",minX>=65);
+                            assertTrue("Logo must not be cut off on the right",maxX<=880);
+                        }
+                    }finally{image.recycle();}
                     assertEquals("Splash must never scroll",0f,splash.maxScroll,.01f);
                     boolean compact=size[1]/(float)size[0]<1.85f;
                     if(compact){

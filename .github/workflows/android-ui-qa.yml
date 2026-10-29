@@ -38,6 +38,8 @@ jobs:
         run: |
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
       - name: Run app on Android emulator and capture every screen
+        id: emulator-primary
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -58,7 +60,40 @@ jobs:
             adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
             mkdir -p android-screenshots
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
-            grep -Eq "OK \\([1-9][0-9]* tests?\\)" instrumentation-results.txt
+            python3 scripts/verify-emulator-screenshots.py
+      - name: Retry emulator if the first boot failed before instrumenting
+        id: emulator-retry
+        if: ${{ steps.emulator-primary.outcome == 'failure' && hashFiles('instrumentation-results.txt') == '' }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            gradle --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            # Fail QA if the screenshot build reports a different app version
+            # from the release workflow that triggered this job.
+            adb shell dumpsys package com.brendigo.brojko | grep -F "versionName=1.12.$BROJKO_BUILD_NUMBER"
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            # Preserve the failing test output and any generated screenshots
+            # so a regression can be diagnosed directly from the PR artifact.
+            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt || true
+            mkdir -p android-screenshots
+            adb pull /sdcard/Android/data/com.brendigo.brojko/files/screenshots/ android-screenshots/ || echo "::warning::Some screenshots were not retrievable"
+            python3 scripts/verify-emulator-screenshots.py
+      - name: Require a successful emulator test run
+        if: always()
+        run: |
+          if [[ "${{ steps.emulator-primary.outcome }}" == "success" ||
+                "${{ steps.emulator-retry.outcome }}" == "success" ]]; then
+            exit 0
+          fi
+          echo "::error::Emulator instrumentation did not complete successfully. Do not merge."
+          exit 1
       - name: Upload real Android screen captures
         if: always()
         uses: actions/upload-artifact@v4
