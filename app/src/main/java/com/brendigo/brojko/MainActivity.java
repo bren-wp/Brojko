@@ -822,16 +822,29 @@ public final class MainActivity extends Activity {
                 pad.cubicTo(20,23,17,17,15,17);
                 pad.lineTo(9,17);pad.cubicTo(7,17,4,23,2,20);
                 pad.cubicTo(0,17,3,8,6,6);pad.close();
-                p.setColor(color);c.drawPath(pad,p);
+                // Small raised navy controller, as on the reference KPI.
+                c.save();c.translate(0,1.15f);
+                p.setColor(0x35081327);c.drawPath(pad,p);c.restore();
+                p.setShader(new LinearGradient(0,4,0,22,
+                    lighten(color,.20f),darken(color,.11f),
+                    Shader.TileMode.CLAMP));
+                c.drawPath(pad,p);p.setShader(null);
                 p.setColor(WHITE);c.drawRoundRect(6,9,8,15,1,1,p);
                 c.drawRoundRect(4,11,10,13,1,1,p);
                 c.drawCircle(16,10,1.5f,p);c.drawCircle(19,13,1.5f,p);
             }else if("grid".equals(type)){
-                p.setColor(color);
-                for(int row=0;row<2;row++)
-                    for(int col=0;col<2;col++)
-                        c.drawRoundRect(2+col*11,2+row*11,11+col*11,
-                            11+row*11,2.5f,2.5f,p);
+                for(int row=0;row<2;row++){
+                    for(int col=0;col<2;col++){
+                        float gx=2+col*11,gy=2+row*11;
+                        p.setColor(0x26a05d18);
+                        c.drawRoundRect(gx,gy+1.15f,gx+9,gy+10.15f,
+                            2.5f,2.5f,p);
+                        p.setShader(new LinearGradient(gx,gy,gx,gy+9,
+                            lighten(color,.25f),color,Shader.TileMode.CLAMP));
+                        c.drawRoundRect(gx,gy,gx+9,gy+9,2.5f,2.5f,p);
+                        p.setShader(null);
+                    }
+                }
             }else if("star".equals(type)){
                 // Rounded, raised golden star used for *earned* rewards.
                 // Its geometry remains vector-drawn at every Android density.
@@ -887,7 +900,13 @@ public final class MainActivity extends Activity {
                 flame.cubicTo(25,12,23,17,20,21);
                 flame.cubicTo(16,25,8,25,4,20);
                 flame.cubicTo(0,15,5,8,12,1);
-                flame.close();p.setColor(color);c.drawPath(flame,p);
+                flame.close();
+                c.save();c.translate(0,1f);p.setColor(0x270b1740);
+                c.drawPath(flame,p);c.restore();
+                p.setShader(new LinearGradient(4,2,18,23,
+                    lighten(color,.26f),darken(color,.07f),
+                    Shader.TileMode.CLAMP));
+                c.drawPath(flame,p);p.setShader(null);
                 Path core=new Path();core.moveTo(12,12);
                 core.cubicTo(17,17,17,19,14,22);
                 core.cubicTo(11,24,8,21,9,18);
@@ -933,8 +952,13 @@ public final class MainActivity extends Activity {
                     if(i==0)gear.moveTo(x,y);else gear.lineTo(x,y);
                 }
                 gear.close();
-                p.setColor(color==ink?0xff172b4f:color);
-                c.drawPath(gear,p);
+                int gearColor=color==ink?0xff172b4f:color;
+                c.save();c.translate(0,1.1f);
+                p.setColor(0x3009122a);c.drawPath(gear,p);c.restore();
+                p.setShader(new LinearGradient(3,2,21,23,
+                    lighten(gearColor,.22f),darken(gearColor,.12f),
+                    Shader.TileMode.CLAMP));
+                c.drawPath(gear,p);p.setShader(null);
                 p.setColor(theme==1?0xff263653:CREAM);
                 c.drawCircle(12,12,4.1f,p);
             }else if("calendar".equals(type)){
@@ -2349,7 +2373,8 @@ public final class MainActivity extends Activity {
             }
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
-            icon(symbol,x+25,y+29,width<=118?24:29,accent);
+            icon(symbol,x+25,y+29,width<=118?24:29,
+                "gamepad".equals(symbol)?ink:accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
