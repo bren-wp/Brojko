@@ -2169,14 +2169,16 @@ public final class MainActivity extends Activity {
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
                 270,y+(portrait?59:68),11,45,muted,true);
-            missionSurface(289,y+(portrait?4:6),71,
-                portrait?61:68,15,theme==1?0xff3b3b4c:0xfffff0d5);
-            // Reward emblem is visually prominent on the reference cards,
-            // while the reward amount stays below it in the same hit-free pane.
-            icon("star",323,y+(portrait?24:29),
-                portrait?32:29,0xffffad1a);
-            fitted("+"+fmt(reward),323,y+(portrait?54:62),
-                portrait?15:13,63,ink,true);
+            // Narrower, right-aligned reward bay matches the source card
+            // and gives the adjacent real-progress counter enough space.
+            float rewardCenter=portrait?345:323;
+            missionSurface(portrait?315:289,y+(portrait?4:6),
+                portrait?54:71,portrait?61:68,15,
+                theme==1?0xff3b3b4c:0xfffff0d5);
+            icon("star",rewardCenter,y+(portrait?24:29),
+                portrait?27:29,0xffffad1a);
+            fitted("+"+fmt(reward),rewardCenter,y+(portrait?54:62),
+                portrait?13:13,portrait?49:63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
