@@ -82,6 +82,57 @@ public class ScreensSmokeTest {
         return result;
     }
 
+    private static void assertPlatformSystemBarColor(
+            String label,int expected,int actual){
+        // Android 15/API 35 uses transparent edge-to-edge system bars.
+        // Their composited appearance comes from the already tested UI
+        // canvas, so a transparent bar is not a wrong cream background.
+        if(android.os.Build.VERSION.SDK_INT>=35 &&
+                actual==android.graphics.Color.TRANSPARENT)return;
+        assertEquals(label,expected,actual);
+    }
+
+    @Test public void lightCanvasMatchesReferenceAndDarkPaletteIsPreserved(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+            view.layout(0,0,941,1672);
+            Bitmap screenshot=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="settings";
+                activity.theme=0;
+                activity.updateBars();
+                view.draw(new Canvas(screenshot));
+                assertEquals("Portrait reference background must not be tinted cream",
+                    MainActivity.LIGHT_CANVAS,screenshot.getPixel(2,200));
+                assertEquals(MainActivity.LIGHT_CANVAS,view.bg);
+                assertPlatformSystemBarColor("Light status bar should match its canvas",
+                    MainActivity.LIGHT_CANVAS,activity.getWindow().getStatusBarColor());
+                assertPlatformSystemBarColor("Light navigation bar should match its canvas",
+                    MainActivity.LIGHT_CANVAS,activity.getWindow().getNavigationBarColor());
+                activity.theme=1;
+                activity.updateBars();
+                view.draw(new Canvas(screenshot));
+                assertEquals("Changing the light background must never affect dark mode",
+                    0xff14233a,screenshot.getPixel(2,200));
+                assertEquals(0xff14233a,view.bg);
+                assertPlatformSystemBarColor("Dark status bar should match its canvas",
+                    0xff14233a,activity.getWindow().getStatusBarColor());
+                assertPlatformSystemBarColor("Dark navigation bar should match its canvas",
+                    0xff14233a,activity.getWindow().getNavigationBarColor());
+            }finally{
+                screenshot.recycle();
+                activity.page=originalPage;
+                activity.theme=originalTheme;
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionRewardsAreOnlyGivenOncePerPeriod(){
         rule.getScenario().onActivity(activity->{
             int originalStars=activity.stars,originalFlags=activity.rewardFlags;

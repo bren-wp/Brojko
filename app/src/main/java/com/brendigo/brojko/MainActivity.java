@@ -42,7 +42,8 @@ import org.json.JSONObject;
 
 /** Brojko: offline, native number-merging game. Every visible action is functional. */
 public final class MainActivity extends Activity {
-    static final int INK=0xff1e2a44, CREAM=0xfffff8ee, CORAL=0xffff7a5b,
+    static final int INK=0xff1e2a44, CREAM=0xfffff8ee,
+        LIGHT_CANVAS=0xfffefcf6, CORAL=0xffff7a5b,
         TEAL=0xff2ec4b6, MUTED=0xff77849a, WHITE=Color.WHITE;
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
@@ -69,7 +70,7 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        getWindow().setStatusBarColor(CREAM);
+        getWindow().setStatusBarColor(LIGHT_CANVAS);
         getWindow().setNavigationBarColor(CREAM);
         if(Build.VERSION.SDK_INT>=26)getWindow().getDecorView().setSystemUiVisibility(
             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
@@ -193,7 +194,7 @@ public final class MainActivity extends Activity {
     }
     void updateBars() {
         boolean dark=theme==1;
-        int base=dark?0xff14233a:CREAM;
+        int base=dark?0xff14233a:LIGHT_CANVAS;
         getWindow().setStatusBarColor(base);getWindow().setNavigationBarColor(base);
         int flags=dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
         getWindow().getDecorView().setSystemUiVisibility(flags);
@@ -588,7 +589,9 @@ public final class MainActivity extends Activity {
         }
         void palette() {
             boolean dark=theme==1;
-            bg=dark?0xff14233a:CREAM;
+            // The very light canvas matches the user-provided nine portrait
+            // reference screens; retain CREAM on warm cards and buttons.
+            bg=dark?0xff14233a:LIGHT_CANVAS;
             card=dark?0xff263653:0xfffffdfa;
             ink=dark?0xffeff6ff:INK;
             muted=dark?0xffaabbce:MUTED;
