@@ -28,6 +28,12 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
 import android.view.MotionEvent;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
@@ -41,7 +47,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /** Brojko: offline, native number-merging game. Every visible action is functional. */
-public final class MainActivity extends Activity {
+public final class MainActivity extends ComponentActivity {
     static final int INK=0xff1e2a44, CREAM=0xfffff8ee,
         LIGHT_CANVAS=0xfffefcf6, CORAL=0xffff7a5b,
         TEAL=0xff2ec4b6, MUTED=0xff77849a, WHITE=Color.WHITE;
@@ -70,10 +76,13 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        getWindow().setStatusBarColor(LIGHT_CANVAS);
-        getWindow().setNavigationBarColor(CREAM);
-        if(Build.VERSION.SDK_INT>=26)getWindow().getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        // Android 15+ draws under transparent system bars. Enable the same
+        // contract on older versions and place controls inside safe insets.
+        WindowCompat.enableEdgeToEdge(getWindow());
+        // Android 16 predictive back gestures do not invoke Activity.onBackPressed.
+        getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){
+            @Override public void handleOnBackPressed(){handleBackNavigation();}
+        });
         prefs=getSharedPreferences("brojko",MODE_PRIVATE);
         best=prefs.getInt("best",0);plays=prefs.getInt("games",0);total=prefs.getInt("total",0);
         lastScore=prefs.getInt("lastScore",0);
@@ -100,23 +109,40 @@ public final class MainActivity extends Activity {
             if(!saved.isEmpty())game=TileGame.fromJson(new JSONObject(saved));
             else migrateLegacy();
         }catch(Exception ignored){game=null;}
+        float restoredScroll=0f;
+        if(bundle!=null){
+            String restored=bundle.getString("brojko_game", "");
+            if(!restored.isEmpty()){
+                try{game=TileGame.fromJson(new JSONObject(restored));}
+                catch(Exception ignored){/* Keep the persisted session. */}
+            }
+            page=bundle.getString("brojko_page","home");
+            pendingMode=bundle.getString("brojko_mode","classic");
+            selectedHistoryIndex=bundle.getInt("brojko_history_index",0);
+            chartMetric=bundle.getInt("brojko_chart_metric",0);
+            restoredScroll=bundle.getFloat("brojko_scroll",0f);
+            if(game==null && (page.equals("game")||page.equals("pause")||
+                page.equals("win")||page.equals("over")||
+                page.equals("dailyWin")||page.equals("dailyFail")))page="home";
+        }
         screen=new BoardScreen(this);setContentView(screen);
+        if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
         screen.postDelayed(()->{
             if("splash".equals(page))navigate("home");
         },1350);
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
-        if(Build.VERSION.SDK_INT>=35){
-            screen.setOnApplyWindowInsetsListener((v,insets)->{
-                android.graphics.Insets safe=insets.getInsets(
-                    android.view.WindowInsets.Type.systemBars()|
-                    android.view.WindowInsets.Type.displayCutout());
+        ViewCompat.setOnApplyWindowInsetsListener(screen,(v,insets)->{
+            androidx.core.graphics.Insets safe=insets.getInsets(
+                WindowInsetsCompat.Type.systemBars()|
+                WindowInsetsCompat.Type.displayCutout());
+            if(v.getPaddingLeft()!=safe.left||v.getPaddingTop()!=safe.top||
+               v.getPaddingRight()!=safe.right||v.getPaddingBottom()!=safe.bottom)
                 v.setPadding(safe.left,safe.top,safe.right,safe.bottom);
-                return insets;
-            });
-            screen.requestApplyInsets();
-        }
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(screen);
         updateBars();
     }
     void migrateLegacy(){
@@ -193,11 +219,14 @@ public final class MainActivity extends Activity {
         return "relaxed".equals(m)?"Opušteno 5×5":"daily".equals(m)?"Dnevni izazov":"Klasično 4×4";
     }
     void updateBars() {
-        boolean dark=theme==1;
-        int base=dark?0xff14233a:LIGHT_CANVAS;
-        getWindow().setStatusBarColor(base);getWindow().setNavigationBarColor(base);
-        int flags=dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-        getWindow().getDecorView().setSystemUiVisibility(flags);
+        // Never call deprecated Window.setStatusBarColor/NavigationBarColor.
+        // Android 15 forces transparent bars: choose icon contrast, while the
+        // BoardScreen itself draws the correct light/dark background behind.
+        WindowInsetsControllerCompat controller=WindowCompat.getInsetsController(
+            getWindow(),getWindow().getDecorView());
+        boolean lightBackground=theme!=1;
+        controller.setAppearanceLightStatusBars(lightBackground);
+        controller.setAppearanceLightNavigationBars(lightBackground);
     }
     void persist() {
         SharedPreferences.Editor e=prefs.edit()
@@ -520,7 +549,7 @@ public final class MainActivity extends Activity {
         }
         return super.onKeyDown(keyCode,event);
     }
-    @Override public void onBackPressed(){
+    void handleBackNavigation(){
         if(page.equals("game"))navigate("pause");
         else if(page.equals("pause"))navigate("game");
         else if(page.equals("historyDetail"))navigate("stats");
@@ -530,8 +559,20 @@ public final class MainActivity extends Activity {
         else if(page.equals("confirm")||page.equals("confirmEnd"))navigate(game==null?"home":"game");
         else if(page.equals("win")||page.equals("over")||page.equals("dailyWin")||page.equals("dailyFail"))navigate("home");
         else if(page.equals("splash"))navigate("home");
-        else if(page.equals("home"))super.onBackPressed();
+        else if(page.equals("home"))finish();
         else navigate("home");
+    }
+    @Override protected void onSaveInstanceState(Bundle out){
+        // Unlocked portrait/landscape and foldable resizing recreate Activities.
+        // Keep the current game, page and scroll offset rather than returning
+        // to the splash screen or losing the active move after rotation.
+        out.putString("brojko_page",page);
+        out.putString("brojko_mode",pendingMode);
+        out.putInt("brojko_history_index",selectedHistoryIndex);
+        out.putInt("brojko_chart_metric",chartMetric);
+        if(screen!=null)out.putFloat("brojko_scroll",screen.scrollOffset);
+        if(game!=null)out.putString("brojko_game",game.toJson().toString());
+        super.onSaveInstanceState(out);
     }
     @Override protected void onPause(){
         if(!skipPersistOnPauseAfterImport)persist();
@@ -1221,7 +1262,12 @@ public final class MainActivity extends Activity {
             // Decorative edge tiles may be cropped, but logo/slogan must fit.
             boolean compact=referencePortraitLayout||
                 (!page.equals("splash")&&extended);
-            scale=compact?usableWidth/400f:Math.min(usableWidth/400f,usableHeight/880f);
+            // Landscape phones and resizable tablets must keep the whole
+            // interaction region reachable; portrait stays pixel-identical.
+            boolean landscape=usableWidth>usableHeight;
+            scale=landscape?Math.min(usableWidth/400f,usableHeight/720f):
+                (compact?usableWidth/400f:
+                    Math.min(usableWidth/400f,usableHeight/880f));
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
                     Math.max(710f,466f+Math.min(5,history().length())*48f)
