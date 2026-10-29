@@ -711,11 +711,26 @@ public final class MainActivity extends Activity {
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
         void fitted(String content,float x,float baseline,float size,float maxWidth,int color,boolean bold) {
+            if(content==null||content.isEmpty()||maxWidth<=0)return;
+            p.setTextScaleX(1f);
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setFakeBoldText(false);
             p.setTextSize(size);
-            while(p.measureText(content)>maxWidth && size>10){size-=1;p.setTextSize(size);}
-            txt(content,x,baseline,size,color,bold);
+            while(p.measureText(content)>maxWidth && size>10){
+                size=Math.max(10,size-1);
+                p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+                p.setTextSize(size);
+            }
+            // Extremely long localized values can still exceed their card at
+            // 10 units. Scale ONLY the text's x axis instead of drawing over
+            // adjacent buttons or changing responsive hit areas.
+            float width=p.measureText(content);
+            if(width>maxWidth){
+                c.save();c.translate(x,baseline);
+                c.scale(maxWidth/width,1f);
+                txt(content,0,0,size,color,bold);
+                c.restore();
+            }else txt(content,x,baseline,size,color,bold);
         }
         // Home shortcut captions must never run into neighboring cards.
         // Preserve their intended font size: only compress the horizontal
@@ -736,14 +751,23 @@ public final class MainActivity extends Activity {
         // Shrink only when the actual Nunito glyphs would overlap controls.
         void leftFitted(String content,float left,float baseline,float size,
                         float maxWidth,int color,boolean bold){
+            if(content==null||content.isEmpty()||maxWidth<=0)return;
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+            p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
             while(p.measureText(content)>maxWidth&&size>10){
-                size-=.5f;p.setTextSize(size);
+                size=Math.max(10,size-.5f);
+                p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
+                p.setTextSize(size);
             }
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);p.setTextAlign(Paint.Align.LEFT);
-            p.setStrokeWidth(0);c.drawText(content,left,baseline,p);
+            p.setStrokeWidth(0);
+            float drawnWidth=p.measureText(content);
+            if(drawnWidth>maxWidth){
+                c.save();c.translate(left,baseline);c.scale(maxWidth/drawnWidth,1f);
+                c.drawText(content,0,0,p);c.restore();
+            }else c.drawText(content,left,baseline,p);
             p.setTextAlign(Paint.Align.CENTER);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
