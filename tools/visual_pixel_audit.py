@@ -21,6 +21,24 @@ SCREENS = {
     "Postavke": ("19-10", "reference-settings-polished-941x1672.png"),
 }
 
+
+# Subregions are source-PNG pixel coordinates, never scaled or aligned.
+# Per-screen and local scores are both important: large empty backgrounds
+# must not hide deteriorating controls, digits or raised tile details.
+REGIONS = {
+    "Splash": [("Logotip", (110, 580, 835, 1100))],
+    "Početni": [("Glavni gumb", (120, 665, 820, 910))],
+    "Igra 4×4": [("Ploča", (35, 365, 920, 1325)),
+                 ("Pločice", (45, 410, 910, 1285))],
+    "Pobjeda": [("Rezultat i akcije", (135, 450, 805, 1415))],
+    "Dnevni izazov": [("Ploča", (195, 360, 755, 970))],
+    "Misije": [("Kartice nagrada", (720, 345, 920, 1580))],
+    "Statistika": [("KPI kartice", (30, 300, 915, 760))],
+    "Teme": [("Kartice tema", (40, 380, 900, 800)),
+             ("Pretpregled pločica", (55, 940, 900, 1385))],
+    "Postavke": [("Retci postavki", (30, 220, 910, 1370))],
+}
+
 def screenshot(archive, name):
     matched = [item for item in archive.namelist() if item.endswith("/" + name)]
     if len(matched) != 1:
@@ -29,9 +47,16 @@ def screenshot(archive, name):
         with Image.open(stream) as image:
             return image.convert("RGB")
 
-def rgb_mae(reference, actual):
+def rgb_mae(reference, actual, region=None):
     if reference.size != actual.size:
         raise ValueError(f"Image sizes differ: {reference.size} / {actual.size}; refusing resize")
+    if region is not None:
+        left, top, right, bottom = region
+        if not (0 <= left < right <= reference.width and
+                0 <= top < bottom <= reference.height):
+            raise ValueError(f"Invalid native-resolution ROI: {region}")
+        reference = reference.crop(region)
+        actual = actual.crop(region)
     return sum(ImageStat.Stat(ImageChops.difference(reference, actual)).mean) / 3
 
 def main():
@@ -41,6 +66,8 @@ def main():
     parser.add_argument("--baseline-artifact", type=Path)
     parser.add_argument("--reference-copy-index", default="7")
     parser.add_argument("--markdown", type=Path)
+    parser.add_argument("--include-regions", action="store_true",
+                        help="Also report important real-pixel subregions per screen")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -65,11 +92,20 @@ def main():
                     raise ValueError(f"Expected one reference for {token}; found {len(found)}")
                 with Image.open(found[0]) as image:
                     reference = image.convert("RGB")
-                    current = rgb_mae(reference, screenshot(latest, name))
-                    baseline = rgb_mae(reference, screenshot(previous, name)) if previous else None
-                before = f"{baseline:.3f}" if baseline is not None else "—"
-                delta = f"{current-baseline:+.3f}" if baseline is not None else "—"
-                rows.append(f"| {label} | {current:.3f} | {before} | {delta} |")
+                    current_image = screenshot(latest, name)
+                    previous_image = screenshot(previous, name) if previous else None
+                    current = rgb_mae(reference, current_image)
+                    baseline = rgb_mae(reference, previous_image) if previous_image else None
+                    before = f"{baseline:.3f}" if baseline is not None else "—"
+                    delta = f"{current-baseline:+.3f}" if baseline is not None else "—"
+                    rows.append(f"| {label} | {current:.3f} | {before} | {delta} |")
+                    if args.include_regions:
+                        for region_name, bounds in REGIONS.get(label, []):
+                            local = rgb_mae(reference, current_image, bounds)
+                            prev = rgb_mae(reference, previous_image, bounds) if previous_image else None
+                            old = f"{prev:.3f}" if prev is not None else "—"
+                            change = f"{local-prev:+.3f}" if prev is not None else "—"
+                            rows.append(f"| ↳ {region_name} | {local:.3f} | {old} | {change} |")
         finally:
             if previous:
                 previous.close()
