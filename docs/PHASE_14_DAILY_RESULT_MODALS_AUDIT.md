@@ -41,6 +41,8 @@ Među deset vlasnikovih PNG referenci nalazi se zaslon **Dnevni izazov** prije p
 - `dailyRewardDate` mora ostati na već nagrađenom datumu, a `dailyBonusGrantedThisAttempt` mora biti resetirana za novi pokušaj.
 - Test po završetku vraća spremljenu povijest i privremeno modificirane korisničke brojače/nagrade.
 
+**`failedDailyReplayCannotClaimSuccessReward`** provjerava da neuspjeli 80. potez, ponavljanje dnevnog izazova i lokalno arhiviranje gubitka (1728 bodova) **ne postavljaju** `dailyRewardDate` niti lažno uključuju UI oznaku prve nagrade. Nakon testa vraćaju se svi izmijenjeni lokalni podaci.
+
 Postojeći `dailyChallengeAwardsOnceAndEnforcesMoveLimit` nastavlja testirati jedinstvenu nagradu od 250 zvjezdica i automatski neuspjeh na 80. potezu.
 
 `scripts/verify-emulator-screenshots.py` sada zahtijeva obje nove snimke dimenzija **941×1672**.
