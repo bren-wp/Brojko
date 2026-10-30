@@ -2100,13 +2100,28 @@ public final class MainActivity extends ComponentActivity {
         void overlayBox(float y,float height){
             card(27,y,346,height,30,theme==1?0xff293956:CREAM);
         }
+        // Post-main-screen QA: Pause shares the warm, raised Brojko
+        // material system without affecting the board or the saved session.
+        // There is no owner-supplied Pause PNG; never claim exact 1:1 here.
         void pauseOverlay(){
-            dim();overlayBox(255,370);
-            icon("pause",200,302,44,CORAL);
-            txt("Igra je pauzirana",200,361,31,ink,true);
-            txt("Rezultat: "+fmt(game.score),200,404,20,muted,false);
-            button("Nastavi","play",52,443,296,65,CORAL,true,()->navigate("game"));
-            button("Izbornik","home",52,532,296,61,card,false,()->navigate("home"));
+            dim();
+            overlayBox(229,414);
+            card(159,247,82,76,23,
+                theme==1?0xff354660:0xfffff1e4);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
+            icon("pause",200,286,29,WHITE);
+            fitted("Igra je pauzirana",200,364,30,321,ink,true);
+            fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
+            card(62,406,276,55,17,
+                theme==1?card:0xfffff8ef);
+            icon("stats",91,433,22,muted);
+            leftFitted("Rezultat",114,429,14,110,muted,false);
+            fitted(fmt(game.score),271,443,25,119,ink,true);
+            button("Nastavi","play",52,483,296,66,CORAL,true,
+                ()->navigate("game"));
+            button("Izbornik","home",52,561,296,61,card,false,
+                ()->navigate("home"));
         }
         // Source artwork uses a quiet post-game summary behind the modal:
         // the real frozen board, compact brand / score HUD and bottom shortcuts.
