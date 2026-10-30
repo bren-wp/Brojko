@@ -2635,6 +2635,56 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void homeControlledGoldenMatchesSourceDataWithoutFakingPlayerStats(){
+        rule.getScenario().onActivity(activity->{
+            // Source art uses 12,560 / 3,864 and a 'Nova igra' CTA. These
+            // values exist only during this isolated screenshot test, NEVER
+            // in the player's persistent statistics or production UI.
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldBest=activity.best,oldLast=activity.lastScore;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=null;
+                activity.best=12560;
+                activity.lastScore=3864;
+                activity.theme=0;
+                activity.page="home";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                captureReference(activity,view,"home-controlled-reference-941x1672");
+                int newGameActions=0,modeActions=0,shortcutActions=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Nova igra".equals(tap.label))newGameActions++;
+                    if(tap.label.startsWith("Klasično")||
+                        tap.label.startsWith("Opušteno")||
+                        tap.label.startsWith("Dnevni izazov"))modeActions++;
+                    if("Misije".equals(tap.label)||
+                        "Statistika".equals(tap.label)||
+                        "Teme".equals(tap.label)||
+                        "Postavke".equals(tap.label)){
+                        shortcutActions++;
+                        assertTrue("Home shortcut must remain touch-sized",
+                            tap.bottom-tap.top>=48f);
+                    }
+                }
+                assertEquals("Source Home CTA is a real New Game action",
+                    1,newGameActions);
+                assertEquals("All three play modes remain real",3,modeActions);
+                assertEquals("All four Home shortcuts remain real",4,shortcutActions);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.best=oldBest;activity.lastScore=oldLast;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitHomeHasFunctionalScoreCardsAndAllFourShortcuts(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
