@@ -143,6 +143,56 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void edgeToEdgeCriticalButtonsAreOutsideSystemBars(){
+        rule.getScenario().onActivity(activity->{
+            MainActivity.BoardScreen view=activity.screen;
+            androidx.core.view.WindowInsetsCompat insets=
+                androidx.core.view.ViewCompat.getRootWindowInsets(view);
+            assertNotNull("Insets must be delivered before drawing",insets);
+            androidx.core.graphics.Insets safe=insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()|
+                androidx.core.view.WindowInsetsCompat.Type.displayCutout());
+            String previousPage=activity.page;
+            TileGame previousGame=activity.game;
+            try{
+                activity.game=new TileGame("classic","",34982L);
+                for(String selected:new String[]{"home","game"}){
+                    activity.page=selected;
+                    Bitmap bmp=Bitmap.createBitmap(view.getWidth(),view.getHeight(),
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(bmp));}finally{bmp.recycle();}
+                    int critical=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        boolean important="home".equals(selected)?
+                            ("Nova igra".equals(tap.label)||
+                             "Nastavi igru".equals(tap.label)):
+                            ("Novo".equals(tap.label)||
+                             "Završi".equals(tap.label));
+                        if(!important)continue;
+                        critical++;
+                        float top=view.offY+tap.top*view.scale;
+                        float bottom=view.offY+tap.bottom*view.scale;
+                        assertTrue("Primary action begins under system bar on "+
+                            selected,top>=safe.top-1f);
+                        if(view.maxScroll<=.01f)
+                            assertTrue("Primary action covered by navigation bar on "+
+                                selected,bottom<=view.getHeight()-safe.bottom+1f);
+                        else
+                            assertTrue("Primary action must be scroll-reachable",
+                                tap.bottom<=view.getHeight()/view.scale+
+                                    view.maxScroll+1f);
+                    }
+                    assertTrue("Both screens need functional primary actions",
+                        critical>0);
+                }
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                view.invalidate();
+            }
+        });
+    }
+
     @Test public void rotationRecreationPreservesCurrentGameAndNavigation(){
         final String[] oldPage=new String[1];
         final String[] oldSession=new String[1];
