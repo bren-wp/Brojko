@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate screenshot checker syntax
         run: python3 -m py_compile scripts/verify-emulator-screenshots.py
+      - name: Guard Android 15/16 edge-to-edge and deprecated APIs
+        run: bash scripts/verify-edge-to-edge.sh
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

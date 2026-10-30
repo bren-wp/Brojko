@@ -3,9 +3,13 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:colorAccent">#FF7A5B</item>
         <item name="android:windowBackground">#FFF8EE</item>
+        <!-- Prior to Android 15 these theme colors provide transparent
+             status-bar drawing without calling deprecated Window setters. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- API 24/25 lack dark navigation-bar icons: retain a dark bar
+             so their white 3-button controls remain readable. -->
+        <item name="android:navigationBarColor">#14233A</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">#FFF8EE</item>
-        <item name="android:statusBarColor">#FFF8EE</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
 </resources>
