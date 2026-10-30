@@ -1586,7 +1586,9 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffcf5e9);
             icon("crown",53,scoresY+29,28,0xffffb228);
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
-            fitted(fmt(best),118,scoresY+60,27,107,ink,true);
+            // Source-matched 12.560 remains clear of the three right-hand
+            // mini bars even for larger real records.
+            fitted(fmt(best),112,scoresY+60,27,84,ink,true);
             if(portrait)homeBestMiniChart(159,scoresY+58);
             icon("stats",236,scoresY+30,27,0xff63799d);
             fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
