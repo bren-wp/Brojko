@@ -77,6 +77,10 @@ def main():
     parser.add_argument("--markdown", type=Path)
     parser.add_argument("--include-regions", action="store_true",
                         help="Also report important real-pixel subregions per screen")
+    parser.add_argument("--screen", choices=sorted(SCREENS),
+                        help="Audit just one requested screen during pixel-by-pixel work")
+    parser.add_argument("--controlled-home", action="store_true",
+                        help="Compare Home against the instrumented source-data fixture, not a live session")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -94,7 +98,12 @@ def main():
         else:
             previous = None
         try:
-            for label, (token, name) in SCREENS.items():
+            for label, (token, default_name) in SCREENS.items():
+                if args.screen and label != args.screen:
+                    continue
+                name = ("home-controlled-reference-941x1672.png"
+                        if args.controlled_home and label == "Početni"
+                        else default_name)
                 pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
                            if args.reference_copy_index is not None
                            else f"Slika ChatGPT*{token}*.png")
