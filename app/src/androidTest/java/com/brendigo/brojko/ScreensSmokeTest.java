@@ -960,6 +960,101 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void pauseModalKeepsTheRealGameAndUsesOnlyTwoSafeActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",70881L);
+                activity.game.score=3848;
+                activity.game.moves=17;
+                activity.page="pause";
+                activity.theme=0;
+                final int[] originalCells=activity.game.cells.clone();
+                for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        board.draw(new Canvas(bitmap));
+                        assertEquals("Pause must show only modal actions",
+                            2,board.taps.size());
+                        assertEquals("First action resumes",
+                            "Nastavi",board.taps.get(0).label);
+                        assertEquals("Second action exits to home",
+                            "Izbornik",board.taps.get(1).label);
+                        assertEquals("Pause overlay must not phantom-scroll",
+                            0f,board.maxScroll,.01f);
+                        for(MainActivity.BoardScreen.Tap tap:board.taps){
+                            assertTrue("Pause button remains inside the modal",
+                                tap.left>=52f&&tap.right<=348f);
+                            assertTrue("Pause button stays visible",
+                                board.offY+tap.bottom*board.scale<=size[1]+1f);
+                            assertTrue("Accessible pause action",
+                                tap.bottom-tap.top>=60f);
+                        }
+                        assertTrue("Buttons cannot overlap",
+                            board.taps.get(0).bottom<board.taps.get(1).top);
+                        if(size[0]==941){
+                            captureReference(activity,board,
+                                "pause-branded-modal-941x1672");
+                            Bitmap changed=Bitmap.createBitmap(941,1672,
+                                Bitmap.Config.ARGB_8888);
+                            try{
+                                activity.game.score=0;
+                                board.draw(new Canvas(changed));
+                                int changedPixels=0;
+                                for(int y=420;y<=449;y+=2)
+                                    for(int x=230;x<=312;x+=2){
+                                        int px=Math.round(board.offX+
+                                            x*board.scale);
+                                        int py=Math.round(board.offY+
+                                            y*board.scale);
+                                        if(bitmap.getPixel(px,py)!=
+                                            changed.getPixel(px,py))
+                                            changedPixels++;
+                                    }
+                                assertTrue("Score must come from game state",
+                                    changedPixels>20);
+                            }finally{
+                                activity.game.score=3848;
+                                changed.recycle();
+                            }
+                        }
+                    }finally{bitmap.recycle();}
+                }
+                board.taps.get(0).action.run();
+                assertEquals("Resume must return to the same game",
+                    "game",activity.page);
+                assertEquals(3848,activity.game.score);
+                assertEquals(17,activity.game.moves);
+                assertArrayEquals("Pause does not mutate tile positions",
+                    originalCells,activity.game.cells);
+                activity.page="pause";
+                Bitmap reenter=Bitmap.createBitmap(1080,2400,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(reenter));
+                    board.taps.get(1).action.run();
+                }finally{reenter.recycle();}
+                assertEquals("Menu action returns home","home",activity.page);
+                assertEquals("Home action does not erase session",
+                    3848,activity.game.score);
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyResultModalKeepsBottomActionInsideItsCard(){
         rule.getScenario().onActivity(activity->{
             TileGame priorGame=activity.game;
