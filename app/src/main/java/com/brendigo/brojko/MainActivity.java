@@ -1160,10 +1160,14 @@ public final class MainActivity extends ComponentActivity {
                 boolean flatDaily=page.equals("daily");
                 boolean homeHero=page.equals("home")&&w>=280;
                 float lip=flatDaily?2.5f:homeHero?6f:5f;
-                shape(x,y+lip,w,h,radius,darken(color,
-                    flatDaily?.13f:homeHero?.10f:.23f));
+                // Home source has a warm coral top and a deeper red-orange
+                // bottom. The original HERO button used an almost flat
+                // salmon gradient despite matching geometry.
+                shape(x,y+lip,w,h,radius,homeHero?
+                    0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
-                    lighten(color,flatDaily?.10f:homeHero?.07f:.18f),color);
+                    homeHero?0xffff945d:lighten(color,flatDaily?.10f:.18f),
+                    homeHero?0xffff5b38:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:1.2f);
                 p.setColor(0x86ffffff);
