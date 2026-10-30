@@ -1417,6 +1417,16 @@ public class ScreensSmokeTest {
                 activity.game.score=1316;activity.best=3864;
                 activity.page="game";
                 captureReference(activity,reference,"golden-state-game-941x1672");
+                // The 2048 victory artwork uses a DIFFERENT illustrative
+                // frozen board than the classic in-game screenshot. Match
+                // that fixture for fair per-pixel comparison only.
+                // Never modify the actual production win screen's data.
+                activity.game.cells=new int[]{
+                    2,4,8,16,
+                    4,8,16,32,
+                    8,16,32,64,
+                    128,256,512,1024
+                };
                 activity.game.peak=2048;activity.game.reached2048=true;
                 activity.game.score=2048;activity.best=12560;
                 activity.page="win";
@@ -2635,6 +2645,60 @@ public class ScreensSmokeTest {
                 activity.game=previousGame;
                 activity.page=previousPage;
                 activity.persist();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void victoryNativePixelsUseWarmSummaryAndCoralButton(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",2148L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.theme=0;activity.page="win";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int surface=image.getPixel(210,835);
+                    int r=android.graphics.Color.red(surface);
+                    int g=android.graphics.Color.green(surface);
+                    int b=android.graphics.Color.blue(surface);
+                    assertTrue("Reference victory summary is light warm cream",
+                        r>=g+5&&g>=b+7&&b>=210);
+                    int cta=image.getPixel(260,1010);
+                    assertTrue("Reference primary CTA stays coral",
+                        android.graphics.Color.red(cta)>=230 &&
+                        android.graphics.Color.green(cta)>=70 &&
+                        android.graphics.Color.green(cta)<=170 &&
+                        android.graphics.Color.blue(cta)<125);
+                    int reachable=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Nastavi igrati".equals(tap.label)||
+                            "Nova igra".equals(tap.label)||
+                            "Podijeli rezultat".equals(tap.label)){
+                            reachable++;
+                            assertTrue("Victory actions remain touch-sized",
+                                tap.bottom-tap.top>=49f);
+                        }
+                    }
+                    assertEquals("Exactly three functional modal actions",3,reachable);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.theme=previousTheme;
                 activity.screen.invalidate();
             }
         });
