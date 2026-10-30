@@ -1826,7 +1826,7 @@ public final class MainActivity extends ComponentActivity {
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (victoryBoard?89f:(tallFour?94f:tile+gap))*y;
+                    (victoryBoard?90.5f:(tallFour?94f:tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
