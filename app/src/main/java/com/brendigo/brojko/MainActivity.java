@@ -1160,10 +1160,14 @@ public final class MainActivity extends ComponentActivity {
                 boolean flatDaily=page.equals("daily");
                 boolean homeHero=page.equals("home")&&w>=280;
                 float lip=flatDaily?2.5f:homeHero?6f:5f;
-                shape(x,y+lip,w,h,radius,darken(color,
-                    flatDaily?.13f:homeHero?.10f:.23f));
+                // Home source has a warm coral top and a deeper red-orange
+                // bottom. The original HERO button used an almost flat
+                // salmon gradient despite matching geometry.
+                shape(x,y+lip,w,h,radius,homeHero?
+                    0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
-                    lighten(color,flatDaily?.10f:homeHero?.07f:.18f),color);
+                    homeHero?0xffff945d:lighten(color,flatDaily?.10f:.18f),
+                    homeHero?0xffff5b38:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:1.2f);
                 p.setColor(0x86ffffff);
@@ -1602,11 +1606,21 @@ public final class MainActivity extends ComponentActivity {
                         v>99?8.4f:12,side-2,WHITE,true);
                 }
             }
-            fitted(name,x+w/2,y+(portrait?125:150),portrait?16:17,w-5,ink,true);
+            // Native pixel audit: 4x4/5x5 headings were ~27 px too high,
+            // whereas the daily heading was ~6 px high at 941x1672.
+            // Only the Home thumbnail typography is repositioned.
+            float captionX=x+w/2f+(portrait&&!daily?5f:0f);
+            float captionY=y+(portrait?(daily?128f:137f):150f);
+            if(portrait&&daily){
+                c.save();
+                c.scale(.90f,1f,captionX,captionY);
+                fitted(name,captionX,captionY,16,w-5,ink,true);
+                c.restore();
+            }else fitted(name,captionX,captionY,portrait?16:17,w-5,ink,true);
             if(daily){
-                fitted("Novi izazov",x+w/2,y+(portrait?140:169),12,w-5,muted,false);
-                fitted("svaki dan!",x+w/2,y+(portrait?154:182),12,w-5,muted,false);
-            }else fitted(sub,x+w/2,y+(portrait?152:177),17,w-6,muted,false);
+                fitted("Novi izazov",x+w/2,y+(portrait?143:169),12,w-5,muted,false);
+                fitted("svaki dan!",x+w/2,y+(portrait?157:182),12,w-5,muted,false);
+            }else fitted(sub,x+w/2,y+(portrait?155:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
         float gridX=16,gridY=222,gridSize=368;
