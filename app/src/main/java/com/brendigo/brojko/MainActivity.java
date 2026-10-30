@@ -498,21 +498,35 @@ public final class MainActivity extends ComponentActivity {
             JSONArray history=new JSONArray(data.getString("history"));
             if(history.length()>200)throw new IllegalArgumentException("Oštećena povijest partija.");
         }
+        // Validate each key against its actual SharedPreferences storage
+        // type before clearing any existing settings. A backup with e.g.
+        // "best":"100" previously committed successfully, then getInt()
+        // crashed on the next launch. Never coerce untrusted JSON values.
         for(String key:BACKUP_KEYS){
             if(!data.has(key))continue;
             Object value=data.get(key);
-            Object expected=prefs.getAll().get(key);
-            if(value instanceof Integer){
-                if(((Integer)value)<0&&!key.equals("theme"))throw new IllegalArgumentException("Nevaljani podatci.");
-            }else if(!(value instanceof String) && !(value instanceof Boolean))
-                throw new IllegalArgumentException("Nevaljani podatci.");
-            if(key.equals("theme")||key.equals("style")||key.equals("animation")){
-                if(!(value instanceof Integer)||((Integer)value)>2||((Integer)value)<0)
+            boolean booleanKey=key.equals("sound")||key.equals("vibrate")||
+                key.equals("notifications")||key.equals("undoUsedThisGame");
+            boolean stringKey=key.equals("session")||key.equals("history")||
+                key.equals("lastDaily")||key.equals("dailyRewardDate")||
+                key.equals("statsDay")||key.equals("weekStart")||
+                key.equals("lastPlayDay");
+            if(booleanKey){
+                if(!(value instanceof Boolean))
+                    throw new IllegalArgumentException("Nevaljana logička postavka.");
+            }else if(stringKey){
+                if(!(value instanceof String))
+                    throw new IllegalArgumentException("Nevaljani tekstualni podatci.");
+                if(!key.equals("session")&&!key.equals("history")&&
+                    ((String)value).length()>20)
+                    throw new IllegalArgumentException("Nevaljani datum.");
+            }else{
+                if(!(value instanceof Integer)||((Integer)value)<0)
+                    throw new IllegalArgumentException("Nevaljani brojčani podatci.");
+                if((key.equals("theme")||key.equals("style")||
+                    key.equals("animation"))&&((Integer)value)>2)
                     throw new IllegalArgumentException("Nevaljane postavke.");
             }
-            if((key.equals("sound")||key.equals("vibrate")||
-                (key.equals("notifications")||key.equals("undoUsedThisGame")))&&!(value instanceof Boolean))
-                throw new IllegalArgumentException("Nevaljane postavke.");
         }
         SharedPreferences.Editor editor=prefs.edit().clear();
         for(String key:BACKUP_KEYS){
