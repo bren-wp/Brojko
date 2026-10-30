@@ -3754,7 +3754,15 @@ public final class MainActivity extends ComponentActivity {
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            brand(compact?639:795,compact?54:53,false);
+            if(compact){
+                // Owner's footer wordmark is taller and slightly wider than
+                // the current native font glyphs. Scale only the settings
+                // wordmark, keeping the real version and byline legible.
+                c.save();
+                c.scale(1.05f,1.32f,200,630);
+                brand(639,54,false);
+                c.restore();
+            }else brand(795,53,false);
             fitted("v"+appVersion(),200,compact?668:829,15,320,muted,false);
             fitted("by Brendigo",200,compact?689:849,15,300,muted,true);
         }
