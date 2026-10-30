@@ -910,17 +910,21 @@ public final class MainActivity extends ComponentActivity {
                 float[] xs=new float[10],ys=new float[10];
                 for(int i=0;i<10;i++){
                     double angle=-Math.PI/2+i*Math.PI/5;
-                    float radius=i%2==0?10.6f:5.35f;
+                    // Only the victory card uses the soft, pillow-like points
+                // of the owner's 941x1672 reward illustration.
+                float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
+                    (page.equals("win")?5.15f:5.35f);
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
                 Path star=new Path();
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
-                    float startX=xs[i]*.82f+xs[prev]*.18f;
-                    float startY=ys[i]*.82f+ys[prev]*.18f;
-                    float endX=xs[i]*.82f+xs[next]*.18f;
-                    float endY=ys[i]*.82f+ys[next]*.18f;
+                    float corner=page.equals("win")?.73f:.82f;
+                    float startX=xs[i]*corner+xs[prev]*(1f-corner);
+                    float startY=ys[i]*corner+ys[prev]*(1f-corner);
+                    float endX=xs[i]*corner+xs[next]*(1f-corner);
+                    float endY=ys[i]*corner+ys[next]*(1f-corner);
                     if(i==0)star.moveTo(startX,startY);
                     else star.lineTo(startX,startY);
                     star.quadTo(xs[i],ys[i],endX,endY);
@@ -930,11 +934,15 @@ public final class MainActivity extends ComponentActivity {
                 // Respect the supplied accent instead of recoloring every star.
                 boolean golden=Color.red(color)>200 &&
                     Color.green(color)>100&&Color.blue(color)<140;
-                int rim=golden?0xffe48408:darken(color,.28f);
-                int top=golden?0xffffed87:lighten(color,.43f);
-                // Reference's golden rewards have an orange rounded
-                // bevel, not a pale nearly-white perimeter.
-                int edge=golden?0xffff9f19:lighten(color,.69f);
+                boolean victoryGold=golden&&page.equals("win");
+                int rim=victoryGold?0xffe88b10:
+                    golden?0xffe48408:darken(color,.28f);
+                int top=victoryGold?0xffffdc65:
+                    golden?0xffffed87:lighten(color,.43f);
+                // The victory stars are filled golden-orange with soft tips,
+                // rather than the lighter outline-like mission style.
+                int edge=victoryGold?0xffffa722:
+                    golden?0xffff9f19:lighten(color,.69f);
                 c.save();c.translate(0,1.6f);
                 p.setColor(rim);c.drawPath(star,p);
                 c.restore();
@@ -942,13 +950,15 @@ public final class MainActivity extends ComponentActivity {
                     top,color,Shader.TileMode.CLAMP));
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(victoryGold?.72f:1.05f);
                 p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
-                // The broad glint is intentional: screenshot pixel QA
-                // showed a better reward match without the clipped highlight.
+                // Keep the original broad glint outside the victory modal;
+                // its 3D stars instead have a subtle warm highlight.
                 p.setShader(new LinearGradient(6,4,17,12,
-                    0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                    victoryGold?0x40ffffff:0x7fffffff,
+                    0x00ffffff,Shader.TileMode.CLAMP));
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
             }else if("flame".equals(type)){
@@ -2006,12 +2016,15 @@ public final class MainActivity extends ComponentActivity {
             card(95,295,210,33,18,theme==1?card:0xffffeddb);
             fitted("Dosegnuli ste",161,318,20,133,CORAL,true);
             fitted("2048!",258,318,21,88,TEAL,true);
-            card(76,337,120,69,19,card);
-            card(204,337,120,69,19,card);
+            // Measured reference card interior averages RGB(249,237,221);
+            // the generic nearly-white card was RGB(255,253,250).
+            int summarySurface=theme==1?card:0xfff8ead9;
+            card(76,337,120,69,19,summarySurface);
+            card(204,337,120,69,19,summarySurface);
             txt("Tvoj rezultat",136,356,13,muted,false);
             fitted(fmt(game.score),136,392,33,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
-            for(int i=0;i<3;i++)icon("star",229+i*35,382,30,0xffffb526);
+            for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
             button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
