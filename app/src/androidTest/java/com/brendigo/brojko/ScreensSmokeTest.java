@@ -2389,6 +2389,72 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void settingsBackArrowIsVisibleAccessibleAndNavigatesHome(){
+        rule.getScenario().onActivity(activity->{
+            String previous=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                for(int themeValue:new int[]{0,1}){
+                    activity.theme=themeValue;
+                    activity.page="settings";
+                    for(int[] viewport:new int[][]{
+                        {941,1672},{360,600},{1080,2400}
+                    }){
+                        int width=viewport[0],height=viewport[1];
+                        board.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        board.layout(0,0,width,height);
+                        Bitmap bitmap=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            board.draw(new Canvas(bitmap));
+                            assertEquals("Natrag must be the first touch target",
+                                "Natrag",board.taps.get(0).label);
+                            MainActivity.BoardScreen.Tap back=board.taps.get(0);
+                            assertTrue("Back needs a full-width 54-unit hit area",
+                                back.right-back.left>=54f);
+                            assertTrue("Back needs a full-height 54-unit hit area",
+                                back.bottom-back.top>=54f);
+                            assertTrue("Back must remain left of the heading",
+                                back.right<=72f);
+                            assertTrue("Back must stay above setting rows",
+                                back.bottom<board.taps.get(1).top);
+                            assertTrue("Back must be visible below system insets",
+                                board.offY+back.top*board.scale>=0f);
+                            if(width==941&&themeValue==0){
+                                captureReference(activity,board,
+                                    "settings-back-arrow-941x1672");
+                            }
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                activity.page="settings";
+                board.taps.get(0).action.run();
+                assertEquals("Arrow returns Home","home",activity.page);
+                activity.page="settings";
+                activity.handleBackNavigation();
+                assertEquals("System Back remains functional","home",activity.page);
+            }finally{
+                activity.theme=oldTheme;
+                activity.page=previous;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashBrandRemainsVisibleForAtLeastThreeSeconds(){
+        // Compare the configured interval rather than wall-clock sleep:
+        // flaky emulator boot times are not representative of production.
+        assertTrue("Splash must last at least 3000 ms",
+            MainActivity.SPLASH_DURATION_MS>=3000L);
+        assertTrue("Splash should not block users for too long",
+            MainActivity.SPLASH_DURATION_MS<=4500L);
+    }
+
     @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
