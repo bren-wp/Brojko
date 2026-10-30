@@ -2495,6 +2495,55 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void victorySummaryUsesWarmCardsAndGoldenRewardFaces(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.theme=0;
+                activity.game=new TileGame("classic","",781L);
+                activity.game.cells[0]=2048;
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    // Source art's summary cards are warm cream, never flat
+                    // white. This point is inside the right summary surface.
+                    int surface=image.getPixel(500,815);
+                    int r=android.graphics.Color.red(surface);
+                    int g=android.graphics.Color.green(surface);
+                    int b=android.graphics.Color.blue(surface);
+                    assertTrue("Win summary card should be cream",r>=g+7);
+                    assertTrue("Win summary card should be warm",g>=b+10);
+                    assertTrue("Win summary card must not turn white",b<245);
+                    // Reward icons retain a solid golden face rather than
+                    // disappearing into the light card.
+                    int face=image.getPixel(538,895);
+                    assertTrue("Victory reward must be a golden-filled star",
+                        android.graphics.Color.red(face)>230 &&
+                        android.graphics.Color.green(face)>145 &&
+                        android.graphics.Color.green(face)<239 &&
+                        android.graphics.Color.blue(face)<150);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=oldGame;
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void victoryContinueActionKeepsSameSavedGame(){
         rule.getScenario().onActivity(activity->{
             TileGame previousGame=activity.game;
