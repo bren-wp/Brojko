@@ -19,6 +19,8 @@ CAPTURES = (
     "confirm-new-session-941x1672.png",
     "confirm-end-session-941x1672.png",
     "game-over-raised-portrait-941x1672.png",
+    "daily-win-raised-portrait-941x1672.png",
+    "daily-fail-raised-portrait-941x1672.png",
     "home-source-accent-rays-941x1672.png",
     "home-controlled-reference-941x1672.png",
     "golden-state-game-941x1672.png",
