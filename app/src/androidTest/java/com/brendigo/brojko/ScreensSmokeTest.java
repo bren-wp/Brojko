@@ -2026,6 +2026,63 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void illustratedMissionsKeepRealProgressAndDistinctColors(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldTile=activity.recordTile;
+            int oldBest=activity.best,oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bmp));
+                    int purple=bmp.getPixel(
+                        Math.round(view.offX+46*view.scale),
+                        Math.round(view.offY+256*view.scale));
+                    assertTrue("512 illustrated tile must remain purple",
+                        android.graphics.Color.blue(purple)>
+                            android.graphics.Color.green(purple)+28);
+                    int teal=bmp.getPixel(
+                        Math.round(view.offX+70*view.scale),
+                        Math.round(view.offY+178*view.scale));
+                    assertTrue("First mission needs a teal numbered tile",
+                        android.graphics.Color.green(teal)>
+                            android.graphics.Color.red(teal)+20);
+                    int reward=bmp.getPixel(
+                        Math.round(view.offX+345*view.scale),
+                        Math.round(view.offY+184*view.scale));
+                    assertTrue("Reward star must be saturated gold",
+                        android.graphics.Color.red(reward)>
+                            android.graphics.Color.blue(reward)+65);
+                    assertEquals("Do not invent earned achievements",
+                        0,view.completedAchievements());
+                    assertTrue("All six mission rows remain visible",
+                        view.maxScroll<1.1f);
+                    captureReference(activity,view,
+                        "missions-illustrated-six-941x1672");
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyReferenceHasNoGhostScrollAndStillFitsAllControls(){
         rule.getScenario().onActivity(activity->{
             String original=activity.page;
