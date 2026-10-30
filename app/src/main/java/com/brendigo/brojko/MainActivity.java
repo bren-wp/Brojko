@@ -1554,41 +1554,6 @@ public final class MainActivity extends ComponentActivity {
                     theme==1?0xff65758e:0xffe4e0d9);
             }
         }
-        void homeDailyCalendar(float cx,float cy,float size){
-            // Calendar on the Home mode card is a raised 3D illustration,
-            // separate from smaller functional calendars elsewhere.
-            c.save();c.translate(cx-size/2f,cy-size/2f);
-            c.scale(size/24f,size/24f);
-            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
-            p.setColor(0xffc9a999);
-            p.setShadowLayer(2.2f,0f,1.6f,0x669d7849);
-            c.drawRoundRect(2.5f,3.5f,21.5f,23.5f,3.6f,3.6f,p);
-            p.clearShadowLayer();
-            p.setColor(0xfffffaf0);
-            c.drawRoundRect(2f,3f,21f,22f,3.6f,3.6f,p);
-            p.setShader(new LinearGradient(0,3,0,11,
-                0xffff9872,0xffff6047,Shader.TileMode.CLAMP));
-            c.drawRoundRect(2f,3f,21f,11f,3.4f,3.4f,p);
-            p.setShader(null);
-            p.setColor(0xff192741);
-            c.drawRoundRect(6f,.1f,8.7f,7.1f,1.4f,1.4f,p);
-            c.drawRoundRect(15f,.1f,17.7f,7.1f,1.4f,1.4f,p);
-            Path star=new Path();
-            for(int i=0;i<10;i++){
-                double angle=-Math.PI/2+i*Math.PI/5;
-                float radius=i%2==0?6.1f:3.0f;
-                float px=11.5f+(float)Math.cos(angle)*radius;
-                float py=16.3f+(float)Math.sin(angle)*radius;
-                if(i==0)star.moveTo(px,py);else star.lineTo(px,py);
-            }
-            star.close();
-            c.save();c.translate(0,1f);
-            p.setColor(0xffe28a0d);c.drawPath(star,p);c.restore();
-            p.setShader(new LinearGradient(0,10,0,22,
-                0xffffe467,0xffffa21d,Shader.TileMode.CLAMP));
-            c.drawPath(star,p);p.setShader(null);
-            c.restore();
-        }
         void home(){
             boolean portrait=referencePortraitLayout;
             c.save();c.rotate(-16,35,76);
@@ -1657,7 +1622,7 @@ public final class MainActivity extends ComponentActivity {
             modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe9fcfa,false,
                 ()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Novi izazov svaki dan!",
-                267,modeY,117,modeH,0xfffff9e6,true,()->navigate("daily"));
+                267,modeY,117,modeH,0xfffff4d7,true,()->navigate("daily"));
             float shortcutY=portrait?570:687;
             float shortcutH=portrait?120:144;
             shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
@@ -1689,9 +1654,9 @@ public final class MainActivity extends ComponentActivity {
             boolean portrait=referencePortraitLayout;
             homeSoftCard(x,y,w,h,22,theme==1?card:fill);
             if(daily){
-                if(portrait&&theme!=1)
-                    homeDailyCalendar(x+w/2,y+69f,69f);
-                else icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
+                // Actual emulator comparison: the existing vector calendar
+                // tracks the owner's source better than the bulkier trial.
+                icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
