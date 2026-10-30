@@ -58,6 +58,9 @@ public final class MainActivity extends ComponentActivity {
     private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
     private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
     private static final float[] VICTORY_RISE={2f,-2f,1f,-1f,0f,-3f};
+    // B and exclamation are deliberately oversized in the source logo.
+    private static final float[] VICTORY_WIDTH={1.24f,1f,1f,1f,1f,1.35f};
+    private static final float[] VICTORY_HEIGHT={1.2f,1f,1f,1f,1f,1.08f};
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -1930,24 +1933,10 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(WHITE);
             c.drawPath(crown,p);
             p.setStyle(Paint.Style.FILL);
-            p.setShadowLayer(.8f,0f,1.1f,0x55c17816);
             p.setShader(new LinearGradient(0,3,0,19,
-                0xfffff08d,0xffffae1c,Shader.TileMode.CLAMP));
+                0xffffeb7c,0xffffb324,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
-            p.clearShadowLayer();
             p.setShader(null);
-            // Shallow warm lip and a curved inner glint give the crown
-            // genuine painted volume without a rasterized screen image.
-            Path glint=new Path();
-            glint.moveTo(5.0f,10.2f);
-            glint.quadTo(7.8f,14.1f,10.7f,9.0f);
-            glint.quadTo(12.0f,6.8f,13.1f,10.2f);
-            glint.quadTo(15.3f,14.4f,18.3f,10.6f);
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.9f);
-            p.setColor(0x80fff4bd);
-            c.drawPath(glint,p);
-            p.setStyle(Paint.Style.FILL);
             p.setColor(0xffff8f16);
             c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
             p.setColor(0xffffce46);
@@ -1980,15 +1969,18 @@ public final class MainActivity extends ComponentActivity {
             p.setTextAlign(Paint.Align.CENTER);
             float full=0f;
             for(int i=0;i<VICTORY_GLYPHS.length;i++){
-                full+=p.measureText(VICTORY_GLYPHS[i])-
-                    (i<VICTORY_GLYPHS.length-1?2.6f:0f);
+                full+=p.measureText(VICTORY_GLYPHS[i])*VICTORY_WIDTH[i]-
+                    (i<VICTORY_GLYPHS.length-1?3.1f:0f);
             }
-            float left=200f-full/2f;
+            float left=202f-full/2f;
             for(int i=0;i<VICTORY_GLYPHS.length;i++){
-                float glyphWidth=p.measureText(VICTORY_GLYPHS[i]);
+                float glyphWidth=p.measureText(VICTORY_GLYPHS[i])*VICTORY_WIDTH[i];
                 float middle=left+glyphWidth/2f;
                 float baseline=286f+VICTORY_RISE[i];
-                c.save();c.rotate(VICTORY_TILT[i],middle,baseline-20f);
+                c.save();
+                c.rotate(VICTORY_TILT[i],middle,baseline-20f);
+                c.scale(VICTORY_WIDTH[i],VICTORY_HEIGHT[i],
+                    middle,baseline-27f);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
                 p.setStrokeWidth(3.4f);p.setColor(WHITE);
@@ -1996,7 +1988,7 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.FILL);p.setColor(ink);
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
                 c.restore();
-                left+=glyphWidth-2.6f;
+                left+=glyphWidth-3.1f;
             }
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
             p.setTextAlign(Paint.Align.CENTER);
@@ -2006,7 +1998,9 @@ public final class MainActivity extends ComponentActivity {
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
-            victoryCrown(200,195,103);
+            // Pixel audit: original golden silhouette was ~21 px too wide
+            // and ~18 px too low at the 941x1672 reference viewport.
+            victoryCrown(200,187,98);
             victoryHeadingRays();
             victoryHeading();
             card(95,295,210,33,18,theme==1?card:0xffffeddb);
