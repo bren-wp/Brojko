@@ -393,6 +393,13 @@ public final class MainActivity extends ComponentActivity {
             page="dailyFail";
         }else if(result.first2048)page="win";
         else if(result.lost){page="daily".equals(game.mode)?"dailyFail":"over";}
+        if("win".equals(page)){
+            String announcement="Bravo! Dosegnuli ste pločicu 2048. "
+                +"Tvoj rezultat je "+fmt(game.score)+".";
+            screen.setContentDescription(announcement+
+                " Nastavi igrati, Nova igra ili Podijeli rezultat.");
+            screen.announceForAccessibility(announcement);
+        }
         persist();animate();
     }
     void endSession(){
@@ -1163,14 +1170,25 @@ public final class MainActivity extends ComponentActivity {
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
                 boolean homeHero=page.equals("home")&&w>=280;
-                float lip=flatDaily?2.5f:homeHero?6f:5f;
+                boolean victoryPrimary=page.equals("win")&&
+                    "Nastavi igrati".equals(label);
+                boolean victoryShare=page.equals("win")&&
+                    "Podijeli rezultat".equals(label);
+                float lip=flatDaily?2.5f:homeHero?6f:
+                    (victoryPrimary||victoryShare?4f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
-                shape(x,y+lip,w,h,radius,homeHero?
-                    0xffda4932:darken(color,flatDaily?.13f:.23f));
+                shape(x,y+lip,w,h,radius,
+                    victoryPrimary?0xffd7462f:
+                    victoryShare?0xff1d62c2:
+                    homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
+                    victoryPrimary?0xffff946a:
+                    victoryShare?0xff67b2ff:
                     homeHero?0xffff945d:lighten(color,flatDaily?.10f:.18f),
+                    victoryPrimary?0xffff5c41:
+                    victoryShare?0xff2b80eb:
                     homeHero?0xffff5b38:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:1.2f);
@@ -1184,7 +1202,10 @@ public final class MainActivity extends ComponentActivity {
                 // blended into the canvas. Leave small header controls and
                 // every other screen unchanged.
                 boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
+                boolean victorySecondary=page.equals("win")&&
+                    "Nova igra".equals(label)&&theme!=1;
                 card(x,y,w,h,radius,
+                    victorySecondary?0xfff5e9da:
                     raisedGameAction&&theme!=1?0xfffff3e5:color);
             }
             boolean hasSymbol=symbol!=null;
@@ -1898,29 +1919,79 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(WHITE);
             c.drawPath(crown,p);
             p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(.8f,0f,1.1f,0x55c17816);
             p.setShader(new LinearGradient(0,3,0,19,
-                0xffffeb7c,0xffffb324,Shader.TileMode.CLAMP));
+                0xfffff08d,0xffffae1c,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
+            p.clearShadowLayer();
             p.setShader(null);
+            // Shallow warm lip and a curved inner glint give the crown
+            // genuine painted volume without a rasterized screen image.
+            Path glint=new Path();
+            glint.moveTo(5.0f,10.2f);
+            glint.quadTo(7.8f,14.1f,10.7f,9.0f);
+            glint.quadTo(12.0f,6.8f,13.1f,10.2f);
+            glint.quadTo(15.3f,14.4f,18.3f,10.6f);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.9f);
+            p.setColor(0x80fff4bd);
+            c.drawPath(glint,p);
+            p.setStyle(Paint.Style.FILL);
             p.setColor(0xffff8f16);
             c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
             p.setColor(0xffffce46);
             c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
             c.restore();
         }
+        void victoryHeadingRays(){
+            // The hand-lettered reference has coral strokes framing the
+            // raised navy wordmark. Keep rays off the three touch targets.
+            for(int side=0;side<2;side++){
+                float x=side==0?91f:309f;
+                for(int i=0;i<3;i++){
+                    float y=247f+i*24f;
+                    int color=i==1?TEAL:CORAL;
+                    c.save();
+                    c.rotate((side==0?-1f:1f)*(i==0?-36f:i==2?39f:69f),x,y);
+                    shape(x-3f,y-9f,6f,i==1?14f:17f,3f,color);
+                    c.restore();
+                }
+            }
+        }
         void victoryHeading(){
-            // Nunito lettering in the reference is taller than Android's
-            // regular glyph metrics. Scale the text only, not its tap targets.
-            c.save();
-            c.scale(1.02f,1.25f,200,288);
+            // The reference logo is a bouncing, hand-lettered Nunito word,
+            // not a single rigid baseline. Build it as individual glyphs
+            // so the weight, overlap and subtle rotations work at any DPI.
+            final String[] glyphs={"B","r","a","v","o","!"};
+            final float[] tilt={-8f,4f,-6f,5f,-4f,7f};
+            final float[] rise={2f,-2f,1f,-1f,0f,-3f};
+            c.save();c.scale(.96f,1.28f,200f,286f);
             p.clearShadowLayer();p.setShader(null);
-            p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
-            p.setTextSize(60);p.setFakeBoldText(false);
-            p.setStrokeJoin(Paint.Join.ROUND);
-            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.7f);
-            p.setColor(WHITE);c.drawText("Bravo!",200,288,p);
+            p.setTypeface(displayFont);p.setTextSize(63f);
+            p.setTextScaleX(1f);p.setFakeBoldText(false);
+            p.setTextAlign(Paint.Align.CENTER);
+            float[] advances=new float[glyphs.length];
+            float full=0f;
+            for(int i=0;i<glyphs.length;i++){
+                advances[i]=p.measureText(glyphs[i]);
+                full+=advances[i]-(i<glyphs.length-1?2.6f:0f);
+            }
+            float left=200f-full/2f;
+            for(int i=0;i<glyphs.length;i++){
+                float middle=left+advances[i]/2f;
+                float baseline=286f+rise[i];
+                c.save();c.rotate(tilt[i],middle,baseline-20f);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(3.4f);p.setColor(WHITE);
+                c.drawText(glyphs[i],middle,baseline,p);
+                p.setStyle(Paint.Style.FILL);p.setColor(ink);
+                c.drawText(glyphs[i],middle,baseline,p);
+                c.restore();
+                left+=advances[i]-2.6f;
+            }
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
-            p.setColor(ink);c.drawText("Bravo!",200,288,p);
+            p.setTextAlign(Paint.Align.CENTER);
             c.restore();
         }
         void compactVictoryCard(){
@@ -1928,6 +1999,7 @@ public final class MainActivity extends ComponentActivity {
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
             victoryCrown(200,195,103);
+            victoryHeadingRays();
             victoryHeading();
             card(95,295,210,33,18,theme==1?card:0xffffeddb);
             fitted("Dosegnuli ste",161,318,20,133,CORAL,true);
