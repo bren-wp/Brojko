@@ -69,6 +69,9 @@ public final class MainActivity extends ComponentActivity {
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
+    // Allow the full branded opening illustration to be read before Home.
+    // Previously 1350 ms was too brief, especially on faster devices.
+    static final long SPLASH_DURATION_MS=3200L;
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
     int chartMetric=0;
@@ -145,7 +148,7 @@ public final class MainActivity extends ComponentActivity {
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
         screen.postDelayed(()->{
             if("splash".equals(page))navigate("home");
-        },1350);
+        },SPLASH_DURATION_MS);
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
@@ -3918,7 +3921,8 @@ public final class MainActivity extends ComponentActivity {
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(8f);
             p.setStrokeCap(Paint.Cap.ROUND);
             c.drawLine(80,32,90,45,p);
-            c.drawLine(69,58,82,58,p);
+            // Keep the coral accent outside the new Back touch surface.
+            c.drawLine(81,58,94,58,p);
             c.drawLine(320,32,310,45,p);
             c.drawLine(331,58,318,58,p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
@@ -3935,6 +3939,9 @@ public final class MainActivity extends ComponentActivity {
         }
         void settings(){
             boolean compact=referencePortraitLayout;
+            // Match all other detail screens: visible back arrow with an
+            // accessible 54x54 logical touch target, returning to Home.
+            back();
             // Source PNG spacing: four close rows, a slightly larger break,
             // local backup, privacy and app info, and the footer byline.
             int[] rowY=compact?

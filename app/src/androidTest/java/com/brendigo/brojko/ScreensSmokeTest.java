@@ -2389,6 +2389,72 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void settingsBackArrowIsVisibleAccessibleAndNavigatesHome(){
+        rule.getScenario().onActivity(activity->{
+            String previous=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                for(int themeValue:new int[]{0,1}){
+                    activity.theme=themeValue;
+                    activity.page="settings";
+                    for(int[] viewport:new int[][]{
+                        {941,1672},{360,600},{1080,2400}
+                    }){
+                        int width=viewport[0],height=viewport[1];
+                        board.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        board.layout(0,0,width,height);
+                        Bitmap bitmap=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            board.draw(new Canvas(bitmap));
+                            assertEquals("Natrag must be the first touch target",
+                                "Natrag",board.taps.get(0).label);
+                            MainActivity.BoardScreen.Tap back=board.taps.get(0);
+                            assertTrue("Back needs a full-width 54-unit hit area",
+                                back.right-back.left>=54f);
+                            assertTrue("Back needs a full-height 54-unit hit area",
+                                back.bottom-back.top>=54f);
+                            assertTrue("Back must remain left of the heading",
+                                back.right<=72f);
+                            assertTrue("Back must stay above setting rows",
+                                back.bottom<board.taps.get(1).top);
+                            assertTrue("Back must be visible below system insets",
+                                board.offY+back.top*board.scale>=0f);
+                            if(width==941&&themeValue==0){
+                                captureReference(activity,board,
+                                    "settings-back-arrow-941x1672");
+                            }
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                activity.page="settings";
+                board.taps.get(0).action.run();
+                assertEquals("Arrow returns Home","home",activity.page);
+                activity.page="settings";
+                activity.handleBackNavigation();
+                assertEquals("System Back remains functional","home",activity.page);
+            }finally{
+                activity.theme=oldTheme;
+                activity.page=previous;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashBrandRemainsVisibleForAtLeastThreeSeconds(){
+        // Compare the configured interval rather than wall-clock sleep:
+        // flaky emulator boot times are not representative of production.
+        assertTrue("Splash must last at least 3000 ms",
+            MainActivity.SPLASH_DURATION_MS>=3000L);
+        assertTrue("Splash should not block users for too long",
+            MainActivity.SPLASH_DURATION_MS<=4500L);
+    }
+
     @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
@@ -2411,9 +2477,15 @@ public class ScreensSmokeTest {
                         new int[]{148,229,310,391,478,559,640};
                     String[] labels={"Zvuk","Vibracija","Jezik","Obavijesti",
                         "Sinkronizacija napretka","Pravila privatnosti","O aplikaciji"};
+                    assertEquals("Seven rows and a separate Back arrow",
+                        8,board.taps.size());
+                    MainActivity.BoardScreen.Tap back=board.taps.get(0);
+                    assertEquals("Natrag",back.label);
+                    assertTrue("Back hit area must be at least 54 units",
+                        back.right-back.left>=54&&back.bottom-back.top>=54);
                     int i=0;
-                    for(MainActivity.BoardScreen.Tap tap:board.taps){
-                        if(i>=7)break;
+                    for(int rowIndex=1;rowIndex<board.taps.size();rowIndex++){
+                        MainActivity.BoardScreen.Tap tap=board.taps.get(rowIndex);
                         assertTrue("Settings touch target must be labeled: "+tap.label,
                             tap.label.startsWith(labels[i]));
                         assertEquals("Row "+i+" must follow reference top",expectedY[i],
@@ -2423,7 +2495,7 @@ public class ScreensSmokeTest {
                         assertEquals(382f,tap.right,.1f);
                         assertTrue("Height >= 48 design units",tap.bottom-tap.top>=48f);
                         if(i>0)assertTrue("Settings cards must not overlap",
-                            tap.top>=board.taps.get(i-1).bottom);
+                            tap.top>=board.taps.get(rowIndex-1).bottom);
                         i++;
                     }
                     assertEquals("Exactly seven setting cards",7,i);
@@ -2478,18 +2550,19 @@ public class ScreensSmokeTest {
                 String[] expected={"Zvuk","Vibracija","Jezik","Obavijesti",
                     "Sinkronizacija napretka","Pravila privatnosti",
                     "O aplikaciji"};
-                assertEquals("Seven settings rows",7,board.taps.size());
+                assertEquals("Seven setting rows plus Back",8,board.taps.size());
+                assertEquals("Natrag",board.taps.get(0).label);
                 for(int i=0;i<expected.length;i++){
-                    MainActivity.BoardScreen.Tap item=board.taps.get(i);
+                    MainActivity.BoardScreen.Tap item=board.taps.get(i+1);
                     assertTrue("Wrong settings action at row "+i,
                         item.label.startsWith(expected[i]));
                     assertEquals("Full-width touch target",364f,
                         item.right-item.left,.01f);
                     assertTrue("Accessible row height",item.bottom-item.top>=48);
                 }
-                assertTrue(board.taps.get(0).label.contains("uključeno"));
                 assertTrue(board.taps.get(1).label.contains("uključeno"));
-                assertTrue(board.taps.get(3).label.contains("uključeno"));
+                assertTrue(board.taps.get(2).label.contains("uključeno"));
+                assertTrue(board.taps.get(4).label.contains("uključeno"));
                 // On-state tint remains saturated turquoise, while
                 // row cards remain opaque white and brand footer warm.
                 int turquoise=bitmap.getPixel(
@@ -2502,26 +2575,30 @@ public class ScreensSmokeTest {
                     "settings-phase08-source-on-941x1672");
 
                 // Real preference, not decorative switch; test independence.
-                board.taps.get(0).action.run();
+                board.taps.get(1).action.run();
                 assertFalse("Sound persists OFF",activity.prefs.getBoolean("sound",true));
                 assertTrue("Vibration stays enabled",activity.vibration);
-                board.taps.get(1).action.run();
+                board.taps.get(2).action.run();
                 assertFalse("Vibration persists OFF",
                     activity.prefs.getBoolean("vibrate",true));
                 assertFalse("Sound remains disabled",activity.sound);
 
                 // Backup is navigation, never fake remote sync.
-                board.taps.get(4).action.run();
+                board.taps.get(5).action.run();
                 assertEquals("backup",activity.page);
                 activity.page="settings";
-                board.taps.get(2).action.run();
+                board.taps.get(3).action.run();
                 assertEquals("language",activity.page);
                 activity.page="settings";
-                board.taps.get(5).action.run();
+                board.taps.get(6).action.run();
                 assertEquals("privacy",activity.page);
                 activity.page="settings";
-                board.taps.get(6).action.run();
+                board.taps.get(7).action.run();
                 assertEquals("about",activity.page);
+                activity.page="settings";
+                board.taps.get(0).action.run();
+                assertEquals("Visible Back arrow returns Home",
+                    "home",activity.page);
             }finally{
                 bitmap.recycle();
                 activity.page=oldPage;
