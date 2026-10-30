@@ -1690,30 +1690,25 @@ public final class MainActivity extends ComponentActivity {
             float actionsH=portraitFour?94:(narrow?82:91);
             float firstX=portraitFour?17:22,undoX=portraitFour?139:144;
             float finishX=portraitFour?258:265;
-            // Source 941x1672 classic board: shallow cream buttons and a
-            // coral "Završi" button without the oversized dark extrusion.
-            // The small-screen tap boxes and game actions remain identical.
-            if(portraitFour&&theme==0){
-                portraitClassicAction("Novo","refresh",firstX,actionsY,113,
-                    actionsH,false,true,()->requestNew(game.mode));
-                portraitClassicAction("Poništi","undo",undoX,actionsY,112,
-                    actionsH,false,game.canUndo(),()->undo());
-                portraitClassicAction("Završi","check",finishX,actionsY,120,
-                    actionsH,true,true,()->navigate("confirmEnd"));
-            }else{
-                button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
-                    ()->requestNew(game.mode));
-                if(game.canUndo())
-                    button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
-                else {
-                    card(undoX,actionsY,112,actionsH,20,
-                        theme==1?0xff29364a:0xffeae5de);
-                    icon("undo",undoX+56,actionsY+27,25,muted);
-                    txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
-                }
+            // Keep standard (already measured) Novo/Poništi rendering.
+            // Apply special artwork only to the coral confirmation button,
+            // avoiding a measurable regression in the two cream controls.
+            button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
+                ()->requestNew(game.mode));
+            if(game.canUndo())
+                button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
+            else {
+                card(undoX,actionsY,112,actionsH,20,
+                    theme==1?0xff29364a:0xffeae5de);
+                icon("undo",undoX+56,actionsY+27,25,muted);
+                txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
+            }
+            if(portraitFour&&theme==0)
+                portraitClassicFinish(finishX,actionsY,120,actionsH,
+                    ()->navigate("confirmEnd"));
+            else
                 button("Završi","check",finishX,actionsY,portraitFour?120:113,
                     actionsH,CORAL,true,()->navigate("confirmEnd"));
-            }
             if(!narrow){
                 button("Izbornik","home",22,757,171,64,card,false,
                     ()->navigate("home"));
@@ -1755,33 +1750,21 @@ public final class MainActivity extends ComponentActivity {
             }
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
-        void portraitClassicAction(String label,String symbol,
-                float x,float y,float width,float height,
-                boolean accent,boolean enabled,Runnable action){
+        void portraitClassicFinish(float x,float y,float width,
+                float height,Runnable action){
             float radius=22f;
-            if(accent){
-                shape(x,y+3,width,height,radius,0xffdf5941);
-                gradient(x,y,width,height-3,radius,
-                    0xffff9a71,0xffff6341);
-            }else{
-                shape(x,y+3,width,height,radius,0xffe8d8c5);
-                gradient(x,y,width,height-2,radius,
-                    0xfffffcf5,0xfffff2e1);
-            }
+            shape(x,y+3,width,height,radius,0xffdf5941);
+            gradient(x,y,width,height-3,radius,0xffff9a71,0xffff6341);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
-            p.setColor(accent?0x70ffffff:0x63e5c9ac);
+            p.setColor(0x70ffffff);
             c.drawRoundRect(x+2,y+2,x+width-2,y+height-4,
                 radius-2,radius-2,p);
             p.setStyle(Paint.Style.FILL);
             float center=x+width/2f;
-            // The source's navy action glyphs are substantially heavier
-            // and wider than the default small-menu icons.
-            icon(symbol,center,y+height*.37f,
-                accent?39f:41f,accent?WHITE:(enabled?ink:muted));
-            fitted(label,center,y+height*.81f,accent?18.5f:18.5f,
-                width-10,accent?WHITE:(enabled?ink:muted),true);
-            if(enabled)taps.add(new Tap(x,y,x+width,y+height,label,action));
+            icon("check",center,y+height*.37f,39f,WHITE);
+            fitted("Završi",center,y+height*.81f,18.5f,width-10,WHITE,true);
+            taps.add(new Tap(x,y,x+width,y+height,"Završi",action));
         }
         void headerUndo(float x,float y,float w,float h){
             if(game!=null && game.canUndo()){
@@ -1810,7 +1793,9 @@ public final class MainActivity extends ComponentActivity {
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
                     (tallFour?94:tile+gap)*y;
-                int color=tallFour&&theme==0&&tileStyle==0?
+                // Victory/pause backdrops also call drawGrid(). Only the
+                // *active* light-theme 4x4 gameplay may use this palette.
+                int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
                     classicReferenceTileColor(value):tileColor(value);
                 float delta=animation==0?1:pulse;
                 float inset=value>0?(1-delta)*tile/2:0;
