@@ -1021,6 +1021,70 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void confirmNewGameArchivesBeforeSwitchingToRequestedMode(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page,oldMode=activity.pendingMode;
+            String oldHistory=activity.prefs.getString("history","[]");
+            String oldLastPlayDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldPlays=activity.plays,oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldStars=activity.stars,oldFlags=activity.rewardFlags;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",90127L);
+                activity.game.score=4096;activity.game.moves=15;
+                activity.requestNew("relaxed");
+                assertEquals("New game requires an explicit confirmation",
+                    "confirm",activity.page);
+                assertEquals("Requested next mode is retained","relaxed",
+                    activity.pendingMode);
+                assertEquals("No archive before confirmation",oldHistory,
+                    activity.prefs.getString("history","[]"));
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    view.taps.get(0).action.run();
+                }finally{image.recycle();}
+                assertEquals("Confirmed action enters actual game","game",
+                    activity.page);
+                assertEquals("New mode is relaxed 5x5","relaxed",activity.game.mode);
+                assertEquals(5,activity.game.size);
+                assertEquals(25,activity.game.cells.length);
+                org.json.JSONArray history=new org.json.JSONArray(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Prior active session must be archived",history.length()>0);
+                org.json.JSONObject first=history.optJSONObject(0);
+                assertNotNull(first);
+                assertEquals(4096,first.optInt("score"));
+                assertEquals(15,first.optInt("moves"));
+                assertEquals("classic",first.optString("mode"));
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.pendingMode=oldMode;activity.plays=oldPlays;
+                activity.recordTile=oldRecordTile;activity.lastScore=oldLastScore;
+                activity.lastPlayDay=oldLastPlayDay;activity.playDayStreak=oldStreak;
+                activity.stars=oldStars;activity.rewardFlags=oldFlags;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;
+                activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void confirmationCancelIsNonDestructiveAndConfirmedEndArchives(){
         rule.getScenario().onActivity(activity->{
             TileGame prior=activity.game;
