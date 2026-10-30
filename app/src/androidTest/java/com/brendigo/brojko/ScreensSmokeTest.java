@@ -1563,6 +1563,69 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void failedDailyReplayCannotClaimSuccessReward(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previous=activity.game;
+            String oldPage=activity.page,oldRewardDate=activity.dailyRewardDate;
+            String oldHistory=activity.prefs.getString("history","[]");
+            String oldLastDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldStars=activity.stars,oldPlays=activity.plays;
+            int oldFlags=activity.rewardFlags,oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            boolean oldUndo=activity.undoUsedThisGame;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("daily",activity.today(),56044L);
+                activity.game.cells[0]=64;
+                activity.game.peak=64;activity.game.score=1728;
+                activity.game.moves=80;activity.game.gameOver=true;
+                activity.page="dailyFail";
+                activity.dailyRewardDate="";
+                activity.dailyBonusGrantedThisAttempt=false;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(0).action.run();
+                }finally{bitmap.recycle();}
+                assertEquals("Replay after failure returns to game","game",
+                    activity.page);
+                assertEquals("daily",activity.game.mode);
+                assertEquals("Failed attempt cannot award today's bonus","",
+                    activity.dailyRewardDate);
+                assertFalse("No winning UI status after a failed retry",
+                    activity.dailyBonusGrantedThisAttempt);
+                org.json.JSONArray saved=new org.json.JSONArray(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Failed attempt remains in history",saved.length()>0);
+                assertEquals(1728,saved.optJSONObject(0).optInt("score"));
+                assertEquals(80,saved.optJSONObject(0).optInt("moves"));
+            }finally{
+                activity.game=previous;activity.page=oldPage;
+                activity.dailyRewardDate=oldRewardDate;activity.lastPlayDay=oldLastDay;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;activity.stars=oldStars;
+                activity.rewardFlags=oldFlags;activity.recordTile=oldRecordTile;
+                activity.plays=oldPlays;activity.playDayStreak=oldStreak;
+                activity.lastScore=oldLastScore;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyResultModalKeepsBottomActionInsideItsCard(){
         rule.getScenario().onActivity(activity->{
             TileGame priorGame=activity.game;
