@@ -1582,9 +1582,19 @@ public final class MainActivity extends ComponentActivity {
                     float px=left+(i%cols)*(side+space);
                     float py=top+(i/cols)*(side+space);
                     int v=values[Math.min(values.length-1,i)];
-                    int col=cols==5?
-                        TILES[1+(i+((i/5)*2))%Math.min(10,TILES.length-1)]:
-                        tileColor(v);
+                    // The relaxed thumbnail is a fixed, *decorative*
+                    // sample, not the active game board. The old index
+                    // formula produced purple in row 2 and coral in the
+                    // fifth slot of row 1, unlike the supplied 5x5 artwork.
+                    // Keep runtime game spawn and tileColor unchanged.
+                    int[] relaxedPreview={
+                        TILES[1],TILES[2],TILES[3],TILES[4],0xfff1e3b1,
+                        TILES[2],TILES[3],TILES[4],TILES[1],TILES[6],
+                        TILES[3],TILES[4],TILES[1],TILES[6],TILES[7],
+                        TILES[6],0xffff6193,TILES[7],TILES[3],TILES[10],
+                        TILES[7],TILES[8],TILES[3],TILES[10],TILES[10]
+                    };
+                    int col=cols==5?relaxedPreview[i]:tileColor(v);
                     glossyTile(px,py,side,side,4,col);
                     if(cols==4)fitted(""+v,px+side/2,py+side*.67f,
                         v>99?8.4f:12,side-2,WHITE,true);
