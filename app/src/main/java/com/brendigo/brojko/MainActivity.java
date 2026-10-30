@@ -3624,11 +3624,101 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?color:
                     (creamFooter?0xfffff3e6:0xfffffdfa));
         }
+        // Screen 08 uses its own glossy material. This does not alter
+        // gameplay tiles, the launcher, or icons on other screens.
         void settingsIconTile(float x,float y,float size,int color,String glyph){
-            shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
-            p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,size,size-1.5f,12,lighten(color,.12f),color);
-            icon(glyph,x+size/2f,y+size/2f,Math.min(27,size*.59f),WHITE);
+            shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
+                theme==1?0x66000000:0x26966c51);
+            gradient(x,y,size,size-1.5f,12,lighten(color,.17f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);p.setColor(0x7bffffff);
+            c.drawRoundRect(x+1.1f,y+1.1f,x+size-1.1f,y+size-3.3f,11,11,p);
+            p.setStyle(Paint.Style.FILL);
+            float cx=x+size/2f,cy=y+size/2f;
+            if("sound".equals(glyph)){
+                settingsSpeakerGlyph(cx,cy,Math.min(31,size*.68f));
+            }else if("cloud-backup".equals(glyph)){
+                settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
+            }else if("shield".equals(glyph)){
+                settingsShieldGlyph(cx,cy,Math.min(32,size*.70f));
+            }else{
+                icon(glyph,cx,cy,Math.min(29,size*.63f),WHITE);
+            }
+        }
+        void settingsSpeakerGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            Path horn=new Path();
+            horn.moveTo(2,9);horn.lineTo(7.5f,9);horn.lineTo(12.8f,4);
+            horn.quadTo(15,2,15,5.6f);horn.lineTo(15,18.5f);
+            horn.quadTo(15,22,12.8f,20);horn.lineTo(7.5f,15);
+            horn.lineTo(2,15);horn.close();c.drawPath(horn,p);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(2.7f);
+            Path waves=new Path();
+            waves.arcTo(new RectF(12.3f,6f,22f,18f),-58f,116f,false);
+            c.drawPath(waves,p);
+            p.setStrokeWidth(2.1f);
+            c.drawArc(new RectF(9.8f,2.1f,26.7f,21.9f),
+                -54f,108f,false,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
+            c.restore();
+        }
+        void settingsBackupGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(3.2f);p.setColor(WHITE);
+            Path cloud=new Path();
+            cloud.moveTo(6.3f,18.2f);
+            cloud.cubicTo(-.5f,18.2f,1.8f,9.5f,6.8f,10.7f);
+            cloud.cubicTo(8.1f,3.1f,18.8f,4.3f,19f,11f);
+            cloud.cubicTo(25f,11.5f,23.7f,19f,17.8f,19f);
+            cloud.lineTo(6.3f,19f);c.drawPath(cloud,p);
+            p.setStrokeWidth(2.4f);
+            c.drawArc(new RectF(8,9.4f,17.4f,18.5f),210,200,false,p);
+            Path arrow=new Path();
+            arrow.moveTo(15.4f,11.2f);arrow.lineTo(17.4f,12.1f);
+            arrow.lineTo(16.1f,14.2f);c.drawPath(arrow,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
+        void settingsShieldGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            Path shield=new Path();
+            shield.moveTo(12,2);shield.cubicTo(16,5,19,5,22,6.1f);
+            shield.lineTo(21.5f,13.2f);
+            shield.cubicTo(21,18.8f,16.4f,21.6f,12,23);
+            shield.cubicTo(7.6f,21.6f,3,18.8f,2.5f,13.2f);
+            shield.lineTo(2,6.1f);shield.cubicTo(5,5,8,5,12,2);
+            shield.close();c.drawPath(shield,p);
+            p.setColor(0xfffa6153);
+            c.drawRoundRect(10.3f,8.2f,13.7f,16.6f,1.7f,1.7f,p);
+            c.restore();
+        }
+        void settingsHeaderAccent(){
+            // The source has two broad coral rays per side, not
+            // three thin marks. Keep them outside the title glyphs.
+            p.clearShadowLayer();p.setShader(null);p.setColor(CORAL);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(8f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawLine(80,32,90,45,p);
+            c.drawLine(69,58,82,58,p);
+            c.drawLine(320,32,310,45,p);
+            c.drawLine(331,58,318,58,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
+        void settingsToggle(float x,float y,boolean enabled){
+            int from=enabled?0xff2ddcca:0xffdce1e8;
+            int to=enabled?0xff17c4b0:0xffbac4d1;
+            gradient(x,y,55,32,17,from,to);
+            shape(x+(enabled?25:3)+.3f,y+4,25,25,13,
+                theme==1?0x34000000:0x1394684a);
+            gradient(x+(enabled?24:2),y+2,27,27,14,WHITE,0xfff9f9f8);
         }
         void settings(){
             boolean compact=referencePortraitLayout;
@@ -3638,8 +3728,11 @@ public final class MainActivity extends ComponentActivity {
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
             txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
-            rays(74,compact?67:97,compact?34:29,CORAL);
-            rays(331,compact?67:97,compact?34:29,CORAL);
+            if(compact)settingsHeaderAccent();
+            else {
+                rays(74,97,29,CORAL);
+                rays(331,97,29,CORAL);
+            }
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
@@ -3676,8 +3769,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted(caption,compact?91:97,y+height*.62f,
                 compact?18.8f:21,compact?210:202,ink,true);
             float switchY=y+(height-32)/2f;
-            shape(313,switchY,55,32,17,on?TEAL:0xffc6ced6);
-            shape(on?337:317,switchY+3,26,26,15,WHITE);
+            settingsToggle(313,switchY,on);
             taps.add(new Tap(18,y,382,y+height,
                 caption+(on?" uključeno":" isključeno"),action));
         }
@@ -3702,8 +3794,9 @@ public final class MainActivity extends ComponentActivity {
                     "Jezik".equals(caption)?145:215,ink,true);
                 if("Jezik".equals(caption)){
                     float pillY=y+(compact?9:14),pillH=compact?39:44;
-                    shape(245,pillY,124,pillH,19,
-                        theme==1?0xff394a63:0xfffff2e2);
+                    gradient(245,pillY,124,pillH,19,
+                        theme==1?0xff4b5971:0xfffffaf1,
+                        theme==1?0xff394a63:0xfff7ecdd);
                     fitted(value,289,y+(compact?36:43),17,91,ink,true);
                     icon("chevron-down",351,y+height/2f,17,muted);
                 }else if(hasValue){
