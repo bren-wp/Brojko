@@ -2532,7 +2532,7 @@ public class ScreensSmokeTest {
                 assertEquals(18,activity.game.moves);
                 assertTrue("Saved JSON records the acknowledged milestone",
                     activity.prefs.getString("session","")
-                        .contains("\\"ack\\":true"));
+                        .contains("\"ack\":true"));
             }finally{
                 activity.game=previousGame;
                 activity.page=previousPage;
