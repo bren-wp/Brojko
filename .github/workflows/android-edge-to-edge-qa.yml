@@ -1,0 +1,54 @@
+name: Android 16 navigation bar and inset QA
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/src/main/**'
+      - 'app/src/androidTest/**'
+      - 'scripts/verify-edge-to-edge*.sh'
+      - '.github/workflows/android-edge-to-edge-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android36-bars:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK 36
+        run: |
+          SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+      - name: Prepare bundled font
+        run: bash scripts/prepare-nunito.sh
+      - name: Enable hardware acceleration
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Test real API 36 gesture and 3-button navigation
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            gradle --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+            bash scripts/verify-edge-to-edge-emulator.sh
+      - name: Upload Android 16 navigation test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brojko-android36-edge-to-edge
+          if-no-files-found: warn
+          path: edge-to-edge-*.txt
