@@ -2740,6 +2740,9 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(2f,0,2f,0x269f805f);
             c.drawRoundRect(x,y+1,x+size,y+size+1,11,11,p);
             p.clearShadowLayer();
+            // gradient() preserves the Paint alpha; reset it after the
+            // translucent shadow so the ivory body is not see-through.
+            p.setColor(WHITE);
             gradient(x,y,size,size,11,0xfffffcf6,0xfff8ecdd);
         }
         void missionRaisedNumber(float x,float y,float size,int color,
