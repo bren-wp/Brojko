@@ -2900,12 +2900,20 @@ public class ScreensSmokeTest {
     @Test public void missionMasterUnlockBarMatchesItsBinaryCounter(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
+            TileGame oldGame=activity.game;
             int oldTheme=activity.theme,oldTile=activity.recordTile;
             int oldFlags=activity.rewardFlags;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldBest=activity.best;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
             try{
                 activity.page="missions";activity.theme=0;
+                // Explicit source-style fixture; never show the real user's
+                // scores in a reference comparison as if they were mockup data.
+                activity.game=null;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.best=8400;
                 activity.rewardFlags=0;
                 view.measure(View.MeasureSpec.makeMeasureSpec(941,
                         View.MeasureSpec.EXACTLY),
@@ -2938,7 +2946,9 @@ public class ScreensSmokeTest {
                 bitmap.recycle();
                 activity.page=oldPage;activity.theme=oldTheme;
                 activity.recordTile=oldTile;activity.rewardFlags=oldFlags;
-                activity.screen.invalidate();
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.best=oldBest;
+                activity.game=oldGame;activity.screen.invalidate();
             }
         });
     }
