@@ -3120,6 +3120,52 @@ public class ScreensSmokeTest {
     }
 
 
+
+    @Test public void splashPhaseNineRendersOwnerIllustrationAndSoftEdgeTiles(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousStyle=activity.tileStyle,previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";activity.tileStyle=0;activity.theme=0;
+                int[][] sizes={{941,1672},{360,600},{1080,2400}};
+                for(int[] size:sizes){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(bitmap));
+                        assertEquals("Splash never scrolls",0f,view.maxScroll,.01f);
+                        if(size[0]==941){
+                            assertTrue("Coral left accent rays are visible",
+                                countCoralPixels(bitmap,view,32,61,63,105)>8);
+                            int px=Math.round(view.offX+350f*view.scale);
+                            int py=Math.round(view.offY+675f*view.scale);
+                            int blue=bitmap.getPixel(px,py);
+                            assertTrue("Lower-right decorative 256 is soft blue",
+                                android.graphics.Color.blue(blue)>
+                                    android.graphics.Color.red(blue)+35);
+                            assertTrue("Raised 2 remains inside native screen",
+                                view.offX+61*view.scale>0);
+                            captureReference(activity,view,
+                                "splash-phase09-owner-941x1672");
+                        }
+                        if(size[0]==360)
+                            assertTrue("Short phone keeps source slogan on-screen",
+                                view.offY+628f*view.scale<=600f);
+                    }finally{bitmap.recycle();}
+                }
+            }finally{
+                activity.page=previousPage;activity.tileStyle=previousStyle;
+                activity.theme=previousTheme;activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitSplashFillsWidthWithoutScrollingOrClippingSlogan(){
         rule.getScenario().onActivity(activity->{
             String old=activity.page;
