@@ -76,9 +76,13 @@ public final class MainActivity extends ComponentActivity {
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        // Android 15+ draws under transparent system bars. Enable the same
-        // contract on older versions and place controls inside safe insets.
-        WindowCompat.enableEdgeToEdge(getWindow());
+        // Draw behind both system bars on API 24-36. Use the manual
+        // edge-to-edge contract instead of WindowCompat.enableEdgeToEdge():
+        // AndroidX's setup helper can invoke deprecated Window bar-color
+        // setters on API 35+, which Google Play reports against onCreate.
+        // Transparent bar colors for API <=34 are provided by qualified
+        // themes; API 35+ supplies transparent bars automatically.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
         // Android 16 predictive back gestures do not invoke Activity.onBackPressed.
         getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){
             @Override public void handleOnBackPressed(){handleBackNavigation();}
