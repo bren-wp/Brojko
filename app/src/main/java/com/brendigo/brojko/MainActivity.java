@@ -1602,11 +1602,23 @@ public final class MainActivity extends ComponentActivity {
                         v>99?8.4f:12,side-2,WHITE,true);
                 }
             }
-            fitted(name,x+w/2,y+(portrait?125:150),portrait?16:17,w-5,ink,true);
+            // Native pixel audit: the original labels were ~27 px too high
+            // for the 4x4 and 5x5 cards, while the daily title was ~6 px high.
+            // Align typography only, not mode-card touch areas or gameplay.
+            float captionX=x+w/2f+(portrait&&!daily?5f:0f);
+            float captionY=y+(portrait?(daily?128f:137f):150f);
+            if(portrait&&daily){
+                // Reference daily heading is ~10% narrower than the previous
+                // native heading but remains fully readable in the card.
+                c.save();
+                c.scale(.90f,1f,captionX,captionY);
+                fitted(name,captionX,captionY,16,w-5,ink,true);
+                c.restore();
+            }else fitted(name,captionX,captionY,portrait?16:17,w-5,ink,true);
             if(daily){
-                fitted("Novi izazov",x+w/2,y+(portrait?140:169),12,w-5,muted,false);
-                fitted("svaki dan!",x+w/2,y+(portrait?154:182),12,w-5,muted,false);
-            }else fitted(sub,x+w/2,y+(portrait?152:177),17,w-6,muted,false);
+                fitted("Novi izazov",x+w/2,y+(portrait?143:169),12,w-5,muted,false);
+                fitted("svaki dan!",x+w/2,y+(portrait?157:182),12,w-5,muted,false);
+            }else fitted(sub,x+w/2,y+(portrait?155:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
         float gridX=16,gridY=222,gridSize=368;
