@@ -1408,8 +1408,12 @@ public class ScreensSmokeTest {
                 activity.dailyBonusGrantedThisAttempt=true;
                 activity.dailyRewardDate=activity.today();
                 for(String state:new String[]{"dailyWin","dailyFail"}){
+                    boolean failed="dailyFail".equals(state);
                     activity.page=state;
-                    activity.game.gameOver="dailyFail".equals(state);
+                    activity.game.gameOver=failed;
+                    activity.game.score=failed?1728:3848;
+                    activity.game.peak=failed?64:256;
+                    activity.game.cells[0]=failed?64:256;
                     for(int[] viewport:new int[][]{{941,1672},{360,600},{1080,2400}}){
                         int width=viewport[0],height=viewport[1];
                         view.measure(View.MeasureSpec.makeMeasureSpec(width,
@@ -1476,7 +1480,8 @@ public class ScreensSmokeTest {
                 assertEquals("Rendering does not award stars",
                     activity.today(),activity.dailyRewardDate);
                 assertEquals("Rendering cannot advance moves",80,activity.game.moves);
-                assertEquals(3848,activity.game.score);
+                assertEquals("Daily failure retains actual losing score",
+                    1728,activity.game.score);
             }finally{
                 activity.game=oldGame;activity.page=oldPage;activity.theme=oldTheme;
                 activity.dailyBonusGrantedThisAttempt=oldAward;
@@ -1492,6 +1497,10 @@ public class ScreensSmokeTest {
             String oldPage=activity.page,oldLastDay=activity.lastPlayDay;
             String oldRewardDate=activity.dailyRewardDate;
             String oldHistory=activity.prefs.getString("history","[]");
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
             int oldStars=activity.stars,oldPlays=activity.plays;
             int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
             int oldRewardFlags=activity.rewardFlags,oldTile=activity.recordTile;
@@ -1543,6 +1552,11 @@ public class ScreensSmokeTest {
                 activity.playDayStreak=oldStreak;activity.lastScore=oldLastScore;
                 activity.rewardFlags=oldRewardFlags;activity.recordTile=oldTile;
                 activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;
+                activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;
+                activity.undoUsedThisGame=oldUndo;
                 activity.prefs.edit().putString("history",oldHistory).commit();
                 activity.persist();activity.updateBars();activity.screen.invalidate();
             }
