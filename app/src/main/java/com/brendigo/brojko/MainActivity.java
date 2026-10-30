@@ -2644,10 +2644,12 @@ public final class MainActivity extends ComponentActivity {
         void dailyRewardGift(float cx,float cy,float size){
             // All-vector, soft 3D present. The reference has a plump bow,
             // purple side facets, and a wide gold ribbon, not a flat square.
-            float top=cy-size*.16f;
+            // Measured: first bow rose into the final objective row.
+            // Raise the box lid, extend the body, but lower its bow tips.
+            float top=cy-size*.22f;
             float left=cx-size*.40f;
             float width=size*.80f;
-            float height=size*.56f;
+            float height=size*.62f;
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
@@ -2675,16 +2677,16 @@ public final class MainActivity extends ComponentActivity {
                 0xffffed78,0xffffb21e);
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.19f,top-size*.63f,
-                cx-size*.64f,top-size*.67f,
+            bowL.cubicTo(cx-size*.19f,top-size*.44f,
+                cx-size*.64f,top-size*.46f,
                 cx-size*.51f,top-size*.34f);
             bowL.cubicTo(cx-size*.46f,top-size*.10f,
                 cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
             bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.19f,top-size*.63f,
-                cx+size*.64f,top-size*.67f,
+            bowR.cubicTo(cx+size*.19f,top-size*.44f,
+                cx+size*.64f,top-size*.46f,
                 cx+size*.51f,top-size*.34f);
             bowR.cubicTo(cx+size*.46f,top-size*.10f,
                 cx+size*.15f,top-size*.04f,cx,top-size*.10f);
@@ -2699,10 +2701,10 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
             p.setColor(0xfffff2a7);
-            c.drawOval(cx-size*.44f,top-size*.46f,
-                cx-size*.16f,top-size*.28f,p);
-            c.drawOval(cx+size*.16f,top-size*.46f,
-                cx+size*.44f,top-size*.28f,p);
+            c.drawOval(cx-size*.44f,top-size*.35f,
+                cx-size*.16f,top-size*.19f,p);
+            c.drawOval(cx+size*.16f,top-size*.35f,
+                cx+size*.44f,top-size*.19f,p);
             gradient(cx-size*.145f,top-size*.22f,
                 size*.29f,size*.21f,6,
                 0xffffeb77,0xffffa51c);
