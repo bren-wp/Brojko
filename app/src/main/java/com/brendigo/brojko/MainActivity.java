@@ -1638,8 +1638,10 @@ public final class MainActivity extends ComponentActivity {
                 c.scale(1f,1.40f,105f,60f);
                 fitted("Klasično",105,89,43,201,ink,true);
                 c.restore();
-                // Three coral rays above the reference title's upper accents.
-                rays(110,67,35,CORAL);
+                // Thick coral rays in the owner reference are distinct
+                // strokes, not the tiny dots of the generic rays() helper.
+                if(theme==0)classicGameAccentRays(false);
+                else rays(110,67,35,CORAL);
             }else{
                 fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
                     105,89,daily?32:43,201,ink,true);
@@ -1648,7 +1650,8 @@ public final class MainActivity extends ComponentActivity {
                 if(narrow&&!relaxed){
                     card(60,100,93,43,18,CORAL);
                     txt("4×4",106.5f,133,35,WHITE,true);
-                    rays(49,120,16,CORAL);rays(165,120,16,CORAL);
+                    if(theme==0)classicGameAccentRays(true);
+                    else {rays(49,120,16,CORAL);rays(165,120,16,CORAL);}
                 }else{
                     card(39,108,141,50,19,CORAL);
                     txt(relaxed?"5×5":"4×4",110,144,35,WHITE,true);
@@ -1687,24 +1690,96 @@ public final class MainActivity extends ComponentActivity {
             float actionsH=portraitFour?94:(narrow?82:91);
             float firstX=portraitFour?17:22,undoX=portraitFour?139:144;
             float finishX=portraitFour?258:265;
-            button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
-                ()->requestNew(game.mode));
-            if(game.canUndo())
-                button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
-            else {
-                card(undoX,actionsY,112,actionsH,20,
-                    theme==1?0xff29364a:0xffeae5de);
-                icon("undo",undoX+56,actionsY+27,25,muted);
-                txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
+            // Source 941x1672 classic board: shallow cream buttons and a
+            // coral "Završi" button without the oversized dark extrusion.
+            // The small-screen tap boxes and game actions remain identical.
+            if(portraitFour&&theme==0){
+                portraitClassicAction("Novo","refresh",firstX,actionsY,113,
+                    actionsH,false,true,()->requestNew(game.mode));
+                portraitClassicAction("Poništi","undo",undoX,actionsY,112,
+                    actionsH,false,game.canUndo(),()->undo());
+                portraitClassicAction("Završi","check",finishX,actionsY,120,
+                    actionsH,true,true,()->navigate("confirmEnd"));
+            }else{
+                button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
+                    ()->requestNew(game.mode));
+                if(game.canUndo())
+                    button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
+                else {
+                    card(undoX,actionsY,112,actionsH,20,
+                        theme==1?0xff29364a:0xffeae5de);
+                    icon("undo",undoX+56,actionsY+27,25,muted);
+                    txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
+                }
+                button("Završi","check",finishX,actionsY,portraitFour?120:113,
+                    actionsH,CORAL,true,()->navigate("confirmEnd"));
             }
-            button("Završi","check",finishX,actionsY,portraitFour?120:113,
-                actionsH,CORAL,true,()->navigate("confirmEnd"));
             if(!narrow){
                 button("Izbornik","home",22,757,171,64,card,false,
                     ()->navigate("home"));
                 button("Podijeli","share",207,757,171,64,card,false,()->share());
                 bottomBrand();
             }
+        }
+        // All following art is scoped to the light-theme 4x4 gameplay
+        // view. Do not change achievements, tile values, scoring, gameplay
+        // physics, other themes, 5x5, or any modal/backdrop rendering.
+        int classicReferenceTileColor(int value){
+            switch(value){
+                case 2: return 0xffff6948;
+                case 4: return 0xff19d6bf;
+                case 8: return 0xff248fff;
+                case 16: return 0xffffb638;
+                case 32: return 0xffff6482;
+                case 64: return 0xffc23cf8;
+                case 128: return 0xffa846ed;
+                case 256: return 0xff874cf5;
+                default: return tileColor(value);
+            }
+        }
+        void classicGameAccentRays(boolean aroundBadge){
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStrokeWidth(aroundBadge?6.5f:7.5f);
+            if(aroundBadge){
+                float[][] marks={
+                    {53,117,44,112},{48,126,39,126},{53,135,45,141},
+                    {160,117,169,112},{165,126,174,126},{160,135,168,141}
+                };
+                for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
+            }else{
+                float[][] marks={{100,58,93,51},{110,53,109,39},
+                                  {121,58,127,50}};
+                for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
+        void portraitClassicAction(String label,String symbol,
+                float x,float y,float width,float height,
+                boolean accent,boolean enabled,Runnable action){
+            float radius=22f;
+            if(accent){
+                shape(x,y+3,width,height,radius,0xffdf5941);
+                gradient(x,y,width,height-3,radius,
+                    0xffff9a71,0xffff6341);
+            }else{
+                shape(x,y+3,width,height,radius,0xffe8d8c5);
+                gradient(x,y,width,height-2,radius,
+                    0xfffffcf5,0xfffff2e1);
+            }
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
+            p.setColor(accent?0x70ffffff:0x63e5c9ac);
+            c.drawRoundRect(x+2,y+2,x+width-2,y+height-4,
+                radius-2,radius-2,p);
+            p.setStyle(Paint.Style.FILL);
+            float center=x+width/2f;
+            icon(symbol,center,y+height*.37f,
+                accent?39f:35f,accent?WHITE:(enabled?ink:muted));
+            fitted(label,center,y+height*.81f,accent?18.5f:18.5f,
+                width-10,accent?WHITE:(enabled?ink:muted),true);
+            if(enabled)taps.add(new Tap(x,y,x+width,y+height,label,action));
         }
         void headerUndo(float x,float y,float w,float h){
             if(game!=null && game.canUndo()){
@@ -1733,7 +1808,8 @@ public final class MainActivity extends ComponentActivity {
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
                     (tallFour?94:tile+gap)*y;
-                int color=tileColor(value);
+                int color=tallFour&&theme==0&&tileStyle==0?
+                    classicReferenceTileColor(value):tileColor(value);
                 float delta=animation==0?1:pulse;
                 float inset=value>0?(1-delta)*tile/2:0;
                 float round=tileStyle==1?7:tileStyle==2?24:15;
