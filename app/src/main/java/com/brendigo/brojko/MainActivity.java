@@ -1355,7 +1355,9 @@ public final class MainActivity extends ComponentActivity {
                     Math.min(usableWidth/400f,usableHeight/880f));
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
-                    Math.max(710f,466f+Math.min(5,history().length())*48f)
+                    (statsTouchExploration()?
+                        Math.max(710f,545f+Math.min(5,history().length())*48f):
+                        710f)
                     :1120f):
                 // All Home shortcuts end at y=690 plus their card shadows.
                 // The old 880-unit height caused ~170 units of empty scrolling
@@ -3349,6 +3351,14 @@ public final class MainActivity extends ComponentActivity {
         }
 
 
+        boolean statsTouchExploration(){
+            // Keep the owner's dense five-row layout normally, but expand
+            // targets and permit scrolling for TalkBack/touch exploration.
+            android.view.accessibility.AccessibilityManager manager=
+                (android.view.accessibility.AccessibilityManager)
+                getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+            return manager!=null&&manager.isTouchExplorationEnabled();
+        }
         void statsHeaderBurst(float cx,float cy,boolean right){
             // Three source-style coral rays at either side of the rounded title.
             final float sign=right?1f:-1f;
@@ -3417,7 +3427,8 @@ public final class MainActivity extends ComponentActivity {
             }
             // One visual history panel as in the reference; row cards are flat,
             // separated by a 4-unit gap, never five heavy elevated panels.
-            statsSoftCard(16,497,368,204,23,card);
+            final boolean accessibleRows=statsTouchExploration();
+            statsSoftCard(16,497,368,accessibleRows?273:204,23,card);
             leftFitted("Povijest partija",30,522,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
@@ -3427,10 +3438,12 @@ public final class MainActivity extends ComponentActivity {
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=530+i*34,idx=i;
+                int pitch=accessibleRows?48:34;
+                int y=530+i*pitch,idx=i;
                 int score=row.optInt("score");
                 boolean record=best>0&&score>=best;
-                shape(25,y,350,30,12,theme==1?0xff34445f:0xfffaf5ee);
+                shape(25,y,350,accessibleRows?44:30,12,
+                    theme==1?0xff34445f:0xfffaf5ee);
                 leftFitted(row.optString("day",""),33,y+21,11.3f,83,muted,false);
                 String completedAt=row.optString("time","");
                 // Legacy archives have no time: keep the field empty, never
@@ -3450,7 +3463,8 @@ public final class MainActivity extends ComponentActivity {
                         theme==1?WHITE:tagFg,true);
                 }
                 icon("chevron-right",366,y+15,15,muted);
-                taps.add(new Tap(22,y-2,378,y+32,"Detalji partije "+(i+1),
+                taps.add(new Tap(22,y-2,378,y+(accessibleRows?46:32),
+                    "Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
