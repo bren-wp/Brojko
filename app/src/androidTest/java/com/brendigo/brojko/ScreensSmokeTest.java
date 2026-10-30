@@ -2203,6 +2203,12 @@ public class ScreensSmokeTest {
                         android.graphics.Color.red(tile)>185 &&
                         android.graphics.Color.red(tile)>
                             android.graphics.Color.green(tile)+40);
+                    int flameX=Math.round(board.offX+325f*board.scale);
+                    int flameY=Math.round(board.offY+67f*board.scale);
+                    int flame=image.getPixel(flameX,flameY);
+                    assertTrue("Seven-day flame must be saturated orange, not alpha-grey",
+                        android.graphics.Color.red(flame)>
+                            android.graphics.Color.blue(flame)+35);
                     int giftX=Math.round(board.offX+70f*board.scale);
                     int giftY=Math.round(board.offY+615f*board.scale);
                     int purple=image.getPixel(giftX,giftY);
