@@ -1363,10 +1363,11 @@ public final class MainActivity extends ComponentActivity {
                 // The old 880-unit height caused ~170 units of empty scrolling
                 // at the original 941x1672 reference viewport. Preserve real
                 // scrolling on shorter devices without cropping any shortcut.
+                (page.equals("pause")&&referencePortraitLayout?650f:
                 (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f));
+                    referencePortraitLayout?710f:880f)));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
