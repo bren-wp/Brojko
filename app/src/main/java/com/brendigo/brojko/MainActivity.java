@@ -1578,22 +1578,24 @@ public final class MainActivity extends ComponentActivity {
                 float side=cols==5?17.0f:21.5f;
                 float left=x+(w-(side+space)*cols+space)/2;
                 float top=y+(portrait?14:(cols==5?20:19));
+                // Decorative Home preview only; the actual 5x5 engine is
+                // unchanged. Allocate the palette once per thumbnail.
+                // The relaxed thumbnail is a fixed, *decorative*
+                // sample, not the active game board. The old index
+                // formula produced purple in row 2 and coral in the
+                // fifth slot of row 1, unlike the supplied 5x5 artwork.
+                // Keep runtime game spawn and tileColor unchanged.
+                int[] relaxedPreview={
+                    TILES[1],TILES[2],TILES[3],TILES[4],0xfff1e3b1,
+                    TILES[2],TILES[3],TILES[4],TILES[1],TILES[6],
+                    TILES[3],TILES[4],TILES[1],TILES[6],TILES[7],
+                    TILES[6],0xffff6193,TILES[7],TILES[3],TILES[10],
+                    TILES[7],TILES[8],TILES[3],TILES[10],TILES[10]
+                };
                 for(int i=0;i<cols*cols;i++){
                     float px=left+(i%cols)*(side+space);
                     float py=top+(i/cols)*(side+space);
                     int v=values[Math.min(values.length-1,i)];
-                    // The relaxed thumbnail is a fixed, *decorative*
-                    // sample, not the active game board. The old index
-                    // formula produced purple in row 2 and coral in the
-                    // fifth slot of row 1, unlike the supplied 5x5 artwork.
-                    // Keep runtime game spawn and tileColor unchanged.
-                    int[] relaxedPreview={
-                        TILES[1],TILES[2],TILES[3],TILES[4],0xfff1e3b1,
-                        TILES[2],TILES[3],TILES[4],TILES[1],TILES[6],
-                        TILES[3],TILES[4],TILES[1],TILES[6],TILES[7],
-                        TILES[6],0xffff6193,TILES[7],TILES[3],TILES[10],
-                        TILES[7],TILES[8],TILES[3],TILES[10],TILES[10]
-                    };
                     int col=cols==5?relaxedPreview[i]:tileColor(v);
                     glossyTile(px,py,side,side,4,col);
                     if(cols==4)fitted(""+v,px+side/2,py+side*.67f,
