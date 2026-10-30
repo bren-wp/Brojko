@@ -1737,6 +1737,72 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void statsZeroValuesNeverProduceFakeChartBars(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            String previousHistory=activity.prefs.getString("history","[]");
+            int previousMetric=activity.chartMetric;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="stats";
+                final String zeroRows=
+                    "[{\"score\":800,\"peak\":256,\"day\":\"25.10.2026.\"},"+
+                    "{\"score\":0,\"peak\":0,\"day\":\"24.10.2026.\"}]";
+                final String nonzeroRows=
+                    "[{\"score\":800,\"peak\":256,\"day\":\"25.10.2026.\"},"+
+                    "{\"score\":400,\"peak\":128,\"day\":\"24.10.2026.\"}]";
+                for(int[] size:new int[][]{{941,1672},{1080,2400}}){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        for(int metric=0;metric<2;metric++){
+                            activity.chartMetric=metric;
+                            activity.prefs.edit().putString("history",zeroRows)
+                                .commit();
+                            view.draw(new Canvas(image));
+                            float baseline= size[0]==941?461f:579f;
+                            int zeroX=Math.round(view.offX+49f*view.scale);
+                            int gapX=Math.round(view.offX+70f*view.scale);
+                            int y=Math.round(view.offY+baseline*view.scale);
+                            assertEquals("Zero history value must be empty, not a bar",
+                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                            if(size[0]==941&&metric==0)
+                                captureReference(activity,view,
+                                    "stats-zero-history-bars-941x1672");
+                            int toggles=0;
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                if(tap.label.startsWith("Grafikon ")){
+                                    toggles++;
+                                    assertTrue("Statistics metric touch area >=48",
+                                        tap.bottom-tap.top>=48f);
+                                }
+                            }
+                            assertEquals("Two independently selectable chart metrics",
+                                2,toggles);
+                            activity.prefs.edit().putString("history",nonzeroRows)
+                                .commit();
+                            view.draw(new Canvas(image));
+                            assertNotEquals("Real positive history must draw a bar",
+                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                        }
+                    }finally{image.recycle();}
+                }
+            }finally{
+                activity.prefs.edit().putString("history",previousHistory)
+                    .commit();
+                activity.chartMetric=previousMetric;
+                activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statisticsSourceLayoutRetainsRealChartAndHistoryActions(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
