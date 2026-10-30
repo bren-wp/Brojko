@@ -1365,10 +1365,11 @@ public final class MainActivity extends ComponentActivity {
                 // scrolling on shorter devices without cropping any shortcut.
                 ((page.equals("pause")||page.equals("confirm")||
                     page.equals("confirmEnd"))&&referencePortraitLayout?654f:
+                (page.equals("over")&&referencePortraitLayout?705f:
                 (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f)));
+                    referencePortraitLayout?710f:880f))));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -2312,6 +2313,32 @@ public final class MainActivity extends ComponentActivity {
             button("Podijeli rezultat","share",74,532,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
+        // There is no separately supplied owner's Game Over PNG. Keep the
+        // same tactile Brojko language as Victory while faithfully rendering
+        // the frozen real game, score and peak tile (not screenshot fixtures).
+        void compactGameOverCard(){
+            card(42,168,316,525,29,theme==1?0xff293956:CREAM);
+            card(155,182,90,85,24,
+                theme==1?0xff3b4b66:0xfffff0e0);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
+            icon("target",200,224,31,WHITE);
+            fitted("Kraj igre",200,308,39,294,ink,true);
+            fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
+            // Warm, raised status panels are not fake reward counters.
+            victorySummaryCard(59,358,135,107);
+            victorySummaryCard(206,358,135,107);
+            fitted("Tvoj rezultat",126.5f,383,14,123,muted,false);
+            fitted(fmt(game.score),126.5f,440,31,123,ink,true);
+            fitted("Najveća pločica",273.5f,383,13.5f,128,muted,false);
+            fitted(fmt(game.maxTile()),273.5f,440,30,119,TEAL,true);
+            button("Nova igra","refresh",54,483,292,64,CORAL,true,
+                ()->newGame(game.mode));
+            button("Povratak","home",54,559,292,56,card,false,
+                ()->navigate("home"));
+            button("Podijeli rezultat","share",54,624,292,52,
+                theme==1?0xff3269b5:0xff3b95ee,true,()->share());
+        }
         void resultOverlay(boolean winning){
             // Reference victory backdrop is charcoal-neutral rather than blue.
             // Keep the original overlay for loss and wide-device modals.
@@ -2328,6 +2355,10 @@ public final class MainActivity extends ComponentActivity {
             }
             if(winning&&narrow){
                 compactVictoryCard();
+                return;
+            }
+            if(!winning&&narrow){
+                compactGameOverCard();
                 return;
             }
             // Non-portrait and game-over states retain their established
