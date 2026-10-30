@@ -1363,7 +1363,8 @@ public final class MainActivity extends ComponentActivity {
                 // The old 880-unit height caused ~170 units of empty scrolling
                 // at the original 941x1672 reference viewport. Preserve real
                 // scrolling on shorter devices without cropping any shortcut.
-                (page.equals("pause")&&referencePortraitLayout?650f:
+                ((page.equals("pause")||page.equals("confirm")||
+                    page.equals("confirmEnd"))&&referencePortraitLayout?654f:
                 (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
@@ -2391,21 +2392,49 @@ public final class MainActivity extends ComponentActivity {
             button("Izbornik","home",53,621,294,55,card,false,
                 ()->navigate("home"));
         }
+        // These confirmation screens are functional modals, not independent
+        // games. Both use actual session state, including local archive status.
+        // Owner supplied no separate PNG for the two dialogs.
+        void confirmModalBadge(String glyph,int accent){
+            card(156,245,88,76,22,theme==1?0xff364560:0xfffff0e1);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(173,258,54,52,17,lighten(accent,.18f),accent);
+            icon(glyph,200,284,30,WHITE);
+        }
+        void confirmSessionSummary(float y){
+            card(60,y,280,57,18,theme==1?card:0xfffff7ed);
+            icon("stats",91,y+27,22,muted);
+            leftFitted("Rezultat",115,y+25,14,98,muted,false);
+            fitted(game==null?"0":fmt(game.score),273,y+38,24,118,ink,true);
+        }
         void confirmEndOverlay(){
-            dim();overlayBox(266,356);
-            icon("check",200,312,43,TEAL);
-            txt("Završiti partiju?",200,371,29,ink,true);
-            txt("Rezultat se sprema u statistiku.",200,414,16,muted,false);
-            button("Završi i spremi","check",50,448,300,64,CORAL,true,()->endSession());
-            button("Nastavi igrati","play",50,532,300,60,card,false,()->navigate("game"));
+            dim();
+            overlayBox(226,421);
+            confirmModalBadge("check",TEAL);
+            fitted("Završiti partiju?",200,362,29,316,ink,true);
+            fitted("Rezultat se sprema u povijest partija.",
+                200,393,15.5f,317,muted,false);
+            confirmSessionSummary(411);
+            button("Završi i spremi","check",52,488,296,65,CORAL,true,
+                ()->endSession());
+            button("Nastavi igrati","play",52,570,296,59,card,false,
+                ()->navigate("game"));
         }
         void confirmOverlay() {
-            dim();overlayBox(282,320);
-            txt("Nova partija?",200,341,30,ink,true);
-            fitted("Trenutačni napredak bit će spremljen",200,380,17,300,muted,false);
-            txt("u povijest partija.",200,408,17,muted,false);
-            button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
-            button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
+            dim();
+            overlayBox(226,421);
+            confirmModalBadge("refresh",CORAL);
+            fitted("Nova partija?",200,362,30,318,ink,true);
+            fitted("Trenutačni napredak sprema se u povijest.",
+                200,393,15.1f,316,muted,false);
+            confirmSessionSummary(411);
+            String modeLabel="relaxed".equals(pendingMode)?"Opušteno 5×5":
+                "daily".equals(pendingMode)?"Dnevni izazov":"Klasično 4×4";
+            fitted("Novi način: "+modeLabel,200,482,14,310,muted,true);
+            button("Započni novo","play",52,500,296,60,CORAL,true,
+                ()->newGame(pendingMode));
+            button("Odustani","back",52,578,296,54,card,false,
+                ()->navigate("game"));
         }
         void dailyPlayGlyph(float cx,float cy,float size,int color){
             c.save();c.translate(cx-size/2f,cy-size/2f);
