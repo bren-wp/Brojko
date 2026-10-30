@@ -39,3 +39,39 @@ Da bi razlike u podacima bile izolirane od vizualnih razlika, Android instrument
 5. Ako ROI rezultati regresiraju, vratiti lokalnu promjenu prije spajanja.
 
 **Status:** Ovo je namjerno uski rad na ekranu Home. PR #28 ostaje Draft, bez automatskog spajanja/izdavanja.
+
+
+## Potvrđena iteracija — `31ab840`
+
+Sva tri GitHub Actions workflowa završila su uspješno:
+- [Android PR validation #41130372774](https://github.com/bren-wp/Brojko/actions/runs/41130372774)
+- [Android 16 navigation/insets QA #41130373035](https://github.com/bren-wp/Brojko/actions/runs/41130373035)
+- [Android UI smoke + emulator screenshots #41130372871](https://github.com/bren-wp/Brojko/actions/runs/41130372871)
+
+Novi stvarni emulator ZIP: `Brojko-real-device-UI`, artifact ID `13012288787`. Izvor slike (941×1672) ostaje isti, nema interpolacije niti naknadnog pomicanja radi boljeg rezultata. Usporedba je provedena nad *istim* screenshotom `home-source-accent-rays-941x1672.png` u staroj i novoj verziji.
+
+| Regija (pixels) | Prije (f3a4ef15) | Poslije (31ab840) | Delta |
+|---|---:|---:|---:|
+| Cijeli Home | 23.928 | 22.770 | −1.158 |
+| Logotip (100,175–840,470) | 34.863 | 34.210 | −0.653 |
+| Rezultatske kartice (30,450–908,680) | 19.125 | 17.027 | −2.098 |
+| Primarni CTA (55,650–880,920) | 21.793 | 20.166 | −1.627 |
+| Načini igre (30,900–900,1325) | 26.036 | 25.911 | −0.125 |
+| Donji prečaci (25,1300–910,1625) | 18.529 | 14.813 | −3.716 |
+
+**Ograničenja:** Nijedan od gore navedenih brojeva ne dokazuje 1:1 identičnost. Priloženi original sadrži organske, nacrtane 3D oblike i vlastitu tipografiju logotipa; trenutni izvor koristi vektore i Nunito. Stoga je potrebno dodatno uskladiti izvorni brand asset, tile bevel, i tipografiju u istom viewportu. Nakon toga provjeriti i visoke i kratke uređaje.
+
+### Jasni redoslijed zaslona za daljnji rad
+
+1. Početni — trenutačni aktivni zaslon, CI potvrđen, **1:1 nije potvrđeno**
+2. Klasično 4×4 — sljedeći nakon završnog Home pixel passa
+3. Pobjeda „Bravo!”
+4. Dnevni izazov
+5. Misije i postignuća
+6. Statistika
+7. Teme i izgled
+8. Postavke
+9. Splash
+10. Ikona i brending
+
+Svi zahvati ostaju u postojećem PR-u #28 dok korisnik ne zatraži drukčije. Nema umjetnog prikazivanja fiktivnih rezultata u produkciji.
