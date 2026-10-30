@@ -2320,14 +2320,77 @@ public final class MainActivity extends ComponentActivity {
             button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
             button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
         }
+        void dailyBoardFrame(float x,float y,float width,float height){
+            // Warm ivory raised frame around the *preview*, not game state.
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfff8efe4);
+            p.setShadowLayer(6f,0,3.5f,0x2ca78052);
+            c.drawRoundRect(x,y,x+width,y+height,24,24,p);
+            p.clearShadowLayer();
+            gradient(x,y,width,height,24,0xfffffcf5,0xfff8efe5);
+            shape(x+10,y+9,width-20,height-18,18,0xfff4eadd);
+        }
+        void dailySampleTile(float x,float y,float size,int color){
+            // Subtle 3D volume without the harsh double outline of
+            // the shared game tile. Restrict to the illustration preview.
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0x36ad7e56);
+            p.setShadowLayer(2.4f,0f,2.4f,0x36a57d58);
+            c.drawRoundRect(x,y+1.4f,x+size,y+size+1.4f,10,10,p);
+            p.clearShadowLayer();
+            shape(x,y+2.1f,size,size-1.7f,10,darken(color,.13f));
+            gradient(x,y,size,size-3.1f,10,
+                lighten(color,.13f),color);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.65f);p.setColor(0x60ffffff);
+            c.drawRoundRect(x+1.1f,y+1.0f,x+size-1.1f,
+                y+size-3.9f,9,9,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void dailySwapArrows(float cx,float cy,float size){
+            // Reference's opposing blue arrowheads are chunky and bevelled.
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            Path upper=new Path();
+            upper.moveTo(2,8);upper.lineTo(8,2);
+            upper.quadTo(9,1,10,2.5f);
+            upper.lineTo(10,5);upper.lineTo(20,5);
+            upper.quadTo(22,5,22,7.2f);
+            upper.quadTo(22,9,20,9);
+            upper.lineTo(10,9);upper.lineTo(10,12);
+            upper.quadTo(9,13,8,12);upper.close();
+            Path lower=new Path();
+            lower.moveTo(22,16);lower.lineTo(16,22);
+            lower.quadTo(15,23,14,21.5f);
+            lower.lineTo(14,19);lower.lineTo(4,19);
+            lower.quadTo(2,19,2,16.8f);
+            lower.quadTo(2,15,4,15);
+            lower.lineTo(14,15);lower.lineTo(14,12);
+            lower.quadTo(15,11,16,12);lower.close();
+            c.save();c.translate(0,1.0f);
+            p.setColor(0xff125bb4);
+            c.drawPath(upper,p);c.drawPath(lower,p);c.restore();
+            p.setShader(new LinearGradient(0,0,24,24,
+                0xff60baff,0xff177fe8,Shader.TileMode.CLAMP));
+            c.drawPath(upper,p);c.drawPath(lower,p);
+            p.setShader(null);c.restore();
+        }
         // Three broad, slanted rays at either side of the daily illustration,
         // matching the provided PNG instead of the shared tiny ray dots.
         void dailyBoardBursts(float cx,float cy,boolean right,int color){
-            float sign=right?1f:-1f;
-            for(int i=-1;i<=1;i++){
-                c.save();
-                c.rotate(sign*(i*29f+90f),cx,cy);
-                shape(cx-3.4f,cy-35f,6.8f,19f,3.4f,color);
+            // Source: separated rounded orange/yellow petals, not three
+            // identical rays forming a single angular mark.
+            final float[] yOff={-17f,13f,46f};
+            final float[] xOff={right?3f:-3f,right?7f:-7f,0f};
+            final float[] tilt={right?-36f:36f,90f,right?37f:-37f};
+            final int[] palette={0xffffb33b,0xffff6547,0xffffae3b};
+            for(int i=0;i<3;i++){
+                float x=cx+xOff[i],y=cy+yOff[i];
+                c.save();c.rotate(tilt[i],x,y);
+                shape(x-3.4f,y-12f,6.8f,24f,3.4f,
+                    theme==1?color:palette[i]);
                 c.restore();
             }
         }
@@ -2372,14 +2435,23 @@ public final class MainActivity extends ComponentActivity {
             // Keep the calendar glyph and locally formatted long date apart.
             // Reference date is a shallow capsule; the previous 32-unit
             // pill touched the first description line on compact phones.
-            card(98,dateY,191,portrait?25:34,17,
-                theme==1?card:0xffffecdc);
-            icon(portrait?"calendar-outline":"calendar",119,
+            if(portrait&&theme!=1)
+                gradient(132,dateY,136,25,16,
+                    0xfffff6ec,0xfff9eede);
+            else card(portrait?132:98,dateY,portrait?136:191,
+                portrait?25:34,17,theme==1?card:0xffffecdc);
+            icon(portrait?"calendar-outline":"calendar",portrait?153:119,
                 dateY+(portrait?12:18),portrait?16:19,muted);
-            leftFitted(dailyLongDate(),139,dateY+(portrait?18:24),
-                portrait?11.5f:14,142,ink,true);
+            // Source pill is ~320px wide; long real dates shrink inside
+            // it without touching the calendar or changing today's date.
+            leftFitted(dailyLongDate(),portrait?174:139,
+                dateY+(portrait?18:24),portrait?11.5f:14,
+                portrait?89:142,ink,true);
             float streakTop=portrait?38:66;
-            card(portrait?302:291,streakTop,portrait?80:87,
+            if(portrait&&theme!=1)
+                gradient(302,streakTop,80,72,18,
+                    0xfffffcf5,0xffffead2);
+            else card(portrait?302:291,streakTop,portrait?80:87,
                 portrait?72:83,18,theme==1?card:0xffffebd4);
             icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
             fitted(Integer.toString(streak),portrait?358:351,streakTop+40,
@@ -2410,7 +2482,9 @@ public final class MainActivity extends ComponentActivity {
                 true,CORAL);
             // The source card extends beyond the edge tiles; the previous
             // 229-unit square made this cream frame visibly too narrow.
-            missionSurface(portrait?75:76,boardY+(portrait?2:0),
+            if(portrait&&theme!=1)
+                dailyBoardFrame(75,boardY+2,247,235);
+            else missionSurface(portrait?75:76,boardY+(portrait?2:0),
                 portrait?247:248,portrait?235:248,24,
                 theme==1?0xff35455f:0xfff3e8da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
@@ -2420,9 +2494,15 @@ public final class MainActivity extends ComponentActivity {
                 float y=boardY+(portrait?16:7)+row*(portrait?53:59);
                 int value=sample[i];
                 float cellSize=portrait?51:52;
-                glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
+                if(portrait&&theme!=1&&tileStyle==0)
+                    dailySampleTile(x,y,cellSize,tileColor(value));
+                else glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
+                float numeral=portrait?
+                    (value>=1000?15.3f:value>=100?19.0f:
+                        value>=10?21.1f:22.3f):
+                    (value>999?16f:24f);
                 fitted(""+value,x+cellSize*.5f,
-                    y+(portrait?33:34),value>999?16:24,
+                    y+(portrait?33:34),numeral,
                     portrait?48:49,WHITE,true);
             }
             // Source art groups the three daily objectives inside one
@@ -2444,7 +2524,10 @@ public final class MainActivity extends ComponentActivity {
             dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
                 portrait?513:667,finished);
             float rewardY=portrait?569:744;
-            missionSurface(portrait?18:28,rewardY,portrait?364:344,
+            if(portrait&&theme!=1)
+                gradient(18,rewardY,364,80,19,
+                    0xffefebff,0xffeee8ff);
+            else missionSurface(portrait?18:28,rewardY,portrait?364:344,
                 portrait?80:48,19,theme==1?0xff3a3459:0xfff0e9ff);
             // The illustration fills the left third of the source card.
             // Keep all copy to its right, including the real earned amount.
@@ -2511,7 +2594,9 @@ public final class MainActivity extends ComponentActivity {
                     portrait?35:39,0xffffb51a);
             }else{
                 // Blue opposite-facing arrows directly on the row background.
-                icon("swap",glyphCenter,y+height/2f,
+                if(portrait&&theme!=1)
+                    dailySwapArrows(glyphCenter,y+height/2f,35f);
+                else icon("swap",glyphCenter,y+height/2f,
                     portrait?34:38,0xff268fec);
             }
             // Reference goal cards use left-aligned text and a right-side help
