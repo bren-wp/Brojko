@@ -16,6 +16,8 @@ CAPTURES = (
     "splash-full-width-portrait-reference-941x1672.png",
     "splash-phase09-owner-941x1672.png",
     "pause-branded-modal-941x1672.png",
+    "confirm-new-session-941x1672.png",
+    "confirm-end-session-941x1672.png",
     "home-source-accent-rays-941x1672.png",
     "home-controlled-reference-941x1672.png",
     "golden-state-game-941x1672.png",
