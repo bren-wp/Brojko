@@ -8,7 +8,7 @@ test -s "$java"
 test -s "$api35"
 
 # Match executable calls, not explanatory comments mentioning the API.
-if grep -En '^[[:space:]]*[^/*].*(\.setStatusBarColor\(|\.setNavigationBarColor\(|WindowCompat\.enableEdgeToEdge\()' "$java" ; then
+if grep -En '^[[:space:]]*[[:alpha:]_].*(\.setStatusBarColor\(|\.setNavigationBarColor\(|WindowCompat\.enableEdgeToEdge\()' "$java" ; then
   echo "Deprecated bar-color setup reintroduced in MainActivity" >&2
   exit 1
 fi
