@@ -1805,19 +1805,24 @@ public final class MainActivity extends ComponentActivity {
             if(game==null)return;
             int n=game.size;
             boolean tallFour=compactBoardLayout&&n==4;
+            boolean victoryBoard=tallFour&&referencePortraitLayout&&
+                "win".equals(page);
+            // The win mockup uses 84-unit square-like tiles with a tighter
+            // vertical cadence. Active gameplay keeps its existing geometry.
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
             float left=gridX-(tallFour?2.5f:0f);
-            card(left-4,gridY-4,gridSize+8,gridSize+(tallFour?34:8),23,
+            card(left-4,gridY-4,gridSize+8,
+                gridSize+(victoryBoard?14:(tallFour?34:8)),23,
                 theme==1?0xff354661:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
-            float tileHeight=tallFour?89:tile;
+            float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (tallFour?94:tile+gap)*y;
+                    (victoryBoard?89f:(tallFour?94f:tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
@@ -1876,7 +1881,9 @@ public final class MainActivity extends ComponentActivity {
             fitted("Rezultat",335,56,12,77,muted,true);
             fitted(fmt(game.score),335,79,20,75,ink,true);
             float prevGridY=gridY;
-            gridY=112;
+            // The illustrated post-win board begins 10 units above the
+            // gameplay grid; its tiles are slightly shorter as well.
+            gridY=102;
             drawGrid();
             gridY=prevGridY;
             card(18,620,114,77,17,card);
