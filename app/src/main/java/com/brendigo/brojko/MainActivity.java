@@ -1197,21 +1197,24 @@ public final class MainActivity extends ComponentActivity {
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
                 shape(x,y+lip,w,h,radius,
+                    flatDaily?0xffd94a33:
                     victoryPrimary?0xffd8432f:
                     victoryShare?0xff2467c9:
                     homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
+                    flatDaily?0xffff8a60:
                     victoryPrimary?0xffff8054:
                     victoryShare?0xff66b0fc:
                     homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
+                    flatDaily?0xffff593a:
                     victoryPrimary?0xffff5134:
                     victoryShare?0xff2f83ec:
                     homeHero?0xffff5837:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
-                p.setColor(victoryPrimary||victoryShare?
-                    0x46ffffff:0x86ffffff);
+                p.setColor(flatDaily||victoryPrimary||victoryShare?
+                    0x48ffffff:0x86ffffff);
                 c.drawRoundRect(x+3,y+2,x+w-3,
                     y+h-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
@@ -1252,6 +1255,9 @@ public final class MainActivity extends ComponentActivity {
                         Math.min(58f,w*.21f)):25f);
                     if(winSecondary)
                         victoryRestartIcon(iconX,y+h/2f,29f,iconColor);
+                    else if(page.equals("daily")&&prominent&&
+                        "play".equals(symbol))
+                        dailyPlayGlyph(iconX,y+h/2f,32f,iconColor);
                     else icon(symbol,iconX,y+h/2,
                         Math.min(prominent?
                             (page.equals("daily")?34:homeHero?43:33):23,
@@ -2320,6 +2326,22 @@ public final class MainActivity extends ComponentActivity {
             button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
             button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
         }
+        void dailyPlayGlyph(float cx,float cy,float size,int color){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setStyle(Paint.Style.FILL);p.setShader(null);
+            p.setColor(0x2dc04f27);p.setShadowLayer(1.3f,0,.7f,0x4e953a18);
+            Path play=new Path();
+            play.moveTo(6.1f,2.0f);
+            play.quadTo(5.3f,1.6f,5.3f,4.5f);
+            play.lineTo(5.3f,19.5f);
+            play.quadTo(5.3f,22.6f,8.0f,21.3f);
+            play.lineTo(20.6f,13.8f);
+            play.quadTo(23.5f,12f,20.6f,10.2f);
+            play.close();
+            p.setColor(color);c.drawPath(play,p);p.clearShadowLayer();
+            c.restore();
+        }
         void dailyBoardFrame(float x,float y,float width,float height){
             // Warm ivory raised frame around the *preview*, not game state.
             p.clearShadowLayer();p.setShader(null);
@@ -2531,8 +2553,9 @@ public final class MainActivity extends ComponentActivity {
                 portrait?80:48,19,theme==1?0xff3a3459:0xfff0e9ff);
             // The illustration fills the left third of the source card.
             // Keep all copy to its right, including the real earned amount.
-            dailyRewardGift(portrait?91:65,rewardY+(portrait?38:24),
+            dailyRewardGift(portrait?91:65,rewardY+(portrait?43:24),
                 portrait?80:37);
+            if(portrait&&theme!=1)dailyGiftBursts(91,rewardY+40f);
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     158,rewardY+17,12,190,muted,true);
@@ -2615,48 +2638,82 @@ public final class MainActivity extends ComponentActivity {
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void dailyRewardGift(float cx,float cy,float size){
-            // Layered vector approximation of the supplied purple/gold gift.
-            // Dynamic challenge reward remains a real label, not baked art.
-            float left=cx-size*.37f,top=cy-size*.11f;
-            shape(left,top+size*.06f,size*.74f,size*.49f,9,0x41652e96);
-            // Paint alpha survives shape(): make the gift body fully opaque.
-            p.setShader(null);p.setColor(WHITE);
-            gradient(left,top,size*.74f,size*.49f,9,
-                0xffb77bf5,0xff6738c8);
-            // Ribbons span both the lid and the body.
-            shape(cx-size*.085f,top,size*.17f,size*.49f,3,0xfffcb72d);
-            gradient(cx-size*.44f,top-size*.15f,size*.88f,size*.22f,8,
-                0xffce9cff,0xff8748e0);
-            gradient(cx-size*.085f,top-size*.15f,size*.17f,size*.64f,3,
-                0xffffe76a,0xffffb523);
-            // Folded gold bow petals replace the old thin outlined circles.
-            p.setShader(new LinearGradient(cx,cy-size*.54f,cx,cy-size*.21f,
-                0xffffe877,0xffffa71c,Shader.TileMode.CLAMP));
+            // All-vector, soft 3D present. The reference has a plump bow,
+            // purple side facets, and a wide gold ribbon, not a flat square.
+            float top=cy-size*.16f;
+            float left=cx-size*.40f;
+            float width=size*.80f;
+            float height=size*.56f;
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(7f,0f,4.5f,0x559875a9);
+            c.drawRoundRect(left,top+3f,left+width,top+height+3f,
+                9.0f,9.0f,p);
+            p.clearShadowLayer();
+            gradient(left,top,width,height,9,
+                0xffba82ff,0xff7034d3);
+            // Side wall and inset highlight give the box a rounded body.
+            gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
+                8,0xff995ae3,0xff6330bf);
+            p.setColor(0x59ffffff);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);
+            c.drawRoundRect(left+1.3f,top+1.3f,
+                left+width-1.3f,top+height-2.0f,8,8,p);
             p.setStyle(Paint.Style.FILL);
-            Path leftBow=new Path();
-            leftBow.moveTo(cx,cy-size*.27f);
-            leftBow.cubicTo(cx-size*.32f,cy-size*.72f,
-                cx-size*.62f,cy-size*.50f,cx-size*.37f,cy-size*.31f);
-            leftBow.cubicTo(cx-size*.25f,cy-size*.23f,
-                cx-size*.10f,cy-size*.22f,cx,cy-size*.27f);
-            leftBow.close();
-            c.drawPath(leftBow,p);
-            Path rightBow=new Path();
-            rightBow.moveTo(cx,cy-size*.27f);
-            rightBow.cubicTo(cx+size*.32f,cy-size*.72f,
-                cx+size*.62f,cy-size*.50f,cx+size*.37f,cy-size*.31f);
-            rightBow.cubicTo(cx+size*.25f,cy-size*.23f,
-                cx+size*.10f,cy-size*.22f,cx,cy-size*.27f);
-            rightBow.close();
-            c.drawPath(rightBow,p);
+            gradient(cx-size*.09f,top,size*.18f,height,2.8f,
+                0xffffeb75,0xffffaa1d);
+            // Raised purple lid, with golden horizontal band.
+            gradient(left-size*.025f,top-size*.075f,
+                width+size*.05f,size*.23f,7,
+                0xffcf9bff,0xff7a3bdb);
+            gradient(cx-size*.1f,top-size*.075f,
+                size*.20f,size*.23f,2.0f,
+                0xffffed78,0xffffb21e);
+            Path bowL=new Path();
+            bowL.moveTo(cx,top-size*.10f);
+            bowL.cubicTo(cx-size*.19f,top-size*.63f,
+                cx-size*.64f,top-size*.67f,
+                cx-size*.51f,top-size*.34f);
+            bowL.cubicTo(cx-size*.46f,top-size*.10f,
+                cx-size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowL.close();
+            Path bowR=new Path();
+            bowR.moveTo(cx,top-size*.10f);
+            bowR.cubicTo(cx+size*.19f,top-size*.63f,
+                cx+size*.64f,top-size*.67f,
+                cx+size*.51f,top-size*.34f);
+            bowR.cubicTo(cx+size*.46f,top-size*.10f,
+                cx+size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowR.close();
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffe88a0b);
+            c.save();c.translate(0,1f);c.drawPath(bowL,p);
+            c.drawPath(bowR,p);c.restore();
+            p.setShader(new LinearGradient(cx-size*.5f,top-size*.55f,
+                cx+size*.5f,top-size*.13f,
+                0xffffed76,0xffffaf15,Shader.TileMode.CLAMP));
+            c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
-            p.setColor(0xfffff2a1);
-            c.drawOval(cx-size*.41f,cy-size*.48f,
-                cx-size*.17f,cy-size*.32f,p);
-            c.drawOval(cx+size*.17f,cy-size*.48f,
-                cx+size*.41f,cy-size*.32f,p);
-            gradient(cx-size*.13f,cy-size*.32f,size*.26f,size*.16f,8,
-                0xffffec73,0xffffb326);
+            p.setColor(0xfffff2a7);
+            c.drawOval(cx-size*.44f,top-size*.46f,
+                cx-size*.16f,top-size*.28f,p);
+            c.drawOval(cx+size*.16f,top-size*.46f,
+                cx+size*.44f,top-size*.28f,p);
+            gradient(cx-size*.145f,top-size*.22f,
+                size*.29f,size*.21f,6,
+                0xffffeb77,0xffffa51c);
+        }
+        void dailyGiftBursts(float cx,float cy){
+            // Gold petals sit outside the illustration and never cover copy.
+            final float[][] rays={{-65,-20,-30},{-68,2,79},
+                {63,-25,31},{67,3,-75}};
+            for(float[] spec:rays){
+                float x=cx+spec[0],y=cy+spec[1];
+                c.save();c.rotate(spec[2],x,y);
+                shape(x-2.9f,y-8.2f,5.8f,16.4f,3f,
+                    0xffffbc30);
+                c.restore();
+            }
         }
         void missionSurface(float x,float y,float width,float height,
                             float radius,int color){
