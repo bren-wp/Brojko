@@ -1775,8 +1775,10 @@ public final class MainActivity extends ComponentActivity {
                 radius-2,radius-2,p);
             p.setStyle(Paint.Style.FILL);
             float center=x+width/2f;
+            // The source's navy action glyphs are substantially heavier
+            // and wider than the default small-menu icons.
             icon(symbol,center,y+height*.37f,
-                accent?39f:35f,accent?WHITE:(enabled?ink:muted));
+                accent?39f:41f,accent?WHITE:(enabled?ink:muted));
             fitted(label,center,y+height*.81f,accent?18.5f:18.5f,
                 width-10,accent?WHITE:(enabled?ink:muted),true);
             if(enabled)taps.add(new Tap(x,y,x+width,y+height,label,action));
