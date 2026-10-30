@@ -1203,10 +1203,10 @@ public final class MainActivity extends ComponentActivity {
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
                     victoryPrimary?0xffff946a:
                     victoryShare?0xff67b2ff:
-                    homeHero?0xffff945d:lighten(color,flatDaily?.10f:.18f),
+                    homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
                     victoryPrimary?0xffff5c41:
                     victoryShare?0xff2b80eb:
-                    homeHero?0xffff5b38:color);
+                    homeHero?0xffff5837:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:1.2f);
                 p.setColor(0x86ffffff);
@@ -1515,20 +1515,90 @@ public final class MainActivity extends ComponentActivity {
             fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
             fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
         }
+        // Home is a dedicated illustrated surface: softer cream cards and
+        // ambient shadows belong here, not on shared in-game controls.
+        void homeSoftCard(float x,float y,float w,float h,float radius,int color){
+            if(theme==1||!referencePortraitLayout){
+                card(x,y,w,h,radius,color);return;
+            }
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfffdf7ec);
+            p.setShadowLayer(9f,0f,5.5f,0x28a78353);
+            c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
+            p.clearShadowLayer();
+            gradient(x,y,w,h,radius,lighten(color,.40f),color);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.85f);p.setColor(0xb4ffffff);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,radius-1,radius-1,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void homeFloatingTile(float x,float y,float w,float h,float radius,
+                              int color,int value){
+            // The source artwork floats over a warm, defocused shadow.
+            // Decorative only; no fake values are added to the game state.
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setColor(0x349e826f);
+            p.setShadowLayer(15f,0f,9f,0x3abf9b73);
+            c.drawRoundRect(x+3f,y+7f,x+w+3f,y+h+7f,radius,radius,p);
+            p.clearShadowLayer();
+            styledTile(x,y,w,h,radius,color,0);
+            fitted(Integer.toString(value),x+w/2f,y+h*.68f,
+                value>=16?40:47,w-12,WHITE,true);
+        }
+        void homeBestMiniChart(float x,float baseline){
+            // The source's best-score card has three pale bars at its end.
+            for(int i=0;i<3;i++){
+                float height=10+i*5.5f;
+                shape(x+i*7.1f,baseline-height,5.6f,height,2.1f,
+                    theme==1?0xff65758e:0xffe4e0d9);
+            }
+        }
+        void homeDailyCalendar(float cx,float cy,float size){
+            // Calendar on the Home mode card is a raised 3D illustration,
+            // separate from smaller functional calendars elsewhere.
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffc9a999);
+            p.setShadowLayer(2.2f,0f,1.6f,0x669d7849);
+            c.drawRoundRect(2.5f,3.5f,21.5f,23.5f,3.6f,3.6f,p);
+            p.clearShadowLayer();
+            p.setColor(0xfffffaf0);
+            c.drawRoundRect(2f,3f,21f,22f,3.6f,3.6f,p);
+            p.setShader(new LinearGradient(0,3,0,11,
+                0xffff9872,0xffff6047,Shader.TileMode.CLAMP));
+            c.drawRoundRect(2f,3f,21f,11f,3.4f,3.4f,p);
+            p.setShader(null);
+            p.setColor(0xff192741);
+            c.drawRoundRect(6f,.1f,8.7f,7.1f,1.4f,1.4f,p);
+            c.drawRoundRect(15f,.1f,17.7f,7.1f,1.4f,1.4f,p);
+            Path star=new Path();
+            for(int i=0;i<10;i++){
+                double angle=-Math.PI/2+i*Math.PI/5;
+                float radius=i%2==0?6.1f:3.0f;
+                float px=11.5f+(float)Math.cos(angle)*radius;
+                float py=16.3f+(float)Math.sin(angle)*radius;
+                if(i==0)star.moveTo(px,py);else star.lineTo(px,py);
+            }
+            star.close();
+            c.save();c.translate(0,1f);
+            p.setColor(0xffe28a0d);c.drawPath(star,p);c.restore();
+            p.setShader(new LinearGradient(0,10,0,22,
+                0xffffe467,0xffffa21d,Shader.TileMode.CLAMP));
+            c.drawPath(star,p);p.setShader(null);
+            c.restore();
+        }
         void home(){
             boolean portrait=referencePortraitLayout;
             c.save();c.rotate(-16,35,76);
-            styledTile(-3,4,81,77,16,TILES[1],0);
-            txt("2",38,57,42,WHITE,true);c.restore();
+            homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
             c.save();c.rotate(15,365,56);
-            styledTile(327,6,77,75,16,TILES[2],0);
-            txt("4",366,56,40,WHITE,true);c.restore();
+            homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
-            styledTile(-37,144,69,66,14,TILES[3],0);
-            txt("8",0,185,35,WHITE,true);c.restore();
+            homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
             c.save();c.rotate(9,390,179);
-            styledTile(360,149,76,69,14,TILES[4],0);
-            txt("16",392,191,31,WHITE,true);c.restore();
+            homeFloatingTile(359,147,77,73,16,TILES[4],16);c.restore();
             // Use the geometrically verified Splash wordmark on Home,
             // scaled to the Home source artwork's native bounds. This keeps
             // the navy rounded silhouette, raised "2", and coral rays in sync
@@ -1545,11 +1615,14 @@ public final class MainActivity extends ComponentActivity {
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
-            card(21,scoresY,171,scoresH,19,card);
-            card(207,scoresY,171,scoresH,19,card);
+            homeSoftCard(21,scoresY,171,scoresH,19,
+                theme==1?card:0xfffcf5e9);
+            homeSoftCard(207,scoresY,171,scoresH,19,
+                theme==1?card:0xfffcf5e9);
             icon("crown",53,scoresY+29,28,0xffffb228);
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
-            fitted(fmt(best),128,scoresY+60,27,123,ink,true);
+            fitted(fmt(best),118,scoresY+60,27,107,ink,true);
+            if(portrait)homeBestMiniChart(159,scoresY+58);
             icon("stats",236,scoresY+30,27,0xff63799d);
             fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
                 13,portrait?104:116,muted,true);
@@ -1579,12 +1652,12 @@ public final class MainActivity extends ComponentActivity {
             }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
-            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xffffe9de,false,
+            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffff4ed,false,
                 ()->requestNew("classic"));
-            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffddf9f5,false,
+            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe9fcfa,false,
                 ()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Novi izazov svaki dan!",
-                267,modeY,117,modeH,0xfffff4d7,true,()->navigate("daily"));
+                267,modeY,117,modeH,0xfffff9e6,true,()->navigate("daily"));
             float shortcutY=portrait?570:687;
             float shortcutH=portrait?120:144;
             shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
@@ -1599,7 +1672,7 @@ public final class MainActivity extends ComponentActivity {
         void shortcut(String label,String glyph,String sub1,String sub2,
                       float x,float y,float w,float h,int fill,Runnable action){
             boolean portrait=referencePortraitLayout;
-            card(x,y,w,h,19,theme==1?card:fill);
+            homeSoftCard(x,y,w,h,19,theme==1?card:0xfffaf3e8);
             icon(glyph,x+w/2,y+(portrait?31:39),portrait?38:43,
                 glyph.equals("target")?CORAL:
                 glyph.equals("stats")?0xff344868:
@@ -1614,9 +1687,11 @@ public final class MainActivity extends ComponentActivity {
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
             boolean portrait=referencePortraitLayout;
-            card(x,y,w,h,22,theme==1?card:fill);
+            homeSoftCard(x,y,w,h,22,theme==1?card:fill);
             if(daily){
-                icon("calendar",x+w/2,y+(portrait?68:77),portrait?69:69,CORAL);
+                if(portrait&&theme!=1)
+                    homeDailyCalendar(x+w/2,y+69f,69f);
+                else icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
