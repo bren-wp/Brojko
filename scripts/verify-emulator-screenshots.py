@@ -36,6 +36,7 @@ CAPTURES = (
     "themes-phase07-owner-reference-941x1672.png",
     "reference-settings-polished-941x1672.png",
     "settings-phase08-source-on-941x1672.png",
+    "settings-back-arrow-941x1672.png",
 )
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 COMPACT_CAPTURES = (
