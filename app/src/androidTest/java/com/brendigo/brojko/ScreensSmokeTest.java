@@ -2411,9 +2411,15 @@ public class ScreensSmokeTest {
                         new int[]{148,229,310,391,478,559,640};
                     String[] labels={"Zvuk","Vibracija","Jezik","Obavijesti",
                         "Sinkronizacija napretka","Pravila privatnosti","O aplikaciji"};
+                    assertEquals("Seven rows and a separate Back arrow",
+                        8,board.taps.size());
+                    MainActivity.BoardScreen.Tap back=board.taps.get(0);
+                    assertEquals("Natrag",back.label);
+                    assertTrue("Back hit area must be at least 54 units",
+                        back.right-back.left>=54&&back.bottom-back.top>=54);
                     int i=0;
-                    for(MainActivity.BoardScreen.Tap tap:board.taps){
-                        if(i>=7)break;
+                    for(int rowIndex=1;rowIndex<board.taps.size();rowIndex++){
+                        MainActivity.BoardScreen.Tap tap=board.taps.get(rowIndex);
                         assertTrue("Settings touch target must be labeled: "+tap.label,
                             tap.label.startsWith(labels[i]));
                         assertEquals("Row "+i+" must follow reference top",expectedY[i],
@@ -2423,7 +2429,7 @@ public class ScreensSmokeTest {
                         assertEquals(382f,tap.right,.1f);
                         assertTrue("Height >= 48 design units",tap.bottom-tap.top>=48f);
                         if(i>0)assertTrue("Settings cards must not overlap",
-                            tap.top>=board.taps.get(i-1).bottom);
+                            tap.top>=board.taps.get(rowIndex-1).bottom);
                         i++;
                     }
                     assertEquals("Exactly seven setting cards",7,i);
@@ -2478,18 +2484,19 @@ public class ScreensSmokeTest {
                 String[] expected={"Zvuk","Vibracija","Jezik","Obavijesti",
                     "Sinkronizacija napretka","Pravila privatnosti",
                     "O aplikaciji"};
-                assertEquals("Seven settings rows",7,board.taps.size());
+                assertEquals("Seven setting rows plus Back",8,board.taps.size());
+                assertEquals("Natrag",board.taps.get(0).label);
                 for(int i=0;i<expected.length;i++){
-                    MainActivity.BoardScreen.Tap item=board.taps.get(i);
+                    MainActivity.BoardScreen.Tap item=board.taps.get(i+1);
                     assertTrue("Wrong settings action at row "+i,
                         item.label.startsWith(expected[i]));
                     assertEquals("Full-width touch target",364f,
                         item.right-item.left,.01f);
                     assertTrue("Accessible row height",item.bottom-item.top>=48);
                 }
-                assertTrue(board.taps.get(0).label.contains("uključeno"));
                 assertTrue(board.taps.get(1).label.contains("uključeno"));
-                assertTrue(board.taps.get(3).label.contains("uključeno"));
+                assertTrue(board.taps.get(2).label.contains("uključeno"));
+                assertTrue(board.taps.get(4).label.contains("uključeno"));
                 // On-state tint remains saturated turquoise, while
                 // row cards remain opaque white and brand footer warm.
                 int turquoise=bitmap.getPixel(
@@ -2502,26 +2509,30 @@ public class ScreensSmokeTest {
                     "settings-phase08-source-on-941x1672");
 
                 // Real preference, not decorative switch; test independence.
-                board.taps.get(0).action.run();
+                board.taps.get(1).action.run();
                 assertFalse("Sound persists OFF",activity.prefs.getBoolean("sound",true));
                 assertTrue("Vibration stays enabled",activity.vibration);
-                board.taps.get(1).action.run();
+                board.taps.get(2).action.run();
                 assertFalse("Vibration persists OFF",
                     activity.prefs.getBoolean("vibrate",true));
                 assertFalse("Sound remains disabled",activity.sound);
 
                 // Backup is navigation, never fake remote sync.
-                board.taps.get(4).action.run();
+                board.taps.get(5).action.run();
                 assertEquals("backup",activity.page);
                 activity.page="settings";
-                board.taps.get(2).action.run();
+                board.taps.get(3).action.run();
                 assertEquals("language",activity.page);
                 activity.page="settings";
-                board.taps.get(5).action.run();
+                board.taps.get(6).action.run();
                 assertEquals("privacy",activity.page);
                 activity.page="settings";
-                board.taps.get(6).action.run();
+                board.taps.get(7).action.run();
                 assertEquals("about",activity.page);
+                activity.page="settings";
+                board.taps.get(0).action.run();
+                assertEquals("Visible Back arrow returns Home",
+                    "home",activity.page);
             }finally{
                 bitmap.recycle();
                 activity.page=oldPage;
