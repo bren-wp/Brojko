@@ -1055,6 +1055,11 @@ public class ScreensSmokeTest {
             int oldRecordTile=activity.recordTile;
             int oldStreak=activity.playDayStreak;
             String oldLastDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldStars=activity.stars,oldRewardFlags=activity.rewardFlags;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             try{
                 activity.game=new TileGame("classic","",12041L);
@@ -1100,6 +1105,10 @@ public class ScreensSmokeTest {
                 activity.plays=oldPlays;activity.lastScore=oldLastScore;
                 activity.recordTile=oldRecordTile;activity.playDayStreak=oldStreak;
                 activity.lastPlayDay=oldLastDay;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.stars=oldStars;activity.rewardFlags=oldRewardFlags;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;activity.undoUsedThisGame=oldUndo;
                 activity.prefs.edit().putString("history",oldHistory).commit();
                 activity.persist();activity.updateBars();activity.screen.invalidate();
             }
