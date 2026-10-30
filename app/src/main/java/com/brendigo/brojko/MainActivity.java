@@ -3126,15 +3126,21 @@ public final class MainActivity extends ComponentActivity {
             }
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
-            icon(symbol,x+25,y+29,width<=118?24:29,
+            boolean referenceStats=referencePortraitLayout&&
+                "stats".equals(page)&&theme!=1;
+            icon(symbol,x+(width<=118?27:38),
+                y+(referenceStats?(width<=118?38:43):29),
+                referenceStats?(width<=118?34:43):
+                    (width<=118?24:29),
                 "gamepad".equals(symbol)?ink:accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
             fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
             fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
-            fitted(value,x+width/2,y+h-(dense?9:17),
-                dense?21:29,width-12,accent,true);
+            fitted(value,x+width/2,y+h-(dense?11:14),
+                referenceStats?(dense?30:35):(dense?21:29),
+                width-10,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -3343,34 +3349,48 @@ public final class MainActivity extends ComponentActivity {
         }
 
 
+        void statsHeaderBurst(float cx,float cy,boolean right){
+            // Three source-style coral rays at either side of the rounded title.
+            final float sign=right?1f:-1f;
+            float[] yOffsets={-13f,0f,13f};
+            float[] turns={right?-32f:32f,90f,right?32f:-32f};
+            for(int i=0;i<3;i++){
+                float x=cx+sign*(i==1?3f:0f),y=cy+yOffsets[i];
+                c.save();c.rotate(turns[i],x,y);
+                shape(x-2.8f,y-9.0f,5.6f,18f,2.8f,CORAL);
+                c.restore();
+            }
+        }
         void statisticsCompact(){
             back();
             brand(40,35);
-            fitted("Statistika",200,114,43,325,ink,true);
-            rays(80,121,17,CORAL);rays(352,121,17,CORAL);
-            statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),266,126,114,83,0xffffb431);
+            fitted("Statistika",200,116,43,325,ink,true);
+            statsHeaderBurst(79,104,false);
+            statsHeaderBurst(354,104,true);
+            statCell("Najbolji rezultat",fmt(best),20,132,114,94,CORAL);
+            statCell("Ukupno partija",fmt(plays),143,132,114,94,TEAL);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);
-            statsSoftCard(22,297,356,142,22,card);
-            txt("Zadnjih 10 partija",113,323,18,ink,true);
-            card(213,303,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
-            shape(215+(chartMetric==0?0:77),305,77,25,13,CORAL);
-            fitted("Bodovi",253,323,13,71,chartMetric==0?WHITE:ink,true);
-            fitted("Pločica",330,323,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,303,291,336,"Grafikon bodova",()->{
+            statCell("Prosjek bodova",fmt(average),21,235,174,84,0xff478df4);
+            statCell("Niz pobjeda",fmt(consecutiveWins()),205,235,174,84,0xffa657de);
+            statsSoftCard(16,329,368,158,23,card);
+            leftFitted("Zadnjih 10 partija",30,353,20,199,ink,true);
+            shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
+            shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
+            fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
+            fitted("Najveća pločica",334,354,9.5f,73,
+                chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(223,334,297,369,"Grafikon bodova",()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,303,371,336,"Grafikon pločica",()->{
+            taps.add(new Tap(297,334,374,369,"Grafikon pločica",()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,372,15,muted,false);
-                txt("prve završene partije.",200,395,15,muted,false);
+                txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
+                txt("prve završene partije.",200,436,15,muted,false);
             }else{
                 int ceiling=1;
                 for(int i=0;i<count;i++){
@@ -3384,51 +3404,53 @@ public final class MainActivity extends ComponentActivity {
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float barHeight=Math.max(4,72f*Math.max(0,val)/ceiling);
-                    float x=42+i*barSlot+2,y=414-barHeight;
-                    shape(x,y,barSlot-6,barHeight,Math.min(6,barHeight/2),
-                        val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
-                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-8,9,barSlot+3,ink,true);
-                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,431,
+                    float barHeight=Math.max(4,78f*Math.max(0,val)/ceiling);
+                    float x=40+i*barSlot+2,y=463-barHeight;
+                    int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
+                    gradient(x,y,barSlot-6,barHeight,Math.min(5,barHeight/2),
+                        lighten(barColor,.17f),barColor);
+                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
+                        barSlot+4,ink,true);
+                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
                 }
             }
             // One visual history panel as in the reference; row cards are flat,
             // separated by a 4-unit gap, never five heavy elevated panels.
-            shape(16,443,368,265,23,theme==1?card:0xfffffdf9);
-            leftFitted("Povijest partija",30,462,19,250,ink,true);
+            statsSoftCard(16,497,368,204,23,card);
+            leftFitted("Povijest partija",30,522,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
-                shape(25,471,350,43,13,theme==1?0xff34445f:0xfffaf5ee);
-                txt("Još nema dovršenih partija.",200,499,15,muted,false);
+                shape(25,529,350,32,13,theme==1?0xff34445f:0xfffaf5ee);
+                txt("Još nema dovršenih partija.",200,552,15,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=467+i*48,idx=i;
+                int y=530+i*34,idx=i;
                 int score=row.optInt("score");
                 boolean record=best>0&&score>=best;
-                shape(25,y,350,44,13,theme==1?0xff34445f:0xfffaf5ee);
-                leftFitted(row.optString("day",""),33,y+27,11.5f,83,muted,false);
+                shape(25,y,350,30,12,theme==1?0xff34445f:0xfffaf5ee);
+                leftFitted(row.optString("day",""),33,y+21,11.3f,83,muted,false);
                 String completedAt=row.optString("time","");
                 // Legacy archives have no time: keep the field empty, never
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())
-                    leftFitted(completedAt,117,y+27,11.5f,46,muted,false);
-                fitted(fmt(score),207,y+29,17,87,record?CORAL:TEAL,true);
-                if(record)icon("crown",265,y+21,19,0xffff9e23);
+                    leftFitted(completedAt,117,y+21,11.3f,46,muted,false);
+                fitted(fmt(score),205,y+22,17,87,record?CORAL:TEAL,true);
+                if(record)icon("crown",265,y+15,17,0xffff9e23);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
                     int tagBg=peak>=1024?0xffc7f7e6:
                         peak>=512?0xffc7dfff:peak>=128?0xffefdbff:0xffffeacc;
                     int tagFg=peak>=1024?0xff078e77:
                         peak>=512?0xff2167c8:peak>=128?0xff9443bd:0xffc67914;
-                    shape(282,y+9,59,26,10,theme==1?0xff46416b:tagBg);
-                    fitted(Integer.toString(peak),311.5f,y+28,14,54,
+                    shape(282,y+4,59,23,10,theme==1?0xff46416b:tagBg);
+                    fitted(Integer.toString(peak),311.5f,y+21,14,54,
                         theme==1?WHITE:tagFg,true);
                 }
-                icon("chevron-right",366,y+22,15,muted);
-                taps.add(new Tap(22,y,378,y+48,"Detalji partije "+(i+1),
+                icon("chevron-right",366,y+15,15,muted);
+                taps.add(new Tap(22,y-2,378,y+32,"Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
