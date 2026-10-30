@@ -844,6 +844,55 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicOnlyHeaderControlsKeepRealAccessibilityTargets(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme,previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="game";activity.theme=0;activity.tileStyle=0;
+                activity.game=new TileGame("classic","",8844L);
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(image));
+                    int pause=0,topUndo=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Pauziraj igru".equals(tap.label)){
+                            pause++;
+                            assertTrue("Pause touch height",tap.bottom-tap.top>=54f);
+                            assertTrue("Pause touch width",tap.right-tap.left>=54f);
+                        }
+                        if("Poništi potez".equals(tap.label))topUndo++;
+                    }
+                    assertEquals("The real pause action must remain",1,pause);
+                    assertEquals("Undo without prior move has no fake action",0,topUndo);
+                    activity.game.cells=new int[16];
+                    activity.game.cells[0]=2;activity.game.cells[1]=2;
+                    assertTrue(activity.game.move(TileGame.LEFT).changed);
+                    preview.draw(new Canvas(image));
+                    topUndo=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Poništi potez".equals(tap.label)){
+                            topUndo++;
+                            assertTrue("Header Undo remains >=54-unit target",
+                                tap.bottom-tap.top>=54f&&tap.right-tap.left>=54f);
+                        }
+                    }
+                    assertEquals("Enabled top Undo must remain actionable",1,topUndo);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=previousGame;activity.page=previousPage;
+                activity.theme=previousTheme;activity.tileStyle=previousStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitClassicGameHasEnabledAndDisabledBottomActionTargets(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
