@@ -1366,10 +1366,12 @@ public final class MainActivity extends ComponentActivity {
                 ((page.equals("pause")||page.equals("confirm")||
                     page.equals("confirmEnd"))&&referencePortraitLayout?654f:
                 (page.equals("over")&&referencePortraitLayout?705f:
+                ((page.equals("dailyWin")||page.equals("dailyFail"))&&
+                    referencePortraitLayout?700f:
                 (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f))));
+                    referencePortraitLayout?710f:880f)))));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -2401,7 +2403,57 @@ public final class MainActivity extends ComponentActivity {
             button("Podijeli rezultat","share",54,narrow?606:657,292,57,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
+        // Daily result is a stateful gameplay overlay, not a static reward
+        // illustration. No dedicated owner PNG was supplied for these modals.
+        // Both compact variants share measured geometry, real score/peak,
+        // and a local-only bonus that must never be awarded twice.
+        void compactDailyResultOverlay(boolean success){
+            dim();
+            overlayBox(177,511);
+            card(155,191,90,85,24,theme==1?0xff394963:0xfffff0df);
+            p.setShader(null);p.setColor(WHITE);
+            int accent=success?TEAL:CORAL;
+            gradient(173,208,54,52,17,lighten(accent,.16f),accent);
+            icon(success?"star":"target",200,234,31,WHITE);
+            fitted(success?"Dnevni izazov riješen!":"Izazov nije uspio",
+                200,315,success?28:30,321,ink,true);
+            fitted(success?"Sva 3 zadatka su ostvarena!":
+                (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
+                "Nema više mogućih poteza."),200,345,16,319,muted,false);
+
+            victorySummaryCard(59,366,135,99);
+            victorySummaryCard(206,366,135,99);
+            fitted("Tvoj rezultat",126.5f,390,13.6f,126,muted,false);
+            fitted(fmt(game.score),126.5f,444,29,124,ink,true);
+            fitted("Najveća pločica",273.5f,390,13.1f,127,muted,false);
+            fitted(fmt(game.maxTile()),273.5f,444,28,118,TEAL,true);
+
+            card(59,476,282,54,18,theme==1?0xff32445c:
+                success?0xffe3fbf2:0xfffff0e5);
+            icon(success?"star":"target",84,503,23,
+                success?0xffffaf26:CORAL);
+            // The date stored in preferences is the source of truth; the
+            // transient UI flag is only needed to distinguish first win.
+            String message=success?
+                (dailyBonusGrantedThisAttempt?
+                    "+250 zvjezdica osvojeno!":
+                    (today().equals(dailyRewardDate)?
+                        "Današnja nagrada je preuzeta.":
+                        "Dnevni izazov dovršen.")):
+                "Pokušaj ponovno ostvariti ciljeve.";
+            leftFitted(message,108,508,15,216,
+                success?0xff078e77:ink,true);
+            button("Igraj ponovno","refresh",53,543,294,61,CORAL,true,
+                ()->newGame("daily"));
+            button("Izbornik","home",53,615,294,55,card,false,
+                ()->navigate("home"));
+        }
         void dailyResultOverlay(boolean success){
+            if(referencePortraitLayout){
+                compactDailyResultOverlay(success);
+                return;
+            }
+            // Keep the taller established layout for long-aspect devices.
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
@@ -2414,11 +2466,13 @@ public final class MainActivity extends ComponentActivity {
             txt("TVOJ REZULTAT",200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
             fitted(success?(dailyBonusGrantedThisAttempt?
-                "+250 zvjezdica osvojeno!":"Današnja nagrada već preuzeta"):
+                "+250 zvjezdica osvojeno!":
+                today().equals(dailyRewardDate)?
+                    "Današnja nagrada je preuzeta.":
+                    "Dnevni izazov dovršen."):
                 "Pokušaj ponovno ostvariti sve ciljeve.",200,534,17,310,
                 success?0xff259d85:muted,true);
-            // Leave clear space below the last action inside the rounded modal.
-            button("Igraj ponovno","undo",53,546,294,62,CORAL,true,
+            button("Igraj ponovno","refresh",53,546,294,62,CORAL,true,
                 ()->newGame("daily"));
             button("Izbornik","home",53,621,294,55,card,false,
                 ()->navigate("home"));
