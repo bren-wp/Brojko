@@ -1970,8 +1970,10 @@ public class ScreensSmokeTest {
                         "\"score\":2560,\"peak\":128}]").commit();
                     board.draw(new Canvas(withTime));
                     int differences=0;
-                    int top=Math.max(0,Math.round(board.offY+475f*board.scale));
-                    int bottom=Math.min(1672,Math.round(board.offY+501f*board.scale));
+                    // The history rows moved to y=530 in Phase 06.
+                    // Check the actual glyph ROI, not the former chart area.
+                    int top=Math.max(0,Math.round(board.offY+532f*board.scale));
+                    int bottom=Math.min(1672,Math.round(board.offY+558f*board.scale));
                     int left=Math.max(0,Math.round(board.offX+117f*board.scale));
                     int right=Math.min(941,Math.round(board.offX+165f*board.scale));
                     for(int y=top;y<bottom;y++)for(int x=left;x<right;x++){
@@ -3240,6 +3242,82 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void themesPhaseSevenRendersOwnerLayoutAndKeepsRealPreferences(){
+        rule.getScenario().onActivity(activity->{
+            final String oldPage=activity.page;
+            final int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            final int oldAnimation=activity.animation;
+            final boolean oldSound=activity.sound,oldVibration=activity.vibration;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;activity.tileStyle=0;
+                activity.animation=1;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    assertEquals("Screen 07 does not scroll at reference size",
+                        0f,board.maxScroll,.01f);
+                    int themes=0,styles=0,tabs=0;
+                    MainActivity.BoardScreen.Tap dark=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label)){
+                            themes++;
+                            assertTrue("Whole theme card is interactive",
+                                tap.bottom-tap.top>=140);
+                            if("Tamna".equals(tap.label))dark=tap;
+                        }
+                        if("Zaobljene".equals(tap.label)||
+                           "Ravne".equals(tap.label)||
+                           "Staklaste".equals(tap.label)){
+                            styles++;
+                            assertTrue("Whole swatch card is interactive",
+                                tap.bottom-tap.top>=48);
+                        }
+                        if("Novo".equals(tap.label)||
+                           "Rekordi".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))tabs++;
+                    }
+                    assertEquals(3,themes);
+                    assertEquals(3,styles);
+                    assertEquals(4,tabs);
+                    assertNotNull(dark);
+                    int x=Math.round(board.offX+158*board.scale);
+                    int y=Math.round(board.offY+188*board.scale);
+                    int navy=bitmap.getPixel(x,y);
+                    assertTrue("Dark preview uses navy material",
+                        android.graphics.Color.red(navy)<90 &&
+                        android.graphics.Color.blue(navy)<150);
+                    captureReference(activity,board,
+                        "themes-phase07-owner-reference-941x1672");
+                    dark.action.run();
+                    assertEquals("Theme choice is saved locally",1,
+                        activity.prefs.getInt("theme",-1));
+                    board.draw(new Canvas(bitmap));
+                    MainActivity.BoardScreen.Tap glass=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Staklaste".equals(tap.label))glass=tap;
+                    assertNotNull(glass);
+                    glass.action.run();
+                    assertEquals("Tile style is saved locally",2,
+                        activity.prefs.getInt("style",-1));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.animation=oldAnimation;
+                activity.sound=oldSound;activity.vibration=oldVibration;
+                activity.persist();activity.updateBars();
                 activity.screen.invalidate();
             }
         });
