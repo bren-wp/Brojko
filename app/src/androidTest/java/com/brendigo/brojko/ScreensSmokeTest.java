@@ -2263,6 +2263,41 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void malformedBackupTypesNeverOverwriteSavedUserData(){
+        rule.getScenario().onActivity(activity->{
+            // Capture the real local preference map before any import.
+            activity.persist();
+            java.util.Map<String,?> previous=new java.util.HashMap<>(
+                activity.prefs.getAll());
+            try{
+                byte[] original=activity.getBackupBytes();
+                String[] keys={"best","sound","lastDaily","history","animation"};
+                Object[] invalid={"9999",1,20261030,true,3};
+                for(int i=0;i<keys.length;i++){
+                    org.json.JSONObject copy=new org.json.JSONObject(
+                        new String(original,java.nio.charset.StandardCharsets.UTF_8));
+                    copy.getJSONObject("data").put(keys[i],invalid[i]);
+                    boolean rejected=false;
+                    try{
+                        activity.readBackupBytes(copy.toString().getBytes(
+                            java.nio.charset.StandardCharsets.UTF_8));
+                    }catch(IllegalArgumentException|org.json.JSONException error){
+                        rejected=true;
+                    }
+                    assertTrue("Invalid backup type must be rejected: "+keys[i],
+                        rejected);
+                    assertEquals("Rejected imports cannot clear local preferences",
+                        previous,activity.prefs.getAll());
+                }
+            }catch(org.json.JSONException error){
+                throw new AssertionError("Backup QA fixture creation failed",error);
+            }catch(Exception error){
+                throw new AssertionError("Backup QA did not complete",error);
+            }
+        });
+    }
+
     @Test public void importedBackupSurvivesOldActivityLifecyclePause(){
         final byte[][] original=new byte[1][];
         final int[] expectedBest=new int[1];
