@@ -1390,6 +1390,165 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void dailyWinAndFailPortraitUseLiveDataWithSafeActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            String oldRewardDate=activity.dailyRewardDate;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.theme=0;
+                activity.game=new TileGame("daily",activity.today(),81052L);
+                activity.game.cells[0]=256;
+                activity.game.peak=256;activity.game.score=3848;
+                activity.game.moves=80;
+                activity.dailyBonusGrantedThisAttempt=true;
+                activity.dailyRewardDate=activity.today();
+                for(String state:new String[]{"dailyWin","dailyFail"}){
+                    activity.page=state;
+                    activity.game.gameOver="dailyFail".equals(state);
+                    for(int[] viewport:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                        int width=viewport[0],height=viewport[1];
+                        view.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,width,height);
+                        Bitmap bitmap=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            view.scrollOffset=0;
+                            view.draw(new Canvas(bitmap));
+                            if(width==360){
+                                assertTrue("Short phone can scroll to both actions",
+                                    view.maxScroll>0);
+                                view.scrollOffset=view.maxScroll;
+                                view.draw(new Canvas(bitmap));
+                            }else if(width==941){
+                                assertEquals("No ghost scroll on reference portrait",
+                                    0f,view.maxScroll,.01f);
+                            }
+                            assertEquals("Only daily modal actions are active",
+                                2,view.taps.size());
+                            assertEquals("Igraj ponovno",view.taps.get(0).label);
+                            assertEquals("Izbornik",view.taps.get(1).label);
+                            assertTrue("Separate actions never overlap",
+                                view.taps.get(0).bottom<view.taps.get(1).top);
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                assertTrue("Touch target meets minimum height",
+                                    tap.bottom-tap.top>=48f);
+                                assertTrue("Touch target fits horizontally",
+                                    tap.left>=50&&tap.right<=350);
+                                assertTrue("Last action is on-screen after scroll",
+                                    view.offY+tap.bottom*view.scale<=height+1f);
+                            }
+                            if(width==941){
+                                captureReference(activity,view,
+                                    "dailyWin".equals(state)?
+                                    "daily-win-raised-portrait-941x1672":
+                                    "daily-fail-raised-portrait-941x1672");
+                                if("dailyWin".equals(state)){
+                                    int[] before=new int[120*90];
+                                    bitmap.getPixels(before,0,120,240,980,120,90);
+                                    activity.game.score=0;
+                                    Bitmap changed=Bitmap.createBitmap(width,height,
+                                        Bitmap.Config.ARGB_8888);
+                                    try{
+                                        view.draw(new Canvas(changed));
+                                        int[] after=new int[120*90];
+                                        changed.getPixels(after,0,120,240,980,120,90);
+                                        int differences=0;
+                                        for(int j=0;j<before.length;j++)
+                                            if(before[j]!=after[j])differences++;
+                                        assertTrue("Daily score comes from game, not mockup",
+                                            differences>20);
+                                    }finally{
+                                        changed.recycle();activity.game.score=3848;
+                                    }
+                                }
+                            }
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                assertEquals("Rendering does not award stars",
+                    activity.today(),activity.dailyRewardDate);
+                assertEquals("Rendering cannot advance moves",80,activity.game.moves);
+                assertEquals(3848,activity.game.score);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;activity.theme=oldTheme;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.dailyRewardDate=oldRewardDate;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailyResultButtonsPreserveRewardDateAndArchiveRealScore(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page,oldLastDay=activity.lastPlayDay;
+            String oldRewardDate=activity.dailyRewardDate;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldStars=activity.stars,oldPlays=activity.plays;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldRewardFlags=activity.rewardFlags,oldTile=activity.recordTile;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("daily",activity.today(),12552L);
+                activity.game.cells[0]=256;
+                activity.game.peak=256;activity.game.score=3024;
+                activity.game.moves=78;
+                activity.page="dailyWin";
+                activity.dailyBonusGrantedThisAttempt=true;
+                activity.dailyRewardDate=activity.today();
+                activity.stars=500;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(1).action.run();
+                    assertEquals("Daily menu returns home","home",activity.page);
+                    assertEquals("Menu must not discard the daily session",3024,
+                        activity.game.score);
+                    assertEquals("Menu does not write history",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="dailyWin";
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(0).action.run();
+                    assertEquals("Replay enters playable game","game",activity.page);
+                    assertEquals("daily",activity.game.mode);
+                    assertEquals("Replay must preserve granted reward date",
+                        activity.today(),activity.dailyRewardDate);
+                    assertFalse("New attempt no longer shows previous award",
+                        activity.dailyBonusGrantedThisAttempt);
+                    org.json.JSONArray history=new org.json.JSONArray(
+                        activity.prefs.getString("history","[]"));
+                    assertTrue("Completed attempt is archived before replay",
+                        history.length()>0);
+                    assertEquals(3024,history.optJSONObject(0).optInt("score"));
+                    assertEquals(78,history.optJSONObject(0).optInt("moves"));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.lastPlayDay=oldLastDay;activity.dailyRewardDate=oldRewardDate;
+                activity.stars=oldStars;activity.plays=oldPlays;
+                activity.playDayStreak=oldStreak;activity.lastScore=oldLastScore;
+                activity.rewardFlags=oldRewardFlags;activity.recordTile=oldTile;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyResultModalKeepsBottomActionInsideItsCard(){
         rule.getScenario().onActivity(activity->{
             TileGame priorGame=activity.game;
