@@ -58,7 +58,14 @@ REGIONS = {
                   ("Naslovi i stupci", (65, 790, 885, 1115))],
     "Teme": [("Kartice tema", (40, 380, 900, 800)),
              ("Pretpregled pločica", (55, 940, 900, 1385))],
-    "Postavke": [("Retci postavki", (30, 220, 910, 1370))],
+    "Postavke": [("Naslov i koraljne zrake", (110, 48, 820, 210)),
+                 ("Prva cetiri retka", (30, 220, 900, 820)),
+                 ("Sigurnosna kopija", (32, 828, 905, 998)),
+                 ("Privatnost i informacije", (30, 1000, 905, 1300)),
+                 ("Sve ikonice", (55, 220, 185, 1300)),
+                 ("Tri sklopke", (710, 225, 875, 810)),
+                 ("Donji logo i byline", (220, 1330, 720, 1530)),
+                 ("Zavrsna krem kartica", (30, 1310, 905, 1645))],
 }
 
 def screenshot(archive, name):
@@ -97,6 +104,8 @@ def main():
                         help="Compare Home against the instrumented source-data fixture, not a live session")
     parser.add_argument("--controlled-daily", action="store_true",
                         help="Compare Daily against instrumented seven-day streak fixture")
+    parser.add_argument("--controlled-settings", action="store_true",
+                        help="Compare Settings with ON switches in test-only fixture")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -121,6 +130,8 @@ def main():
                         if args.controlled_home and label == "Početni"
                         else "daily-source-streak7-941x1672.png"
                         if args.controlled_daily and label == "Dnevni izazov"
+                        else "settings-phase08-source-on-941x1672.png"
+                        if args.controlled_settings and label == "Postavke"
                         else default_name)
                 pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
                            if args.reference_copy_index is not None
