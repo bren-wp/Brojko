@@ -1739,6 +1739,89 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void settingsScreenEightMatchesReferenceControlsWithoutFakeSync(){
+        rule.getScenario().onActivity(activity->{
+            final String oldPage=activity.page;
+            final int oldTheme=activity.theme;
+            final boolean oldSound=activity.sound,oldVibration=activity.vibration;
+            final boolean oldNotifications=activity.notifications;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                // Illustration's three switches are ON only for this
+                // controlled screenshot. Never overwrite a user's choices
+                // or pretend that a remote cloud service is connected.
+                activity.page="settings";activity.theme=0;
+                activity.sound=true;activity.vibration=true;
+                activity.notifications=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                board.draw(new Canvas(bitmap));
+                assertEquals("The original layout fits without scrolling",
+                    0f,board.maxScroll,.01f);
+                String[] expected={"Zvuk","Vibracija","Jezik","Obavijesti",
+                    "Sinkronizacija napretka","Pravila privatnosti",
+                    "O aplikaciji"};
+                assertEquals("Seven settings rows",7,board.taps.size());
+                for(int i=0;i<expected.length;i++){
+                    MainActivity.BoardScreen.Tap item=board.taps.get(i);
+                    assertTrue("Wrong settings action at row "+i,
+                        item.label.startsWith(expected[i]));
+                    assertEquals("Full-width touch target",364f,
+                        item.right-item.left,.01f);
+                    assertTrue("Accessible row height",item.bottom-item.top>=48);
+                }
+                assertTrue(board.taps.get(0).label.contains("uključeno"));
+                assertTrue(board.taps.get(1).label.contains("uključeno"));
+                assertTrue(board.taps.get(3).label.contains("uključeno"));
+                // On-state tint remains saturated turquoise, while
+                // row cards remain opaque white and brand footer warm.
+                int turquoise=bitmap.getPixel(
+                    Math.round(board.offX+323*board.scale),
+                    Math.round(board.offY+112*board.scale));
+                assertTrue("Settings switch has saturated turquoise",
+                    android.graphics.Color.green(turquoise)>
+                        android.graphics.Color.red(turquoise)+55);
+                captureReference(activity,board,
+                    "settings-phase08-source-on-941x1672");
+
+                // Real preference, not decorative switch; test independence.
+                board.taps.get(0).action.run();
+                assertFalse("Sound persists OFF",activity.prefs.getBoolean("sound",true));
+                assertTrue("Vibration stays enabled",activity.vibration);
+                board.taps.get(1).action.run();
+                assertFalse("Vibration persists OFF",
+                    activity.prefs.getBoolean("vibrate",true));
+                assertFalse("Sound remains disabled",activity.sound);
+
+                // Backup is navigation, never fake remote sync.
+                board.taps.get(4).action.run();
+                assertEquals("backup",activity.page);
+                activity.page="settings";
+                board.taps.get(2).action.run();
+                assertEquals("language",activity.page);
+                activity.page="settings";
+                board.taps.get(5).action.run();
+                assertEquals("privacy",activity.page);
+                activity.page="settings";
+                board.taps.get(6).action.run();
+                assertEquals("about",activity.page);
+            }finally{
+                bitmap.recycle();
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.sound=oldSound;
+                activity.vibration=oldVibration;
+                activity.notifications=oldNotifications;
+                activity.persist();activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void settingsIconColorsAndCardSurfacesStayFullyOpaque(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
