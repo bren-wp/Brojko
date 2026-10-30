@@ -2896,6 +2896,52 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void missionMasterUnlockBarMatchesItsBinaryCounter(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldTile=activity.recordTile;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                int px=Math.round(view.offX+145f*view.scale);
+                int py=Math.round(view.offY+603f*view.scale);
+                activity.recordTile=0;
+                view.draw(new Canvas(bitmap));
+                int none=bitmap.getPixel(px,py);
+                activity.recordTile=512;
+                view.draw(new Canvas(bitmap));
+                int halfway=bitmap.getPixel(px,py);
+                assertEquals("0/1 unlock cannot show a 50% reward bar",
+                    none,halfway);
+                assertEquals("Displaying missions never grants a reward",
+                    0,activity.rewardFlags);
+                captureReference(activity,view,
+                    "missions-phase16-binary-unlock-941x1672");
+                activity.recordTile=1024;
+                view.draw(new Canvas(bitmap));
+                int unlocked=bitmap.getPixel(px,py);
+                assertNotEquals("1/1 unlock must fill its progress bar",
+                    halfway,unlocked);
+                assertEquals("Draw still must not grant a reward",
+                    0,activity.rewardFlags);
+            }finally{
+                bitmap.recycle();
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.recordTile=oldTile;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void illustratedMissionsKeepRealProgressAndDistinctColors(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
