@@ -1427,10 +1427,64 @@ public final class MainActivity extends ComponentActivity {
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
         void splashAmbient(float x,float y,float width,float height,
                            float rotation,int color){
+            // Decorative distant tiles: soft-focus silhouettes only.
+            // Keep all blur drawing local to Splash, not active game cells.
             c.save();c.rotate(rotation,x+width/2,y+height/2);
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);p.setShader(null);
-            p.setColor(color);p.setShadowLayer(20f,0,0,color);
+            p.setColor(color);p.setShadowLayer(24f,0,0,color);
             c.drawRoundRect(x,y,x+width,y+height,17,17,p);
+            p.clearShadowLayer();c.restore();
+        }
+        void splashFloatingTile(float x,float y,float w,float h,
+                                float radius,int color){
+            // Native illustration-like extrusion and highlight. Other
+            // screens continue using their established styledTile renderer.
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setShader(null);p.setColor(0xfff8eee2);
+            p.setShadowLayer(13f,0f,7f,0x3ca9835a);
+            c.drawRoundRect(x+1.7f,y+2.4f,x+w+1.2f,y+h+1.8f,
+                radius,radius,p);
+            p.clearShadowLayer();
+            shape(x+1f,y+4.5f,w-1f,h-3f,radius,darken(color,.13f));
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,w,h-4f,radius,
+                lighten(color,.20f),darken(color,.035f));
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.5f);p.setColor(0x77ffffff);
+            c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
+                radius-2,radius-2,p);
+            p.setStrokeWidth(1.8f);p.setColor(0x42ffffff);
+            Path gleam=new Path();
+            gleam.moveTo(x+radius*.64f,y+5f);
+            gleam.quadTo(x+5,y+5,x+5,y+radius*.75f);
+            c.drawPath(gleam,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
+        }
+        void splashAccentStroke(float x1,float y1,float x2,float y2,
+                                int color){
+            p.clearShadowLayer();p.setShader(null);p.setColor(color);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(7.4f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawLine(x1,y1,x2,y2,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
+        void splashEdgeGlowTile(){
+            // The reference's lower-right 256 is intentionally out of focus.
+            // Draw a softly lit BLUE distant tile rather than a sharp,
+            // foreground purple game tile. It is never a playable tile.
+            c.save();c.rotate(-15f,375f,714f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setColor(0xff539aff);
+            p.setShadowLayer(26f,0,0,0x995295fa);
+            c.drawRoundRect(298,648,137,127,25,25,p);
+            p.clearShadowLayer();
+            p.setColor(0xa3449af5);p.setShadowLayer(12f,0,0,0x774498ef);
+            c.drawRoundRect(302,652,133,119,24,24,p);
+            p.clearShadowLayer();
+            p.setColor(0xd6ffffff);p.setTypeface(displayFont);
+            p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
+            p.setShadowLayer(7f,0,0,0xaaffffff);
+            c.drawText("256",364,726,p);
             p.clearShadowLayer();c.restore();
         }
         // Splash-only wordmark: the source uses wider rounded lettering,
@@ -1489,30 +1543,35 @@ public final class MainActivity extends ComponentActivity {
             if(referencePortraitLayout){
                 // Source 941x1672 uses full width; only edge decorations crop.
                 // All information stays inside the 400x~667 compact viewport.
-                splashAmbient(159,41,38,42,-20,0x28ffb174);
-                splashAmbient(166,190,34,38,14,0x1deabb93);
-                splashAmbient(83,476,70,71,-17,0x252ec4b6);
-                splashAmbient(312,449,78,82,20,0x21ff7a5b);
-                splashAmbient(110,633,66,67,13,0x30ffba30);
-                splashAmbient(173,636,65,65,29,0x302ec4b6);
-                c.save();c.rotate(-18,99,108);
-                styledTile(49,58,106,104,25,TILES[1],0);
-                txt("2",102,131,58,WHITE,true);c.restore();
+                splashAmbient(161,24,40,43,-18,0x1fffbd94);
+                splashAmbient(167,198,35,38,14,0x12eabb93);
+                splashAmbient(84,475,71,67,-17,0x252ec4b6);
+                splashAmbient(321,444,79,78,20,0x21ff7a5b);
+                splashAmbient(111,633,66,67,13,0x25ffba30);
+                splashAmbient(173,636,65,65,29,0x282ec4b6);
+                // Reference accents sit OUTSIDE raised tiles.
+                splashAccentStroke(51,65,60,82,CORAL);
+                splashAccentStroke(36,88,49,94,CORAL);
+                splashAccentStroke(341,77,335,92,TEAL);
+                splashAccentStroke(349,100,336,104,TEAL);
+                c.save();c.rotate(-18,115,111);
+                splashFloatingTile(63,62,104,101,24,TILES[1]);
+                txt("2",115,134,57,WHITE,true);c.restore();
                 c.save();c.rotate(17,289,123);
-                styledTile(235,72,107,106,24,TILES[2],0);
+                splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
                 c.save();c.rotate(-17,42,236);
-                styledTile(-13,184,110,105,22,TILES[3],0);
-                txt("8",43,254,56,WHITE,true);c.restore();
+                splashFloatingTile(-12,187,106,100,22,TILES[3]);
+                txt("8",42,256,56,WHITE,true);c.restore();
                 c.save();c.rotate(18,374,234);
-                styledTile(322,181,106,107,24,TILES[4],0);
-                txt("16",371,258,46,WHITE,true);c.restore();
+                splashFloatingTile(323,182,104,104,24,TILES[4]);
+                txt("16",375,255,46,WHITE,true);c.restore();
+                splashAccentStroke(92,499,102,507,CORAL);
+                splashAccentStroke(89,525,100,531,CORAL);
                 c.save();c.rotate(16,21,509);
-                styledTile(-26,455,96,105,23,TILES[7],0);
-                txt("64",21,523,46,WHITE,true);c.restore();
-                c.save();c.rotate(-13,394,682);
-                styledTile(328,621,131,126,22,TILES[8],0);
-                txt("256",393,702,43,WHITE,true);c.restore();
+                splashFloatingTile(-23,459,97,100,23,TILES[7]);
+                txt("64",25,523,46,WHITE,true);c.restore();
+                splashEdgeGlowTile();
                 splashWordmark();
                 txt("by Brendigo",284,417,19,muted,true);
                 // Native 941x1672 reference: cream slogan pill and both
@@ -1526,19 +1585,19 @@ public final class MainActivity extends ComponentActivity {
             // Taller devices retain the full-height composition.
             // Programmatic branded splash based on the provided portrait reference.
             c.save();c.rotate(-19,59,140);
-            styledTile(-18,74,133,124,25,TILES[1],0);
+            splashFloatingTile(-18,74,133,124,25,TILES[1]);
             txt("2",49,157,64,WHITE,true);c.restore();
             c.save();c.rotate(21,353,142);
-            styledTile(288,79,129,121,24,TILES[2],0);
+            splashFloatingTile(288,79,129,121,24,TILES[2]);
             txt("4",353,155,64,WHITE,true);c.restore();
             c.save();c.rotate(-22,28,283);
-            styledTile(-34,246,107,102,23,TILES[3],0);
+            splashFloatingTile(-34,246,107,102,23,TILES[3]);
             txt("8",20,316,57,WHITE,true);c.restore();
             c.save();c.rotate(18,379,297);
-            styledTile(329,247,111,109,22,TILES[4],0);
+            splashFloatingTile(329,247,111,109,22,TILES[4]);
             txt("16",383,324,49,WHITE,true);c.restore();
             c.save();c.rotate(17,23,661);
-            styledTile(-34,610,112,111,25,TILES[7],0);
+            splashFloatingTile(-34,610,112,111,25,TILES[7]);
             txt("64",21,679,46,WHITE,true);c.restore();
             c.save();c.rotate(-15,374,713);
             styledTile(327,666,118,111,23,TILES[8],0);
