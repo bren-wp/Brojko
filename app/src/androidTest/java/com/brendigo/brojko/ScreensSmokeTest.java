@@ -3220,6 +3220,58 @@ public class ScreensSmokeTest {
     }
 
 
+
+    @Test public void phaseTenAdaptiveIconKeepsFourTilesInsideSafeArtwork(){
+        rule.getScenario().onActivity(activity->{
+            android.graphics.drawable.Drawable foreground=activity.getResources()
+                .getDrawable(com.brendigo.brojko.R.drawable.ic_brojko_foreground,
+                    activity.getTheme());
+            Bitmap image=Bitmap.createBitmap(512,512,Bitmap.Config.ARGB_8888);
+            try{
+                foreground.setBounds(0,0,512,512);
+                foreground.draw(new Canvas(image));
+                int[] quadrants=new int[4];
+                int whiteCenter=0;
+                int unsafeSaturated=0;
+                for(int y=0;y<512;y+=6)for(int x=0;x<512;x+=6){
+                    int value=image.getPixel(x,y);
+                    int red=android.graphics.Color.red(value);
+                    int green=android.graphics.Color.green(value);
+                    int blue=android.graphics.Color.blue(value);
+                    int alpha=android.graphics.Color.alpha(value);
+                    boolean coral=red>209&&green>78&&green<181&&blue<158;
+                    boolean teal=green>145&&blue>115&&red<151;
+                    boolean blueTile=blue>175&&red<166;
+                    boolean yellow=red>202&&green>116&&blue<158;
+                    // A small corner safety gutter is required for round
+                    // and themed launcher masks. White pixels and cream are
+                    // not counted as the colored foreground artwork.
+                    if(alpha>230&&(coral||teal||blueTile||yellow)&&
+                        (x<80||x>=432||y<80||y>=432))unsafeSaturated++;
+                    if(x<243&&y<243&&coral)quadrants[0]++;
+                    if(x>=269&&y<243&&teal)quadrants[1]++;
+                    if(x<243&&y>=269&&blueTile)quadrants[2]++;
+                    if(x>=269&&y>=269&&yellow)quadrants[3]++;
+                    if(x>=185&&x<=330&&y>=160&&y<=355&&alpha>230&&
+                        red>241&&green>241&&blue>224)whiteCenter++;
+                }
+                for(int i=0;i<4;i++)assertTrue(
+                    "Phase 10 launcher retains tile "+i,quadrants[i]>10);
+                assertTrue("Central white B is still prominent",whiteCenter>60);
+                assertEquals("No saturated tile art touches adaptive-icon rim",
+                    0,unsafeSaturated);
+                File folder=new File(activity.getExternalFilesDir(null),"screenshots");
+                assertTrue(folder.isDirectory()||folder.mkdirs());
+                try(FileOutputStream out=new FileOutputStream(new File(
+                        folder,"phase10-adaptive-icon-safe-512.png"))){
+                    assertTrue(image.compress(Bitmap.CompressFormat.PNG,100,out));
+                }catch(java.io.IOException error){
+                    throw new AssertionError("Saving phase 10 launcher screenshot",error);
+                }
+            }finally{image.recycle();}
+        });
+    }
+
     @Test public void launcherRetainsFourSourceColorsAndDominantWhiteB(){
         rule.getScenario().onActivity(activity->{
             if(android.os.Build.VERSION.SDK_INT<26)return;
