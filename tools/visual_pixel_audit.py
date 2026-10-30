@@ -115,6 +115,8 @@ def main():
                         help="Compare Settings with ON switches in test-only fixture")
     parser.add_argument("--screen09-splash", action="store_true",
                         help="Use phase 09 full-resolution Splash capture")
+    parser.add_argument("--screen16-missions", action="store_true",
+                        help="Use phase 16 source-like 941x1672 mission fixture")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -143,6 +145,8 @@ def main():
                         if args.controlled_daily and label == "Dnevni izazov"
                         else "settings-phase08-source-on-941x1672.png"
                         if args.controlled_settings and label == "Postavke"
+                        else "missions-phase16-binary-unlock-941x1672.png"
+                        if args.screen16_missions and label == "Misije"
                         else default_name)
                 pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
                            if args.reference_copy_index is not None
