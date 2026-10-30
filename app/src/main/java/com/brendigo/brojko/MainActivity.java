@@ -1785,20 +1785,20 @@ public final class MainActivity extends ComponentActivity {
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
-            if(portraitFour&&theme==0){
+            if(portraitFour&&theme==0)
                 classicBottomControl("Novo","refresh",firstX,actionsY,
                     113,actionsH,()->requestNew(game.mode));
-                if(game.canUndo())
-                    classicBottomControl("Poništi","undo",undoX,actionsY,
-                        112,actionsH,()->undo());
-            }else{
+            else
                 button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
                     ()->requestNew(game.mode));
-                if(game.canUndo())
+            if(game.canUndo()){
+                if(portraitFour&&theme==0)
+                    classicBottomControl("Poništi","undo",undoX,actionsY,
+                        112,actionsH,()->undo());
+                else
                     button("Poništi","undo",undoX,actionsY,112,actionsH,
                         card,false,()->undo());
-            }
-            else {
+            }else{
                 card(undoX,actionsY,112,actionsH,20,
                     theme==1?0xff29364a:0xffeae5de);
                 icon("undo",undoX+56,actionsY+27,25,muted);
