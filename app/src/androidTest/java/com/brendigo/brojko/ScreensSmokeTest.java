@@ -2495,6 +2495,53 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void victoryContinueActionKeepsSameSavedGame(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            TileGame won=new TileGame("classic","",2048L);
+            won.cells[0]=2048;
+            won.score=4096;
+            won.peak=2048;
+            won.moves=18;
+            won.reached2048=true;
+            try{
+                activity.game=won;
+                activity.page="win";
+                MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{preview.draw(new Canvas(image));}
+                finally{image.recycle();}
+                MainActivity.BoardScreen.Tap resume=null;
+                for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                    if("Nastavi igrati".equals(tap.label))resume=tap;
+                }
+                assertNotNull("The victory modal must provide real Resume",resume);
+                resume.action.run();
+                assertSame("Resume must not create or replace the saved session",
+                    won,activity.game);
+                assertEquals("game",activity.page);
+                assertTrue("Victory acknowledgement must survive persistence",
+                    activity.game.winAcknowledged);
+                assertEquals(4096,activity.game.score);
+                assertEquals(18,activity.game.moves);
+                assertTrue("Saved JSON records the acknowledged milestone",
+                    activity.prefs.getString("session","")
+                        .contains("\\"ack\\":true"));
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.persist();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
