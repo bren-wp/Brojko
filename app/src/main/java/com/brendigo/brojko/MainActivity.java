@@ -1758,7 +1758,7 @@ public final class MainActivity extends ComponentActivity {
             if(narrow){
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.
-                if(!relaxed&&theme==0){
+                if(!relaxed&&!daily&&theme==0){
                     classicHeaderControl("pause",335,32,43,49,
                         ()->navigate("pause"));
                     classicHeaderControl("undo",335,98,43,49,
@@ -1782,17 +1782,19 @@ public final class MainActivity extends ComponentActivity {
             float actionsH=portraitFour?94:(narrow?82:91);
             float firstX=portraitFour?17:22,undoX=portraitFour?139:144;
             float finishX=portraitFour?258:265;
+            boolean classicArtwork=portraitFour&&theme==0&&
+                "classic".equals(game.mode);
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
-            if(portraitFour&&theme==0)
+            if(classicArtwork)
                 classicBottomControl("Novo","refresh",firstX,actionsY,
                     113,actionsH,()->requestNew(game.mode));
             else
                 button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
                     ()->requestNew(game.mode));
             if(game.canUndo()){
-                if(portraitFour&&theme==0)
+                if(classicArtwork)
                     classicBottomControl("Poništi","undo",undoX,actionsY,
                         112,actionsH,()->undo());
                 else
@@ -1973,7 +1975,8 @@ public final class MainActivity extends ComponentActivity {
                 if(value==0)shape(rx,ry,tile,tileHeight,round,color);
                 else {
                     boolean classicSource="game".equals(page)&&tallFour&&
-                        theme==0&&tileStyle==0&&referencePortraitLayout;
+                        "classic".equals(game.mode)&&theme==0&&
+                        tileStyle==0&&referencePortraitLayout;
                     if(classicSource)
                         classicRaisedTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);
