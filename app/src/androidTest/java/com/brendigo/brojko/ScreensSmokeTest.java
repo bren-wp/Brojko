@@ -2175,6 +2175,63 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailySourceStreakFixtureKeepsRealActionsAndRaisedTiles(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            String originalLastDaily=activity.lastDaily;
+            int originalStreak=activity.streak;
+            int originalTheme=activity.theme,originalStyle=activity.tileStyle;
+            TileGame originalGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // Screenshot-only fixture: no user preferences are changed.
+                activity.page="daily";activity.theme=0;activity.tileStyle=0;
+                activity.game=null;activity.lastDaily="";activity.streak=7;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(image));
+                    int tileX=Math.round(board.offX+116f*board.scale);
+                    int tileY=Math.round(board.offY+204f*board.scale);
+                    int tile=image.getPixel(tileX,tileY);
+                    assertTrue("Preview starts with a real coral 2 tile",
+                        android.graphics.Color.red(tile)>185 &&
+                        android.graphics.Color.red(tile)>
+                            android.graphics.Color.green(tile)+40);
+                    int giftX=Math.round(board.offX+70f*board.scale);
+                    int giftY=Math.round(board.offY+615f*board.scale);
+                    int purple=image.getPixel(giftX,giftY);
+                    assertTrue("Reward gift needs saturated purple body",
+                        android.graphics.Color.blue(purple)>
+                            android.graphics.Color.green(purple)+45);
+                    int help=0,cta=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if(tap.label.startsWith("Pomoć za cilj: "))help++;
+                        if("Započni izazov".equals(tap.label)){
+                            cta++;
+                            assertTrue("CTA must remain at least 48 logical units",
+                                tap.bottom-tap.top>=48f);
+                        }
+                    }
+                    assertEquals("Exactly three real challenge help actions",3,help);
+                    assertEquals("Only one functional start action",1,cta);
+                }finally{image.recycle();}
+                captureReference(activity,board,
+                    "daily-source-streak7-941x1672");
+            }finally{
+                activity.page=originalPage;activity.theme=originalTheme;
+                activity.tileStyle=originalStyle;activity.streak=originalStreak;
+                activity.game=originalGame;activity.lastDaily=originalLastDaily;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGiftStaysSaturatedAfterItsTransparentShadow(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;int oldTheme=activity.theme;
