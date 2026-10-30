@@ -1476,10 +1476,10 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setColor(0xff539aff);
             p.setShadowLayer(26f,0,0,0x995295fa);
-            c.drawRoundRect(298,648,137,127,25,25,p);
+            c.drawRoundRect(298,648,435,775,25,25,p);
             p.clearShadowLayer();
             p.setColor(0xa3449af5);p.setShadowLayer(12f,0,0,0x774498ef);
-            c.drawRoundRect(302,652,133,119,24,24,p);
+            c.drawRoundRect(302,652,435,771,24,24,p);
             p.clearShadowLayer();
             p.setColor(0xd6ffffff);p.setTypeface(displayFont);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
