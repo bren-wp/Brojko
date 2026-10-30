@@ -2192,7 +2192,7 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             shape(x+.5f,y+1.6f,width-1f,height,19,0x30c9a98c);
             gradient(x,y,width,height-1.8f,19,
-                0xfffdf7ef,0xfff9f1e4);
+                0xfffdf3e6,0xfff9f1e4);
         }
         void compactVictoryCard(){
             // Match the 941x1672 portrait illustration while retaining all
