@@ -3474,8 +3474,11 @@ public class ScreensSmokeTest {
                     assertEquals(3,styles);
                     assertEquals(4,tabs);
                     assertNotNull(dark);
-                    int x=Math.round(board.offX+158*board.scale);
-                    int y=Math.round(board.offY+188*board.scale);
+                    // The first sample hit the rounded top-left corner
+                    // (x=158,y=188), where the cream backing shows through.
+                    // Sample the dark material between the corner and tiles.
+                    int x=Math.round(board.offX+195*board.scale);
+                    int y=Math.round(board.offY+189*board.scale);
                     int navy=bitmap.getPixel(x,y);
                     assertTrue("Dark preview uses navy material",
                         android.graphics.Color.red(navy)<90 &&
