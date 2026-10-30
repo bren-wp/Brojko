@@ -18,6 +18,7 @@ CAPTURES = (
     "pause-branded-modal-941x1672.png",
     "confirm-new-session-941x1672.png",
     "confirm-end-session-941x1672.png",
+    "game-over-raised-portrait-941x1672.png",
     "home-source-accent-rays-941x1672.png",
     "home-controlled-reference-941x1672.png",
     "golden-state-game-941x1672.png",
