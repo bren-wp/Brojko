@@ -794,6 +794,62 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void portraitClassicGameHasEnabledAndDisabledBottomActionTargets(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            TileGame previousGame=activity.game;
+            int previousTheme=activity.theme,previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="game";activity.theme=0;activity.tileStyle=0;
+                activity.game=new TileGame("classic","",98031L);
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(image));
+                    int newCount=0,finishCount=0,disabledUndo=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Novo".equals(tap.label))newCount++;
+                        if("Završi".equals(tap.label))finishCount++;
+                        if("Poništi".equals(tap.label))disabledUndo++;
+                    }
+                    assertEquals("New-game touch target must be available",1,newCount);
+                    assertEquals("Finish confirmation must be available",1,finishCount);
+                    assertEquals("Disabled Undo may not be clickable",0,disabledUndo);
+
+                    activity.game.cells=new int[16];
+                    activity.game.cells[0]=2;
+                    activity.game.cells[1]=2;
+                    assertTrue("Setup must create an undoable merge",
+                        activity.game.move(TileGame.LEFT).changed);
+                    preview.draw(new Canvas(image));
+                    int undoCount=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Poništi".equals(tap.label)){
+                            undoCount++;
+                            assertTrue("Undo must meet touch target height",
+                                tap.bottom-tap.top>=90f);
+                            assertTrue("Undo must meet touch target width",
+                                tap.right-tap.left>=110f);
+                            assertTrue("Undo must fit the logical viewport",
+                                tap.left>=0&&tap.right<=400);
+                        }
+                    }
+                    assertEquals("Undo must become actionable after move",1,undoCount);
+                }finally{image.recycle();}
+            }finally{
+                activity.page=previousPage;activity.game=previousGame;
+                activity.theme=previousTheme;activity.tileStyle=previousStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void launchBackgroundMatchesBrojkoCreamBeforeFirstFrame(){
         rule.getScenario().onActivity(activity->{
             android.util.TypedValue background=new android.util.TypedValue();
