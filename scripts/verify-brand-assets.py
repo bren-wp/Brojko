@@ -6,7 +6,6 @@ the app icon, while Android 26+ foreground art retains a mask-safe inset.
 No screenshot images or proprietary font/asset bundles are generated.
 """
 from pathlib import Path
-import re
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1] / "app/src/main/res"
