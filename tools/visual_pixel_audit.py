@@ -26,7 +26,14 @@ SCREENS = {
 # Per-screen and local scores are both important: large empty backgrounds
 # must not hide deteriorating controls, digits or raised tile details.
 REGIONS = {
-    "Splash": [("Logotip", (110, 580, 835, 1100))],
+    "Splash": [("Gornje plocice", (0, 95, 941, 700)),
+               ("Plocica 2", (70, 115, 420, 450)),
+               ("Plocica 4", (530, 120, 875, 460)),
+               ("Glavni logotip", (60, 675, 885, 1060)),
+               ("Potpis by Brendigo", (470, 930, 860, 1040)),
+               ("Donje dekoracije", (0, 1040, 941, 1672)),
+               ("Slogan", (50, 1250, 900, 1470)),
+               ("Donji 256 blur", (635, 1420, 941, 1672))],
     "Početni": [("Logotip", (100, 175, 840, 470)),
                  ("Kartice rezultata", (30, 450, 908, 680)),
                  ("Glavni gumb", (55, 650, 880, 920)),
@@ -106,6 +113,8 @@ def main():
                         help="Compare Daily against instrumented seven-day streak fixture")
     parser.add_argument("--controlled-settings", action="store_true",
                         help="Compare Settings with ON switches in test-only fixture")
+    parser.add_argument("--screen09-splash", action="store_true",
+                        help="Use phase 09 full-resolution Splash capture")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -126,7 +135,9 @@ def main():
             for label, (token, default_name) in SCREENS.items():
                 if args.screen and label != args.screen:
                     continue
-                name = ("home-controlled-reference-941x1672.png"
+                name = ("splash-phase09-owner-941x1672.png"
+                        if args.screen09_splash and label == "Splash"
+                        else "home-controlled-reference-941x1672.png"
                         if args.controlled_home and label == "Početni"
                         else "daily-source-streak7-941x1672.png"
                         if args.controlled_daily and label == "Dnevni izazov"
