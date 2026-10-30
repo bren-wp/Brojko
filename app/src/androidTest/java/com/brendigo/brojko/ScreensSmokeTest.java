@@ -1016,7 +1016,7 @@ public class ScreensSmokeTest {
                             captureReference(activity,view,
                                 "game-over-raised-portrait-941x1672");
                             int[] before=new int[100*100];
-                            image.getPixels(before,0,100,110,840,100,100);
+                            image.getPixels(before,0,100,245,974,100,100);
                             activity.game.score=0;
                             Bitmap changed=Bitmap.createBitmap(941,1672,
                                 Bitmap.Config.ARGB_8888);
@@ -1024,7 +1024,7 @@ public class ScreensSmokeTest {
                                 view.draw(new Canvas(changed));
                                 int differences=0;
                                 int[] after=new int[100*100];
-                                changed.getPixels(after,0,100,110,840,100,100);
+                                changed.getPixels(after,0,100,245,974,100,100);
                                 for(int i=0;i<after.length;i++)
                                     if(before[i]!=after[i])differences++;
                                 assertTrue("Summary must render live game score",
@@ -1059,6 +1059,9 @@ public class ScreensSmokeTest {
             try{
                 activity.game=new TileGame("classic","",12041L);
                 activity.game.moves=34;activity.game.score=6144;
+                for(int i=0;i<16;i++)
+                    activity.game.cells[i]=((i/4+i%4)%2==0)?2:4;
+                activity.game.cells[0]=512;
                 activity.game.peak=512;activity.game.gameOver=true;
                 activity.page="over";
                 view.measure(View.MeasureSpec.makeMeasureSpec(941,
@@ -1083,7 +1086,7 @@ public class ScreensSmokeTest {
                     org.json.JSONArray history=new org.json.JSONArray(
                         activity.prefs.getString("history","[]"));
                     assertEquals("One archive entry per finished session",
-                        new org.json.JSONArray(oldHistory).length()+1,
+                        Math.min(20,new org.json.JSONArray(oldHistory).length()+1),
                         history.length());
                     org.json.JSONObject latest=history.optJSONObject(0);
                     assertNotNull(latest);
