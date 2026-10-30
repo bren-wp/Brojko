@@ -19,6 +19,18 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
+    // org.json.JSONArray(String) throws a checked JSONException on Android.
+    // Keep strict parsing and report malformed stored history as test failure.
+    // The helper is safe inside ActivityScenario.onActivity callbacks, which
+    // cannot declare checked exceptions.
+    private static org.json.JSONArray checkedHistory(String source){
+        try{
+            return new org.json.JSONArray(source);
+        }catch(org.json.JSONException error){
+            throw new AssertionError("Malformed saved history in test",error);
+        }
+    }
+
     @Rule public ActivityScenarioRule<MainActivity> rule =
         new ActivityScenarioRule<>(MainActivity.class);
 
@@ -1088,10 +1100,10 @@ public class ScreensSmokeTest {
                     assertEquals("Restart enters game","game",activity.page);
                     assertNotNull(activity.game);
                     assertEquals("Mode stays classic","classic",activity.game.mode);
-                    org.json.JSONArray history=new org.json.JSONArray(
+                    org.json.JSONArray history=checkedHistory(
                         activity.prefs.getString("history","[]"));
                     assertEquals("One archive entry per finished session",
-                        Math.min(20,new org.json.JSONArray(oldHistory).length()+1),
+                        Math.min(20,checkedHistory(oldHistory).length()+1),
                         history.length());
                     org.json.JSONObject latest=history.optJSONObject(0);
                     assertNotNull(latest);
@@ -1214,7 +1226,7 @@ public class ScreensSmokeTest {
                 assertEquals("New mode is relaxed 5x5","relaxed",activity.game.mode);
                 assertEquals(5,activity.game.size);
                 assertEquals(25,activity.game.cells.length);
-                org.json.JSONArray history=new org.json.JSONArray(
+                org.json.JSONArray history=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Prior active session must be archived",history.length()>0);
                 org.json.JSONObject first=history.optJSONObject(0);
@@ -1276,7 +1288,7 @@ public class ScreensSmokeTest {
                     assertEquals("End moves to Home","home",activity.page);
                     assertNull("Finished active session must no longer be playable",
                         activity.game);
-                    org.json.JSONArray saved=new org.json.JSONArray(
+                    org.json.JSONArray saved=checkedHistory(
                         activity.prefs.getString("history","[]"));
                     assertTrue("History must contain the finished session",
                         saved.length()>0);
@@ -1538,7 +1550,7 @@ public class ScreensSmokeTest {
                         activity.today(),activity.dailyRewardDate);
                     assertFalse("New attempt no longer shows previous award",
                         activity.dailyBonusGrantedThisAttempt);
-                    org.json.JSONArray history=new org.json.JSONArray(
+                    org.json.JSONArray history=checkedHistory(
                         activity.prefs.getString("history","[]"));
                     assertTrue("Completed attempt is archived before replay",
                         history.length()>0);
@@ -1604,7 +1616,7 @@ public class ScreensSmokeTest {
                     activity.dailyRewardDate);
                 assertFalse("No winning UI status after a failed retry",
                     activity.dailyBonusGrantedThisAttempt);
-                org.json.JSONArray saved=new org.json.JSONArray(
+                org.json.JSONArray saved=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Failed attempt remains in history",saved.length()>0);
                 assertEquals(1728,saved.optJSONObject(0).optInt("score"));
@@ -3383,7 +3395,7 @@ public class ScreensSmokeTest {
                     activity.archive());
                 assertTrue("Game is marked archived only after disk save",
                     finished.archived);
-                org.json.JSONArray history=new org.json.JSONArray(
+                org.json.JSONArray history=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Latest game must be at the top",history.length()>0);
                 assertEquals(2048,history.getJSONObject(0).getInt("score"));
