@@ -54,6 +54,10 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
+    // Reuse immutable victory lettering data; no array allocations in onDraw.
+    private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
+    private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
+    private static final float[] VICTORY_RISE={2f,-2f,1f,-1f,0f,-3f};
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -1969,33 +1973,30 @@ public final class MainActivity extends ComponentActivity {
             // The reference logo is a bouncing, hand-lettered Nunito word,
             // not a single rigid baseline. Build it as individual glyphs
             // so the weight, overlap and subtle rotations work at any DPI.
-            final String[] glyphs={"B","r","a","v","o","!"};
-            final float[] tilt={-8f,4f,-6f,5f,-4f,7f};
-            final float[] rise={2f,-2f,1f,-1f,0f,-3f};
             c.save();c.scale(.96f,1.28f,200f,286f);
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setTextSize(63f);
             p.setTextScaleX(1f);p.setFakeBoldText(false);
             p.setTextAlign(Paint.Align.CENTER);
-            float[] advances=new float[glyphs.length];
             float full=0f;
-            for(int i=0;i<glyphs.length;i++){
-                advances[i]=p.measureText(glyphs[i]);
-                full+=advances[i]-(i<glyphs.length-1?2.6f:0f);
+            for(int i=0;i<VICTORY_GLYPHS.length;i++){
+                full+=p.measureText(VICTORY_GLYPHS[i])-
+                    (i<VICTORY_GLYPHS.length-1?2.6f:0f);
             }
             float left=200f-full/2f;
-            for(int i=0;i<glyphs.length;i++){
-                float middle=left+advances[i]/2f;
-                float baseline=286f+rise[i];
-                c.save();c.rotate(tilt[i],middle,baseline-20f);
+            for(int i=0;i<VICTORY_GLYPHS.length;i++){
+                float glyphWidth=p.measureText(VICTORY_GLYPHS[i]);
+                float middle=left+glyphWidth/2f;
+                float baseline=286f+VICTORY_RISE[i];
+                c.save();c.rotate(VICTORY_TILT[i],middle,baseline-20f);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
                 p.setStrokeWidth(3.4f);p.setColor(WHITE);
-                c.drawText(glyphs[i],middle,baseline,p);
+                c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
                 p.setStyle(Paint.Style.FILL);p.setColor(ink);
-                c.drawText(glyphs[i],middle,baseline,p);
+                c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
                 c.restore();
-                left+=advances[i]-2.6f;
+                left+=glyphWidth-2.6f;
             }
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
             p.setTextAlign(Paint.Align.CENTER);
