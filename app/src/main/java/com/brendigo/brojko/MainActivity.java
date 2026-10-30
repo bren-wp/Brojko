@@ -972,6 +972,10 @@ public final class MainActivity extends ComponentActivity {
                 flame.close();
                 c.save();c.translate(0,1f);p.setColor(0x270b1740);
                 c.drawPath(flame,p);c.restore();
+                // setColor(0x27...) above also sets Paint alpha to 15%.
+                // Restore opaque paint before the Daily streak gradient;
+                // otherwise the orange flame looks washed-out grey.
+                if("daily".equals(page))p.setColor(WHITE);
                 p.setShader(new LinearGradient(4,2,18,23,
                     lighten(color,.26f),darken(color,.07f),
                     Shader.TileMode.CLAMP));
