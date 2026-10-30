@@ -962,6 +962,147 @@ public class ScreensSmokeTest {
 
 
 
+
+    @Test public void gameOverPortraitKeepsRealScoreAndAllThreeActionsReachable(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",92665L);
+                java.util.Arrays.fill(activity.game.cells,0);
+                activity.game.cells[0]=256;
+                activity.game.cells[5]=128;
+                activity.game.peak=256;
+                activity.game.score=3848;
+                activity.game.moves=30;
+                activity.game.gameOver=true;
+                activity.page="over";activity.theme=0;
+                for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    view.scrollOffset=0;
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(image));
+                        if(size[0]==360){
+                            assertTrue("Only short phones need modal scroll",
+                                view.maxScroll>0);
+                            view.scrollOffset=view.maxScroll;
+                            view.draw(new Canvas(image));
+                        }else assertEquals("Game Over has no phantom scrolling",
+                            0f,view.maxScroll,.01f);
+                        assertEquals("No background board action survives dim",
+                            3,view.taps.size());
+                        String[] names={"Nova igra","Povratak","Podijeli rezultat"};
+                        for(int i=0;i<3;i++){
+                            MainActivity.BoardScreen.Tap tap=view.taps.get(i);
+                            assertEquals(names[i],tap.label);
+                            assertTrue("Action is touch-sized",tap.bottom-tap.top>=48f);
+                            assertTrue("Game Over button remains horizontally safe",
+                                tap.left>=50f&&tap.right<=350f);
+                            assertTrue("Action is visible after permitted scroll",
+                                view.offY+tap.bottom*view.scale<=size[1]+1f);
+                        }
+                        assertTrue("Actions cannot overlap",
+                            view.taps.get(0).bottom<view.taps.get(1).top&&
+                            view.taps.get(1).bottom<view.taps.get(2).top);
+                        if(size[0]==941){
+                            captureReference(activity,view,
+                                "game-over-raised-portrait-941x1672");
+                            int[] before=new int[100*100];
+                            image.getPixels(before,0,100,110,840,100,100);
+                            activity.game.score=0;
+                            Bitmap changed=Bitmap.createBitmap(941,1672,
+                                Bitmap.Config.ARGB_8888);
+                            try{
+                                view.draw(new Canvas(changed));
+                                int differences=0;
+                                int[] after=new int[100*100];
+                                changed.getPixels(after,0,100,110,840,100,100);
+                                for(int i=0;i<after.length;i++)
+                                    if(before[i]!=after[i])differences++;
+                                assertTrue("Summary must render live game score",
+                                    differences>20);
+                            }finally{
+                                changed.recycle();activity.game.score=3848;
+                            }
+                        }
+                    }finally{image.recycle();}
+                }
+                assertEquals("Rendering must not modify score",3848,activity.game.score);
+                assertEquals("Rendering must not modify moves",30,activity.game.moves);
+                assertTrue("Rendering does not reopen finished game",
+                    activity.game.gameOver);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void gameOverNewGameArchivesExactlyOnceAndBackKeepsSession(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldPlays=activity.plays,oldLastScore=activity.lastScore;
+            int oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak;
+            String oldLastDay=activity.lastPlayDay;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",12041L);
+                activity.game.moves=34;activity.game.score=6144;
+                activity.game.peak=512;activity.game.gameOver=true;
+                activity.page="over";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap canvas=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(canvas));
+                    view.taps.get(1).action.run();
+                    assertEquals("Back returns Home","home",activity.page);
+                    assertEquals("Home preserves completed game",6144,
+                        activity.game.score);
+                    assertEquals("Back does not create archive",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="over";
+                    view.draw(new Canvas(canvas));
+                    view.taps.get(0).action.run();
+                    assertEquals("Restart enters game","game",activity.page);
+                    assertNotNull(activity.game);
+                    assertEquals("Mode stays classic","classic",activity.game.mode);
+                    org.json.JSONArray history=new org.json.JSONArray(
+                        activity.prefs.getString("history","[]"));
+                    assertEquals("One archive entry per finished session",
+                        new org.json.JSONArray(oldHistory).length()+1,
+                        history.length());
+                    org.json.JSONObject latest=history.optJSONObject(0);
+                    assertNotNull(latest);
+                    assertEquals(6144,latest.optInt("score"));
+                    assertEquals(34,latest.optInt("moves"));
+                    assertEquals(512,latest.optInt("peak"));
+                    assertEquals("classic",latest.optString("mode"));
+                }finally{canvas.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.plays=oldPlays;activity.lastScore=oldLastScore;
+                activity.recordTile=oldRecordTile;activity.playDayStreak=oldStreak;
+                activity.lastPlayDay=oldLastDay;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void confirmationModalsStayOnScreenAndShowLiveSessionSummary(){
         rule.getScenario().onActivity(activity->{
             TileGame priorGame=activity.game;
