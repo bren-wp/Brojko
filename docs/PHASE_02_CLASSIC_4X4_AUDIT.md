@@ -32,6 +32,12 @@ RGB MAE = srednja apsolutna razlika svih R/G/B kanala (0–255), manji rezultat 
 - Svi dijelovi ploče uključujući zadnji red ostaju dostupni gestama i na drugim gustoćama/veličinama zaslona.
 - Ostali načini (opušteno 5×5, dnevno), sve tri teme, stilovi pločica, splash, Home i win-modal ostaju neizmijenjeni sem ove vizualne grane.
 
+## Popravak regresije pri prvoj kompilaciji
+
+Prva verzija promjene (`209ec657`) nije prošla kompilaciju: `MainActivity.java:1801: else without if`. Problem je nastao jer se stari `else` za onemogućeni Undo nadovezao na novu granu za vizualne gumbe. Ispravljeno u `fb55b655` tako da se stvarne `Novo` i `Poništi` akcije renderiraju odvojeno od stanja onemogućenog Undo. U `32b65c0` svi novi 4×4 vizualni efekti dodatno su ograničeni na način `classic`, ne na Dnevni izazov. Dodan Android instrumentacijski test `classicOnlyHeaderControlsKeepRealAccessibilityTargets`, koji provjerava dodirnu zonu Pause od 54 jedinice, neklikabilan Undo bez poteza i aktivan Undo nakon poteza.
+
+**Ovu prvu neuspjelu CI provjeru ne treba predstavljati uspješnom.** Prihvaća se samo najnoviji commit s ispravljenom granom i uspješnim stvarnim emulatorom.
+
 ## Gate prije završetka
 
 1. Android PR validation: Gradle compilation, lint i lokalni unit testovi.
