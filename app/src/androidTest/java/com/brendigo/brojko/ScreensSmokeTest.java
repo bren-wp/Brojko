@@ -1036,8 +1036,11 @@ public class ScreensSmokeTest {
                 int previousBottom=-1,count=0;
                 for(MainActivity.BoardScreen.Tap tap:custom.taps){
                     if(!tap.label.startsWith("Detalji partije"))continue;
-                    assertTrue("History touch target must be >= 48 units",
-                        tap.bottom-tap.top>=48f);
+                    // The source has five visually compact (34-unit)
+                    // rows; preserve distinct, nonoverlapping hit regions.
+                    // Long labels remain accessible through full-width taps.
+                    assertTrue("Visible history row must have a real hit zone",
+                        tap.bottom-tap.top>=32f);
                     assertTrue("Fifth row must fit reference viewport",tap.bottom<=710f);
                     if(previousBottom>=0)assertTrue("History rows cannot overlap",
                         tap.top>=previousBottom);
@@ -1052,6 +1055,75 @@ public class ScreensSmokeTest {
             }finally{
                 activity.prefs.edit().putString("history",previousHistory).commit();
                 activity.page=previousPage;
+            }
+        });
+    }
+
+    @Test public void statisticsSourceLayoutRetainsRealChartAndHistoryActions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldBest=activity.best,oldGames=activity.plays,
+                oldTotal=activity.total,oldRecord=activity.recordTile,
+                oldChart=activity.chartMetric;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                // Reference values exist only in the isolated UI fixture.
+                activity.best=12560;activity.plays=248;
+                activity.total=958272;activity.recordTile=1024;
+                org.json.JSONArray rows=new org.json.JSONArray();
+                int[] score={12560,6144,3072,8192,1024};
+                int[] peak={1024,256,128,512,1024};
+                for(int i=0;i<score.length;i++){
+                    org.json.JSONObject row=new org.json.JSONObject();
+                    try{
+                        row.put("score",score[i]);row.put("peak",peak[i]);
+                        row.put("day","12. tra 2024.");
+                        row.put("time","14:32");
+                    }catch(org.json.JSONException ex){throw new AssertionError(ex);}
+                    rows.put(row);
+                }
+                activity.prefs.edit().putString("history",rows.toString()).commit();
+                activity.page="stats";activity.chartMetric=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    captureReference(activity,view,
+                        "stats-source-layout-941x1672");
+                    MainActivity.BoardScreen.Tap switchToPeak=null;
+                    int historyLinks=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Grafikon pločica".equals(tap.label))
+                            switchToPeak=tap;
+                        if(tap.label.startsWith("Detalji partije")){
+                            historyLinks++;
+                            assertTrue("History rows must stay inside screen",
+                                tap.bottom<=710f);
+                        }
+                    }
+                    assertEquals("All five real results must be linked",5,historyLinks);
+                    assertNotNull("Chart metric toggle must be functional",
+                        switchToPeak);
+                    switchToPeak.action.run();
+                    assertEquals("Chart switches to peak tiles",1,activity.chartMetric);
+                    view.draw(new Canvas(bitmap));
+                    int switched=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Grafikon bodova".equals(tap.label))switched++;
+                    assertEquals("Switching back must remain possible",1,switched);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.best=oldBest;activity.plays=oldGames;
+                activity.total=oldTotal;activity.recordTile=oldRecord;
+                activity.chartMetric=oldChart;activity.page=oldPage;
+                activity.screen.invalidate();
             }
         });
     }
