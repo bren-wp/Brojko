@@ -21,6 +21,7 @@ CAPTURES = (
     "daily-large-safe-primary-rays-941x1672.png",
     "daily-source-streak7-941x1672.png",
     "missions-six-real-progress-941x1672.png",
+    "missions-illustrated-six-941x1672.png",
     "golden-state-stats-941x1672.png",
     "themes-peach-style-swatches-941x1672.png",
     "reference-settings-polished-941x1672.png",
