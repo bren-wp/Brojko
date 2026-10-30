@@ -2912,10 +2912,11 @@ public class ScreensSmokeTest {
                     View.MeasureSpec.makeMeasureSpec(1672,
                         View.MeasureSpec.EXACTLY));
                 view.layout(0,0,941,1672);
-                int px=Math.round(view.offX+145f*view.scale);
-                int py=Math.round(view.offY+603f*view.scale);
                 activity.recordTile=0;
                 view.draw(new Canvas(bitmap));
+                // offX/offY/scale are updated by onDraw(), not measure().
+                int px=Math.round(view.offX+145f*view.scale);
+                int py=Math.round(view.offY+603f*view.scale);
                 int none=bitmap.getPixel(px,py);
                 activity.recordTile=512;
                 view.draw(new Canvas(bitmap));
