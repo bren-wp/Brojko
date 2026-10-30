@@ -27,9 +27,11 @@ SCREENS = {
 # must not hide deteriorating controls, digits or raised tile details.
 REGIONS = {
     "Splash": [("Logotip", (110, 580, 835, 1100))],
-    "Početni": [("Logotip", (130, 160, 805, 450)),
-                 ("Glavni gumb", (120, 665, 820, 910)),
-                 ("Načini igre", (30, 910, 915, 1320))],
+    "Početni": [("Logotip", (100, 175, 840, 470)),
+                 ("Kartice rezultata", (30, 450, 908, 680)),
+                 ("Glavni gumb", (55, 650, 880, 920)),
+                 ("Načini igre", (30, 900, 900, 1325)),
+                 ("Donji prečaci", (25, 1300, 910, 1625))],
     "Igra 4×4": [("Ploča", (35, 365, 920, 1325)),
                  ("Pločice", (45, 410, 910, 1285)),
                  ("Donje kontrole", (35, 1320, 920, 1600))],
