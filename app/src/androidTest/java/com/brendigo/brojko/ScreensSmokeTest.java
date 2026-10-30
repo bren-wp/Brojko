@@ -961,6 +961,124 @@ public class ScreensSmokeTest {
     }
 
 
+
+    @Test public void confirmationModalsStayOnScreenAndShowLiveSessionSummary(){
+        rule.getScenario().onActivity(activity->{
+            TileGame priorGame=activity.game;
+            String priorPage=activity.page,priorMode=activity.pendingMode;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",89126L);
+                activity.game.score=3848;activity.game.moves=17;
+                activity.pendingMode="relaxed";activity.theme=0;
+                for(String state:new String[]{"confirm","confirmEnd"}){
+                    activity.page=state;
+                    for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                        view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,size[0],size[1]);
+                        Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            view.draw(new Canvas(bitmap));
+                            assertEquals("Modal actions only: "+state,2,view.taps.size());
+                            assertEquals("No needless portrait scroll: "+state,
+                                0f,view.maxScroll,.01f);
+                            String primary="confirm".equals(state)?
+                                "Započni novo":"Završi i spremi";
+                            String secondary="confirm".equals(state)?
+                                "Odustani":"Nastavi igrati";
+                            assertEquals(primary,view.taps.get(0).label);
+                            assertEquals(secondary,view.taps.get(1).label);
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                assertTrue("Modal action inside card",tap.left>=50f&&
+                                    tap.right<=350f);
+                                assertTrue("Modal action >= 48",tap.bottom-tap.top>=48f);
+                                assertTrue("Modal action visible "+size[0]+"x"+size[1],
+                                    view.offY+tap.bottom*view.scale<=size[1]+1f);
+                            }
+                            assertTrue("Buttons must not overlap",
+                                view.taps.get(0).bottom<view.taps.get(1).top);
+                            if(size[0]==941)
+                                captureReference(activity,view,
+                                    "confirm".equals(state)?
+                                    "confirm-new-session-941x1672":
+                                    "confirm-end-session-941x1672");
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                assertEquals("Rendering cannot change the live score",
+                    3848,activity.game.score);
+                assertEquals(17,activity.game.moves);
+            }finally{
+                activity.game=priorGame;activity.page=priorPage;
+                activity.pendingMode=priorMode;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void confirmationCancelIsNonDestructiveAndConfirmedEndArchives(){
+        rule.getScenario().onActivity(activity->{
+            TileGame prior=activity.game;
+            String previousPage=activity.page,previousMode=activity.pendingMode;
+            int previousLastScore=activity.lastScore;
+            String oldHistory=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",71484L);
+                activity.game.score=3072;activity.game.moves=12;
+                activity.page="confirm";activity.pendingMode="relaxed";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    MainActivity.BoardScreen.Tap cancel=view.taps.get(1);
+                    cancel.action.run();
+                    assertEquals("Cancel returns to same game","game",activity.page);
+                    assertEquals(3072,activity.game.score);
+                    assertEquals(12,activity.game.moves);
+                    assertEquals("Cancel cannot write history",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="confirmEnd";
+                    view.draw(new Canvas(image));
+                    view.taps.get(1).action.run();
+                    assertEquals("Resume from end confirmation","game",activity.page);
+                    assertNotNull(activity.game);
+                    assertEquals(3072,activity.game.score);
+                    activity.page="confirmEnd";
+                    view.draw(new Canvas(image));
+                    view.taps.get(0).action.run();
+                    assertEquals("End moves to Home","home",activity.page);
+                    assertNull("Finished active session must no longer be playable",
+                        activity.game);
+                    org.json.JSONArray saved=new org.json.JSONArray(
+                        activity.prefs.getString("history","[]"));
+                    assertTrue("History must contain the finished session",
+                        saved.length()>0);
+                    org.json.JSONObject latest=saved.optJSONObject(0);
+                    assertNotNull(latest);
+                    assertEquals("Archive actual score",3072,latest.optInt("score"));
+                    assertEquals("Archive actual moves",12,latest.optInt("moves"));
+                    assertEquals("Archive actual mode","classic",
+                        latest.optString("mode"));
+                }finally{image.recycle();}
+            }finally{
+                activity.game=prior;activity.page=previousPage;
+                activity.pendingMode=previousMode;activity.lastScore=previousLastScore;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void pauseModalKeepsTheRealGameAndUsesOnlyTwoSafeActions(){
         rule.getScenario().onActivity(activity->{
             TileGame previousGame=activity.game;
