@@ -2732,6 +2732,121 @@ public final class MainActivity extends ComponentActivity {
             gradient(x,y,width,height,radius,
                 lighten(color,theme==1?.07f:.27f),color);
         }
+        void missionSoftIconBackground(float x,float y,float size){
+            // Reference uses warm ivory mini-cards behind the illustrated
+            // mission pictograms, with barely raised corners.
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setColor(0x1b947a60);
+            p.setShadowLayer(2f,0,2f,0x269f805f);
+            c.drawRoundRect(x,y+1,x+size,y+size+1,11,11,p);
+            p.clearShadowLayer();
+            gradient(x,y,size,size,11,0xfffffcf6,0xfff8ecdd);
+        }
+        void missionRaisedNumber(float x,float y,float size,int color,
+                                 String number,float rotation){
+            c.save();c.rotate(rotation,x+size/2f,y+size/2f);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
+            p.setColor(darken(color,.14f));
+            c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
+            p.clearShadowLayer();
+            gradient(x,y,size,size-2f,8,lighten(color,.18f),color);
+            p.setColor(0x7dffffff);p.setStrokeWidth(.8f);
+            p.setStyle(Paint.Style.STROKE);
+            c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
+                y+size-3.5f,7.2f,7.2f,p);
+            p.setStyle(Paint.Style.FILL);
+            fitted(number,x+size/2f,y+size*.68f,
+                number.length()>3?11:number.length()>2?15:
+                    number.length()>1?18:21,size-4,WHITE,true);
+            c.restore();
+        }
+        void missionOrangeRays(float x,float y){
+            final float[][] data={{-10f,-10f,-33f},{11f,-7f,38f},
+                {-12f,12f,36f}};
+            for(float[] line:data){
+                float cx=x+line[0],cy=y+line[1];
+                c.save();c.rotate(line[2],cx,cy);
+                shape(cx-2f,cy-5.5f,4f,11f,2f,0xffffb429);
+                c.restore();
+            }
+        }
+        void missionHand(float x,float y){
+            // Explicitly hand-drawn pointer on the orange 2 + teal 4
+            // icon, as in the supplied source (no emoji or network asset).
+            c.save();c.translate(x,y);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            Path finger=new Path();
+            finger.moveTo(5,16);finger.lineTo(-1,7);
+            finger.quadTo(-3,2,0,1);
+            finger.quadTo(3,-1,5,3);
+            finger.lineTo(9,11);finger.lineTo(10,7);
+            finger.quadTo(12,4,15,7);
+            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
+            finger.lineTo(12,29);finger.lineTo(5,26);
+            finger.close();
+            p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            c.drawPath(finger,p);
+            p.setColor(0xfffffff8);
+            c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
+            c.drawPath(finger,p);c.restore();
+            c.restore();
+        }
+        void missionCalendarSeven(float centerX,float centerY){
+            float x=centerX-22f,y=centerY-21f;
+            gradient(x,y+1,44,45,10,0xfff8fff9,0xffe8e1d8);
+            shape(x+1.8f,y+3,40.4f,13,8,0xffff694d);
+            shape(x+8,y-1,5,13,2.5f,0xffe74e39);
+            shape(x+29,y-1,5,13,2.5f,0xffe74e39);
+            fitted("7",centerX,centerY+17,25,34,ink,true);
+        }
+        void missionTarget(float cx,float cy,float size){
+            // Large coral bullseye and diagonal blue dart.
+            icon("target",cx,cy,size,0xffff795b);
+        }
+        void missionIllustration(String name,float y,boolean portrait,
+                                int accent){
+            if(!portrait){
+                return;
+            }
+            final float cx=62f, cy=y+34f;
+            missionSoftIconBackground(38,y+7,51f);
+            if(name.startsWith("Spoji 20")){
+                missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
+                missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
+                missionHand(54,y+29);
+            }else if(name.startsWith("Dosegni 512")){
+                missionRaisedNumber(42,y+11,45f,0xffb45bf6,"512",-9f);
+                missionOrangeRays(81,y+17);
+            }else if(name.startsWith("Igraj 7")){
+                missionCalendarSeven(cx,cy);
+            }else if(name.startsWith("Ostvari 10.000")){
+                missionTarget(cx,cy,44f);
+            }else if(name.startsWith("Majstor")){
+                int[] values={2,4,8,16};
+                for(int i=0;i<4;i++)
+                    missionRaisedNumber(40+(i%2)*23,y+10+(i/2)*23,
+                        22,TILES[i+1],Integer.toString(values[i]),0);
+            }else if(name.startsWith("Kralj")){
+                icon("crown",cx,cy+2,48,0xffffaf25);
+            }else{
+                icon("star",cx,cy,38,accent);
+            }
+        }
+        void missionWeeklyHeaderIcon(float cx,float cy){
+            // Blue outlined weekly planner, rather than a red daily calendar.
+            p.clearShadowLayer();p.setShader(null);
+            shape(cx-10,cy-10,20,21,4,0xff137ecb);
+            shape(cx-7,cy-5,14,12,2,0xffebf7ff);
+            shape(cx-6,cy-12,4,7,2,0xff2a99ed);
+            shape(cx+2,cy-12,4,7,2,0xff2a99ed);
+            p.setColor(0xff3d91e4);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.4f);
+            c.drawLine(cx-4,cy+1,cx+4,cy+1,p);
+            c.drawLine(cx-4,cy+5,cx+3,cy+5,p);
+            p.setStyle(Paint.Style.FILL);
+        }
         int completedAchievements(){
             int result=0;
             if((rewardFlags&8)!=0)result++;
@@ -2742,12 +2857,14 @@ public final class MainActivity extends ComponentActivity {
             boolean portrait=referencePortraitLayout;
             back();brand(portrait?45:67,39);
             // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",132,portrait?99:128,33,142,ink,true);
-            fitted("postignuća",279,portrait?99:128,33,203,CORAL,true);
+            fitted("Misije i",125,portrait?99:128,
+                portrait?36:33,142,ink,true);
+            fitted("postignuća",274,portrait?99:128,
+                portrait?36:33,203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
-            int dailyTint=theme==1?0xff293b4c:0xffffedda;
-            int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
-            int achievementTint=theme==1?0xff24483f:0xffe0f9ec;
+            int dailyTint=theme==1?0xff293b4c:0xfffff0df;
+            int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
+            int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
             missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
@@ -2757,7 +2874,9 @@ public final class MainActivity extends ComponentActivity {
             p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
             txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
-            icon("calendar",43,portrait?346:420,23,0xff3d98f0);
+            if(portrait&&theme!=1)
+                missionWeeklyHeaderIcon(43,portrait?346:420);
+            else icon("calendar",43,portrait?346:420,23,0xff3d98f0);
             icon("crown",43,portrait?540:636,23,0xffffb431);
             missionPeriodPill("week",portrait?330:402);
             // The source layout counts achievements, not star currency.
@@ -2798,15 +2917,18 @@ public final class MainActivity extends ComponentActivity {
             boolean portrait=referencePortraitLayout;
             int height=portrait?70:80;
             missionSurface(26,y,348,height,19,card);
-            shape(39,y+(portrait?9:10),portrait?46:52,
-                portrait?50:58,15,
-                theme==1?0xff35435d:lighten(accent,.80f));
+            if(!portrait||theme==1)
+                shape(39,y+(portrait?9:10),portrait?46:52,
+                    portrait?50:58,15,
+                    theme==1?0xff35435d:lighten(accent,.80f));
             String taskGlyph=value>=target?"check":
                 name.contains("Kralj")?"crown":
                 name.contains("Igraj")?"calendar":
                 name.contains("Majstor")?"grid":
                 name.contains("Spoji")?"grid":"target";
-            if(name.startsWith("Dosegni 512")){
+            if(portrait&&theme!=1){
+                missionIllustration(name,y,true,accent);
+            }else if(name.startsWith("Dosegni 512")){
                 styledTile(42,y+12,40,40,10,0xffa663e4,0);
                 fitted("512",62,y+40,18,39,WHITE,true);
             }else if(name.startsWith("Spoji 20")){
@@ -2865,13 +2987,15 @@ public final class MainActivity extends ComponentActivity {
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
             float rewardCenter=portrait?345:323;
-            missionSurface(portrait?315:289,y+(portrait?4:6),
+            if(portrait&&theme!=1)
+                gradient(315,y+4,54,61,15,0xfffff9e7,0xfffff0d3);
+            else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,y+(portrait?24:29),
-                portrait?27:29,0xffffad1a);
-            fitted("+"+fmt(reward),rewardCenter,y+(portrait?54:62),
-                portrait?13:13,portrait?49:63,ink,true);
+            icon("star",rewardCenter,y+(portrait?23:29),
+                portrait?31:29,0xffffad1a);
+            fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
+                portrait?14:13,portrait?49:63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
