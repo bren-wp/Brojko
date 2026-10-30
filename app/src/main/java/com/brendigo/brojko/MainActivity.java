@@ -61,6 +61,11 @@ public final class MainActivity extends ComponentActivity {
     // B and exclamation are deliberately oversized in the source logo.
     private static final float[] VICTORY_WIDTH={1.24f,1f,1f,1f,1f,1.35f};
     private static final float[] VICTORY_HEIGHT={1.2f,1f,1f,1f,1f,1.08f};
+    // Immutable mission pictogram data: avoid new arrays on every redraw.
+    private static final int[] MISSION_TILE_VALUES={2,4,8,16};
+    private static final float[][] MISSION_CORAL_RAYS={
+        {-10f,-10f,-33f},{11f,-7f,38f},{-12f,12f,36f}
+    };
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -2970,9 +2975,7 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
         }
         void missionOrangeRays(float x,float y){
-            final float[][] data={{-10f,-10f,-33f},{11f,-7f,38f},
-                {-12f,12f,36f}};
-            for(float[] line:data){
+            for(float[] line:MISSION_CORAL_RAYS){
                 float cx=x+line[0],cy=y+line[1];
                 c.save();c.rotate(line[2],cx,cy);
                 shape(cx-2f,cy-5.5f,4f,11f,2f,0xffffb429);
@@ -3032,10 +3035,9 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Ostvari 10.000")){
                 missionTarget(cx,cy,44f);
             }else if(name.startsWith("Majstor")){
-                int[] values={2,4,8,16};
-                for(int i=0;i<4;i++)
+                for(int i=0;i<MISSION_TILE_VALUES.length;i++)
                     missionRaisedNumber(40+(i%2)*23,y+10+(i/2)*23,
-                        22,TILES[i+1],Integer.toString(values[i]),0);
+                        22,TILES[i+1],Integer.toString(MISSION_TILE_VALUES[i]),0);
             }else if(name.startsWith("Kralj")){
                 icon("crown",cx,cy+2,48,0xffffaf25);
             }else{
@@ -3182,12 +3184,14 @@ public final class MainActivity extends ComponentActivity {
             float progressY=y+(portrait?50:59);
             shape(104,progressY,151,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
-            float fraction=Math.max(0,Math.min(1,(float)value/target));
+            // "Majstor" is an unlock, not an incremental reward. Keep
+            // the filled bar consistent with its 0/1 or 1/1 counter:
+            // a previous 512 tile must not display a fake 50% unlock.
+            boolean binaryMilestone=name.startsWith("Majstor");
+            float fraction=binaryMilestone?(value>=target?1f:0f):
+                Math.max(0,Math.min(1,(float)value/target));
             if(fraction>0)shape(104,progressY,
                 151*fraction,7,4,accent);
-            // Existing 1024 tile milestone is binary; show 0/1 or 1/1
-            // instead of the misleading raw maxTile/1024 ratio.
-            boolean binaryMilestone=name.startsWith("Majstor");
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
