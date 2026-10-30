@@ -26,7 +26,14 @@ SCREENS = {
 # Per-screen and local scores are both important: large empty backgrounds
 # must not hide deteriorating controls, digits or raised tile details.
 REGIONS = {
-    "Splash": [("Logotip", (110, 580, 835, 1100))],
+    "Splash": [("Gornje plocice", (0, 95, 941, 700)),
+               ("Plocica 2", (70, 115, 420, 450)),
+               ("Plocica 4", (530, 120, 875, 460)),
+               ("Glavni logotip", (60, 675, 885, 1060)),
+               ("Potpis by Brendigo", (470, 930, 860, 1040)),
+               ("Donje dekoracije", (0, 1040, 941, 1672)),
+               ("Slogan", (50, 1250, 900, 1470)),
+               ("Donji 256 blur", (635, 1420, 941, 1672))],
     "Početni": [("Logotip", (100, 175, 840, 470)),
                  ("Kartice rezultata", (30, 450, 908, 680)),
                  ("Glavni gumb", (55, 650, 880, 920)),
@@ -38,13 +45,34 @@ REGIONS = {
                  ("Pločice 4×4", (38, 395, 910, 1288)),
                  ("Donje kontrole", (35, 1330, 925, 1605))],
     "Pobjeda": [("Rezultat i akcije", (135, 450, 805, 1415))],
-    "Dnevni izazov": [("Ploča", (195, 360, 755, 970))],
-    "Misije": [("Tekst i napredak", (220, 345, 730, 1580)),
-               ("Kartice nagrada", (720, 345, 920, 1580))],
-    "Statistika": [("KPI kartice", (30, 300, 915, 760))],
+    "Dnevni izazov": [("Naslov, niz i datum", (0, 0, 941, 375)),
+                       ("Ploča 4x4", (150, 365, 790, 955)),
+                       ("Ciljevi", (45, 955, 895, 1325)),
+                       ("Kartica nagrade", (35, 1320, 900, 1550)),
+                       ("Gumb", (25, 1500, 920, 1670))],
+    "Misije": [("Zaglavlje", (0, 0, 941, 315)),
+               ("Dnevni zadaci", (25, 298, 915, 760)),
+               ("Tjedni zadaci", (25, 758, 915, 1235)),
+               ("Postignuca", (25, 1218, 915, 1645)),
+               ("Ilustracije", (45, 375, 220, 1630)),
+               ("Kartice nagrada", (730, 360, 915, 1625)),
+               ("Tekst i napredak", (225, 350, 735, 1620))],
+    "Statistika": [("Zaglavlje", (20, 30, 920, 306)),
+                  ("Tri KPI kartice", (20, 305, 923, 540)),
+                  ("Dva KPI sazetka", (20, 535, 920, 760)),
+                  ("Grafikon", (22, 765, 922, 1160)),
+                  ("Povijest partija", (20, 1160, 920, 1645)),
+                  ("Naslovi i stupci", (65, 790, 885, 1115))],
     "Teme": [("Kartice tema", (40, 380, 900, 800)),
              ("Pretpregled pločica", (55, 940, 900, 1385))],
-    "Postavke": [("Retci postavki", (30, 220, 910, 1370))],
+    "Postavke": [("Naslov i koraljne zrake", (110, 48, 820, 210)),
+                 ("Prva cetiri retka", (30, 220, 900, 820)),
+                 ("Sigurnosna kopija", (32, 828, 905, 998)),
+                 ("Privatnost i informacije", (30, 1000, 905, 1300)),
+                 ("Sve ikonice", (55, 220, 185, 1300)),
+                 ("Tri sklopke", (710, 225, 875, 810)),
+                 ("Donji logo i byline", (220, 1330, 720, 1530)),
+                 ("Zavrsna krem kartica", (30, 1310, 905, 1645))],
 }
 
 def screenshot(archive, name):
@@ -77,6 +105,18 @@ def main():
     parser.add_argument("--markdown", type=Path)
     parser.add_argument("--include-regions", action="store_true",
                         help="Also report important real-pixel subregions per screen")
+    parser.add_argument("--screen", choices=sorted(SCREENS),
+                        help="Audit just one requested screen during pixel-by-pixel work")
+    parser.add_argument("--controlled-home", action="store_true",
+                        help="Compare Home against the instrumented source-data fixture, not a live session")
+    parser.add_argument("--controlled-daily", action="store_true",
+                        help="Compare Daily against instrumented seven-day streak fixture")
+    parser.add_argument("--controlled-settings", action="store_true",
+                        help="Compare Settings with ON switches in test-only fixture")
+    parser.add_argument("--screen09-splash", action="store_true",
+                        help="Use phase 09 full-resolution Splash capture")
+    parser.add_argument("--screen16-missions", action="store_true",
+                        help="Use phase 16 source-like 941x1672 mission fixture")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -94,7 +134,20 @@ def main():
         else:
             previous = None
         try:
-            for label, (token, name) in SCREENS.items():
+            for label, (token, default_name) in SCREENS.items():
+                if args.screen and label != args.screen:
+                    continue
+                name = ("splash-phase09-owner-941x1672.png"
+                        if args.screen09_splash and label == "Splash"
+                        else "home-controlled-reference-941x1672.png"
+                        if args.controlled_home and label == "Početni"
+                        else "daily-source-streak7-941x1672.png"
+                        if args.controlled_daily and label == "Dnevni izazov"
+                        else "settings-phase08-source-on-941x1672.png"
+                        if args.controlled_settings and label == "Postavke"
+                        else "missions-phase16-binary-unlock-941x1672.png"
+                        if args.screen16_missions and label == "Misije"
+                        else default_name)
                 pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
                            if args.reference_copy_index is not None
                            else f"Slika ChatGPT*{token}*.png")

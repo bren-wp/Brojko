@@ -19,6 +19,18 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
+    // org.json.JSONArray(String) throws a checked JSONException on Android.
+    // Keep strict parsing and report malformed stored history as test failure.
+    // The helper is safe inside ActivityScenario.onActivity callbacks, which
+    // cannot declare checked exceptions.
+    private static org.json.JSONArray checkedHistory(String source){
+        try{
+            return new org.json.JSONArray(source);
+        }catch(org.json.JSONException error){
+            throw new AssertionError("Malformed saved history in test",error);
+        }
+    }
+
     @Rule public ActivityScenarioRule<MainActivity> rule =
         new ActivityScenarioRule<>(MainActivity.class);
 
@@ -844,6 +856,55 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicOnlyHeaderControlsKeepRealAccessibilityTargets(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme,previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+            try{
+                activity.page="game";activity.theme=0;activity.tileStyle=0;
+                activity.game=new TileGame("classic","",8844L);
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    preview.draw(new Canvas(image));
+                    int pause=0,topUndo=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Pauziraj igru".equals(tap.label)){
+                            pause++;
+                            assertTrue("Pause touch height",tap.bottom-tap.top>=54f);
+                            assertTrue("Pause touch width",tap.right-tap.left>=54f);
+                        }
+                        if("Poništi potez".equals(tap.label))topUndo++;
+                    }
+                    assertEquals("The real pause action must remain",1,pause);
+                    assertEquals("Undo without prior move has no fake action",0,topUndo);
+                    activity.game.cells=new int[16];
+                    activity.game.cells[0]=2;activity.game.cells[1]=2;
+                    assertTrue(activity.game.move(TileGame.LEFT).changed);
+                    preview.draw(new Canvas(image));
+                    topUndo=0;
+                    for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                        if("Poništi potez".equals(tap.label)){
+                            topUndo++;
+                            assertTrue("Header Undo remains >=54-unit target",
+                                tap.bottom-tap.top>=54f&&tap.right-tap.left>=54f);
+                        }
+                    }
+                    assertEquals("Enabled top Undo must remain actionable",1,topUndo);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=previousGame;activity.page=previousPage;
+                activity.theme=previousTheme;activity.tileStyle=previousStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitClassicGameHasEnabledAndDisabledBottomActionTargets(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
@@ -908,6 +969,672 @@ public class ScreensSmokeTest {
                     android.R.attr.windowBackground,background,true));
             assertEquals("Avoid an unbranded white launch frame",
                 MainActivity.CREAM,background.data);
+        });
+    }
+
+
+
+
+    @Test public void gameOverPortraitKeepsRealScoreAndAllThreeActionsReachable(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",92665L);
+                java.util.Arrays.fill(activity.game.cells,0);
+                activity.game.cells[0]=256;
+                activity.game.cells[5]=128;
+                activity.game.peak=256;
+                activity.game.score=3848;
+                activity.game.moves=30;
+                activity.game.gameOver=true;
+                activity.page="over";activity.theme=0;
+                for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    view.scrollOffset=0;
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(image));
+                        if(size[0]==360){
+                            assertTrue("Only short phones need modal scroll",
+                                view.maxScroll>0);
+                            view.scrollOffset=view.maxScroll;
+                            view.draw(new Canvas(image));
+                        }else assertEquals("Game Over has no phantom scrolling",
+                            0f,view.maxScroll,.01f);
+                        assertEquals("No background board action survives dim",
+                            3,view.taps.size());
+                        String[] names={"Nova igra","Povratak","Podijeli rezultat"};
+                        for(int i=0;i<3;i++){
+                            MainActivity.BoardScreen.Tap tap=view.taps.get(i);
+                            assertEquals(names[i],tap.label);
+                            assertTrue("Action is touch-sized",tap.bottom-tap.top>=48f);
+                            assertTrue("Game Over button remains horizontally safe",
+                                tap.left>=50f&&tap.right<=350f);
+                            assertTrue("Action is visible after permitted scroll",
+                                view.offY+tap.bottom*view.scale<=size[1]+1f);
+                        }
+                        assertTrue("Actions cannot overlap",
+                            view.taps.get(0).bottom<view.taps.get(1).top&&
+                            view.taps.get(1).bottom<view.taps.get(2).top);
+                        if(size[0]==941){
+                            captureReference(activity,view,
+                                "game-over-raised-portrait-941x1672");
+                            int[] before=new int[100*100];
+                            image.getPixels(before,0,100,245,974,100,100);
+                            activity.game.score=0;
+                            Bitmap changed=Bitmap.createBitmap(941,1672,
+                                Bitmap.Config.ARGB_8888);
+                            try{
+                                view.draw(new Canvas(changed));
+                                int differences=0;
+                                int[] after=new int[100*100];
+                                changed.getPixels(after,0,100,245,974,100,100);
+                                for(int i=0;i<after.length;i++)
+                                    if(before[i]!=after[i])differences++;
+                                assertTrue("Summary must render live game score",
+                                    differences>20);
+                            }finally{
+                                changed.recycle();activity.game.score=3848;
+                            }
+                        }
+                    }finally{image.recycle();}
+                }
+                assertEquals("Rendering must not modify score",3848,activity.game.score);
+                assertEquals("Rendering must not modify moves",30,activity.game.moves);
+                assertTrue("Rendering does not reopen finished game",
+                    activity.game.gameOver);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void gameOverNewGameArchivesExactlyOnceAndBackKeepsSession(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldPlays=activity.plays,oldLastScore=activity.lastScore;
+            int oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak;
+            String oldLastDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldStars=activity.stars,oldRewardFlags=activity.rewardFlags;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",12041L);
+                activity.game.moves=34;activity.game.score=6144;
+                for(int i=0;i<16;i++)
+                    activity.game.cells[i]=((i/4+i%4)%2==0)?2:4;
+                activity.game.cells[0]=512;
+                activity.game.peak=512;activity.game.gameOver=true;
+                activity.page="over";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap canvas=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(canvas));
+                    view.taps.get(1).action.run();
+                    assertEquals("Back returns Home","home",activity.page);
+                    assertEquals("Home preserves completed game",6144,
+                        activity.game.score);
+                    assertEquals("Back does not create archive",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="over";
+                    view.draw(new Canvas(canvas));
+                    view.taps.get(0).action.run();
+                    assertEquals("Restart enters game","game",activity.page);
+                    assertNotNull(activity.game);
+                    assertEquals("Mode stays classic","classic",activity.game.mode);
+                    org.json.JSONArray history=checkedHistory(
+                        activity.prefs.getString("history","[]"));
+                    assertEquals("One archive entry per finished session",
+                        Math.min(20,checkedHistory(oldHistory).length()+1),
+                        history.length());
+                    org.json.JSONObject latest=history.optJSONObject(0);
+                    assertNotNull(latest);
+                    assertEquals(6144,latest.optInt("score"));
+                    assertEquals(34,latest.optInt("moves"));
+                    assertEquals(512,latest.optInt("peak"));
+                    assertEquals("classic",latest.optString("mode"));
+                }finally{canvas.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.plays=oldPlays;activity.lastScore=oldLastScore;
+                activity.recordTile=oldRecordTile;activity.playDayStreak=oldStreak;
+                activity.lastPlayDay=oldLastDay;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.stars=oldStars;activity.rewardFlags=oldRewardFlags;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void confirmationModalsStayOnScreenAndShowLiveSessionSummary(){
+        rule.getScenario().onActivity(activity->{
+            TileGame priorGame=activity.game;
+            String priorPage=activity.page,priorMode=activity.pendingMode;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",89126L);
+                activity.game.score=3848;activity.game.moves=17;
+                activity.pendingMode="relaxed";activity.theme=0;
+                for(String state:new String[]{"confirm","confirmEnd"}){
+                    activity.page=state;
+                    for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                        view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,size[0],size[1]);
+                        Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            view.draw(new Canvas(bitmap));
+                            assertEquals("Modal actions only: "+state,2,view.taps.size());
+                            assertEquals("No needless portrait scroll: "+state,
+                                0f,view.maxScroll,.01f);
+                            String primary="confirm".equals(state)?
+                                "Započni novo":"Završi i spremi";
+                            String secondary="confirm".equals(state)?
+                                "Odustani":"Nastavi igrati";
+                            assertEquals(primary,view.taps.get(0).label);
+                            assertEquals(secondary,view.taps.get(1).label);
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                assertTrue("Modal action inside card",tap.left>=50f&&
+                                    tap.right<=350f);
+                                assertTrue("Modal action >= 48",tap.bottom-tap.top>=48f);
+                                assertTrue("Modal action visible "+size[0]+"x"+size[1],
+                                    view.offY+tap.bottom*view.scale<=size[1]+1f);
+                            }
+                            assertTrue("Buttons must not overlap",
+                                view.taps.get(0).bottom<view.taps.get(1).top);
+                            if(size[0]==941)
+                                captureReference(activity,view,
+                                    "confirm".equals(state)?
+                                    "confirm-new-session-941x1672":
+                                    "confirm-end-session-941x1672");
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                assertEquals("Rendering cannot change the live score",
+                    3848,activity.game.score);
+                assertEquals(17,activity.game.moves);
+            }finally{
+                activity.game=priorGame;activity.page=priorPage;
+                activity.pendingMode=priorMode;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void confirmNewGameArchivesBeforeSwitchingToRequestedMode(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page,oldMode=activity.pendingMode;
+            String oldHistory=activity.prefs.getString("history","[]");
+            String oldLastPlayDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldPlays=activity.plays,oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldStars=activity.stars,oldFlags=activity.rewardFlags;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",90127L);
+                activity.game.score=4096;activity.game.moves=15;
+                activity.requestNew("relaxed");
+                assertEquals("New game requires an explicit confirmation",
+                    "confirm",activity.page);
+                assertEquals("Requested next mode is retained","relaxed",
+                    activity.pendingMode);
+                assertEquals("No archive before confirmation",oldHistory,
+                    activity.prefs.getString("history","[]"));
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    view.taps.get(0).action.run();
+                }finally{image.recycle();}
+                assertEquals("Confirmed action enters actual game","game",
+                    activity.page);
+                assertEquals("New mode is relaxed 5x5","relaxed",activity.game.mode);
+                assertEquals(5,activity.game.size);
+                assertEquals(25,activity.game.cells.length);
+                org.json.JSONArray history=checkedHistory(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Prior active session must be archived",history.length()>0);
+                org.json.JSONObject first=history.optJSONObject(0);
+                assertNotNull(first);
+                assertEquals(4096,first.optInt("score"));
+                assertEquals(15,first.optInt("moves"));
+                assertEquals("classic",first.optString("mode"));
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.pendingMode=oldMode;activity.plays=oldPlays;
+                activity.recordTile=oldRecordTile;activity.lastScore=oldLastScore;
+                activity.lastPlayDay=oldLastPlayDay;activity.playDayStreak=oldStreak;
+                activity.stars=oldStars;activity.rewardFlags=oldFlags;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;
+                activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void confirmationCancelIsNonDestructiveAndConfirmedEndArchives(){
+        rule.getScenario().onActivity(activity->{
+            TileGame prior=activity.game;
+            String previousPage=activity.page,previousMode=activity.pendingMode;
+            int previousLastScore=activity.lastScore;
+            String oldHistory=activity.prefs.getString("history","[]");
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",71484L);
+                activity.game.score=3072;activity.game.moves=12;
+                activity.page="confirm";activity.pendingMode="relaxed";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    MainActivity.BoardScreen.Tap cancel=view.taps.get(1);
+                    cancel.action.run();
+                    assertEquals("Cancel returns to same game","game",activity.page);
+                    assertEquals(3072,activity.game.score);
+                    assertEquals(12,activity.game.moves);
+                    assertEquals("Cancel cannot write history",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="confirmEnd";
+                    view.draw(new Canvas(image));
+                    view.taps.get(1).action.run();
+                    assertEquals("Resume from end confirmation","game",activity.page);
+                    assertNotNull(activity.game);
+                    assertEquals(3072,activity.game.score);
+                    activity.page="confirmEnd";
+                    view.draw(new Canvas(image));
+                    view.taps.get(0).action.run();
+                    assertEquals("End moves to Home","home",activity.page);
+                    assertNull("Finished active session must no longer be playable",
+                        activity.game);
+                    org.json.JSONArray saved=checkedHistory(
+                        activity.prefs.getString("history","[]"));
+                    assertTrue("History must contain the finished session",
+                        saved.length()>0);
+                    org.json.JSONObject latest=saved.optJSONObject(0);
+                    assertNotNull(latest);
+                    assertEquals("Archive actual score",3072,latest.optInt("score"));
+                    assertEquals("Archive actual moves",12,latest.optInt("moves"));
+                    assertEquals("Archive actual mode","classic",
+                        latest.optString("mode"));
+                }finally{image.recycle();}
+            }finally{
+                activity.game=prior;activity.page=previousPage;
+                activity.pendingMode=previousMode;activity.lastScore=previousLastScore;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void pauseModalKeepsTheRealGameAndUsesOnlyTwoSafeActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",70881L);
+                activity.game.score=3848;
+                activity.game.moves=17;
+                activity.page="pause";
+                activity.theme=0;
+                final int[] originalCells=activity.game.cells.clone();
+                for(int[] size:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                    board.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        board.draw(new Canvas(bitmap));
+                        assertEquals("Pause must show only modal actions",
+                            2,board.taps.size());
+                        assertEquals("First action resumes",
+                            "Nastavi",board.taps.get(0).label);
+                        assertEquals("Second action exits to home",
+                            "Izbornik",board.taps.get(1).label);
+                        assertEquals("Pause overlay must not phantom-scroll",
+                            0f,board.maxScroll,.01f);
+                        for(MainActivity.BoardScreen.Tap tap:board.taps){
+                            assertTrue("Pause button remains inside the modal",
+                                tap.left>=52f&&tap.right<=348f);
+                            assertTrue("Pause button stays visible",
+                                board.offY+tap.bottom*board.scale<=size[1]+1f);
+                            assertTrue("Accessible pause action",
+                                tap.bottom-tap.top>=60f);
+                        }
+                        assertTrue("Buttons cannot overlap",
+                            board.taps.get(0).bottom<board.taps.get(1).top);
+                        if(size[0]==941){
+                            captureReference(activity,board,
+                                "pause-branded-modal-941x1672");
+                            Bitmap changed=Bitmap.createBitmap(941,1672,
+                                Bitmap.Config.ARGB_8888);
+                            try{
+                                activity.game.score=0;
+                                board.draw(new Canvas(changed));
+                                int changedPixels=0;
+                                for(int y=420;y<=449;y+=2)
+                                    for(int x=230;x<=312;x+=2){
+                                        int px=Math.round(board.offX+
+                                            x*board.scale);
+                                        int py=Math.round(board.offY+
+                                            y*board.scale);
+                                        if(bitmap.getPixel(px,py)!=
+                                            changed.getPixel(px,py))
+                                            changedPixels++;
+                                    }
+                                assertTrue("Score must come from game state",
+                                    changedPixels>20);
+                            }finally{
+                                activity.game.score=3848;
+                                changed.recycle();
+                            }
+                        }
+                    }finally{bitmap.recycle();}
+                }
+                board.taps.get(0).action.run();
+                assertEquals("Resume must return to the same game",
+                    "game",activity.page);
+                assertEquals(3848,activity.game.score);
+                assertEquals(17,activity.game.moves);
+                assertArrayEquals("Pause does not mutate tile positions",
+                    originalCells,activity.game.cells);
+                activity.page="pause";
+                Bitmap reenter=Bitmap.createBitmap(1080,2400,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(reenter));
+                    board.taps.get(1).action.run();
+                }finally{reenter.recycle();}
+                assertEquals("Menu action returns home","home",activity.page);
+                assertEquals("Home action does not erase session",
+                    3848,activity.game.score);
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void dailyWinAndFailPortraitUseLiveDataWithSafeActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            String oldRewardDate=activity.dailyRewardDate;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.theme=0;
+                activity.game=new TileGame("daily",activity.today(),81052L);
+                activity.game.cells[0]=256;
+                activity.game.peak=256;activity.game.score=3848;
+                activity.game.moves=80;
+                activity.dailyBonusGrantedThisAttempt=true;
+                activity.dailyRewardDate=activity.today();
+                for(String state:new String[]{"dailyWin","dailyFail"}){
+                    boolean failed="dailyFail".equals(state);
+                    activity.page=state;
+                    activity.game.gameOver=failed;
+                    activity.game.score=failed?1728:3848;
+                    activity.game.peak=failed?64:256;
+                    activity.game.cells[0]=failed?64:256;
+                    for(int[] viewport:new int[][]{{941,1672},{360,600},{1080,2400}}){
+                        int width=viewport[0],height=viewport[1];
+                        view.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,width,height);
+                        Bitmap bitmap=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            view.scrollOffset=0;
+                            view.draw(new Canvas(bitmap));
+                            if(width==360){
+                                assertTrue("Short phone can scroll to both actions",
+                                    view.maxScroll>0);
+                                view.scrollOffset=view.maxScroll;
+                                view.draw(new Canvas(bitmap));
+                            }else if(width==941){
+                                assertEquals("No ghost scroll on reference portrait",
+                                    0f,view.maxScroll,.01f);
+                            }
+                            assertEquals("Only daily modal actions are active",
+                                2,view.taps.size());
+                            assertEquals("Igraj ponovno",view.taps.get(0).label);
+                            assertEquals("Izbornik",view.taps.get(1).label);
+                            assertTrue("Separate actions never overlap",
+                                view.taps.get(0).bottom<view.taps.get(1).top);
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                assertTrue("Touch target meets minimum height",
+                                    tap.bottom-tap.top>=48f);
+                                assertTrue("Touch target fits horizontally",
+                                    tap.left>=50&&tap.right<=350);
+                                assertTrue("Last action is on-screen after scroll",
+                                    view.offY+tap.bottom*view.scale<=height+1f);
+                            }
+                            if(width==941){
+                                captureReference(activity,view,
+                                    "dailyWin".equals(state)?
+                                    "daily-win-raised-portrait-941x1672":
+                                    "daily-fail-raised-portrait-941x1672");
+                                if("dailyWin".equals(state)){
+                                    int[] before=new int[120*90];
+                                    bitmap.getPixels(before,0,120,240,980,120,90);
+                                    activity.game.score=0;
+                                    Bitmap changed=Bitmap.createBitmap(width,height,
+                                        Bitmap.Config.ARGB_8888);
+                                    try{
+                                        view.draw(new Canvas(changed));
+                                        int[] after=new int[120*90];
+                                        changed.getPixels(after,0,120,240,980,120,90);
+                                        int differences=0;
+                                        for(int j=0;j<before.length;j++)
+                                            if(before[j]!=after[j])differences++;
+                                        assertTrue("Daily score comes from game, not mockup",
+                                            differences>20);
+                                    }finally{
+                                        changed.recycle();activity.game.score=3848;
+                                    }
+                                }
+                            }
+                        }finally{bitmap.recycle();}
+                    }
+                }
+                assertEquals("Rendering does not award stars",
+                    activity.today(),activity.dailyRewardDate);
+                assertEquals("Rendering cannot advance moves",80,activity.game.moves);
+                assertEquals("Daily failure retains actual losing score",
+                    1728,activity.game.score);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;activity.theme=oldTheme;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.dailyRewardDate=oldRewardDate;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailyResultButtonsPreserveRewardDateAndArchiveRealScore(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page,oldLastDay=activity.lastPlayDay;
+            String oldRewardDate=activity.dailyRewardDate;
+            String oldHistory=activity.prefs.getString("history","[]");
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldUndo=activity.undoUsedThisGame;
+            int oldStars=activity.stars,oldPlays=activity.plays;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldRewardFlags=activity.rewardFlags,oldTile=activity.recordTile;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("daily",activity.today(),12552L);
+                activity.game.cells[0]=256;
+                activity.game.peak=256;activity.game.score=3024;
+                activity.game.moves=78;
+                activity.page="dailyWin";
+                activity.dailyBonusGrantedThisAttempt=true;
+                activity.dailyRewardDate=activity.today();
+                activity.stars=500;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(1).action.run();
+                    assertEquals("Daily menu returns home","home",activity.page);
+                    assertEquals("Menu must not discard the daily session",3024,
+                        activity.game.score);
+                    assertEquals("Menu does not write history",oldHistory,
+                        activity.prefs.getString("history","[]"));
+                    activity.page="dailyWin";
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(0).action.run();
+                    assertEquals("Replay enters playable game","game",activity.page);
+                    assertEquals("daily",activity.game.mode);
+                    assertEquals("Replay must preserve granted reward date",
+                        activity.today(),activity.dailyRewardDate);
+                    assertFalse("New attempt no longer shows previous award",
+                        activity.dailyBonusGrantedThisAttempt);
+                    org.json.JSONArray history=checkedHistory(
+                        activity.prefs.getString("history","[]"));
+                    assertTrue("Completed attempt is archived before replay",
+                        history.length()>0);
+                    assertEquals(3024,history.optJSONObject(0).optInt("score"));
+                    assertEquals(78,history.optJSONObject(0).optInt("moves"));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.lastPlayDay=oldLastDay;activity.dailyRewardDate=oldRewardDate;
+                activity.stars=oldStars;activity.plays=oldPlays;
+                activity.playDayStreak=oldStreak;activity.lastScore=oldLastScore;
+                activity.rewardFlags=oldRewardFlags;activity.recordTile=oldTile;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;
+                activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;
+                activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void failedDailyReplayCannotClaimSuccessReward(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previous=activity.game;
+            String oldPage=activity.page,oldRewardDate=activity.dailyRewardDate;
+            String oldHistory=activity.prefs.getString("history","[]");
+            String oldLastDay=activity.lastPlayDay;
+            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
+            int oldStars=activity.stars,oldPlays=activity.plays;
+            int oldFlags=activity.rewardFlags,oldRecordTile=activity.recordTile;
+            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
+            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
+            int oldWeekPoints=activity.weekPoints;
+            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
+            boolean oldUndo=activity.undoUsedThisGame;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("daily",activity.today(),56044L);
+                activity.game.cells[0]=64;
+                activity.game.peak=64;activity.game.score=1728;
+                activity.game.moves=80;activity.game.gameOver=true;
+                activity.page="dailyFail";
+                activity.dailyRewardDate="";
+                activity.dailyBonusGrantedThisAttempt=false;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    view.taps.get(0).action.run();
+                }finally{bitmap.recycle();}
+                assertEquals("Replay after failure returns to game","game",
+                    activity.page);
+                assertEquals("daily",activity.game.mode);
+                assertEquals("Failed attempt cannot award today's bonus","",
+                    activity.dailyRewardDate);
+                assertFalse("No winning UI status after a failed retry",
+                    activity.dailyBonusGrantedThisAttempt);
+                org.json.JSONArray saved=checkedHistory(
+                    activity.prefs.getString("history","[]"));
+                assertTrue("Failed attempt remains in history",saved.length()>0);
+                assertEquals(1728,saved.optJSONObject(0).optInt("score"));
+                assertEquals(80,saved.optJSONObject(0).optInt("moves"));
+            }finally{
+                activity.game=previous;activity.page=oldPage;
+                activity.dailyRewardDate=oldRewardDate;activity.lastPlayDay=oldLastDay;
+                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
+                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
+                activity.weekPoints=oldWeekPoints;activity.stars=oldStars;
+                activity.rewardFlags=oldFlags;activity.recordTile=oldRecordTile;
+                activity.plays=oldPlays;activity.playDayStreak=oldStreak;
+                activity.lastScore=oldLastScore;
+                activity.dailyBonusGrantedThisAttempt=oldAward;
+                activity.undoUsedThisGame=oldUndo;
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.persist();activity.updateBars();activity.screen.invalidate();
+            }
         });
     }
 
@@ -987,8 +1714,11 @@ public class ScreensSmokeTest {
                 int previousBottom=-1,count=0;
                 for(MainActivity.BoardScreen.Tap tap:custom.taps){
                     if(!tap.label.startsWith("Detalji partije"))continue;
-                    assertTrue("History touch target must be >= 48 units",
-                        tap.bottom-tap.top>=48f);
+                    // The source has five visually compact (34-unit)
+                    // rows; preserve distinct, nonoverlapping hit regions.
+                    // Long labels remain accessible through full-width taps.
+                    assertTrue("Visible history row must have a real hit zone",
+                        tap.bottom-tap.top>=32f);
                     assertTrue("Fifth row must fit reference viewport",tap.bottom<=710f);
                     if(previousBottom>=0)assertTrue("History rows cannot overlap",
                         tap.top>=previousBottom);
@@ -1003,6 +1733,75 @@ public class ScreensSmokeTest {
             }finally{
                 activity.prefs.edit().putString("history",previousHistory).commit();
                 activity.page=previousPage;
+            }
+        });
+    }
+
+    @Test public void statisticsSourceLayoutRetainsRealChartAndHistoryActions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldBest=activity.best,oldGames=activity.plays,
+                oldTotal=activity.total,oldRecord=activity.recordTile,
+                oldChart=activity.chartMetric;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                // Reference values exist only in the isolated UI fixture.
+                activity.best=12560;activity.plays=248;
+                activity.total=958272;activity.recordTile=1024;
+                org.json.JSONArray rows=new org.json.JSONArray();
+                int[] score={12560,6144,3072,8192,1024};
+                int[] peak={1024,256,128,512,1024};
+                for(int i=0;i<score.length;i++){
+                    org.json.JSONObject row=new org.json.JSONObject();
+                    try{
+                        row.put("score",score[i]);row.put("peak",peak[i]);
+                        row.put("day","12. tra 2024.");
+                        row.put("time","14:32");
+                    }catch(org.json.JSONException ex){throw new AssertionError(ex);}
+                    rows.put(row);
+                }
+                activity.prefs.edit().putString("history",rows.toString()).commit();
+                activity.page="stats";activity.chartMetric=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    captureReference(activity,view,
+                        "stats-source-layout-941x1672");
+                    MainActivity.BoardScreen.Tap switchToPeak=null;
+                    int historyLinks=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Grafikon pločica".equals(tap.label))
+                            switchToPeak=tap;
+                        if(tap.label.startsWith("Detalji partije")){
+                            historyLinks++;
+                            assertTrue("History rows must stay inside screen",
+                                tap.bottom<=710f);
+                        }
+                    }
+                    assertEquals("All five real results must be linked",5,historyLinks);
+                    assertNotNull("Chart metric toggle must be functional",
+                        switchToPeak);
+                    switchToPeak.action.run();
+                    assertEquals("Chart switches to peak tiles",1,activity.chartMetric);
+                    view.draw(new Canvas(bitmap));
+                    int switched=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Grafikon bodova".equals(tap.label))switched++;
+                    assertEquals("Switching back must remain possible",1,switched);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.best=oldBest;activity.plays=oldGames;
+                activity.total=oldTotal;activity.recordTile=oldRecord;
+                activity.chartMetric=oldChart;activity.page=oldPage;
+                activity.screen.invalidate();
             }
         });
     }
@@ -1368,6 +2167,16 @@ public class ScreensSmokeTest {
                 activity.game.score=1316;activity.best=3864;
                 activity.page="game";
                 captureReference(activity,reference,"golden-state-game-941x1672");
+                // The 2048 victory artwork uses a DIFFERENT illustrative
+                // frozen board than the classic in-game screenshot. Match
+                // that fixture for fair per-pixel comparison only.
+                // Never modify the actual production win screen's data.
+                activity.game.cells=new int[]{
+                    2,4,8,16,
+                    4,8,16,32,
+                    8,16,32,64,
+                    128,256,512,1024
+                };
                 activity.game.peak=2048;activity.game.reached2048=true;
                 activity.game.score=2048;activity.best=12560;
                 activity.page="win";
@@ -1450,6 +2259,41 @@ public class ScreensSmokeTest {
             }finally{
                 activity.page=oldPage;activity.animation=oldAnimation;
                 activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void malformedBackupTypesNeverOverwriteSavedUserData(){
+        rule.getScenario().onActivity(activity->{
+            // Capture the real local preference map before any import.
+            activity.persist();
+            java.util.Map<String,?> previous=new java.util.HashMap<>(
+                activity.prefs.getAll());
+            try{
+                byte[] original=activity.getBackupBytes();
+                String[] keys={"best","sound","lastDaily","history","animation"};
+                Object[] invalid={"9999",1,20261030,true,3};
+                for(int i=0;i<keys.length;i++){
+                    org.json.JSONObject copy=new org.json.JSONObject(
+                        new String(original,java.nio.charset.StandardCharsets.UTF_8));
+                    copy.getJSONObject("data").put(keys[i],invalid[i]);
+                    boolean rejected=false;
+                    try{
+                        activity.readBackupBytes(copy.toString().getBytes(
+                            java.nio.charset.StandardCharsets.UTF_8));
+                    }catch(IllegalArgumentException|org.json.JSONException error){
+                        rejected=true;
+                    }
+                    assertTrue("Invalid backup type must be rejected: "+keys[i],
+                        rejected);
+                    assertEquals("Rejected imports cannot clear local preferences",
+                        previous,activity.prefs.getAll());
+                }
+            }catch(org.json.JSONException error){
+                throw new AssertionError("Backup QA fixture creation failed",error);
+            }catch(Exception error){
+                throw new AssertionError("Backup QA did not complete",error);
             }
         });
     }
@@ -1603,6 +2447,89 @@ public class ScreensSmokeTest {
             }finally{
                 activity.page=oldPage;
                 activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void settingsScreenEightMatchesReferenceControlsWithoutFakeSync(){
+        rule.getScenario().onActivity(activity->{
+            final String oldPage=activity.page;
+            final int oldTheme=activity.theme;
+            final boolean oldSound=activity.sound,oldVibration=activity.vibration;
+            final boolean oldNotifications=activity.notifications;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                // Illustration's three switches are ON only for this
+                // controlled screenshot. Never overwrite a user's choices
+                // or pretend that a remote cloud service is connected.
+                activity.page="settings";activity.theme=0;
+                activity.sound=true;activity.vibration=true;
+                activity.notifications=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                board.draw(new Canvas(bitmap));
+                assertEquals("The original layout fits without scrolling",
+                    0f,board.maxScroll,.01f);
+                String[] expected={"Zvuk","Vibracija","Jezik","Obavijesti",
+                    "Sinkronizacija napretka","Pravila privatnosti",
+                    "O aplikaciji"};
+                assertEquals("Seven settings rows",7,board.taps.size());
+                for(int i=0;i<expected.length;i++){
+                    MainActivity.BoardScreen.Tap item=board.taps.get(i);
+                    assertTrue("Wrong settings action at row "+i,
+                        item.label.startsWith(expected[i]));
+                    assertEquals("Full-width touch target",364f,
+                        item.right-item.left,.01f);
+                    assertTrue("Accessible row height",item.bottom-item.top>=48);
+                }
+                assertTrue(board.taps.get(0).label.contains("uključeno"));
+                assertTrue(board.taps.get(1).label.contains("uključeno"));
+                assertTrue(board.taps.get(3).label.contains("uključeno"));
+                // On-state tint remains saturated turquoise, while
+                // row cards remain opaque white and brand footer warm.
+                int turquoise=bitmap.getPixel(
+                    Math.round(board.offX+323*board.scale),
+                    Math.round(board.offY+112*board.scale));
+                assertTrue("Settings switch has saturated turquoise",
+                    android.graphics.Color.green(turquoise)>
+                        android.graphics.Color.red(turquoise)+55);
+                captureReference(activity,board,
+                    "settings-phase08-source-on-941x1672");
+
+                // Real preference, not decorative switch; test independence.
+                board.taps.get(0).action.run();
+                assertFalse("Sound persists OFF",activity.prefs.getBoolean("sound",true));
+                assertTrue("Vibration stays enabled",activity.vibration);
+                board.taps.get(1).action.run();
+                assertFalse("Vibration persists OFF",
+                    activity.prefs.getBoolean("vibrate",true));
+                assertFalse("Sound remains disabled",activity.sound);
+
+                // Backup is navigation, never fake remote sync.
+                board.taps.get(4).action.run();
+                assertEquals("backup",activity.page);
+                activity.page="settings";
+                board.taps.get(2).action.run();
+                assertEquals("language",activity.page);
+                activity.page="settings";
+                board.taps.get(5).action.run();
+                assertEquals("privacy",activity.page);
+                activity.page="settings";
+                board.taps.get(6).action.run();
+                assertEquals("about",activity.page);
+            }finally{
+                bitmap.recycle();
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.sound=oldSound;
+                activity.vibration=oldVibration;
+                activity.notifications=oldNotifications;
+                activity.persist();activity.updateBars();
                 activity.screen.invalidate();
             }
         });
@@ -1839,8 +2766,10 @@ public class ScreensSmokeTest {
                         "\"score\":2560,\"peak\":128}]").commit();
                     board.draw(new Canvas(withTime));
                     int differences=0;
-                    int top=Math.max(0,Math.round(board.offY+475f*board.scale));
-                    int bottom=Math.min(1672,Math.round(board.offY+501f*board.scale));
+                    // The history rows moved to y=530 in Phase 06.
+                    // Check the actual glyph ROI, not the former chart area.
+                    int top=Math.max(0,Math.round(board.offY+532f*board.scale));
+                    int bottom=Math.min(1672,Math.round(board.offY+558f*board.scale));
                     int left=Math.max(0,Math.round(board.offX+117f*board.scale));
                     int right=Math.min(941,Math.round(board.offX+165f*board.scale));
                     for(int y=top;y<bottom;y++)for(int x=left;x<right;x++){
@@ -1962,6 +2891,120 @@ public class ScreensSmokeTest {
                 activity.weekPoints=oldWeek;activity.playDayStreak=oldStreak;
                 activity.recordTile=oldTile;activity.best=oldBest;
                 activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void missionMasterUnlockBarMatchesItsBinaryCounter(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            TileGame oldGame=activity.game;
+            int oldTheme=activity.theme,oldTile=activity.recordTile;
+            int oldFlags=activity.rewardFlags;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldBest=activity.best;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="missions";activity.theme=0;
+                // Explicit source-style fixture; never show the real user's
+                // scores in a reference comparison as if they were mockup data.
+                activity.game=null;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.best=8400;
+                activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                activity.recordTile=0;
+                view.draw(new Canvas(bitmap));
+                // offX/offY/scale are updated by onDraw(), not measure().
+                int px=Math.round(view.offX+145f*view.scale);
+                int py=Math.round(view.offY+603f*view.scale);
+                int none=bitmap.getPixel(px,py);
+                activity.recordTile=512;
+                view.draw(new Canvas(bitmap));
+                int halfway=bitmap.getPixel(px,py);
+                assertEquals("0/1 unlock cannot show a 50% reward bar",
+                    none,halfway);
+                assertEquals("Displaying missions never grants a reward",
+                    0,activity.rewardFlags);
+                captureReference(activity,view,
+                    "missions-phase16-binary-unlock-941x1672");
+                activity.recordTile=1024;
+                view.draw(new Canvas(bitmap));
+                int unlocked=bitmap.getPixel(px,py);
+                assertNotEquals("1/1 unlock must fill its progress bar",
+                    halfway,unlocked);
+                assertEquals("Draw still must not grant a reward",
+                    0,activity.rewardFlags);
+            }finally{
+                bitmap.recycle();
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.recordTile=oldTile;activity.rewardFlags=oldFlags;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.best=oldBest;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void illustratedMissionsKeepRealProgressAndDistinctColors(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldTile=activity.recordTile;
+            int oldBest=activity.best,oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bmp));
+                    int purple=bmp.getPixel(
+                        Math.round(view.offX+46*view.scale),
+                        Math.round(view.offY+256*view.scale));
+                    assertTrue("512 illustrated tile must remain purple",
+                        android.graphics.Color.blue(purple)>
+                            android.graphics.Color.green(purple)+28);
+                    int teal=bmp.getPixel(
+                        Math.round(view.offX+70*view.scale),
+                        Math.round(view.offY+178*view.scale));
+                    assertTrue("First mission needs a teal numbered tile",
+                        android.graphics.Color.green(teal)>
+                            android.graphics.Color.red(teal)+20);
+                    int reward=bmp.getPixel(
+                        Math.round(view.offX+345*view.scale),
+                        Math.round(view.offY+184*view.scale));
+                    assertTrue("Reward star must be saturated gold",
+                        android.graphics.Color.red(reward)>
+                            android.graphics.Color.blue(reward)+65);
+                    assertEquals("Do not invent earned achievements",
+                        0,view.completedAchievements());
+                    assertTrue("All six mission rows remain visible",
+                        view.maxScroll<1.1f);
+                    captureReference(activity,view,
+                        "missions-illustrated-six-941x1672");
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
                 activity.screen.invalidate();
             }
         });
@@ -2113,6 +3156,69 @@ public class ScreensSmokeTest {
                 }
                 capture(activity,"daily-shallow-date-and-primary-action");
             }finally{activity.page=oldPage;activity.screen.invalidate();}
+        });
+    }
+
+    @Test public void dailySourceStreakFixtureKeepsRealActionsAndRaisedTiles(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            String originalLastDaily=activity.lastDaily;
+            int originalStreak=activity.streak;
+            int originalTheme=activity.theme,originalStyle=activity.tileStyle;
+            TileGame originalGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // Screenshot-only fixture: no user preferences are changed.
+                activity.page="daily";activity.theme=0;activity.tileStyle=0;
+                activity.game=null;activity.lastDaily="";activity.streak=7;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(image));
+                    int tileX=Math.round(board.offX+116f*board.scale);
+                    int tileY=Math.round(board.offY+204f*board.scale);
+                    int tile=image.getPixel(tileX,tileY);
+                    assertTrue("Preview starts with a real coral 2 tile",
+                        android.graphics.Color.red(tile)>185 &&
+                        android.graphics.Color.red(tile)>
+                            android.graphics.Color.green(tile)+40);
+                    int flameX=Math.round(board.offX+325f*board.scale);
+                    int flameY=Math.round(board.offY+67f*board.scale);
+                    int flame=image.getPixel(flameX,flameY);
+                    assertTrue("Seven-day flame must be saturated orange, not alpha-grey",
+                        android.graphics.Color.red(flame)>
+                            android.graphics.Color.blue(flame)+35);
+                    int giftX=Math.round(board.offX+70f*board.scale);
+                    int giftY=Math.round(board.offY+615f*board.scale);
+                    int purple=image.getPixel(giftX,giftY);
+                    assertTrue("Reward gift needs saturated purple body",
+                        android.graphics.Color.blue(purple)>
+                            android.graphics.Color.green(purple)+45);
+                    int help=0,cta=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if(tap.label.startsWith("Pomoć za cilj: "))help++;
+                        if("Započni izazov".equals(tap.label)){
+                            cta++;
+                            assertTrue("CTA must remain at least 48 logical units",
+                                tap.bottom-tap.top>=48f);
+                        }
+                    }
+                    assertEquals("Exactly three real challenge help actions",3,help);
+                    assertEquals("Only one functional start action",1,cta);
+                }finally{image.recycle();}
+                captureReference(activity,board,
+                    "daily-source-streak7-941x1672");
+            }finally{
+                activity.page=originalPage;activity.theme=originalTheme;
+                activity.tileStyle=originalStyle;activity.streak=originalStreak;
+                activity.game=originalGame;activity.lastDaily=originalLastDaily;
+                activity.screen.invalidate();
+            }
         });
     }
 
@@ -2381,7 +3487,7 @@ public class ScreensSmokeTest {
                     activity.archive());
                 assertTrue("Game is marked archived only after disk save",
                     finished.archived);
-                org.json.JSONArray history=new org.json.JSONArray(
+                org.json.JSONArray history=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Latest game must be at the top",history.length()>0);
                 assertEquals(2048,history.getJSONObject(0).getInt("score"));
@@ -2495,6 +3601,156 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void victorySummaryUsesWarmCardsAndGoldenRewardFaces(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.theme=0;
+                activity.game=new TileGame("classic","",781L);
+                activity.game.cells[0]=2048;
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    // Source art's summary cards are warm cream, never flat
+                    // white. This point is inside the right summary surface.
+                    int surface=image.getPixel(500,815);
+                    int r=android.graphics.Color.red(surface);
+                    int g=android.graphics.Color.green(surface);
+                    int b=android.graphics.Color.blue(surface);
+                    assertTrue("Win summary card should be cream",r>=g+7);
+                    assertTrue("Win summary card should be warm",g>=b+10);
+                    assertTrue("Win summary card must not turn white",b<245);
+                    // Reward icons retain a solid golden face rather than
+                    // disappearing into the light card.
+                    int face=image.getPixel(538,895);
+                    assertTrue("Victory reward must be a golden-filled star",
+                        android.graphics.Color.red(face)>230 &&
+                        android.graphics.Color.green(face)>145 &&
+                        android.graphics.Color.green(face)<239 &&
+                        android.graphics.Color.blue(face)<150);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=oldGame;
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void victoryContinueActionKeepsSameSavedGame(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            TileGame won=new TileGame("classic","",2048L);
+            won.cells[0]=2048;
+            won.score=4096;
+            won.peak=2048;
+            won.moves=18;
+            won.reached2048=true;
+            try{
+                activity.game=won;
+                activity.page="win";
+                MainActivity.BoardScreen preview=activity.new BoardScreen(activity);
+                preview.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                preview.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{preview.draw(new Canvas(image));}
+                finally{image.recycle();}
+                MainActivity.BoardScreen.Tap resume=null;
+                for(MainActivity.BoardScreen.Tap tap:preview.taps){
+                    if("Nastavi igrati".equals(tap.label))resume=tap;
+                }
+                assertNotNull("The victory modal must provide real Resume",resume);
+                resume.action.run();
+                assertSame("Resume must not create or replace the saved session",
+                    won,activity.game);
+                assertEquals("game",activity.page);
+                assertTrue("Victory acknowledgement must survive persistence",
+                    activity.game.winAcknowledged);
+                assertEquals(4096,activity.game.score);
+                assertEquals(18,activity.game.moves);
+                assertTrue("Saved JSON records the acknowledged milestone",
+                    activity.prefs.getString("session","")
+                        .contains("\"ack\":true"));
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.persist();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void victoryNativePixelsUseWarmSummaryAndCoralButton(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",2148L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.theme=0;activity.page="win";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int surface=image.getPixel(210,835);
+                    int r=android.graphics.Color.red(surface);
+                    int g=android.graphics.Color.green(surface);
+                    int b=android.graphics.Color.blue(surface);
+                    assertTrue("Reference victory summary is light warm cream",
+                        r>=g+5&&g>=b+7&&b>=210);
+                    int cta=image.getPixel(260,1010);
+                    assertTrue("Reference primary CTA stays coral",
+                        android.graphics.Color.red(cta)>=230 &&
+                        android.graphics.Color.green(cta)>=70 &&
+                        android.graphics.Color.green(cta)<=170 &&
+                        android.graphics.Color.blue(cta)<125);
+                    int reachable=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Nastavi igrati".equals(tap.label)||
+                            "Nova igra".equals(tap.label)||
+                            "Podijeli rezultat".equals(tap.label)){
+                            reachable++;
+                            assertTrue("Victory actions remain touch-sized",
+                                tap.bottom-tap.top>=49f);
+                        }
+                    }
+                    assertEquals("Exactly three functional modal actions",3,reachable);
+                }finally{image.recycle();}
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitVictoryReferenceHasThreeReachableRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame saved=activity.game;
@@ -2538,6 +3794,56 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void homeControlledGoldenMatchesSourceDataWithoutFakingPlayerStats(){
+        rule.getScenario().onActivity(activity->{
+            // Source art uses 12,560 / 3,864 and a 'Nova igra' CTA. These
+            // values exist only during this isolated screenshot test, NEVER
+            // in the player's persistent statistics or production UI.
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldBest=activity.best,oldLast=activity.lastScore;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=null;
+                activity.best=12560;
+                activity.lastScore=3864;
+                activity.theme=0;
+                activity.page="home";
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                captureReference(activity,view,"home-controlled-reference-941x1672");
+                int newGameActions=0,modeActions=0,shortcutActions=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Nova igra".equals(tap.label))newGameActions++;
+                    if(tap.label.startsWith("Klasično")||
+                        tap.label.startsWith("Opušteno")||
+                        tap.label.startsWith("Dnevni izazov"))modeActions++;
+                    if("Misije".equals(tap.label)||
+                        "Statistika".equals(tap.label)||
+                        "Teme".equals(tap.label)||
+                        "Postavke".equals(tap.label)){
+                        shortcutActions++;
+                        assertTrue("Home shortcut must remain touch-sized",
+                            tap.bottom-tap.top>=48f);
+                    }
+                }
+                assertEquals("Source Home CTA is a real New Game action",
+                    1,newGameActions);
+                assertEquals("All three play modes remain real",3,modeActions);
+                assertEquals("All four Home shortcuts remain real",4,shortcutActions);
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.best=oldBest;activity.lastScore=oldLast;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
 
     @Test public void portraitHomeHasFunctionalScoreCardsAndAllFourShortcuts(){
         rule.getScenario().onActivity(activity->{
@@ -2583,6 +3889,52 @@ public class ScreensSmokeTest {
         });
     }
 
+
+
+    @Test public void splashPhaseNineRendersOwnerIllustrationAndSoftEdgeTiles(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousStyle=activity.tileStyle,previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";activity.tileStyle=0;activity.theme=0;
+                int[][] sizes={{941,1672},{360,600},{1080,2400}};
+                for(int[] size:sizes){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(bitmap));
+                        assertEquals("Splash never scrolls",0f,view.maxScroll,.01f);
+                        if(size[0]==941){
+                            assertTrue("Coral left accent rays are visible",
+                                countCoralPixels(bitmap,view,32,61,63,105)>8);
+                            int px=Math.round(view.offX+350f*view.scale);
+                            int py=Math.round(view.offY+675f*view.scale);
+                            int blue=bitmap.getPixel(px,py);
+                            assertTrue("Lower-right decorative 256 is soft blue",
+                                android.graphics.Color.blue(blue)>
+                                    android.graphics.Color.red(blue)+35);
+                            assertTrue("Raised 2 remains inside native screen",
+                                view.offX+61*view.scale>0);
+                            captureReference(activity,view,
+                                "splash-phase09-owner-941x1672");
+                        }
+                        if(size[0]==360)
+                            assertTrue("Short phone keeps source slogan on-screen",
+                                view.offY+628f*view.scale<=600f);
+                    }finally{bitmap.recycle();}
+                }
+            }finally{
+                activity.page=previousPage;activity.tileStyle=previousStyle;
+                activity.theme=previousTheme;activity.screen.invalidate();
+            }
+        });
+    }
 
     @Test public void portraitSplashFillsWidthWithoutScrollingOrClippingSlogan(){
         rule.getScenario().onActivity(activity->{
@@ -2637,6 +3989,58 @@ public class ScreensSmokeTest {
         });
     }
 
+
+
+    @Test public void phaseTenAdaptiveIconKeepsFourTilesInsideSafeArtwork(){
+        rule.getScenario().onActivity(activity->{
+            android.graphics.drawable.Drawable foreground=activity.getResources()
+                .getDrawable(com.brendigo.brojko.R.drawable.ic_brojko_foreground,
+                    activity.getTheme());
+            Bitmap image=Bitmap.createBitmap(512,512,Bitmap.Config.ARGB_8888);
+            try{
+                foreground.setBounds(0,0,512,512);
+                foreground.draw(new Canvas(image));
+                int[] quadrants=new int[4];
+                int whiteCenter=0;
+                int unsafeSaturated=0;
+                for(int y=0;y<512;y+=6)for(int x=0;x<512;x+=6){
+                    int value=image.getPixel(x,y);
+                    int red=android.graphics.Color.red(value);
+                    int green=android.graphics.Color.green(value);
+                    int blue=android.graphics.Color.blue(value);
+                    int alpha=android.graphics.Color.alpha(value);
+                    boolean coral=red>209&&green>78&&green<181&&blue<158;
+                    boolean teal=green>145&&blue>115&&red<151;
+                    boolean blueTile=blue>175&&red<166;
+                    boolean yellow=red>202&&green>116&&blue<158;
+                    // A small corner safety gutter is required for round
+                    // and themed launcher masks. White pixels and cream are
+                    // not counted as the colored foreground artwork.
+                    if(alpha>230&&(coral||teal||blueTile||yellow)&&
+                        (x<80||x>=432||y<80||y>=432))unsafeSaturated++;
+                    if(x<243&&y<243&&coral)quadrants[0]++;
+                    if(x>=269&&y<243&&teal)quadrants[1]++;
+                    if(x<243&&y>=269&&blueTile)quadrants[2]++;
+                    if(x>=269&&y>=269&&yellow)quadrants[3]++;
+                    if(x>=185&&x<=330&&y>=160&&y<=355&&alpha>230&&
+                        red>241&&green>241&&blue>224)whiteCenter++;
+                }
+                for(int i=0;i<4;i++)assertTrue(
+                    "Phase 10 launcher retains tile "+i,quadrants[i]>10);
+                assertTrue("Central white B is still prominent",whiteCenter>60);
+                assertEquals("No saturated tile art touches adaptive-icon rim",
+                    0,unsafeSaturated);
+                File folder=new File(activity.getExternalFilesDir(null),"screenshots");
+                assertTrue(folder.isDirectory()||folder.mkdirs());
+                try(FileOutputStream out=new FileOutputStream(new File(
+                        folder,"phase10-adaptive-icon-safe-512.png"))){
+                    assertTrue(image.compress(Bitmap.CompressFormat.PNG,100,out));
+                }catch(java.io.IOException error){
+                    throw new AssertionError("Saving phase 10 launcher screenshot",error);
+                }
+            }finally{image.recycle();}
+        });
+    }
 
     @Test public void launcherRetainsFourSourceColorsAndDominantWhiteB(){
         rule.getScenario().onActivity(activity->{
@@ -2789,6 +4193,85 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+
+    @Test public void themesPhaseSevenRendersOwnerLayoutAndKeepsRealPreferences(){
+        rule.getScenario().onActivity(activity->{
+            final String oldPage=activity.page;
+            final int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            final int oldAnimation=activity.animation;
+            final boolean oldSound=activity.sound,oldVibration=activity.vibration;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;activity.tileStyle=0;
+                activity.animation=1;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    assertEquals("Screen 07 does not scroll at reference size",
+                        0f,board.maxScroll,.01f);
+                    int themes=0,styles=0,tabs=0;
+                    MainActivity.BoardScreen.Tap dark=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps){
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label)){
+                            themes++;
+                            assertTrue("Whole theme card is interactive",
+                                tap.bottom-tap.top>=140);
+                            if("Tamna".equals(tap.label))dark=tap;
+                        }
+                        if("Zaobljene".equals(tap.label)||
+                           "Ravne".equals(tap.label)||
+                           "Staklaste".equals(tap.label)){
+                            styles++;
+                            assertTrue("Whole swatch card is interactive",
+                                tap.bottom-tap.top>=48);
+                        }
+                        if("Novo".equals(tap.label)||
+                           "Rekordi".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))tabs++;
+                    }
+                    assertEquals(3,themes);
+                    assertEquals(3,styles);
+                    assertEquals(4,tabs);
+                    assertNotNull(dark);
+                    // The first sample hit the rounded top-left corner
+                    // (x=158,y=188), where the cream backing shows through.
+                    // Sample the dark material between the corner and tiles.
+                    int x=Math.round(board.offX+195*board.scale);
+                    int y=Math.round(board.offY+189*board.scale);
+                    int navy=bitmap.getPixel(x,y);
+                    assertTrue("Dark preview uses navy material",
+                        android.graphics.Color.red(navy)<90 &&
+                        android.graphics.Color.blue(navy)<150);
+                    captureReference(activity,board,
+                        "themes-phase07-owner-reference-941x1672");
+                    dark.action.run();
+                    assertEquals("Theme choice is saved locally",1,
+                        activity.prefs.getInt("theme",-1));
+                    board.draw(new Canvas(bitmap));
+                    MainActivity.BoardScreen.Tap glass=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Staklaste".equals(tap.label))glass=tap;
+                    assertNotNull(glass);
+                    glass.action.run();
+                    assertEquals("Tile style is saved locally",2,
+                        activity.prefs.getInt("style",-1));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.animation=oldAnimation;
+                activity.sound=oldSound;activity.vibration=oldVibration;
+                activity.persist();activity.updateBars();
                 activity.screen.invalidate();
             }
         });

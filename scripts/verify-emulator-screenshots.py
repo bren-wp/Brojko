@@ -14,14 +14,28 @@ ROOT = Path("android-screenshots/screenshots")
 TEST_LOG = Path("instrumentation-results.txt")
 CAPTURES = (
     "splash-full-width-portrait-reference-941x1672.png",
+    "splash-phase09-owner-941x1672.png",
+    "pause-branded-modal-941x1672.png",
+    "confirm-new-session-941x1672.png",
+    "confirm-end-session-941x1672.png",
+    "game-over-raised-portrait-941x1672.png",
+    "daily-win-raised-portrait-941x1672.png",
+    "daily-fail-raised-portrait-941x1672.png",
     "home-source-accent-rays-941x1672.png",
+    "home-controlled-reference-941x1672.png",
     "golden-state-game-941x1672.png",
     "golden-state-win-941x1672.png",
     "daily-large-safe-primary-rays-941x1672.png",
+    "daily-source-streak7-941x1672.png",
     "missions-six-real-progress-941x1672.png",
+    "missions-illustrated-six-941x1672.png",
+    "missions-phase16-binary-unlock-941x1672.png",
     "golden-state-stats-941x1672.png",
+    "stats-source-layout-941x1672.png",
     "themes-peach-style-swatches-941x1672.png",
+    "themes-phase07-owner-reference-941x1672.png",
     "reference-settings-polished-941x1672.png",
+    "settings-phase08-source-on-941x1672.png",
 )
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 COMPACT_CAPTURES = (
@@ -73,6 +87,7 @@ def verify() -> None:
     for name, expected_size in (
         *((name, (941, 1672)) for name in CAPTURES),
         *((name, (360, 600)) for name in COMPACT_CAPTURES),
+        ("phase10-adaptive-icon-safe-512.png", (512, 512)),
     ):
         path = ROOT / name
         if not path.is_file():

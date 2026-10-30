@@ -54,6 +54,18 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
+    // Reuse immutable victory lettering data; no array allocations in onDraw.
+    private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
+    private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
+    private static final float[] VICTORY_RISE={2f,-2f,1f,-1f,0f,-3f};
+    // B and exclamation are deliberately oversized in the source logo.
+    private static final float[] VICTORY_WIDTH={1.24f,1f,1f,1f,1f,1.35f};
+    private static final float[] VICTORY_HEIGHT={1.2f,1f,1f,1f,1f,1.08f};
+    // Immutable mission pictogram data: avoid new arrays on every redraw.
+    private static final int[] MISSION_TILE_VALUES={2,4,8,16};
+    private static final float[][] MISSION_CORAL_RAYS={
+        {-10f,-10f,-33f},{11f,-7f,38f},{-12f,12f,36f}
+    };
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -393,6 +405,13 @@ public final class MainActivity extends ComponentActivity {
             page="dailyFail";
         }else if(result.first2048)page="win";
         else if(result.lost){page="daily".equals(game.mode)?"dailyFail":"over";}
+        if("win".equals(page)){
+            String announcement="Bravo! Dosegnuli ste pločicu 2048. "
+                +"Tvoj rezultat je "+fmt(game.score)+".";
+            screen.setContentDescription(announcement+
+                " Nastavi igrati, Nova igra ili Podijeli rezultat.");
+            screen.announceForAccessibility(announcement);
+        }
         persist();animate();
     }
     void endSession(){
@@ -484,21 +503,35 @@ public final class MainActivity extends ComponentActivity {
             JSONArray history=new JSONArray(data.getString("history"));
             if(history.length()>200)throw new IllegalArgumentException("Oštećena povijest partija.");
         }
+        // Validate each key against its actual SharedPreferences storage
+        // type before clearing any existing settings. A backup with e.g.
+        // "best":"100" previously committed successfully, then getInt()
+        // crashed on the next launch. Never coerce untrusted JSON values.
         for(String key:BACKUP_KEYS){
             if(!data.has(key))continue;
             Object value=data.get(key);
-            Object expected=prefs.getAll().get(key);
-            if(value instanceof Integer){
-                if(((Integer)value)<0&&!key.equals("theme"))throw new IllegalArgumentException("Nevaljani podatci.");
-            }else if(!(value instanceof String) && !(value instanceof Boolean))
-                throw new IllegalArgumentException("Nevaljani podatci.");
-            if(key.equals("theme")||key.equals("style")||key.equals("animation")){
-                if(!(value instanceof Integer)||((Integer)value)>2||((Integer)value)<0)
+            boolean booleanKey=key.equals("sound")||key.equals("vibrate")||
+                key.equals("notifications")||key.equals("undoUsedThisGame");
+            boolean stringKey=key.equals("session")||key.equals("history")||
+                key.equals("lastDaily")||key.equals("dailyRewardDate")||
+                key.equals("statsDay")||key.equals("weekStart")||
+                key.equals("lastPlayDay");
+            if(booleanKey){
+                if(!(value instanceof Boolean))
+                    throw new IllegalArgumentException("Nevaljana logička postavka.");
+            }else if(stringKey){
+                if(!(value instanceof String))
+                    throw new IllegalArgumentException("Nevaljani tekstualni podatci.");
+                if(!key.equals("session")&&!key.equals("history")&&
+                    ((String)value).length()>20)
+                    throw new IllegalArgumentException("Nevaljani datum.");
+            }else{
+                if(!(value instanceof Integer)||((Integer)value)<0)
+                    throw new IllegalArgumentException("Nevaljani brojčani podatci.");
+                if((key.equals("theme")||key.equals("style")||
+                    key.equals("animation"))&&((Integer)value)>2)
                     throw new IllegalArgumentException("Nevaljane postavke.");
             }
-            if((key.equals("sound")||key.equals("vibrate")||
-                (key.equals("notifications")||key.equals("undoUsedThisGame")))&&!(value instanceof Boolean))
-                throw new IllegalArgumentException("Nevaljane postavke.");
         }
         SharedPreferences.Editor editor=prefs.edit().clear();
         for(String key:BACKUP_KEYS){
@@ -896,17 +929,21 @@ public final class MainActivity extends ComponentActivity {
                 float[] xs=new float[10],ys=new float[10];
                 for(int i=0;i<10;i++){
                     double angle=-Math.PI/2+i*Math.PI/5;
-                    float radius=i%2==0?10.6f:5.35f;
+                    // Only the victory card uses the soft, pillow-like points
+                // of the owner's 941x1672 reward illustration.
+                float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
+                    (page.equals("win")?5.15f:5.35f);
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
                 Path star=new Path();
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
-                    float startX=xs[i]*.82f+xs[prev]*.18f;
-                    float startY=ys[i]*.82f+ys[prev]*.18f;
-                    float endX=xs[i]*.82f+xs[next]*.18f;
-                    float endY=ys[i]*.82f+ys[next]*.18f;
+                    float corner=page.equals("win")?.73f:.82f;
+                    float startX=xs[i]*corner+xs[prev]*(1f-corner);
+                    float startY=ys[i]*corner+ys[prev]*(1f-corner);
+                    float endX=xs[i]*corner+xs[next]*(1f-corner);
+                    float endY=ys[i]*corner+ys[next]*(1f-corner);
                     if(i==0)star.moveTo(startX,startY);
                     else star.lineTo(startX,startY);
                     star.quadTo(xs[i],ys[i],endX,endY);
@@ -916,11 +953,15 @@ public final class MainActivity extends ComponentActivity {
                 // Respect the supplied accent instead of recoloring every star.
                 boolean golden=Color.red(color)>200 &&
                     Color.green(color)>100&&Color.blue(color)<140;
-                int rim=golden?0xffe48408:darken(color,.28f);
-                int top=golden?0xffffed87:lighten(color,.43f);
-                // Reference's golden rewards have an orange rounded
-                // bevel, not a pale nearly-white perimeter.
-                int edge=golden?0xffff9f19:lighten(color,.69f);
+                boolean victoryGold=golden&&page.equals("win");
+                int rim=victoryGold?0xffe88b10:
+                    golden?0xffe48408:darken(color,.28f);
+                int top=victoryGold?0xffffdc65:
+                    golden?0xffffed87:lighten(color,.43f);
+                // The victory stars are filled golden-orange with soft tips,
+                // rather than the lighter outline-like mission style.
+                int edge=victoryGold?0xffffa722:
+                    golden?0xffff9f19:lighten(color,.69f);
                 c.save();c.translate(0,1.6f);
                 p.setColor(rim);c.drawPath(star,p);
                 c.restore();
@@ -928,13 +969,15 @@ public final class MainActivity extends ComponentActivity {
                     top,color,Shader.TileMode.CLAMP));
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeJoin(Paint.Join.ROUND);p.setStrokeWidth(1.05f);
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(victoryGold?.72f:1.05f);
                 p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
-                // The broad glint is intentional: screenshot pixel QA
-                // showed a better reward match without the clipped highlight.
+                // Keep the original broad glint outside the victory modal;
+                // its 3D stars instead have a subtle warm highlight.
                 p.setShader(new LinearGradient(6,4,17,12,
-                    0x7fffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                    victoryGold?0x40ffffff:0x7fffffff,
+                    0x00ffffff,Shader.TileMode.CLAMP));
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
             }else if("flame".equals(type)){
@@ -948,6 +991,10 @@ public final class MainActivity extends ComponentActivity {
                 flame.close();
                 c.save();c.translate(0,1f);p.setColor(0x270b1740);
                 c.drawPath(flame,p);c.restore();
+                // setColor(0x27...) above also sets Paint alpha to 15%.
+                // Restore opaque paint before the Daily streak gradient;
+                // otherwise the orange flame looks washed-out grey.
+                if("daily".equals(page))p.setColor(WHITE);
                 p.setShader(new LinearGradient(4,2,18,23,
                     lighten(color,.26f),darken(color,.07f),
                     Shader.TileMode.CLAMP));
@@ -1163,18 +1210,34 @@ public final class MainActivity extends ComponentActivity {
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
                 boolean homeHero=page.equals("home")&&w>=280;
-                float lip=flatDaily?2.5f:homeHero?6f:5f;
+                boolean victoryPrimary=page.equals("win")&&
+                    "Nastavi igrati".equals(label);
+                boolean victoryShare=page.equals("win")&&
+                    "Podijeli rezultat".equals(label);
+                float lip=flatDaily?2.5f:homeHero?6f:
+                    (victoryPrimary||victoryShare?2.7f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
-                shape(x,y+lip,w,h,radius,homeHero?
-                    0xffda4932:darken(color,flatDaily?.13f:.23f));
+                shape(x,y+lip,w,h,radius,
+                    flatDaily?0xffd94a33:
+                    victoryPrimary?0xffd8432f:
+                    victoryShare?0xff2467c9:
+                    homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
-                    homeHero?0xffff945d:lighten(color,flatDaily?.10f:.18f),
-                    homeHero?0xffff5b38:color);
+                    flatDaily?0xffff8a60:
+                    victoryPrimary?0xffff8054:
+                    victoryShare?0xff66b0fc:
+                    homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
+                    flatDaily?0xffff593a:
+                    victoryPrimary?0xffff5134:
+                    victoryShare?0xff2f83ec:
+                    homeHero?0xffff5837:color);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(flatDaily?.9f:1.2f);
-                p.setColor(0x86ffffff);
+                p.setStrokeWidth(flatDaily?.9f:
+                    (victoryPrimary||victoryShare?.75f:1.2f));
+                p.setColor(flatDaily||victoryPrimary||victoryShare?
+                    0x48ffffff:0x86ffffff);
                 c.drawRoundRect(x+3,y+2,x+w-3,
                     y+h-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
@@ -1184,8 +1247,18 @@ public final class MainActivity extends ComponentActivity {
                 // blended into the canvas. Leave small header controls and
                 // every other screen unchanged.
                 boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
-                card(x,y,w,h,radius,
-                    raisedGameAction&&theme!=1?0xfffff3e5:color);
+                boolean victorySecondary=page.equals("win")&&
+                    "Nova igra".equals(label)&&theme!=1;
+                if(victorySecondary){
+                    // A warm, raised but borderless reference pill. Do not
+                    // alter the same shared component outside the win modal.
+                    shape(x,y+1.7f,w,h-1,radius,0xffe6d4c0);
+                    gradient(x,y,w,h-2.2f,radius,
+                        0xfffff7ea,0xfff0e3d1);
+                }else{
+                    card(x,y,w,h,radius,
+                        raisedGameAction&&theme!=1?0xfffff3e5:color);
+                }
             }
             boolean hasSymbol=symbol!=null;
             int iconColor=prominent?WHITE:ink;
@@ -1194,15 +1267,30 @@ public final class MainActivity extends ComponentActivity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=280;
-                if(hasSymbol)icon(symbol,x+(prominent?
-                    (page.equals("daily")&&referencePortraitLayout&&w>=300?
-                        80:Math.min(58,w*.21f)):25),
-                    y+h/2,Math.min(prominent?
-                        (page.equals("daily")?34:homeHero?43:33):23,
-                        h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
+                if(hasSymbol){
+                    boolean winSecondary=page.equals("win")&&
+                        "Nova igra".equals(label);
+                    boolean winShare=page.equals("win")&&
+                        "Podijeli rezultat".equals(label);
+                    float iconX=x+(winSecondary?78f:winShare?69f:
+                        prominent?(page.equals("daily")&&
+                        referencePortraitLayout&&w>=300?80f:
+                        Math.min(58f,w*.21f)):25f);
+                    if(winSecondary)
+                        victoryRestartIcon(iconX,y+h/2f,29f,iconColor);
+                    else if(page.equals("daily")&&prominent&&
+                        "play".equals(symbol))
+                        dailyPlayGlyph(iconX,y+h/2f,32f,iconColor);
+                    else icon(symbol,iconX,y+h/2,
+                        Math.min(prominent?
+                            (page.equals("daily")?34:homeHero?43:33):23,
+                            h*(page.equals("daily")?.65f:
+                                homeHero?.57f:.52f)),iconColor);
+                }
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&label.length()>10?w*.62f:w*.58f):
-                    (w+38)/2):w/2);
+                    (page.equals("win")&&"Nova igra".equals(label)?
+                        w*.59f:(w+38f)/2f)):w/2f);
                 int labelColor=prominent?WHITE:ink;
                 float font=prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
@@ -1286,16 +1374,23 @@ public final class MainActivity extends ComponentActivity {
                     Math.min(usableWidth/400f,usableHeight/880f));
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
-                    Math.max(710f,466f+Math.min(5,history().length())*48f)
+                    (statsTouchExploration()?
+                        Math.max(710f,545f+Math.min(5,history().length())*48f):
+                        710f)
                     :1120f):
                 // All Home shortcuts end at y=690 plus their card shadows.
                 // The old 880-unit height caused ~170 units of empty scrolling
                 // at the original 941x1672 reference viewport. Preserve real
                 // scrolling on shorter devices without cropping any shortcut.
+                ((page.equals("pause")||page.equals("confirm")||
+                    page.equals("confirmEnd"))&&referencePortraitLayout?654f:
+                (page.equals("over")&&referencePortraitLayout?705f:
+                ((page.equals("dailyWin")||page.equals("dailyFail"))&&
+                    referencePortraitLayout?700f:
                 (page.equals("home")&&referencePortraitLayout?710f:
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f));
+                    referencePortraitLayout?710f:880f)))));
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -1356,10 +1451,64 @@ public final class MainActivity extends ComponentActivity {
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
         void splashAmbient(float x,float y,float width,float height,
                            float rotation,int color){
+            // Decorative distant tiles: soft-focus silhouettes only.
+            // Keep all blur drawing local to Splash, not active game cells.
             c.save();c.rotate(rotation,x+width/2,y+height/2);
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);p.setShader(null);
-            p.setColor(color);p.setShadowLayer(20f,0,0,color);
+            p.setColor(color);p.setShadowLayer(24f,0,0,color);
             c.drawRoundRect(x,y,x+width,y+height,17,17,p);
+            p.clearShadowLayer();c.restore();
+        }
+        void splashFloatingTile(float x,float y,float w,float h,
+                                float radius,int color){
+            // Native illustration-like extrusion and highlight. Other
+            // screens continue using their established styledTile renderer.
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setShader(null);p.setColor(0xfff8eee2);
+            p.setShadowLayer(13f,0f,7f,0x3ca9835a);
+            c.drawRoundRect(x+1.7f,y+2.4f,x+w+1.2f,y+h+1.8f,
+                radius,radius,p);
+            p.clearShadowLayer();
+            shape(x+1f,y+4.5f,w-1f,h-3f,radius,darken(color,.13f));
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,w,h-4f,radius,
+                lighten(color,.20f),darken(color,.035f));
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.5f);p.setColor(0x77ffffff);
+            c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
+                radius-2,radius-2,p);
+            p.setStrokeWidth(1.8f);p.setColor(0x42ffffff);
+            Path gleam=new Path();
+            gleam.moveTo(x+radius*.64f,y+5f);
+            gleam.quadTo(x+5,y+5,x+5,y+radius*.75f);
+            c.drawPath(gleam,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
+        }
+        void splashAccentStroke(float x1,float y1,float x2,float y2,
+                                int color){
+            p.clearShadowLayer();p.setShader(null);p.setColor(color);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(7.4f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawLine(x1,y1,x2,y2,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
+        void splashEdgeGlowTile(){
+            // The reference's lower-right 256 is intentionally out of focus.
+            // Draw a softly lit BLUE distant tile rather than a sharp,
+            // foreground purple game tile. It is never a playable tile.
+            c.save();c.rotate(-15f,375f,714f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setColor(0xff539aff);
+            p.setShadowLayer(26f,0,0,0x995295fa);
+            c.drawRoundRect(298,648,435,775,25,25,p);
+            p.clearShadowLayer();
+            p.setColor(0xa3449af5);p.setShadowLayer(12f,0,0,0x774498ef);
+            c.drawRoundRect(302,652,435,771,24,24,p);
+            p.clearShadowLayer();
+            p.setColor(0xd6ffffff);p.setTypeface(displayFont);
+            p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
+            p.setShadowLayer(7f,0,0,0xaaffffff);
+            c.drawText("256",364,726,p);
             p.clearShadowLayer();c.restore();
         }
         // Splash-only wordmark: the source uses wider rounded lettering,
@@ -1418,30 +1567,35 @@ public final class MainActivity extends ComponentActivity {
             if(referencePortraitLayout){
                 // Source 941x1672 uses full width; only edge decorations crop.
                 // All information stays inside the 400x~667 compact viewport.
-                splashAmbient(159,41,38,42,-20,0x28ffb174);
-                splashAmbient(166,190,34,38,14,0x1deabb93);
-                splashAmbient(83,476,70,71,-17,0x252ec4b6);
-                splashAmbient(312,449,78,82,20,0x21ff7a5b);
-                splashAmbient(110,633,66,67,13,0x30ffba30);
-                splashAmbient(173,636,65,65,29,0x302ec4b6);
-                c.save();c.rotate(-18,99,108);
-                styledTile(49,58,106,104,25,TILES[1],0);
-                txt("2",102,131,58,WHITE,true);c.restore();
+                splashAmbient(161,24,40,43,-18,0x1fffbd94);
+                splashAmbient(167,198,35,38,14,0x12eabb93);
+                splashAmbient(84,475,71,67,-17,0x252ec4b6);
+                splashAmbient(321,444,79,78,20,0x21ff7a5b);
+                splashAmbient(111,633,66,67,13,0x25ffba30);
+                splashAmbient(173,636,65,65,29,0x282ec4b6);
+                // Reference accents sit OUTSIDE raised tiles.
+                splashAccentStroke(51,65,60,82,CORAL);
+                splashAccentStroke(36,88,49,94,CORAL);
+                splashAccentStroke(341,77,335,92,TEAL);
+                splashAccentStroke(349,100,336,104,TEAL);
+                c.save();c.rotate(-18,115,111);
+                splashFloatingTile(63,62,104,101,24,TILES[1]);
+                txt("2",115,134,57,WHITE,true);c.restore();
                 c.save();c.rotate(17,289,123);
-                styledTile(235,72,107,106,24,TILES[2],0);
+                splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
                 c.save();c.rotate(-17,42,236);
-                styledTile(-13,184,110,105,22,TILES[3],0);
-                txt("8",43,254,56,WHITE,true);c.restore();
+                splashFloatingTile(-12,187,106,100,22,TILES[3]);
+                txt("8",42,256,56,WHITE,true);c.restore();
                 c.save();c.rotate(18,374,234);
-                styledTile(322,181,106,107,24,TILES[4],0);
-                txt("16",371,258,46,WHITE,true);c.restore();
+                splashFloatingTile(323,182,104,104,24,TILES[4]);
+                txt("16",375,255,46,WHITE,true);c.restore();
+                splashAccentStroke(92,499,102,507,CORAL);
+                splashAccentStroke(89,525,100,531,CORAL);
                 c.save();c.rotate(16,21,509);
-                styledTile(-26,455,96,105,23,TILES[7],0);
-                txt("64",21,523,46,WHITE,true);c.restore();
-                c.save();c.rotate(-13,394,682);
-                styledTile(328,621,131,126,22,TILES[8],0);
-                txt("256",393,702,43,WHITE,true);c.restore();
+                splashFloatingTile(-23,459,97,100,23,TILES[7]);
+                txt("64",25,523,46,WHITE,true);c.restore();
+                splashEdgeGlowTile();
                 splashWordmark();
                 txt("by Brendigo",284,417,19,muted,true);
                 // Native 941x1672 reference: cream slogan pill and both
@@ -1455,19 +1609,19 @@ public final class MainActivity extends ComponentActivity {
             // Taller devices retain the full-height composition.
             // Programmatic branded splash based on the provided portrait reference.
             c.save();c.rotate(-19,59,140);
-            styledTile(-18,74,133,124,25,TILES[1],0);
+            splashFloatingTile(-18,74,133,124,25,TILES[1]);
             txt("2",49,157,64,WHITE,true);c.restore();
             c.save();c.rotate(21,353,142);
-            styledTile(288,79,129,121,24,TILES[2],0);
+            splashFloatingTile(288,79,129,121,24,TILES[2]);
             txt("4",353,155,64,WHITE,true);c.restore();
             c.save();c.rotate(-22,28,283);
-            styledTile(-34,246,107,102,23,TILES[3],0);
+            splashFloatingTile(-34,246,107,102,23,TILES[3]);
             txt("8",20,316,57,WHITE,true);c.restore();
             c.save();c.rotate(18,379,297);
-            styledTile(329,247,111,109,22,TILES[4],0);
+            splashFloatingTile(329,247,111,109,22,TILES[4]);
             txt("16",383,324,49,WHITE,true);c.restore();
             c.save();c.rotate(17,23,661);
-            styledTile(-34,610,112,111,25,TILES[7],0);
+            splashFloatingTile(-34,610,112,111,25,TILES[7]);
             txt("64",21,679,46,WHITE,true);c.restore();
             c.save();c.rotate(-15,374,713);
             styledTile(327,666,118,111,23,TILES[8],0);
@@ -1477,20 +1631,55 @@ public final class MainActivity extends ComponentActivity {
             fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
             fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
         }
+        // Home is a dedicated illustrated surface: softer cream cards and
+        // ambient shadows belong here, not on shared in-game controls.
+        void homeSoftCard(float x,float y,float w,float h,float radius,int color){
+            if(theme==1||!referencePortraitLayout){
+                card(x,y,w,h,radius,color);return;
+            }
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfffdf7ec);
+            p.setShadowLayer(9f,0f,5.5f,0x28a78353);
+            c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
+            p.clearShadowLayer();
+            gradient(x,y,w,h,radius,lighten(color,.40f),color);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.85f);p.setColor(0xb4ffffff);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,radius-1,radius-1,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void homeFloatingTile(float x,float y,float w,float h,float radius,
+                              int color,int value){
+            // The source artwork floats over a warm, defocused shadow.
+            // Decorative only; no fake values are added to the game state.
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setColor(0x349e826f);
+            p.setShadowLayer(15f,0f,9f,0x3abf9b73);
+            c.drawRoundRect(x+3f,y+7f,x+w+3f,y+h+7f,radius,radius,p);
+            p.clearShadowLayer();
+            styledTile(x,y,w,h,radius,color,0);
+            fitted(Integer.toString(value),x+w/2f,y+h*.68f,
+                value>=16?40:47,w-12,WHITE,true);
+        }
+        void homeBestMiniChart(float x,float baseline){
+            // The source's best-score card has three pale bars at its end.
+            for(int i=0;i<3;i++){
+                float height=10+i*5.5f;
+                shape(x+i*7.1f,baseline-height,5.6f,height,2.1f,
+                    theme==1?0xff65758e:0xffe4e0d9);
+            }
+        }
         void home(){
             boolean portrait=referencePortraitLayout;
             c.save();c.rotate(-16,35,76);
-            styledTile(-3,4,81,77,16,TILES[1],0);
-            txt("2",38,57,42,WHITE,true);c.restore();
+            homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
             c.save();c.rotate(15,365,56);
-            styledTile(327,6,77,75,16,TILES[2],0);
-            txt("4",366,56,40,WHITE,true);c.restore();
+            homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
-            styledTile(-37,144,69,66,14,TILES[3],0);
-            txt("8",0,185,35,WHITE,true);c.restore();
+            homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
             c.save();c.rotate(9,390,179);
-            styledTile(360,149,76,69,14,TILES[4],0);
-            txt("16",392,191,31,WHITE,true);c.restore();
+            homeFloatingTile(359,147,77,73,16,TILES[4],16);c.restore();
             // Use the geometrically verified Splash wordmark on Home,
             // scaled to the Home source artwork's native bounds. This keeps
             // the navy rounded silhouette, raised "2", and coral rays in sync
@@ -1507,11 +1696,16 @@ public final class MainActivity extends ComponentActivity {
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
-            card(21,scoresY,171,scoresH,19,card);
-            card(207,scoresY,171,scoresH,19,card);
+            homeSoftCard(21,scoresY,171,scoresH,19,
+                theme==1?card:0xfffcf5e9);
+            homeSoftCard(207,scoresY,171,scoresH,19,
+                theme==1?card:0xfffcf5e9);
             icon("crown",53,scoresY+29,28,0xffffb228);
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
-            fitted(fmt(best),128,scoresY+60,27,123,ink,true);
+            // Source-matched 12.560 remains clear of the three right-hand
+            // mini bars even for larger real records.
+            fitted(fmt(best),112,scoresY+60,27,84,ink,true);
+            if(portrait)homeBestMiniChart(159,scoresY+58);
             icon("stats",236,scoresY+30,27,0xff63799d);
             fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
                 13,portrait?104:116,muted,true);
@@ -1541,9 +1735,9 @@ public final class MainActivity extends ComponentActivity {
             }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
-            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xffffe9de,false,
+            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffff4ed,false,
                 ()->requestNew("classic"));
-            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffddf9f5,false,
+            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe9fcfa,false,
                 ()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Novi izazov svaki dan!",
                 267,modeY,117,modeH,0xfffff4d7,true,()->navigate("daily"));
@@ -1561,7 +1755,7 @@ public final class MainActivity extends ComponentActivity {
         void shortcut(String label,String glyph,String sub1,String sub2,
                       float x,float y,float w,float h,int fill,Runnable action){
             boolean portrait=referencePortraitLayout;
-            card(x,y,w,h,19,theme==1?card:fill);
+            homeSoftCard(x,y,w,h,19,theme==1?card:0xfffaf3e8);
             icon(glyph,x+w/2,y+(portrait?31:39),portrait?38:43,
                 glyph.equals("target")?CORAL:
                 glyph.equals("stats")?0xff344868:
@@ -1576,9 +1770,11 @@ public final class MainActivity extends ComponentActivity {
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
             boolean portrait=referencePortraitLayout;
-            card(x,y,w,h,22,theme==1?card:fill);
+            homeSoftCard(x,y,w,h,22,theme==1?card:fill);
             if(daily){
-                icon("calendar",x+w/2,y+(portrait?68:77),portrait?69:69,CORAL);
+                // Actual emulator comparison: the existing vector calendar
+                // tracks the owner's source better than the bulkier trial.
+                icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
@@ -1652,8 +1848,9 @@ public final class MainActivity extends ComponentActivity {
             }
             if(!daily) {
                 if(narrow&&!relaxed){
-                    card(60,100,93,43,18,CORAL);
-                    txt("4×4",106.5f,133,35,WHITE,true);
+                    // Reference badge: narrower than the old 93-unit pill.
+                    classicBadge(60,100,84,43);
+                    txt("4×4",102,133,34,WHITE,true);
                     if(theme==0)classicGameAccentRays(true);
                     else {rays(49,120,16,CORAL);rays(165,120,16,CORAL);}
                 }else{
@@ -1677,8 +1874,15 @@ public final class MainActivity extends ComponentActivity {
             if(narrow){
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.
-                button("","pause",335,32,43,49,card,false,()->navigate("pause"));
-                headerUndo(335,98,43,49);
+                if(!relaxed&&!daily&&theme==0){
+                    classicHeaderControl("pause",335,32,43,49,
+                        ()->navigate("pause"));
+                    classicHeaderControl("undo",335,98,43,49,
+                        ()->undo());
+                }else{
+                    button("","pause",335,32,43,49,card,false,()->navigate("pause"));
+                    headerUndo(335,98,43,49);
+                }
             }else{
                 button("","pause",327,153,48,49,card,false,()->navigate("pause"));
                 headerUndo(265,153,50,49);
@@ -1694,14 +1898,25 @@ public final class MainActivity extends ComponentActivity {
             float actionsH=portraitFour?94:(narrow?82:91);
             float firstX=portraitFour?17:22,undoX=portraitFour?139:144;
             float finishX=portraitFour?258:265;
+            boolean classicArtwork=portraitFour&&theme==0&&
+                "classic".equals(game.mode);
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
-            button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
-                ()->requestNew(game.mode));
-            if(game.canUndo())
-                button("Poništi","undo",undoX,actionsY,112,actionsH,card,false,()->undo());
-            else {
+            if(classicArtwork)
+                classicBottomControl("Novo","refresh",firstX,actionsY,
+                    113,actionsH,()->requestNew(game.mode));
+            else
+                button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
+                    ()->requestNew(game.mode));
+            if(game.canUndo()){
+                if(classicArtwork)
+                    classicBottomControl("Poništi","undo",undoX,actionsY,
+                        112,actionsH,()->undo());
+                else
+                    button("Poništi","undo",undoX,actionsY,112,actionsH,
+                        card,false,()->undo());
+            }else{
                 card(undoX,actionsY,112,actionsH,20,
                     theme==1?0xff29364a:0xffeae5de);
                 icon("undo",undoX+56,actionsY+27,25,muted);
@@ -1723,6 +1938,70 @@ public final class MainActivity extends ComponentActivity {
         // All following art is scoped to the light-theme 4x4 gameplay
         // view. Do not change achievements, tile values, scoring, gameplay
         // physics, other themes, 5x5, or any modal/backdrop rendering.
+        void classicBadge(float x,float y,float width,float height){
+            shape(x,y+2.2f,width,height,17.5f,0xffdf5740);
+            gradient(x,y,width,height-2f,17.5f,0xffff9270,0xffff6346);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.9f);p.setColor(0x8bffffff);
+            c.drawRoundRect(x+1.6f,y+1.2f,x+width-1.6f,y+height-4,
+                16f,16f,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void classicSoftCard(float x,float y,float w,float h,float r,int fill){
+            if(theme!=0){card(x,y,w,h,r,fill);return;}
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfff0e4d5);
+            p.setShadowLayer(6.5f,0f,3.5f,0x27977a52);
+            c.drawRoundRect(x,y+1.4f,x+w,y+h+1.4f,r,r,p);
+            p.clearShadowLayer();
+            gradient(x,y,w,h,r,0xfffffdf7,0xfff8efdf);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.7f);p.setColor(0x93ffffff);
+            c.drawRoundRect(x+1.2f,y+1.2f,x+w-1.2f,y+h-1.2f,
+                r-1f,r-1f,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void classicBottomControl(String label,String glyph,float x,float y,
+                float w,float h,Runnable action){
+            classicSoftCard(x,y,w,h,20f,card);
+            float center=x+w/2f;
+            icon(glyph,center,y+h*.36f,39f,ink);
+            fitted(label,center,y+h*.81f,19f,w-10f,ink,true);
+            taps.add(new Tap(x,y,x+w,y+h,label,action));
+        }
+        void classicHeaderControl(String glyph,float x,float y,float w,
+                float h,Runnable action){
+            classicSoftCard(x,y,w,h,15f,card);
+            boolean enabled=!glyph.equals("undo")||(game!=null&&game.canUndo());
+            icon(glyph,x+w/2f,y+h/2f,enabled?29f:26f,
+                enabled?ink:muted);
+            if(enabled){
+                float extraX=Math.max(0,(54f-w)/2f);
+                float extraY=Math.max(0,(54f-h)/2f);
+                taps.add(new Tap(Math.max(0,x-extraX),Math.max(0,y-extraY),
+                    Math.min(400,x+w+extraX),y+h+extraY,
+                    glyph.equals("pause")?"Pauziraj igru":"Poništi potez",
+                    action));
+            }
+        }
+        void classicRaisedTile(float x,float y,float w,float h,float radius,int color){
+            // Owner's rounded, softly elevated 4×4 tiles have broad gradient
+            // lighting. Avoid the hard double-outline of generic glossyTile.
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0xffe4cbb8);p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(3.1f,0f,2.4f,0x3e8b755d);
+            c.drawRoundRect(x,y+1.1f,x+w,y+h+1.1f,radius,radius,p);
+            p.clearShadowLayer();
+            shape(x,y+2f,w,h-1f,radius,darken(color,.16f));
+            gradient(x,y,w,h-3f,radius,
+                lighten(color,.23f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
+            c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
+                y+h-4.5f,radius-1.4f,radius-1.4f,p);
+            p.setStyle(Paint.Style.FILL);
+        }
         int classicReferenceTileColor(int value){
             switch(value){
                 case 2: return 0xffff6948;
@@ -1784,19 +2063,24 @@ public final class MainActivity extends ComponentActivity {
             if(game==null)return;
             int n=game.size;
             boolean tallFour=compactBoardLayout&&n==4;
+            boolean victoryBoard=tallFour&&referencePortraitLayout&&
+                "win".equals(page);
+            // The win mockup uses 84-unit square-like tiles with a tighter
+            // vertical cadence. Active gameplay keeps its existing geometry.
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
             float left=gridX-(tallFour?2.5f:0f);
-            card(left-4,gridY-4,gridSize+8,gridSize+(tallFour?34:8),23,
+            card(left-4,gridY-4,gridSize+8,
+                gridSize+(victoryBoard?14:(tallFour?34:8)),23,
                 theme==1?0xff354661:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
-            float tileHeight=tallFour?89:tile;
+            float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (tallFour?94:tile+gap)*y;
+                    (victoryBoard?90.5f:(tallFour?94f:tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
@@ -1806,11 +2090,20 @@ public final class MainActivity extends ComponentActivity {
                 float round=tileStyle==1?7:tileStyle==2?24:15;
                 if(value==0)shape(rx,ry,tile,tileHeight,round,color);
                 else {
-                    glossyTile(rx+inset,ry+inset,tile-2*inset,
-                        tileHeight-2*inset,round,color);
+                    boolean classicSource="game".equals(page)&&tallFour&&
+                        "classic".equals(game.mode)&&theme==0&&
+                        tileStyle==0&&referencePortraitLayout;
+                    if(classicSource)
+                        classicRaisedTile(rx+inset,ry+inset,tile-2*inset,
+                            tileHeight-2*inset,round,color);
+                    else
+                        glossyTile(rx+inset,ry+inset,tile-2*inset,
+                            tileHeight-2*inset,round,color);
                     String str=Integer.toString(value);
                     int digits=str.length();
-                    float fontsize=(n==5?33:44)-(digits>3?(digits-3)*7:0);
+                    float fontsize=classicSource?
+                        (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
+                        (n==5?33:44)-(digits>3?(digits-3)*7:0);
                     fitted(str,rx+tile/2,ry+tileHeight*.62f,
                         fontsize,tile-7,WHITE,true);
                 }
@@ -1831,13 +2124,28 @@ public final class MainActivity extends ComponentActivity {
         void overlayBox(float y,float height){
             card(27,y,346,height,30,theme==1?0xff293956:CREAM);
         }
+        // Post-main-screen QA: Pause shares the warm, raised Brojko
+        // material system without affecting the board or the saved session.
+        // There is no owner-supplied Pause PNG; never claim exact 1:1 here.
         void pauseOverlay(){
-            dim();overlayBox(255,370);
-            icon("pause",200,302,44,CORAL);
-            txt("Igra je pauzirana",200,361,31,ink,true);
-            txt("Rezultat: "+fmt(game.score),200,404,20,muted,false);
-            button("Nastavi","play",52,443,296,65,CORAL,true,()->navigate("game"));
-            button("Izbornik","home",52,532,296,61,card,false,()->navigate("home"));
+            dim();
+            overlayBox(229,414);
+            card(159,247,82,76,23,
+                theme==1?0xff354660:0xfffff1e4);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
+            icon("pause",200,286,29,WHITE);
+            fitted("Igra je pauzirana",200,364,30,321,ink,true);
+            fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
+            card(62,406,276,55,17,
+                theme==1?card:0xfffff8ef);
+            icon("stats",91,433,22,muted);
+            leftFitted("Rezultat",114,429,14,110,muted,false);
+            fitted(fmt(game.score),271,443,25,119,ink,true);
+            button("Nastavi","play",52,483,296,66,CORAL,true,
+                ()->navigate("game"));
+            button("Izbornik","home",52,561,296,61,card,false,
+                ()->navigate("home"));
         }
         // Source artwork uses a quiet post-game summary behind the modal:
         // the real frozen board, compact brand / score HUD and bottom shortcuts.
@@ -1855,7 +2163,9 @@ public final class MainActivity extends ComponentActivity {
             fitted("Rezultat",335,56,12,77,muted,true);
             fitted(fmt(game.score),335,79,20,75,ink,true);
             float prevGridY=gridY;
-            gridY=112;
+            // The illustrated post-win board begins 10 units above the
+            // gameplay grid; its tiles are slightly shorter as well.
+            gridY=102;
             drawGrid();
             gridY=prevGridY;
             card(18,620,114,77,17,card);
@@ -1908,42 +2218,146 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
             c.restore();
         }
+        void victoryHeadingRays(){
+            // The hand-lettered reference has coral strokes framing the
+            // raised navy wordmark. Keep rays off the three touch targets.
+            for(int side=0;side<2;side++){
+                float x=side==0?91f:309f;
+                for(int i=0;i<3;i++){
+                    float y=247f+i*24f;
+                    int color=i==1?TEAL:CORAL;
+                    c.save();
+                    c.rotate((side==0?-1f:1f)*(i==0?-36f:i==2?39f:69f),x,y);
+                    shape(x-3f,y-9f,6f,i==1?14f:17f,3f,color);
+                    c.restore();
+                }
+            }
+        }
         void victoryHeading(){
-            // Nunito lettering in the reference is taller than Android's
-            // regular glyph metrics. Scale the text only, not its tap targets.
-            c.save();
-            c.scale(1.02f,1.25f,200,288);
+            // The reference logo is a bouncing, hand-lettered Nunito word,
+            // not a single rigid baseline. Build it as individual glyphs
+            // so the weight, overlap and subtle rotations work at any DPI.
+            // Golden screenshot: previous heading was visibly ~20% taller
+            // than the painted wordmark, especially the capital B.
+            c.save();c.scale(.95f,1.10f,200f,286f);
             p.clearShadowLayer();p.setShader(null);
-            p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
-            p.setTextSize(60);p.setFakeBoldText(false);
-            p.setStrokeJoin(Paint.Join.ROUND);
-            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.7f);
-            p.setColor(WHITE);c.drawText("Bravo!",200,288,p);
+            p.setTypeface(displayFont);p.setTextSize(63f);
+            p.setTextScaleX(1f);p.setFakeBoldText(false);
+            p.setTextAlign(Paint.Align.CENTER);
+            float full=0f;
+            for(int i=0;i<VICTORY_GLYPHS.length;i++){
+                full+=p.measureText(VICTORY_GLYPHS[i])*VICTORY_WIDTH[i]-
+                    (i<VICTORY_GLYPHS.length-1?3.1f:0f);
+            }
+            float left=202f-full/2f;
+            for(int i=0;i<VICTORY_GLYPHS.length;i++){
+                float glyphWidth=p.measureText(VICTORY_GLYPHS[i])*VICTORY_WIDTH[i];
+                float middle=left+glyphWidth/2f;
+                float baseline=286f+VICTORY_RISE[i];
+                c.save();
+                c.rotate(VICTORY_TILT[i],middle,baseline-20f);
+                c.scale(VICTORY_WIDTH[i],VICTORY_HEIGHT[i],
+                    middle,baseline-27f);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(2.6f);p.setColor(WHITE);
+                c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                p.setStyle(Paint.Style.FILL);p.setColor(ink);
+                c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                c.restore();
+                left+=glyphWidth-3.1f;
+            }
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0);
-            p.setColor(ink);c.drawText("Bravo!",200,288,p);
+            p.setTextAlign(Paint.Align.CENTER);
             c.restore();
+        }
+        void victoryRestartIcon(float cx,float cy,float width,int color){
+            // The original new-game pictogram is a two-arrow refresh.
+            c.save();c.translate(cx-width/2f,cy-width/2f);
+            c.scale(width/24f,width/24f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(2.7f);p.setStrokeCap(Paint.Cap.ROUND);
+            p.setColor(color);
+            c.drawArc(new RectF(3.4f,3.4f,20.6f,20.6f),
+                201f,148f,false,p);
+            c.drawArc(new RectF(3.4f,3.4f,20.6f,20.6f),
+                20f,148f,false,p);
+            p.setStyle(Paint.Style.FILL);
+            Path arrows=new Path();
+            arrows.moveTo(17.8f,2.0f);arrows.lineTo(21.5f,7.3f);
+            arrows.lineTo(15.3f,7.4f);arrows.close();
+            c.drawPath(arrows,p);
+            arrows.reset();arrows.moveTo(6.2f,22.0f);
+            arrows.lineTo(2.5f,16.7f);arrows.lineTo(8.7f,16.6f);
+            arrows.close();c.drawPath(arrows,p);
+            c.restore();
+        }
+        void victorySummaryCard(float x,float y,float width,float height){
+            if(theme==1){
+                card(x,y,width,height,19,card);return;
+            }
+            // Reference interior is ~RGB(249,241,228), unlike the former
+            // #F8EAD9 with a thick white bevel.
+            p.clearShadowLayer();p.setShader(null);
+            shape(x+.5f,y+1.6f,width-1f,height,19,0x30c9a98c);
+            gradient(x,y,width,height-1.8f,19,
+                0xfffdf3e6,0xfff9f1e4);
         }
         void compactVictoryCard(){
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
-            victoryCrown(200,195,103);
+            // Pixel audit: original golden silhouette was ~21 px too wide
+            // and ~18 px too low at the 941x1672 reference viewport.
+            victoryCrown(200,187,98);
+            victoryHeadingRays();
             victoryHeading();
-            card(95,295,210,33,18,theme==1?card:0xffffeddb);
-            fitted("Dosegnuli ste",161,318,20,133,CORAL,true);
-            fitted("2048!",258,318,21,88,TEAL,true);
-            card(76,337,120,69,19,card);
-            card(204,337,120,69,19,card);
-            txt("Tvoj rezultat",136,356,13,muted,false);
-            fitted(fmt(game.score),136,392,33,113,ink,true);
+            if(theme==1)card(95,299,210,30,17,card);
+            else gradient(95,299,210,30,17,
+                0xfffff5e7,0xffffeedb);
+            fitted("Dosegnuli ste",161,323,20,133,0xffff5537,true);
+            fitted("2048!",258,323,21,88,0xff008d83,true);
+            // Measured reference card interior averages RGB(249,237,221);
+            // the generic nearly-white card was RGB(255,253,250).
+            victorySummaryCard(76,337,120,69);
+            victorySummaryCard(204,337,120,69);
+            txt("Tvoj rezultat",136,356,12,muted,false);
+            fitted(fmt(game.score),136,392,35,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
-            for(int i=0;i<3;i++)icon("star",229+i*35,382,30,0xffffb526);
+            for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
             button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
             button("Nova igra","refresh",74,478,252,49,card,false,
                 ()->newGame(game.mode));
             button("Podijeli rezultat","share",74,532,252,49,
+                theme==1?0xff3269b5:0xff3b95ee,true,()->share());
+        }
+        // There is no separately supplied owner's Game Over PNG. Keep the
+        // same tactile Brojko language as Victory while faithfully rendering
+        // the frozen real game, score and peak tile (not screenshot fixtures).
+        void compactGameOverCard(){
+            card(42,168,316,525,29,theme==1?0xff293956:CREAM);
+            card(155,182,90,85,24,
+                theme==1?0xff3b4b66:0xfffff0e0);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
+            icon("target",200,224,31,WHITE);
+            fitted("Kraj igre",200,308,39,294,ink,true);
+            fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
+            // Warm, raised status panels are not fake reward counters.
+            victorySummaryCard(59,358,135,107);
+            victorySummaryCard(206,358,135,107);
+            fitted("Tvoj rezultat",126.5f,383,14,123,muted,false);
+            fitted(fmt(game.score),126.5f,440,31,123,ink,true);
+            fitted("Najveća pločica",273.5f,383,13.5f,128,muted,false);
+            fitted(fmt(game.maxTile()),273.5f,440,30,119,TEAL,true);
+            button("Nova igra","refresh",54,483,292,64,CORAL,true,
+                ()->newGame(game.mode));
+            button("Povratak","home",54,559,292,56,card,false,
+                ()->navigate("home"));
+            button("Podijeli rezultat","share",54,624,292,52,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         void resultOverlay(boolean winning){
@@ -1962,6 +2376,10 @@ public final class MainActivity extends ComponentActivity {
             }
             if(winning&&narrow){
                 compactVictoryCard();
+                return;
+            }
+            if(!winning&&narrow){
+                compactGameOverCard();
                 return;
             }
             // Non-portrait and game-over states retain their established
@@ -2004,7 +2422,57 @@ public final class MainActivity extends ComponentActivity {
             button("Podijeli rezultat","share",54,narrow?606:657,292,57,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
+        // Daily result is a stateful gameplay overlay, not a static reward
+        // illustration. No dedicated owner PNG was supplied for these modals.
+        // Both compact variants share measured geometry, real score/peak,
+        // and a local-only bonus that must never be awarded twice.
+        void compactDailyResultOverlay(boolean success){
+            dim();
+            overlayBox(177,511);
+            card(155,191,90,85,24,theme==1?0xff394963:0xfffff0df);
+            p.setShader(null);p.setColor(WHITE);
+            int accent=success?TEAL:CORAL;
+            gradient(173,208,54,52,17,lighten(accent,.16f),accent);
+            icon(success?"star":"target",200,234,31,WHITE);
+            fitted(success?"Dnevni izazov riješen!":"Izazov nije uspio",
+                200,315,success?28:30,321,ink,true);
+            fitted(success?"Sva 3 zadatka su ostvarena!":
+                (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
+                "Nema više mogućih poteza."),200,345,16,319,muted,false);
+
+            victorySummaryCard(59,366,135,99);
+            victorySummaryCard(206,366,135,99);
+            fitted("Tvoj rezultat",126.5f,390,13.6f,126,muted,false);
+            fitted(fmt(game.score),126.5f,444,29,124,ink,true);
+            fitted("Najveća pločica",273.5f,390,13.1f,127,muted,false);
+            fitted(fmt(game.maxTile()),273.5f,444,28,118,TEAL,true);
+
+            card(59,476,282,54,18,theme==1?0xff32445c:
+                success?0xffe3fbf2:0xfffff0e5);
+            icon(success?"star":"target",84,503,23,
+                success?0xffffaf26:CORAL);
+            // The date stored in preferences is the source of truth; the
+            // transient UI flag is only needed to distinguish first win.
+            String message=success?
+                (dailyBonusGrantedThisAttempt?
+                    "+250 zvjezdica osvojeno!":
+                    (today().equals(dailyRewardDate)?
+                        "Današnja nagrada je preuzeta.":
+                        "Dnevni izazov dovršen.")):
+                "Pokušaj ponovno ostvariti ciljeve.";
+            leftFitted(message,108,508,15,216,
+                success?0xff078e77:ink,true);
+            button("Igraj ponovno","refresh",53,543,294,61,CORAL,true,
+                ()->newGame("daily"));
+            button("Izbornik","home",53,615,294,55,card,false,
+                ()->navigate("home"));
+        }
         void dailyResultOverlay(boolean success){
+            if(referencePortraitLayout){
+                compactDailyResultOverlay(success);
+                return;
+            }
+            // Keep the taller established layout for long-aspect devices.
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
@@ -2017,39 +2485,148 @@ public final class MainActivity extends ComponentActivity {
             txt("TVOJ REZULTAT",200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
             fitted(success?(dailyBonusGrantedThisAttempt?
-                "+250 zvjezdica osvojeno!":"Današnja nagrada već preuzeta"):
+                "+250 zvjezdica osvojeno!":
+                today().equals(dailyRewardDate)?
+                    "Današnja nagrada je preuzeta.":
+                    "Dnevni izazov dovršen."):
                 "Pokušaj ponovno ostvariti sve ciljeve.",200,534,17,310,
                 success?0xff259d85:muted,true);
-            // Leave clear space below the last action inside the rounded modal.
-            button("Igraj ponovno","undo",53,546,294,62,CORAL,true,
+            button("Igraj ponovno","refresh",53,546,294,62,CORAL,true,
                 ()->newGame("daily"));
             button("Izbornik","home",53,621,294,55,card,false,
                 ()->navigate("home"));
         }
+        // These confirmation screens are functional modals, not independent
+        // games. Both use actual session state, including local archive status.
+        // Owner supplied no separate PNG for the two dialogs.
+        void confirmModalBadge(String glyph,int accent){
+            card(156,245,88,76,22,theme==1?0xff364560:0xfffff0e1);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(173,258,54,52,17,lighten(accent,.18f),accent);
+            icon(glyph,200,284,30,WHITE);
+        }
+        void confirmSessionSummary(float y){
+            card(60,y,280,57,18,theme==1?card:0xfffff7ed);
+            icon("stats",91,y+27,22,muted);
+            leftFitted("Rezultat",115,y+25,14,98,muted,false);
+            fitted(game==null?"0":fmt(game.score),273,y+38,24,118,ink,true);
+        }
         void confirmEndOverlay(){
-            dim();overlayBox(266,356);
-            icon("check",200,312,43,TEAL);
-            txt("Završiti partiju?",200,371,29,ink,true);
-            txt("Rezultat se sprema u statistiku.",200,414,16,muted,false);
-            button("Završi i spremi","check",50,448,300,64,CORAL,true,()->endSession());
-            button("Nastavi igrati","play",50,532,300,60,card,false,()->navigate("game"));
+            dim();
+            overlayBox(226,421);
+            confirmModalBadge("check",TEAL);
+            fitted("Završiti partiju?",200,362,29,316,ink,true);
+            fitted("Rezultat se sprema u povijest partija.",
+                200,393,15.5f,317,muted,false);
+            confirmSessionSummary(411);
+            button("Završi i spremi","check",52,488,296,65,CORAL,true,
+                ()->endSession());
+            button("Nastavi igrati","play",52,570,296,59,card,false,
+                ()->navigate("game"));
         }
         void confirmOverlay() {
-            dim();overlayBox(282,320);
-            txt("Nova partija?",200,341,30,ink,true);
-            fitted("Trenutačni napredak bit će spremljen",200,380,17,300,muted,false);
-            txt("u povijest partija.",200,408,17,muted,false);
-            button("Započni novo","play",54,452,292,57,CORAL,true,()->newGame(pendingMode));
-            button("Odustani","back",54,526,292,54,card,false,()->navigate("game"));
+            dim();
+            overlayBox(226,421);
+            confirmModalBadge("refresh",CORAL);
+            fitted("Nova partija?",200,362,30,318,ink,true);
+            fitted("Trenutačni napredak sprema se u povijest.",
+                200,393,15.1f,316,muted,false);
+            confirmSessionSummary(411);
+            String modeLabel="relaxed".equals(pendingMode)?"Opušteno 5×5":
+                "daily".equals(pendingMode)?"Dnevni izazov":"Klasično 4×4";
+            fitted("Novi način: "+modeLabel,200,482,14,310,muted,true);
+            button("Započni novo","play",52,500,296,60,CORAL,true,
+                ()->newGame(pendingMode));
+            button("Odustani","back",52,578,296,54,card,false,
+                ()->navigate("game"));
+        }
+        void dailyPlayGlyph(float cx,float cy,float size,int color){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setStyle(Paint.Style.FILL);p.setShader(null);
+            p.setColor(0x2dc04f27);p.setShadowLayer(1.3f,0,.7f,0x4e953a18);
+            Path play=new Path();
+            play.moveTo(6.1f,2.0f);
+            play.quadTo(5.3f,1.6f,5.3f,4.5f);
+            play.lineTo(5.3f,19.5f);
+            play.quadTo(5.3f,22.6f,8.0f,21.3f);
+            play.lineTo(20.6f,13.8f);
+            play.quadTo(23.5f,12f,20.6f,10.2f);
+            play.close();
+            p.setColor(color);c.drawPath(play,p);p.clearShadowLayer();
+            c.restore();
+        }
+        void dailyBoardFrame(float x,float y,float width,float height){
+            // Warm ivory raised frame around the *preview*, not game state.
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfff8efe4);
+            p.setShadowLayer(6f,0,3.5f,0x2ca78052);
+            c.drawRoundRect(x,y,x+width,y+height,24,24,p);
+            p.clearShadowLayer();
+            gradient(x,y,width,height,24,0xfffffcf5,0xfff8efe5);
+            shape(x+10,y+9,width-20,height-18,18,0xfff4eadd);
+        }
+        void dailySampleTile(float x,float y,float size,int color){
+            // Subtle 3D volume without the harsh double outline of
+            // the shared game tile. Restrict to the illustration preview.
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0x36ad7e56);
+            p.setShadowLayer(2.4f,0f,2.4f,0x36a57d58);
+            c.drawRoundRect(x,y+1.4f,x+size,y+size+1.4f,10,10,p);
+            p.clearShadowLayer();
+            shape(x,y+2.1f,size,size-1.7f,10,darken(color,.13f));
+            gradient(x,y,size,size-3.1f,10,
+                lighten(color,.13f),color);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.65f);p.setColor(0x60ffffff);
+            c.drawRoundRect(x+1.1f,y+1.0f,x+size-1.1f,
+                y+size-3.9f,9,9,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void dailySwapArrows(float cx,float cy,float size){
+            // Reference's opposing blue arrowheads are chunky and bevelled.
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            Path upper=new Path();
+            upper.moveTo(2,8);upper.lineTo(8,2);
+            upper.quadTo(9,1,10,2.5f);
+            upper.lineTo(10,5);upper.lineTo(20,5);
+            upper.quadTo(22,5,22,7.2f);
+            upper.quadTo(22,9,20,9);
+            upper.lineTo(10,9);upper.lineTo(10,12);
+            upper.quadTo(9,13,8,12);upper.close();
+            Path lower=new Path();
+            lower.moveTo(22,16);lower.lineTo(16,22);
+            lower.quadTo(15,23,14,21.5f);
+            lower.lineTo(14,19);lower.lineTo(4,19);
+            lower.quadTo(2,19,2,16.8f);
+            lower.quadTo(2,15,4,15);
+            lower.lineTo(14,15);lower.lineTo(14,12);
+            lower.quadTo(15,11,16,12);lower.close();
+            c.save();c.translate(0,1.0f);
+            p.setColor(0xff125bb4);
+            c.drawPath(upper,p);c.drawPath(lower,p);c.restore();
+            p.setShader(new LinearGradient(0,0,24,24,
+                0xff60baff,0xff177fe8,Shader.TileMode.CLAMP));
+            c.drawPath(upper,p);c.drawPath(lower,p);
+            p.setShader(null);c.restore();
         }
         // Three broad, slanted rays at either side of the daily illustration,
         // matching the provided PNG instead of the shared tiny ray dots.
         void dailyBoardBursts(float cx,float cy,boolean right,int color){
-            float sign=right?1f:-1f;
-            for(int i=-1;i<=1;i++){
-                c.save();
-                c.rotate(sign*(i*29f+90f),cx,cy);
-                shape(cx-3.4f,cy-35f,6.8f,19f,3.4f,color);
+            // Source: separated rounded orange/yellow petals, not three
+            // identical rays forming a single angular mark.
+            final float[] yOff={-17f,13f,46f};
+            final float[] xOff={right?3f:-3f,right?7f:-7f,0f};
+            final float[] tilt={right?-36f:36f,90f,right?37f:-37f};
+            final int[] palette={0xffffb33b,0xffff6547,0xffffae3b};
+            for(int i=0;i<3;i++){
+                float x=cx+xOff[i],y=cy+yOff[i];
+                c.save();c.rotate(tilt[i],x,y);
+                shape(x-3.4f,y-12f,6.8f,24f,3.4f,
+                    theme==1?color:palette[i]);
                 c.restore();
             }
         }
@@ -2094,14 +2671,23 @@ public final class MainActivity extends ComponentActivity {
             // Keep the calendar glyph and locally formatted long date apart.
             // Reference date is a shallow capsule; the previous 32-unit
             // pill touched the first description line on compact phones.
-            card(98,dateY,191,portrait?25:34,17,
-                theme==1?card:0xffffecdc);
-            icon(portrait?"calendar-outline":"calendar",119,
+            if(portrait&&theme!=1)
+                gradient(132,dateY,136,25,16,
+                    0xfffff6ec,0xfff9eede);
+            else card(portrait?132:98,dateY,portrait?136:191,
+                portrait?25:34,17,theme==1?card:0xffffecdc);
+            icon(portrait?"calendar-outline":"calendar",portrait?153:119,
                 dateY+(portrait?12:18),portrait?16:19,muted);
-            leftFitted(dailyLongDate(),139,dateY+(portrait?18:24),
-                portrait?11.5f:14,142,ink,true);
+            // Source pill is ~320px wide; long real dates shrink inside
+            // it without touching the calendar or changing today's date.
+            leftFitted(dailyLongDate(),portrait?174:139,
+                dateY+(portrait?18:24),portrait?11.5f:14,
+                portrait?89:142,ink,true);
             float streakTop=portrait?38:66;
-            card(portrait?302:291,streakTop,portrait?80:87,
+            if(portrait&&theme!=1)
+                gradient(302,streakTop,80,72,18,
+                    0xfffffcf5,0xffffead2);
+            else card(portrait?302:291,streakTop,portrait?80:87,
                 portrait?72:83,18,theme==1?card:0xffffebd4);
             icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
             fitted(Integer.toString(streak),portrait?358:351,streakTop+40,
@@ -2132,7 +2718,9 @@ public final class MainActivity extends ComponentActivity {
                 true,CORAL);
             // The source card extends beyond the edge tiles; the previous
             // 229-unit square made this cream frame visibly too narrow.
-            missionSurface(portrait?75:76,boardY+(portrait?2:0),
+            if(portrait&&theme!=1)
+                dailyBoardFrame(75,boardY+2,247,235);
+            else missionSurface(portrait?75:76,boardY+(portrait?2:0),
                 portrait?247:248,portrait?235:248,24,
                 theme==1?0xff35455f:0xfff3e8da);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
@@ -2142,9 +2730,15 @@ public final class MainActivity extends ComponentActivity {
                 float y=boardY+(portrait?16:7)+row*(portrait?53:59);
                 int value=sample[i];
                 float cellSize=portrait?51:52;
-                glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
+                if(portrait&&theme!=1&&tileStyle==0)
+                    dailySampleTile(x,y,cellSize,tileColor(value));
+                else glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
+                float numeral=portrait?
+                    (value>=1000?15.3f:value>=100?19.0f:
+                        value>=10?21.1f:22.3f):
+                    (value>999?16f:24f);
                 fitted(""+value,x+cellSize*.5f,
-                    y+(portrait?33:34),value>999?16:24,
+                    y+(portrait?33:34),numeral,
                     portrait?48:49,WHITE,true);
             }
             // Source art groups the three daily objectives inside one
@@ -2166,12 +2760,16 @@ public final class MainActivity extends ComponentActivity {
             dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
                 portrait?513:667,finished);
             float rewardY=portrait?569:744;
-            missionSurface(portrait?18:28,rewardY,portrait?364:344,
+            if(portrait&&theme!=1)
+                gradient(18,rewardY,364,80,19,
+                    0xffefebff,0xffeee8ff);
+            else missionSurface(portrait?18:28,rewardY,portrait?364:344,
                 portrait?80:48,19,theme==1?0xff3a3459:0xfff0e9ff);
             // The illustration fills the left third of the source card.
             // Keep all copy to its right, including the real earned amount.
-            dailyRewardGift(portrait?91:65,rewardY+(portrait?38:24),
+            dailyRewardGift(portrait?91:65,rewardY+(portrait?43:24),
                 portrait?80:37);
+            if(portrait&&theme!=1)dailyGiftBursts(91,rewardY+40f);
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     158,rewardY+17,12,190,muted,true);
@@ -2233,7 +2831,9 @@ public final class MainActivity extends ComponentActivity {
                     portrait?35:39,0xffffb51a);
             }else{
                 // Blue opposite-facing arrows directly on the row background.
-                icon("swap",glyphCenter,y+height/2f,
+                if(portrait&&theme!=1)
+                    dailySwapArrows(glyphCenter,y+height/2f,35f);
+                else icon("swap",glyphCenter,y+height/2f,
                     portrait?34:38,0xff268fec);
             }
             // Reference goal cards use left-aligned text and a right-side help
@@ -2252,48 +2852,84 @@ public final class MainActivity extends ComponentActivity {
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void dailyRewardGift(float cx,float cy,float size){
-            // Layered vector approximation of the supplied purple/gold gift.
-            // Dynamic challenge reward remains a real label, not baked art.
-            float left=cx-size*.37f,top=cy-size*.11f;
-            shape(left,top+size*.06f,size*.74f,size*.49f,9,0x41652e96);
-            // Paint alpha survives shape(): make the gift body fully opaque.
-            p.setShader(null);p.setColor(WHITE);
-            gradient(left,top,size*.74f,size*.49f,9,
-                0xffb77bf5,0xff6738c8);
-            // Ribbons span both the lid and the body.
-            shape(cx-size*.085f,top,size*.17f,size*.49f,3,0xfffcb72d);
-            gradient(cx-size*.44f,top-size*.15f,size*.88f,size*.22f,8,
-                0xffce9cff,0xff8748e0);
-            gradient(cx-size*.085f,top-size*.15f,size*.17f,size*.64f,3,
-                0xffffe76a,0xffffb523);
-            // Folded gold bow petals replace the old thin outlined circles.
-            p.setShader(new LinearGradient(cx,cy-size*.54f,cx,cy-size*.21f,
-                0xffffe877,0xffffa71c,Shader.TileMode.CLAMP));
+            // All-vector, soft 3D present. The reference has a plump bow,
+            // purple side facets, and a wide gold ribbon, not a flat square.
+            // Measured: first bow rose into the final objective row.
+            // Raise the box lid, extend the body, but lower its bow tips.
+            float top=cy-size*.22f;
+            float left=cx-size*.40f;
+            float width=size*.80f;
+            float height=size*.62f;
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(7f,0f,4.5f,0x559875a9);
+            c.drawRoundRect(left,top+3f,left+width,top+height+3f,
+                9.0f,9.0f,p);
+            p.clearShadowLayer();
+            gradient(left,top,width,height,9,
+                0xffba82ff,0xff7034d3);
+            // Side wall and inset highlight give the box a rounded body.
+            gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
+                8,0xff995ae3,0xff6330bf);
+            p.setColor(0x59ffffff);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);
+            c.drawRoundRect(left+1.3f,top+1.3f,
+                left+width-1.3f,top+height-2.0f,8,8,p);
             p.setStyle(Paint.Style.FILL);
-            Path leftBow=new Path();
-            leftBow.moveTo(cx,cy-size*.27f);
-            leftBow.cubicTo(cx-size*.32f,cy-size*.72f,
-                cx-size*.62f,cy-size*.50f,cx-size*.37f,cy-size*.31f);
-            leftBow.cubicTo(cx-size*.25f,cy-size*.23f,
-                cx-size*.10f,cy-size*.22f,cx,cy-size*.27f);
-            leftBow.close();
-            c.drawPath(leftBow,p);
-            Path rightBow=new Path();
-            rightBow.moveTo(cx,cy-size*.27f);
-            rightBow.cubicTo(cx+size*.32f,cy-size*.72f,
-                cx+size*.62f,cy-size*.50f,cx+size*.37f,cy-size*.31f);
-            rightBow.cubicTo(cx+size*.25f,cy-size*.23f,
-                cx+size*.10f,cy-size*.22f,cx,cy-size*.27f);
-            rightBow.close();
-            c.drawPath(rightBow,p);
+            gradient(cx-size*.09f,top,size*.18f,height,2.8f,
+                0xffffeb75,0xffffaa1d);
+            // Raised purple lid, with golden horizontal band.
+            gradient(left-size*.025f,top-size*.075f,
+                width+size*.05f,size*.23f,7,
+                0xffcf9bff,0xff7a3bdb);
+            gradient(cx-size*.1f,top-size*.075f,
+                size*.20f,size*.23f,2.0f,
+                0xffffed78,0xffffb21e);
+            Path bowL=new Path();
+            bowL.moveTo(cx,top-size*.10f);
+            bowL.cubicTo(cx-size*.19f,top-size*.44f,
+                cx-size*.64f,top-size*.46f,
+                cx-size*.51f,top-size*.34f);
+            bowL.cubicTo(cx-size*.46f,top-size*.10f,
+                cx-size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowL.close();
+            Path bowR=new Path();
+            bowR.moveTo(cx,top-size*.10f);
+            bowR.cubicTo(cx+size*.19f,top-size*.44f,
+                cx+size*.64f,top-size*.46f,
+                cx+size*.51f,top-size*.34f);
+            bowR.cubicTo(cx+size*.46f,top-size*.10f,
+                cx+size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowR.close();
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffe88a0b);
+            c.save();c.translate(0,1f);c.drawPath(bowL,p);
+            c.drawPath(bowR,p);c.restore();
+            p.setShader(new LinearGradient(cx-size*.5f,top-size*.55f,
+                cx+size*.5f,top-size*.13f,
+                0xffffed76,0xffffaf15,Shader.TileMode.CLAMP));
+            c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
-            p.setColor(0xfffff2a1);
-            c.drawOval(cx-size*.41f,cy-size*.48f,
-                cx-size*.17f,cy-size*.32f,p);
-            c.drawOval(cx+size*.17f,cy-size*.48f,
-                cx+size*.41f,cy-size*.32f,p);
-            gradient(cx-size*.13f,cy-size*.32f,size*.26f,size*.16f,8,
-                0xffffec73,0xffffb326);
+            p.setColor(0xfffff2a7);
+            c.drawOval(cx-size*.44f,top-size*.35f,
+                cx-size*.16f,top-size*.19f,p);
+            c.drawOval(cx+size*.16f,top-size*.35f,
+                cx+size*.44f,top-size*.19f,p);
+            gradient(cx-size*.145f,top-size*.22f,
+                size*.29f,size*.21f,6,
+                0xffffeb77,0xffffa51c);
+        }
+        void dailyGiftBursts(float cx,float cy){
+            // Gold petals sit outside the illustration and never cover copy.
+            final float[][] rays={{-65,-20,-30},{-68,2,79},
+                {63,-25,31},{67,3,-75}};
+            for(float[] spec:rays){
+                float x=cx+spec[0],y=cy+spec[1];
+                c.save();c.rotate(spec[2],x,y);
+                shape(x-2.9f,y-8.2f,5.8f,16.4f,3f,
+                    0xffffbc30);
+                c.restore();
+            }
         }
         void missionSurface(float x,float y,float width,float height,
                             float radius,int color){
@@ -2306,6 +2942,121 @@ public final class MainActivity extends ComponentActivity {
             gradient(x,y,width,height,radius,
                 lighten(color,theme==1?.07f:.27f),color);
         }
+        void missionSoftIconBackground(float x,float y,float size){
+            // Reference uses warm ivory mini-cards behind the illustrated
+            // mission pictograms, with barely raised corners.
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setColor(0x1b947a60);
+            p.setShadowLayer(2f,0,2f,0x269f805f);
+            c.drawRoundRect(x,y+1,x+size,y+size+1,11,11,p);
+            p.clearShadowLayer();
+            // gradient() preserves the Paint alpha; reset it after the
+            // translucent shadow so the ivory body is not see-through.
+            p.setColor(WHITE);
+            gradient(x,y,size,size,11,0xfffffcf6,0xfff8ecdd);
+        }
+        void missionRaisedNumber(float x,float y,float size,int color,
+                                 String number,float rotation){
+            c.save();c.rotate(rotation,x+size/2f,y+size/2f);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
+            p.setColor(darken(color,.14f));
+            c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
+            p.clearShadowLayer();
+            gradient(x,y,size,size-2f,8,lighten(color,.18f),color);
+            p.setColor(0x7dffffff);p.setStrokeWidth(.8f);
+            p.setStyle(Paint.Style.STROKE);
+            c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
+                y+size-3.5f,7.2f,7.2f,p);
+            p.setStyle(Paint.Style.FILL);
+            fitted(number,x+size/2f,y+size*.68f,
+                number.length()>3?11:number.length()>2?15:
+                    number.length()>1?18:21,size-4,WHITE,true);
+            c.restore();
+        }
+        void missionOrangeRays(float x,float y){
+            for(float[] line:MISSION_CORAL_RAYS){
+                float cx=x+line[0],cy=y+line[1];
+                c.save();c.rotate(line[2],cx,cy);
+                shape(cx-2f,cy-5.5f,4f,11f,2f,0xffffb429);
+                c.restore();
+            }
+        }
+        void missionHand(float x,float y){
+            // Explicitly hand-drawn pointer on the orange 2 + teal 4
+            // icon, as in the supplied source (no emoji or network asset).
+            c.save();c.translate(x,y);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            Path finger=new Path();
+            finger.moveTo(5,16);finger.lineTo(-1,7);
+            finger.quadTo(-3,2,0,1);
+            finger.quadTo(3,-1,5,3);
+            finger.lineTo(9,11);finger.lineTo(10,7);
+            finger.quadTo(12,4,15,7);
+            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
+            finger.lineTo(12,29);finger.lineTo(5,26);
+            finger.close();
+            p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            c.drawPath(finger,p);
+            p.setColor(0xfffffff8);
+            c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
+            c.drawPath(finger,p);c.restore();
+            c.restore();
+        }
+        void missionCalendarSeven(float centerX,float centerY){
+            float x=centerX-22f,y=centerY-21f;
+            gradient(x,y+1,44,45,10,0xfff8fff9,0xffe8e1d8);
+            shape(x+1.8f,y+3,40.4f,13,8,0xffff694d);
+            shape(x+8,y-1,5,13,2.5f,0xffe74e39);
+            shape(x+29,y-1,5,13,2.5f,0xffe74e39);
+            fitted("7",centerX,centerY+17,25,34,ink,true);
+        }
+        void missionTarget(float cx,float cy,float size){
+            // Large coral bullseye and diagonal blue dart.
+            icon("target",cx,cy,size,0xffff795b);
+        }
+        void missionIllustration(String name,float y,boolean portrait,
+                                int accent){
+            if(!portrait){
+                return;
+            }
+            final float cx=62f, cy=y+34f;
+            missionSoftIconBackground(38,y+7,51f);
+            if(name.startsWith("Spoji 20")){
+                missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
+                missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
+                missionHand(54,y+29);
+            }else if(name.startsWith("Dosegni 512")){
+                missionRaisedNumber(42,y+11,45f,0xffb45bf6,"512",-9f);
+                missionOrangeRays(81,y+17);
+            }else if(name.startsWith("Igraj 7")){
+                missionCalendarSeven(cx,cy);
+            }else if(name.startsWith("Ostvari 10.000")){
+                missionTarget(cx,cy,44f);
+            }else if(name.startsWith("Majstor")){
+                for(int i=0;i<MISSION_TILE_VALUES.length;i++)
+                    missionRaisedNumber(40+(i%2)*23,y+10+(i/2)*23,
+                        22,TILES[i+1],Integer.toString(MISSION_TILE_VALUES[i]),0);
+            }else if(name.startsWith("Kralj")){
+                icon("crown",cx,cy+2,48,0xffffaf25);
+            }else{
+                icon("star",cx,cy,38,accent);
+            }
+        }
+        void missionWeeklyHeaderIcon(float cx,float cy){
+            // Blue outlined weekly planner, rather than a red daily calendar.
+            p.clearShadowLayer();p.setShader(null);
+            shape(cx-10,cy-10,20,21,4,0xff137ecb);
+            shape(cx-7,cy-5,14,12,2,0xffebf7ff);
+            shape(cx-6,cy-12,4,7,2,0xff2a99ed);
+            shape(cx+2,cy-12,4,7,2,0xff2a99ed);
+            p.setColor(0xff3d91e4);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.4f);
+            c.drawLine(cx-4,cy+1,cx+4,cy+1,p);
+            c.drawLine(cx-4,cy+5,cx+3,cy+5,p);
+            p.setStyle(Paint.Style.FILL);
+        }
         int completedAchievements(){
             int result=0;
             if((rewardFlags&8)!=0)result++;
@@ -2316,12 +3067,14 @@ public final class MainActivity extends ComponentActivity {
             boolean portrait=referencePortraitLayout;
             back();brand(portrait?45:67,39);
             // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",132,portrait?99:128,33,142,ink,true);
-            fitted("postignuća",279,portrait?99:128,33,203,CORAL,true);
+            fitted("Misije i",125,portrait?99:128,
+                portrait?36:33,142,ink,true);
+            fitted("postignuća",274,portrait?99:128,
+                portrait?36:33,203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
-            int dailyTint=theme==1?0xff293b4c:0xffffedda;
-            int weeklyTint=theme==1?0xff253b4f:0xffe4f3ff;
-            int achievementTint=theme==1?0xff24483f:0xffe0f9ec;
+            int dailyTint=theme==1?0xff293b4c:0xfffff0df;
+            int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
+            int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
             missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
@@ -2331,7 +3084,9 @@ public final class MainActivity extends ComponentActivity {
             p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
             txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
-            icon("calendar",43,portrait?346:420,23,0xff3d98f0);
+            if(portrait&&theme!=1)
+                missionWeeklyHeaderIcon(43,portrait?346:420);
+            else icon("calendar",43,portrait?346:420,23,0xff3d98f0);
             icon("crown",43,portrait?540:636,23,0xffffb431);
             missionPeriodPill("week",portrait?330:402);
             // The source layout counts achievements, not star currency.
@@ -2372,15 +3127,18 @@ public final class MainActivity extends ComponentActivity {
             boolean portrait=referencePortraitLayout;
             int height=portrait?70:80;
             missionSurface(26,y,348,height,19,card);
-            shape(39,y+(portrait?9:10),portrait?46:52,
-                portrait?50:58,15,
-                theme==1?0xff35435d:lighten(accent,.80f));
+            if(!portrait||theme==1)
+                shape(39,y+(portrait?9:10),portrait?46:52,
+                    portrait?50:58,15,
+                    theme==1?0xff35435d:lighten(accent,.80f));
             String taskGlyph=value>=target?"check":
                 name.contains("Kralj")?"crown":
                 name.contains("Igraj")?"calendar":
                 name.contains("Majstor")?"grid":
                 name.contains("Spoji")?"grid":"target";
-            if(name.startsWith("Dosegni 512")){
+            if(portrait&&theme!=1){
+                missionIllustration(name,y,true,accent);
+            }else if(name.startsWith("Dosegni 512")){
                 styledTile(42,y+12,40,40,10,0xffa663e4,0);
                 fitted("512",62,y+40,18,39,WHITE,true);
             }else if(name.startsWith("Spoji 20")){
@@ -2426,12 +3184,14 @@ public final class MainActivity extends ComponentActivity {
             float progressY=y+(portrait?50:59);
             shape(104,progressY,151,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
-            float fraction=Math.max(0,Math.min(1,(float)value/target));
+            // "Majstor" is an unlock, not an incremental reward. Keep
+            // the filled bar consistent with its 0/1 or 1/1 counter:
+            // a previous 512 tile must not display a fake 50% unlock.
+            boolean binaryMilestone=name.startsWith("Majstor");
+            float fraction=binaryMilestone?(value>=target?1f:0f):
+                Math.max(0,Math.min(1,(float)value/target));
             if(fraction>0)shape(104,progressY,
                 151*fraction,7,4,accent);
-            // Existing 1024 tile milestone is binary; show 0/1 or 1/1
-            // instead of the misleading raw maxTile/1024 ratio.
-            boolean binaryMilestone=name.startsWith("Majstor");
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
@@ -2439,13 +3199,15 @@ public final class MainActivity extends ComponentActivity {
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
             float rewardCenter=portrait?345:323;
-            missionSurface(portrait?315:289,y+(portrait?4:6),
+            if(portrait&&theme!=1)
+                gradient(315,y+4,54,61,15,0xfffff9e7,0xfffff0d3);
+            else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,y+(portrait?24:29),
-                portrait?27:29,0xffffad1a);
-            fitted("+"+fmt(reward),rewardCenter,y+(portrait?54:62),
-                portrait?13:13,portrait?49:63,ink,true);
+            icon("star",rewardCenter,y+(portrait?23:29),
+                portrait?31:29,0xffffad1a);
+            fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
+                portrait?14:13,portrait?49:63,ink,true);
         }
         JSONArray history() {
             try{return new JSONArray(prefs.getString("history","[]"));}
@@ -2573,15 +3335,21 @@ public final class MainActivity extends ComponentActivity {
             }
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
-            icon(symbol,x+25,y+29,width<=118?24:29,
+            boolean referenceStats=referencePortraitLayout&&
+                "stats".equals(page)&&theme!=1;
+            icon(symbol,x+(width<=118?27:38),
+                y+(referenceStats?(width<=118?38:43):29),
+                referenceStats?(width<=118?34:43):
+                    (width<=118?24:29),
                 "gamepad".equals(symbol)?ink:accent);
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
             fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
             fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
-            fitted(value,x+width/2,y+h-(dense?9:17),
-                dense?21:29,width-12,accent,true);
+            fitted(value,x+width/2,y+h-(dense?11:14),
+                referenceStats?(dense?30:35):(dense?21:29),
+                width-10,accent,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -2663,6 +3431,31 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.FILL);
             }
         }
+
+        // Scope Screen 07's preview materials to the picker only.
+        // Actual game tile colors and the persisted game are untouched.
+        void themeChoiceSurface(float x,float y,float w,float h,int preset){
+            int top=preset==2?0xff9f54f9:preset==1?0xff2d405e:0xfffff7eb;
+            int bottom=preset==2?0xff177be9:preset==1?0xff101c32:0xfff1e5d6;
+            shape(x+1.1f,y+3,w-2.2f,h-1,17,
+                theme==1?0x55000000:0x239d7957);
+            // Shadow uses translucent Paint; reset it before an opaque shader.
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,w,h-2,17,top,bottom);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setColor(preset==1?0x45ffffff:0x90ffffff);
+            p.setStrokeWidth(1f);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-3,16,16,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void themeBoardTray(float x,float y,float w,float h){
+            shape(x+1,y+3,w-2,h-1,18,
+                theme==1?0x44000000:0x18a17b59);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,w,h-2,17,
+                theme==1?0xff3b4b62:0xfffff7ec,
+                theme==1?0xff28364c:0xfff1e7da);
+        }
         void themes(){
             if(referencePortraitLayout){themesCompact();return;}
             brand(61,38);
@@ -2671,7 +3464,6 @@ public final class MainActivity extends ComponentActivity {
             fitted("izgled",276,126,35,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
-            int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
@@ -2682,10 +3474,7 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,198.5f,x+114.5f,369.5f,21,21,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                if(i==2){
-                    p.setShader(null);p.setColor(WHITE);
-                    gradient(x+7,207,102,109,18,0xff984af0,0xff238ffa);
-                }else shape(x+7,207,102,109,18,fills[i]);
+                themeChoiceSurface(x+7,207,102,109,i);
                 int[] cs=i==2?new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
@@ -2706,7 +3495,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Stil pločica",210,433,19,162,ink,true);
             shape(201,416,1,360,0,theme==1?0xff47536a:0xffebdfd0);
             // Real visual tile preview for all 16 values, independent of the game board.
-            shape(29,465,167,172,17,theme==1?0xff344157:0xfff3e9da);
+            themeBoardTray(29,465,167,172);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
@@ -2790,34 +3579,56 @@ public final class MainActivity extends ComponentActivity {
         }
 
 
+        boolean statsTouchExploration(){
+            // Keep the owner's dense five-row layout normally, but expand
+            // targets and permit scrolling for TalkBack/touch exploration.
+            android.view.accessibility.AccessibilityManager manager=
+                (android.view.accessibility.AccessibilityManager)
+                getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+            return manager!=null&&manager.isTouchExplorationEnabled();
+        }
+        void statsHeaderBurst(float cx,float cy,boolean right){
+            // Three source-style coral rays at either side of the rounded title.
+            final float sign=right?1f:-1f;
+            float[] yOffsets={-13f,0f,13f};
+            float[] turns={right?-32f:32f,90f,right?32f:-32f};
+            for(int i=0;i<3;i++){
+                float x=cx+sign*(i==1?3f:0f),y=cy+yOffsets[i];
+                c.save();c.rotate(turns[i],x,y);
+                shape(x-2.8f,y-9.0f,5.6f,18f,2.8f,CORAL);
+                c.restore();
+            }
+        }
         void statisticsCompact(){
             back();
             brand(40,35);
-            fitted("Statistika",200,114,43,325,ink,true);
-            rays(80,121,17,CORAL);rays(352,121,17,CORAL);
-            statCell("Najbolji rezultat",fmt(best),20,126,114,83,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,126,114,83,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),266,126,114,83,0xffffb431);
+            fitted("Statistika",200,116,43,325,ink,true);
+            statsHeaderBurst(79,104,false);
+            statsHeaderBurst(354,104,true);
+            statCell("Najbolji rezultat",fmt(best),20,132,114,94,CORAL);
+            statCell("Ukupno partija",fmt(plays),143,132,114,94,TEAL);
+            statCell("Najveća pločica",Integer.toString(recordTile),266,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,215,174,75,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),205,215,174,75,0xffa657de);
-            statsSoftCard(22,297,356,142,22,card);
-            txt("Zadnjih 10 partija",113,323,18,ink,true);
-            card(213,303,157,29,15,theme==1?0xff34445f:0xfff4ebdf);
-            shape(215+(chartMetric==0?0:77),305,77,25,13,CORAL);
-            fitted("Bodovi",253,323,13,71,chartMetric==0?WHITE:ink,true);
-            fitted("Pločica",330,323,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,303,291,336,"Grafikon bodova",()->{
+            statCell("Prosjek bodova",fmt(average),21,235,174,84,0xff478df4);
+            statCell("Niz pobjeda",fmt(consecutiveWins()),205,235,174,84,0xffa657de);
+            statsSoftCard(16,329,368,158,23,card);
+            leftFitted("Zadnjih 10 partija",30,353,20,199,ink,true);
+            shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
+            shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
+            fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
+            fitted("Najveća pločica",334,354,9.5f,73,
+                chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(223,334,297,369,"Grafikon bodova",()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,303,371,336,"Grafikon pločica",()->{
+            taps.add(new Tap(297,334,374,369,"Grafikon pločica",()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,372,15,muted,false);
-                txt("prve završene partije.",200,395,15,muted,false);
+                txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
+                txt("prve završene partije.",200,436,15,muted,false);
             }else{
                 int ceiling=1;
                 for(int i=0;i<count;i++){
@@ -2831,51 +3642,57 @@ public final class MainActivity extends ComponentActivity {
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float barHeight=Math.max(4,72f*Math.max(0,val)/ceiling);
-                    float x=42+i*barSlot+2,y=414-barHeight;
-                    shape(x,y,barSlot-6,barHeight,Math.min(6,barHeight/2),
-                        val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
-                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-8,9,barSlot+3,ink,true);
-                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,431,
+                    float barHeight=Math.max(4,78f*Math.max(0,val)/ceiling);
+                    float x=40+i*barSlot+2,y=463-barHeight;
+                    int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
+                    gradient(x,y,barSlot-6,barHeight,Math.min(5,barHeight/2),
+                        lighten(barColor,.17f),barColor);
+                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
+                        barSlot+4,ink,true);
+                    fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
                 }
             }
             // One visual history panel as in the reference; row cards are flat,
             // separated by a 4-unit gap, never five heavy elevated panels.
-            shape(16,443,368,265,23,theme==1?card:0xfffffdf9);
-            leftFitted("Povijest partija",30,462,19,250,ink,true);
+            final boolean accessibleRows=statsTouchExploration();
+            statsSoftCard(16,497,368,accessibleRows?273:204,23,card);
+            leftFitted("Povijest partija",30,522,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
-                shape(25,471,350,43,13,theme==1?0xff34445f:0xfffaf5ee);
-                txt("Još nema dovršenih partija.",200,499,15,muted,false);
+                shape(25,529,350,32,13,theme==1?0xff34445f:0xfffaf5ee);
+                txt("Još nema dovršenih partija.",200,552,15,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
                 if(row==null)continue;
-                int y=467+i*48,idx=i;
+                int pitch=accessibleRows?48:34;
+                int y=530+i*pitch,idx=i;
                 int score=row.optInt("score");
                 boolean record=best>0&&score>=best;
-                shape(25,y,350,44,13,theme==1?0xff34445f:0xfffaf5ee);
-                leftFitted(row.optString("day",""),33,y+27,11.5f,83,muted,false);
+                shape(25,y,350,accessibleRows?44:30,12,
+                    theme==1?0xff34445f:0xfffaf5ee);
+                leftFitted(row.optString("day",""),33,y+21,11.3f,83,muted,false);
                 String completedAt=row.optString("time","");
                 // Legacy archives have no time: keep the field empty, never
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())
-                    leftFitted(completedAt,117,y+27,11.5f,46,muted,false);
-                fitted(fmt(score),207,y+29,17,87,record?CORAL:TEAL,true);
-                if(record)icon("crown",265,y+21,19,0xffff9e23);
+                    leftFitted(completedAt,117,y+21,11.3f,46,muted,false);
+                fitted(fmt(score),205,y+22,17,87,record?CORAL:TEAL,true);
+                if(record)icon("crown",265,y+15,17,0xffff9e23);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
                     int tagBg=peak>=1024?0xffc7f7e6:
                         peak>=512?0xffc7dfff:peak>=128?0xffefdbff:0xffffeacc;
                     int tagFg=peak>=1024?0xff078e77:
                         peak>=512?0xff2167c8:peak>=128?0xff9443bd:0xffc67914;
-                    shape(282,y+9,59,26,10,theme==1?0xff46416b:tagBg);
-                    fitted(Integer.toString(peak),311.5f,y+28,14,54,
+                    shape(282,y+4,59,23,10,theme==1?0xff46416b:tagBg);
+                    fitted(Integer.toString(peak),311.5f,y+21,14,54,
                         theme==1?WHITE:tagFg,true);
                 }
-                icon("chevron-right",366,y+22,15,muted);
-                taps.add(new Tap(22,y,378,y+48,"Detalji partije "+(i+1),
+                icon("chevron-right",366,y+15,15,muted);
+                taps.add(new Tap(22,y-2,378,y+(accessibleRows?46:32),
+                    "Detalji partije "+(i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
@@ -2887,7 +3704,6 @@ public final class MainActivity extends ComponentActivity {
             fitted("izgled",276,125,36,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
-            int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
@@ -2897,10 +3713,7 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                if(i==2){
-                    p.setShader(null);p.setColor(WHITE);
-                    gradient(x+7,y+18,102,96,16,0xff984af0,0xff238ffa);
-                }else shape(x+7,y+18,102,96,16,fills[i]);
+                themeChoiceSurface(x+7,y+18,102,96,i);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
@@ -2922,8 +3735,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Pregled",30,370,22,167,ink,true);
             leftFitted("Stil pločica",201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
-            shape(29,411,163,169,17,
-                theme==1?0xff344157:0xfff3e9da);
+            themeBoardTray(29,411,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
@@ -3022,11 +3834,104 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?color:
                     (creamFooter?0xfffff3e6:0xfffffdfa));
         }
+        // Screen 08 uses its own glossy material. This does not alter
+        // gameplay tiles, the launcher, or icons on other screens.
         void settingsIconTile(float x,float y,float size,int color,String glyph){
-            shape(x,y+2,size,size,12,theme==1?0x77000000:0x23966c51);
+            shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
+                theme==1?0x66000000:0x26966c51);
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,size,size-1.5f,12,lighten(color,.12f),color);
-            icon(glyph,x+size/2f,y+size/2f,Math.min(27,size*.59f),WHITE);
+            gradient(x,y,size,size-1.5f,12,lighten(color,.17f),color);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);p.setColor(0x7bffffff);
+            c.drawRoundRect(x+1.1f,y+1.1f,x+size-1.1f,y+size-3.3f,11,11,p);
+            p.setStyle(Paint.Style.FILL);
+            float cx=x+size/2f,cy=y+size/2f;
+            if("sound".equals(glyph)){
+                settingsSpeakerGlyph(cx,cy,Math.min(31,size*.68f));
+            }else if("cloud-backup".equals(glyph)){
+                settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
+            }else if("shield".equals(glyph)){
+                settingsShieldGlyph(cx,cy,Math.min(32,size*.70f));
+            }else{
+                icon(glyph,cx,cy,Math.min(29,size*.63f),WHITE);
+            }
+        }
+        void settingsSpeakerGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            Path horn=new Path();
+            horn.moveTo(2,9);horn.lineTo(7.5f,9);horn.lineTo(12.8f,4);
+            horn.quadTo(15,2,15,5.6f);horn.lineTo(15,18.5f);
+            horn.quadTo(15,22,12.8f,20);horn.lineTo(7.5f,15);
+            horn.lineTo(2,15);horn.close();c.drawPath(horn,p);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(2.7f);
+            Path waves=new Path();
+            waves.arcTo(new RectF(12.3f,6f,22f,18f),-58f,116f,false);
+            c.drawPath(waves,p);
+            p.setStrokeWidth(2.1f);
+            c.drawArc(new RectF(9.8f,2.1f,26.7f,21.9f),
+                -54f,108f,false,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
+            c.restore();
+        }
+        void settingsBackupGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(3.2f);p.setColor(WHITE);
+            Path cloud=new Path();
+            cloud.moveTo(6.3f,18.2f);
+            cloud.cubicTo(-.5f,18.2f,1.8f,9.5f,6.8f,10.7f);
+            cloud.cubicTo(8.1f,3.1f,18.8f,4.3f,19f,11f);
+            cloud.cubicTo(25f,11.5f,23.7f,19f,17.8f,19f);
+            cloud.lineTo(6.3f,19f);c.drawPath(cloud,p);
+            p.setStrokeWidth(2.4f);
+            c.drawArc(new RectF(8,9.4f,17.4f,18.5f),210,200,false,p);
+            Path arrow=new Path();
+            arrow.moveTo(15.4f,11.2f);arrow.lineTo(17.4f,12.1f);
+            arrow.lineTo(16.1f,14.2f);c.drawPath(arrow,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
+        void settingsShieldGlyph(float cx,float cy,float size){
+            c.save();c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            Path shield=new Path();
+            shield.moveTo(12,2);shield.cubicTo(16,5,19,5,22,6.1f);
+            shield.lineTo(21.5f,13.2f);
+            shield.cubicTo(21,18.8f,16.4f,21.6f,12,23);
+            shield.cubicTo(7.6f,21.6f,3,18.8f,2.5f,13.2f);
+            shield.lineTo(2,6.1f);shield.cubicTo(5,5,8,5,12,2);
+            shield.close();c.drawPath(shield,p);
+            p.setColor(0xfffa6153);
+            c.drawRoundRect(10.3f,8.2f,13.7f,16.6f,1.7f,1.7f,p);
+            c.restore();
+        }
+        void settingsHeaderAccent(){
+            // The source has two broad coral rays per side, not
+            // three thin marks. Keep them outside the title glyphs.
+            p.clearShadowLayer();p.setShader(null);p.setColor(CORAL);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(8f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            c.drawLine(80,32,90,45,p);
+            c.drawLine(69,58,82,58,p);
+            c.drawLine(320,32,310,45,p);
+            c.drawLine(331,58,318,58,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
+        void settingsToggle(float x,float y,boolean enabled){
+            int from=enabled?0xff2ddcca:0xffdce1e8;
+            int to=enabled?0xff17c4b0:0xffbac4d1;
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x,y,55,32,17,from,to);
+            shape(x+(enabled?25:3)+.3f,y+4,25,25,13,
+                theme==1?0x34000000:0x1394684a);
+            p.setShader(null);p.setColor(WHITE);
+            gradient(x+(enabled?24:2),y+2,27,27,14,WHITE,0xfff9f9f8);
         }
         void settings(){
             boolean compact=referencePortraitLayout;
@@ -3036,8 +3941,11 @@ public final class MainActivity extends ComponentActivity {
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
             txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
-            rays(74,compact?67:97,compact?34:29,CORAL);
-            rays(331,compact?67:97,compact?34:29,CORAL);
+            if(compact)settingsHeaderAccent();
+            else {
+                rays(74,97,29,CORAL);
+                rays(331,97,29,CORAL);
+            }
             settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
@@ -3059,7 +3967,15 @@ public final class MainActivity extends ComponentActivity {
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            brand(compact?639:795,compact?54:53,false);
+            if(compact){
+                // Owner's footer wordmark is taller and slightly wider than
+                // the current native font glyphs. Scale only the settings
+                // wordmark, keeping the real version and byline legible.
+                c.save();
+                c.scale(1.05f,1.32f,200,630);
+                brand(639,54,false);
+                c.restore();
+            }else brand(795,53,false);
             fitted("v"+appVersion(),200,compact?668:829,15,320,muted,false);
             fitted("by Brendigo",200,compact?689:849,15,300,muted,true);
         }
@@ -3074,8 +3990,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted(caption,compact?91:97,y+height*.62f,
                 compact?18.8f:21,compact?210:202,ink,true);
             float switchY=y+(height-32)/2f;
-            shape(313,switchY,55,32,17,on?TEAL:0xffc6ced6);
-            shape(on?337:317,switchY+3,26,26,15,WHITE);
+            settingsToggle(313,switchY,on);
             taps.add(new Tap(18,y,382,y+height,
                 caption+(on?" uključeno":" isključeno"),action));
         }
@@ -3100,8 +4015,9 @@ public final class MainActivity extends ComponentActivity {
                     "Jezik".equals(caption)?145:215,ink,true);
                 if("Jezik".equals(caption)){
                     float pillY=y+(compact?9:14),pillH=compact?39:44;
-                    shape(245,pillY,124,pillH,19,
-                        theme==1?0xff394a63:0xfffff2e2);
+                    gradient(245,pillY,124,pillH,19,
+                        theme==1?0xff4b5971:0xfffffaf1,
+                        theme==1?0xff394a63:0xfff7ecdd);
                     fitted(value,289,y+(compact?36:43),17,91,ink,true);
                     icon("chevron-down",351,y+height/2f,17,muted);
                 }else if(hasValue){
