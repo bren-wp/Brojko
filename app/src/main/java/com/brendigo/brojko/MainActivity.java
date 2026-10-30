@@ -1158,8 +1158,8 @@ public final class MainActivity extends ComponentActivity {
                 // The original daily-start pill has a shallow lip, unlike the
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
-                boolean homeHero=page.equals("home")&&w>=300;
-                float lip=flatDaily?2.5f:homeHero?3.5f:5f;
+                boolean homeHero=page.equals("home")&&w>=280;
+                float lip=flatDaily?2.5f:homeHero?6f:5f;
                 shape(x,y+lip,w,h,radius,darken(color,
                     flatDaily?.13f:homeHero?.10f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
@@ -1185,7 +1185,7 @@ public final class MainActivity extends ComponentActivity {
                 icon(symbol,x+w/2,y+h*.30f,29,iconColor);
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
-                boolean homeHero=page.equals("home")&&prominent&&w>=300;
+                boolean homeHero=page.equals("home")&&prominent&&w>=280;
                 if(hasSymbol)icon(symbol,x+(prominent?
                     (page.equals("daily")&&referencePortraitLayout&&w>=300?
                         80:Math.min(58,w*.21f)):25),
@@ -1483,13 +1483,15 @@ public final class MainActivity extends ComponentActivity {
             c.save();c.rotate(9,390,179);
             styledTile(360,149,76,69,14,TILES[4],0);
             txt("16",392,191,31,WHITE,true);c.restore();
-            // Reference wordmark has almost the same width as our lettering,
-            // but its navy silhouette is significantly taller. Scale only
-            // the drawn portrait glyphs, not layout/touch areas or the byline.
+            // Use the geometrically verified Splash wordmark on Home,
+            // scaled to the Home source artwork's native bounds. This keeps
+            // the navy rounded silhouette, raised "2", and coral rays in sync
+            // with screen 1 without modifying any other page.
             if(portrait){
                 c.save();
-                c.scale(1.03f,1.24f,200f,134f);
-                brand(153,72,false);
+                c.translate(0f,-129f);
+                c.scale(.775f,.74f,200f,0f);
+                splashWordmark();
                 c.restore();
                 txt("by Brendigo",265,184,15,muted,true);
             }else brand(197,72);
