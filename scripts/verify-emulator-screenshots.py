@@ -25,6 +25,7 @@ CAPTURES = (
     "golden-state-stats-941x1672.png",
     "stats-source-layout-941x1672.png",
     "themes-peach-style-swatches-941x1672.png",
+    "themes-phase07-owner-reference-941x1672.png",
     "reference-settings-polished-941x1672.png",
 )
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
