@@ -3224,6 +3224,28 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.FILL);
             }
         }
+
+        // Scope Screen 07's preview materials to the picker only.
+        // Actual game tile colors and the persisted game are untouched.
+        void themeChoiceSurface(float x,float y,float w,float h,int preset){
+            int top=preset==2?0xff9f54f9:preset==1?0xff2d405e:0xfffff7eb;
+            int bottom=preset==2?0xff177be9:preset==1?0xff101c32:0xfff1e5d6;
+            shape(x+1.1f,y+3,w-2.2f,h-1,17,
+                theme==1?0x55000000:0x239d7957);
+            gradient(x,y,w,h-2,17,top,bottom);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setColor(preset==1?0x45ffffff:0x90ffffff);
+            p.setStrokeWidth(1f);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-3,16,16,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        void themeBoardTray(float x,float y,float w,float h){
+            shape(x+1,y+3,w-2,h-1,18,
+                theme==1?0x44000000:0x18a17b59);
+            gradient(x,y,w,h-2,17,
+                theme==1?0xff3b4b62:0xfffff7ec,
+                theme==1?0xff28364c:0xfff1e7da);
+        }
         void themes(){
             if(referencePortraitLayout){themesCompact();return;}
             brand(61,38);
@@ -3232,7 +3254,6 @@ public final class MainActivity extends ComponentActivity {
             fitted("izgled",276,126,35,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
-            int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
@@ -3243,10 +3264,7 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,198.5f,x+114.5f,369.5f,21,21,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                if(i==2){
-                    p.setShader(null);p.setColor(WHITE);
-                    gradient(x+7,207,102,109,18,0xff984af0,0xff238ffa);
-                }else shape(x+7,207,102,109,18,fills[i]);
+                themeChoiceSurface(x+7,207,102,109,i);
                 int[] cs=i==2?new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
@@ -3267,7 +3285,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Stil pločica",210,433,19,162,ink,true);
             shape(201,416,1,360,0,theme==1?0xff47536a:0xffebdfd0);
             // Real visual tile preview for all 16 values, independent of the game board.
-            shape(29,465,167,172,17,theme==1?0xff344157:0xfff3e9da);
+            themeBoardTray(29,465,167,172);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
@@ -3476,7 +3494,6 @@ public final class MainActivity extends ComponentActivity {
             fitted("izgled",276,125,36,166,CORAL,true);
             fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
-            int[] fills={0xffffece1,0xff1e2943,0xffdcd4ff};
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
@@ -3486,10 +3503,7 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                if(i==2){
-                    p.setShader(null);p.setColor(WHITE);
-                    gradient(x+7,y+18,102,96,16,0xff984af0,0xff238ffa);
-                }else shape(x+7,y+18,102,96,16,fills[i]);
+                themeChoiceSurface(x+7,y+18,102,96,i);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
@@ -3511,8 +3525,7 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Pregled",30,370,22,167,ink,true);
             leftFitted("Stil pločica",201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
-            shape(29,411,163,169,17,
-                theme==1?0xff344157:0xfff3e9da);
+            themeBoardTray(29,411,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
