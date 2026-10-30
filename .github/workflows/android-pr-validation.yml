@@ -30,3 +30,7 @@ jobs:
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
       - name: Verify compiled package and Google Play SDK levels
         run: bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
+      - name: Test release checksum generation on PR
+        run: |
+          bash scripts/generate-checksums.sh
+          test "$(wc -l < SHA256SUMS)" -ge 3
