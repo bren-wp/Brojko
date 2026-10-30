@@ -3232,6 +3232,8 @@ public final class MainActivity extends ComponentActivity {
             int bottom=preset==2?0xff177be9:preset==1?0xff101c32:0xfff1e5d6;
             shape(x+1.1f,y+3,w-2.2f,h-1,17,
                 theme==1?0x55000000:0x239d7957);
+            // Shadow uses translucent Paint; reset it before an opaque shader.
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-2,17,top,bottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setColor(preset==1?0x45ffffff:0x90ffffff);
@@ -3242,6 +3244,7 @@ public final class MainActivity extends ComponentActivity {
         void themeBoardTray(float x,float y,float w,float h){
             shape(x+1,y+3,w-2,h-1,18,
                 theme==1?0x44000000:0x18a17b59);
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-2,17,
                 theme==1?0xff3b4b62:0xfffff7ec,
                 theme==1?0xff28364c:0xfff1e7da);
@@ -3629,6 +3632,7 @@ public final class MainActivity extends ComponentActivity {
         void settingsIconTile(float x,float y,float size,int color,String glyph){
             shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
                 theme==1?0x66000000:0x26966c51);
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,size,size-1.5f,12,lighten(color,.17f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);p.setColor(0x7bffffff);
@@ -3715,9 +3719,11 @@ public final class MainActivity extends ComponentActivity {
         void settingsToggle(float x,float y,boolean enabled){
             int from=enabled?0xff2ddcca:0xffdce1e8;
             int to=enabled?0xff17c4b0:0xffbac4d1;
+            p.setShader(null);p.setColor(WHITE);
             gradient(x,y,55,32,17,from,to);
             shape(x+(enabled?25:3)+.3f,y+4,25,25,13,
                 theme==1?0x34000000:0x1394684a);
+            p.setShader(null);p.setColor(WHITE);
             gradient(x+(enabled?24:2),y+2,27,27,14,WHITE,0xfff9f9f8);
         }
         void settings(){
