@@ -38,7 +38,11 @@ REGIONS = {
                  ("Pločice 4×4", (38, 395, 910, 1288)),
                  ("Donje kontrole", (35, 1330, 925, 1605))],
     "Pobjeda": [("Rezultat i akcije", (135, 450, 805, 1415))],
-    "Dnevni izazov": [("Ploča", (195, 360, 755, 970))],
+    "Dnevni izazov": [("Naslov, niz i datum", (0, 0, 941, 375)),
+                       ("Ploča 4x4", (150, 365, 790, 955)),
+                       ("Ciljevi", (45, 955, 895, 1325)),
+                       ("Kartica nagrade", (35, 1320, 900, 1550)),
+                       ("Gumb", (25, 1500, 920, 1670))],
     "Misije": [("Tekst i napredak", (220, 345, 730, 1580)),
                ("Kartice nagrada", (720, 345, 920, 1580))],
     "Statistika": [("KPI kartice", (30, 300, 915, 760))],
@@ -81,6 +85,8 @@ def main():
                         help="Audit just one requested screen during pixel-by-pixel work")
     parser.add_argument("--controlled-home", action="store_true",
                         help="Compare Home against the instrumented source-data fixture, not a live session")
+    parser.add_argument("--controlled-daily", action="store_true",
+                        help="Compare Daily against instrumented seven-day streak fixture")
     args = parser.parse_args()
     rows = [
         "# Brojko — pixel fidelity audit",
@@ -103,6 +109,8 @@ def main():
                     continue
                 name = ("home-controlled-reference-941x1672.png"
                         if args.controlled_home and label == "Početni"
+                        else "daily-source-streak7-941x1672.png"
+                        if args.controlled_daily and label == "Dnevni izazov"
                         else default_name)
                 pattern = (f"Slika ChatGPT*{token}({args.reference_copy_index}).png"
                            if args.reference_copy_index is not None
