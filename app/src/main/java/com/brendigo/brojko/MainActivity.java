@@ -1741,15 +1741,15 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
             p.setStrokeCap(Paint.Cap.ROUND);
-            p.setStrokeWidth(aroundBadge?6.5f:7.5f);
+            p.setStrokeWidth(aroundBadge?5f:6.9f);
             if(aroundBadge){
                 float[][] marks={
-                    {53,117,44,112},{48,126,39,126},{53,135,45,141},
-                    {160,117,169,112},{165,126,174,126},{160,135,168,141}
+                    {53,117,44,112},{50,126,43,126},{53,130,46,132},
+                    {156,117,164,114},{158,126,166,126},{155,131,163,134}
                 };
                 for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
             }else{
-                float[][] marks={{100,58,93,51},{110,53,109,39},
+                float[][] marks={{102,58,96,52},{110,53,109,40.5f},
                                   {121,58,127,50}};
                 for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
             }
