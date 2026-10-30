@@ -1192,24 +1192,26 @@ public final class MainActivity extends ComponentActivity {
                 boolean victoryShare=page.equals("win")&&
                     "Podijeli rezultat".equals(label);
                 float lip=flatDaily?2.5f:homeHero?6f:
-                    (victoryPrimary||victoryShare?4f:5f);
+                    (victoryPrimary||victoryShare?2.7f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
                 shape(x,y+lip,w,h,radius,
-                    victoryPrimary?0xffd7462f:
-                    victoryShare?0xff1d62c2:
+                    victoryPrimary?0xffd8432f:
+                    victoryShare?0xff2467c9:
                     homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
                 gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
-                    victoryPrimary?0xffff946a:
-                    victoryShare?0xff67b2ff:
+                    victoryPrimary?0xffff8054:
+                    victoryShare?0xff66b0fc:
                     homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
-                    victoryPrimary?0xffff5c41:
-                    victoryShare?0xff2b80eb:
+                    victoryPrimary?0xffff5134:
+                    victoryShare?0xff2f83ec:
                     homeHero?0xffff5837:color);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(flatDaily?.9f:1.2f);
-                p.setColor(0x86ffffff);
+                p.setStrokeWidth(flatDaily?.9f:
+                    (victoryPrimary||victoryShare?.75f:1.2f));
+                p.setColor(victoryPrimary||victoryShare?
+                    0x46ffffff:0x86ffffff);
                 c.drawRoundRect(x+3,y+2,x+w-3,
                     y+h-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
@@ -1221,9 +1223,16 @@ public final class MainActivity extends ComponentActivity {
                 boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
                 boolean victorySecondary=page.equals("win")&&
                     "Nova igra".equals(label)&&theme!=1;
-                card(x,y,w,h,radius,
-                    victorySecondary?0xfff5e9da:
-                    raisedGameAction&&theme!=1?0xfffff3e5:color);
+                if(victorySecondary){
+                    // A warm, raised but borderless reference pill. Do not
+                    // alter the same shared component outside the win modal.
+                    shape(x,y+1.7f,w,h-1,radius,0xffe6d4c0);
+                    gradient(x,y,w,h-2.2f,radius,
+                        0xfffff7ea,0xfff0e3d1);
+                }else{
+                    card(x,y,w,h,radius,
+                        raisedGameAction&&theme!=1?0xfffff3e5:color);
+                }
             }
             boolean hasSymbol=symbol!=null;
             int iconColor=prominent?WHITE:ink;
@@ -1232,15 +1241,27 @@ public final class MainActivity extends ComponentActivity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=280;
-                if(hasSymbol)icon(symbol,x+(prominent?
-                    (page.equals("daily")&&referencePortraitLayout&&w>=300?
-                        80:Math.min(58,w*.21f)):25),
-                    y+h/2,Math.min(prominent?
-                        (page.equals("daily")?34:homeHero?43:33):23,
-                        h*(page.equals("daily")?.65f:homeHero?.57f:.52f)),iconColor);
+                if(hasSymbol){
+                    boolean winSecondary=page.equals("win")&&
+                        "Nova igra".equals(label);
+                    boolean winShare=page.equals("win")&&
+                        "Podijeli rezultat".equals(label);
+                    float iconX=x+(winSecondary?78f:winShare?69f:
+                        prominent?(page.equals("daily")&&
+                        referencePortraitLayout&&w>=300?80f:
+                        Math.min(58f,w*.21f)):25f);
+                    if(winSecondary)
+                        victoryRestartIcon(iconX,y+h/2f,29f,iconColor);
+                    else icon(symbol,iconX,y+h/2,
+                        Math.min(prominent?
+                            (page.equals("daily")?34:homeHero?43:33):23,
+                            h*(page.equals("daily")?.65f:
+                                homeHero?.57f:.52f)),iconColor);
+                }
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&label.length()>10?w*.62f:w*.58f):
-                    (w+38)/2):w/2);
+                    (page.equals("win")&&"Nova igra".equals(label)?
+                        w*.59f:(w+38f)/2f)):w/2f);
                 int labelColor=prominent?WHITE:ink;
                 float font=prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
@@ -2106,7 +2127,9 @@ public final class MainActivity extends ComponentActivity {
             // The reference logo is a bouncing, hand-lettered Nunito word,
             // not a single rigid baseline. Build it as individual glyphs
             // so the weight, overlap and subtle rotations work at any DPI.
-            c.save();c.scale(.96f,1.28f,200f,286f);
+            // Golden screenshot: previous heading was visibly ~20% taller
+            // than the painted wordmark, especially the capital B.
+            c.save();c.scale(.95f,1.10f,200f,286f);
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setTextSize(63f);
             p.setTextScaleX(1f);p.setFakeBoldText(false);
@@ -2127,7 +2150,7 @@ public final class MainActivity extends ComponentActivity {
                     middle,baseline-27f);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
-                p.setStrokeWidth(3.4f);p.setColor(WHITE);
+                p.setStrokeWidth(2.6f);p.setColor(WHITE);
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
                 p.setStyle(Paint.Style.FILL);p.setColor(ink);
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
@@ -2138,6 +2161,39 @@ public final class MainActivity extends ComponentActivity {
             p.setTextAlign(Paint.Align.CENTER);
             c.restore();
         }
+        void victoryRestartIcon(float cx,float cy,float width,int color){
+            // The original new-game pictogram is a two-arrow refresh.
+            c.save();c.translate(cx-width/2f,cy-width/2f);
+            c.scale(width/24f,width/24f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(2.7f);p.setStrokeCap(Paint.Cap.ROUND);
+            p.setColor(color);
+            c.drawArc(new RectF(3.4f,3.4f,20.6f,20.6f),
+                201f,148f,false,p);
+            c.drawArc(new RectF(3.4f,3.4f,20.6f,20.6f),
+                20f,148f,false,p);
+            p.setStyle(Paint.Style.FILL);
+            Path arrows=new Path();
+            arrows.moveTo(17.8f,2.0f);arrows.lineTo(21.5f,7.3f);
+            arrows.lineTo(15.3f,7.4f);arrows.close();
+            c.drawPath(arrows,p);
+            arrows.reset();arrows.moveTo(6.2f,22.0f);
+            arrows.lineTo(2.5f,16.7f);arrows.lineTo(8.7f,16.6f);
+            arrows.close();c.drawPath(arrows,p);
+            c.restore();
+        }
+        void victorySummaryCard(float x,float y,float width,float height){
+            if(theme==1){
+                card(x,y,width,height,19,card);return;
+            }
+            // Reference interior is ~RGB(249,241,228), unlike the former
+            // #F8EAD9 with a thick white bevel.
+            p.clearShadowLayer();p.setShader(null);
+            shape(x+.5f,y+1.6f,width-1f,height,19,0x30c9a98c);
+            gradient(x,y,width,height-1.8f,19,
+                0xfffdf7ef,0xfff9f1e4);
+        }
         void compactVictoryCard(){
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
@@ -2147,16 +2203,17 @@ public final class MainActivity extends ComponentActivity {
             victoryCrown(200,187,98);
             victoryHeadingRays();
             victoryHeading();
-            card(95,295,210,33,18,theme==1?card:0xffffeddb);
-            fitted("Dosegnuli ste",161,318,20,133,CORAL,true);
-            fitted("2048!",258,318,21,88,TEAL,true);
+            if(theme==1)card(95,299,210,30,17,card);
+            else gradient(95,299,210,30,17,
+                0xfffff5e7,0xffffeedb);
+            fitted("Dosegnuli ste",161,323,20,133,0xffff5537,true);
+            fitted("2048!",258,323,21,88,0xff008d83,true);
             // Measured reference card interior averages RGB(249,237,221);
             // the generic nearly-white card was RGB(255,253,250).
-            int summarySurface=theme==1?card:0xfff8ead9;
-            card(76,337,120,69,19,summarySurface);
-            card(204,337,120,69,19,summarySurface);
-            txt("Tvoj rezultat",136,356,13,muted,false);
-            fitted(fmt(game.score),136,392,33,113,ink,true);
+            victorySummaryCard(76,337,120,69);
+            victorySummaryCard(204,337,120,69);
+            txt("Tvoj rezultat",136,356,12,muted,false);
+            fitted(fmt(game.score),136,392,35,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
             for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
             button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
