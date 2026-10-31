@@ -3251,10 +3251,10 @@ public final class MainActivity extends ComponentActivity {
             shape(215+(chartMetric==0?0:77),413,77,29,15,CORAL);
             fitted("Bodovi",253,434,13,71,chartMetric==0?WHITE:ink,true);
             fitted("Pločica",330,434,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,410,291,445,"Grafikon bodova",()->{
+            taps.add(new Tap(214,405,291,453,"Grafikon bodova",()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,410,371,445,"Grafikon pločica",()->{
+            taps.add(new Tap(292,405,371,453,"Grafikon pločica",()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
@@ -3263,23 +3263,26 @@ public final class MainActivity extends ComponentActivity {
                 txt("Grafikon će se prikazati nakon",200,519,16,muted,false);
                 txt("prve završene partije.",200,545,16,muted,false);
             }else{
-                int ceiling=1, topScoreIndex=-1;
+                int ceiling=1;
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(i);
                     if(row==null)continue;
                     int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
-                    if(value>ceiling){ceiling=value;topScoreIndex=i;}
+                    ceiling=Math.max(ceiling,value);
                 }
                 float chartLeft=42,barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float height=Math.max(4,112f*Math.max(0,val)/ceiling);
-                    float x=chartLeft+i*barSlot+2,y=581-height;
-                    shape(x,y,barSlot-6,height,Math.min(6,height/2),
-                        val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
-                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-9,9,barSlot+3,ink,true);
+                    float x=chartLeft+i*barSlot+2;
+                    if(val>0){
+                        float height=Math.max(4f,112f*val/ceiling);
+                        float y=581-height;
+                        shape(x,y,barSlot-6,height,Math.min(6f,height/2f),
+                            val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
+                        fitted(fmt(val),x+(barSlot-6)/2,y-9,9,barSlot+3,ink,true);
+                    }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,606,11,barSlot-4,
                         muted,false);
                 }
@@ -3621,10 +3624,10 @@ public final class MainActivity extends ComponentActivity {
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
             fitted("Najveća pločica",334,354,9.5f,73,
                 chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(223,334,297,369,"Grafikon bodova",()->{
+            taps.add(new Tap(223,324,297,372,"Grafikon bodova",()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(297,334,374,369,"Grafikon pločica",()->{
+            taps.add(new Tap(297,324,374,372,"Grafikon pločica",()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
@@ -3645,13 +3648,19 @@ public final class MainActivity extends ComponentActivity {
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float barHeight=Math.max(4,78f*Math.max(0,val)/ceiling);
-                    float x=40+i*barSlot+2,y=463-barHeight;
-                    int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
-                    gradient(x,y,barSlot-6,barHeight,Math.min(5,barHeight/2),
-                        lighten(barColor,.17f),barColor);
-                    if(val>0)fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
-                        barSlot+4,ink,true);
+                    float x=40+i*barSlot+2;
+                    // A zero-value history row is not an earned bar. The
+                    // former minimum 4-unit pillar falsely visualized 0.
+                    if(val>0){
+                        float barHeight=Math.max(4f,78f*val/ceiling);
+                        float y=463-barHeight;
+                        int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
+                        p.setShader(null);p.setColor(WHITE);
+                        gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
+                            lighten(barColor,.17f),barColor);
+                        fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
+                            barSlot+4,ink,true);
+                    }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
                 }
