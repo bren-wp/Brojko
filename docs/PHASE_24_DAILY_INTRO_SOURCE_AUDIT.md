@@ -38,3 +38,32 @@ U izvorniku postoje četiri zasićena narančasta/žuta dekorativna poteza pored
 - [ ] Preuzeti **novu stvarnu snimku** i mjeriti iste ROI-e; usporedba datuma iz različitih dana nije dokaz podudaranja tipografije.
 - [ ] PR i dalje ostaje Draft; **bez mergea i bez novog izdanja**.
 - [ ] Ne tvrditi 1:1 prije odgovarajuće pixel potvrde svakog zaslona.
+
+
+## Nastavak u istom Draft PR-u: pravi 3D poklon (faza 25)
+
+Vlasnikov izvorni PNG 941 × 1672 uspoređen je sa stvarnom emulator snimkom `daily-intro-rays-source-941x1672.png` nakon uspješne prethodne faze, bez pomicanja ili skaliranja. Sljedeće regije pokazuju zašto vizual poklona nije bio dovoljno usklađen:
+
+| Regija | Koordinate [x0,y0,x1,y1) | Početni RGB MAE |
+|---|---|---:|
+| Cijeli Dnevni izazov | [0,0,941,1672) | 17,430 |
+| Panel nagrade | [40,1315,899,1512) | 26,064 |
+| Ilustracija poklona | [100,1310,320,1540) | **38,240** |
+| Mašna | [115,1310,310,1410) | 32,276 |
+| Tijelo i zlatna vrpca | [120,1400,302,1530) | **56,510** |
+| Tekst nagrade | [350,1315,830,1520) | 23,855 |
+
+### Potvrđen uzrok i stvarne izmjene
+
+Android `Paint` zadržavao je prozirnu alfa-vrijednost iz obruba poklona i pri kasnijem iscrtavanju zlatne vrpce. Metoda `gradient()` ne mijenja alfa-kanal `Paint` objekta; zato je zlatna vrpca bila ružičasto-prozirna umjesto neprozirno zlatne. Taj problem ispravljen je **lokalnim resetiranjem boje/alfе prije gradijenta**, bez globalne promjene zajedničkog crtanja.
+
+Uz to je proširena ljubičasta kutija `0,80 → 0,94` puta veličine ilustracije i malo produljena. Bezier geometrija dviju petlji mašne smanjena je u visinu i širinu: prethodna mašna dosezala je oko y=1322 px i gotovo dodirivala zadnju karticu cilja, dok je u referenci zlatni vrh približno y=1351 px. Geometrija je prilagođena upravo tom odmaku.
+
+- Nema vanjskih slika, ovisnosti ili mrežnih servisa.
+- Iznos stvarne nagrade `+250`, stanje `finished`, pravo pokretanje izazova i korisnička pohrana nisu izmijenjeni.
+- Dodan je instrumentacijski test `dailyGiftHasOpaqueRibbonCompactBowAndSourceWidth`, koji na stvarnoj 941 × 1672 Canvas snimci provjerava neprozirnu žutu vrpcu, široko ljubičasto tijelo, donji položaj mašne i očuvan streak.
+- Validator zahtijeva stvarni `daily-gift-opaque-ribbon-941x1672.png`.
+
+### Kriterij prihvaćanja
+
+Ove su vrijednosti **početna mjerenja, a ne rezultat najnovijeg commita**. Novi stvarni screenshot i sva tri uspješna GitHub Actions workflowa potrebni su za konačnu ponovljenu usporedbu; ako novi ROI MAE poraste ili novi test padne, ispravak se nastavlja u **istom PR-u #34**. PR ostaje Draft, bez mergea i izdanja.
