@@ -3821,6 +3821,61 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGiftBowHasHollowAmberLoopsOnRealEmulator(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDaily=activity.lastDaily;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                activity.streak=7;activity.lastDaily="";
+                activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    // The owner's bow has deep amber hollows at both
+                    // 3D loops, not uniform pale-yellow oval fills.
+                    for(int x:new int[]{165,263}){
+                        int rgb=image.getPixel(x,1374);
+                        int red=android.graphics.Color.red(rgb);
+                        int green=android.graphics.Color.green(rgb);
+                        int blue=android.graphics.Color.blue(rgb);
+                        assertTrue("Both bow openings must be amber, not flat yellow",
+                            red>135&&green<185&&blue<130&&red>green+45);
+                    }
+                    // The two independent straps and real 250-star reward
+                    // remain untouched by this visual-only bow change.
+                    int left=image.getPixel(170,1480);
+                    int middle=image.getPixel(214,1480);
+                    int right=image.getPixel(259,1480);
+                    assertTrue("Left strap stays gold",
+                        android.graphics.Color.red(left)>195 &&
+                        android.graphics.Color.blue(left)<145);
+                    assertTrue("Gift center stays purple",
+                        android.graphics.Color.blue(middle)>
+                        android.graphics.Color.red(middle)+20);
+                    assertTrue("Right strap stays gold",
+                        android.graphics.Color.red(right)>195 &&
+                        android.graphics.Color.blue(right)<145);
+                    assertEquals("Drawing does not change daily streak",
+                        7,activity.streak);
+                    captureReference(activity,view,
+                        "daily-gift-bow-hollows-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.streak=oldStreak;activity.lastDaily=oldDaily;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGiftHasOpaqueRibbonCompactBowAndSourceWidth(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
