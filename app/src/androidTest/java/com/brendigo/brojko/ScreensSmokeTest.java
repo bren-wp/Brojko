@@ -4428,6 +4428,59 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void themesDarkAndVividPreviewsFillRealSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int darkX=Math.round(board.offX+202f*board.scale);
+                    int vividX=Math.round(board.offX+319f*board.scale);
+                    int top=Math.round(board.offY+179f*board.scale);
+                    int vividTop=Math.round(board.offY+174f*board.scale);
+                    int bottom=Math.round(board.offY+279f*board.scale);
+                    int darkTop=bitmap.getPixel(darkX,top);
+                    int darkBottom=bitmap.getPixel(darkX,bottom);
+                    int vivid=bitmap.getPixel(vividX,vividTop);
+                    assertTrue("Dark preview must reach upper source bounds",
+                        android.graphics.Color.red(darkTop)<85 &&
+                        android.graphics.Color.blue(darkTop)<115);
+                    assertTrue("Dark preview must reach lower source bounds",
+                        android.graphics.Color.red(darkBottom)<85);
+                    assertTrue("Vivid preview reaches upper purple source bounds",
+                        android.graphics.Color.blue(vivid)>180 &&
+                        android.graphics.Color.blue(vivid)>
+                            android.graphics.Color.green(vivid)+80);
+                    int cards=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Svijetla".equals(tap.label)||
+                            "Tamna".equals(tap.label)||
+                            "Živopisna".equals(tap.label)){
+                            cards++;
+                            assertTrue("Preview card remains interactive",
+                                tap.bottom-tap.top>=140);
+                        }
+                    assertEquals(3,cards);
+                    captureReference(activity,board,
+                        "themes-choice-bounds-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themeAnimationUsesThreeSourcePillsAndPersistsSelection(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
