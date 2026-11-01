@@ -2980,8 +2980,14 @@ public final class MainActivity extends ComponentActivity {
                     holeX+size*.055f,holeY+size*.083f,p);
                 p.setShader(null);c.restore();
             }
-            gradient(cx-size*.145f,top-size*.22f,
-                size*.29f,size*.21f,6,
+            // On the light portrait reference the central bow knot starts
+            // below the hollow loops. Its previous top covered the cream
+            // background 20px too early above the owner's gold center.
+            boolean sourceGift=referencePortraitLayout&&theme==0;
+            float knotTop=top-size*(sourceGift?.11f:.22f);
+            float knotHeight=size*(sourceGift?.18f:.21f);
+            gradient(cx-size*.145f,knotTop,
+                size*.29f,knotHeight,6,
                 0xffffeb77,0xffffa51c);
         }
         void dailyGiftBursts(float cx,float cy){
