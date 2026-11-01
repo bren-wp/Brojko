@@ -941,14 +941,16 @@ public final class MainActivity extends ComponentActivity {
                     // Only the victory card uses the soft, pillow-like points
                 // of the owner's 941x1672 reward illustration.
                 float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
-                    (page.equals("win")?5.15f:5.35f);
+                    (page.equals("win")?5.15f:
+                        ("missions".equals(page)&&theme==0?5.85f:5.35f));
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
                 Path star=new Path();
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
-                    float corner=page.equals("win")?.73f:.82f;
+                    float corner=page.equals("win")?.73f:
+                        ("missions".equals(page)&&theme==0?.72f:.82f);
                     float startX=xs[i]*corner+xs[prev]*(1f-corner);
                     float startY=ys[i]*corner+ys[prev]*(1f-corner);
                     float endX=xs[i]*corner+xs[next]*(1f-corner);
@@ -966,7 +968,8 @@ public final class MainActivity extends ComponentActivity {
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xffffdc65:
-                    golden?0xffffed87:lighten(color,.43f);
+                    golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
+                    lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
                 // rather than the lighter outline-like mission style.
                 int edge=victoryGold?0xffffa722:
@@ -2661,6 +2664,27 @@ public final class MainActivity extends ComponentActivity {
             }
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
+        // Exact 941x1672 owner screenshot has four short orange marks
+        // beside the introductory subtitle. Static geometry avoids new
+        // allocations during Canvas redraw and stays outside its text.
+        private static final float[][] DAILY_INTRO_MARKS={
+            {52f,117f,61f,127f}, {40f,140f,53f,141f},
+            {347f,118f,342f,127f}, {347f,140f,360f,140f}
+        };
+        private static final int[] DAILY_INTRO_COLORS={
+            0xffff913a,0xffffb32f,0xffffa73c,0xffff7248
+        };
+        void dailyIntroMarks(){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            for(int i=0;i<DAILY_INTRO_MARKS.length;i++){
+                float[] m=DAILY_INTRO_MARKS[i];
+                p.setColor(DAILY_INTRO_COLORS[i]);
+                p.setStrokeWidth(i%2==0?7f:8f);
+                c.drawLine(m[0],m[1],m[2],m[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void dailyHeaderAccents(float cx,float cy){
             // Source heading uses three solid coral confetti strokes rather
             // than the tiny evenly spaced dots of the shared rays() utility.
@@ -2710,6 +2734,7 @@ public final class MainActivity extends ComponentActivity {
                 25,46,CORAL,true);
             fitted("dana zaredom",portrait?344:335,streakTop+
                 (portrait?60:65),12,83,muted,true);
+            if(portrait&&theme==0)dailyIntroMarks();
             if(portrait){
                 // The original portrait artwork has two subtitle lines,
                 // spaced between the date pill and the illustrative board.
@@ -2873,15 +2898,18 @@ public final class MainActivity extends ComponentActivity {
             // Measured: first bow rose into the final objective row.
             // Raise the box lid, extend the body, but lower its bow tips.
             float top=cy-size*.22f;
-            float left=cx-size*.40f;
-            float width=size*.80f;
-            float height=size*.62f;
+            // Original has a broader opaque box and a compact bow above
+            // the reward panel, not a narrow translucent parcel.
+            float left=cx-size*.47f;
+            float width=size*.94f;
+            float height=size*.64f;
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
             c.drawRoundRect(left,top+3f,left+width,top+height+3f,
                 9.0f,9.0f,p);
             p.clearShadowLayer();
+            p.setColor(WHITE); // gradient() retains the Paint alpha
             gradient(left,top,width,height,9,
                 0xffba82ff,0xff7034d3);
             // Side wall and inset highlight give the box a rounded body.
@@ -2892,29 +2920,38 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(left+1.3f,top+1.3f,
                 left+width-1.3f,top+height-2.0f,8,8,p);
             p.setStyle(Paint.Style.FILL);
-            gradient(cx-size*.09f,top,size*.18f,height,2.8f,
+            p.setColor(WHITE); // do not inherit the translucent rim alpha
+            // The original gift has TWO gold edge straps with a purple
+            // front panel between them (not one centered ribbon).
+            // The widths correspond to x≈156..183 and x≈247..272
+            // on the owner's unscaled 941x1672 portrait reference.
+            gradient(cx-size*.31f,top,size*.14f,height,2.8f,
+                0xffffeb75,0xffffaa1d);
+            gradient(cx+size*.17f,top,size*.14f,height,2.8f,
                 0xffffeb75,0xffffaa1d);
             // Raised purple lid, with golden horizontal band.
             gradient(left-size*.025f,top-size*.075f,
                 width+size*.05f,size*.23f,7,
                 0xffcf9bff,0xff7a3bdb);
-            gradient(cx-size*.1f,top-size*.075f,
-                size*.20f,size*.23f,2.0f,
+            // Wide gold lid crossing under the center knot joins the
+            // two front straps in the owner illustration.
+            gradient(left+width*.23f,top+size*.015f,
+                width*.54f,size*.115f,4f,
                 0xffffed78,0xffffb21e);
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.19f,top-size*.44f,
-                cx-size*.64f,top-size*.46f,
-                cx-size*.51f,top-size*.34f);
-            bowL.cubicTo(cx-size*.46f,top-size*.10f,
+            bowL.cubicTo(cx-size*.18f,top-size*.30f,
+                cx-size*.49f,top-size*.31f,
+                cx-size*.44f,top-size*.23f);
+            bowL.cubicTo(cx-size*.39f,top-size*.10f,
                 cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
             bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.19f,top-size*.44f,
-                cx+size*.64f,top-size*.46f,
-                cx+size*.51f,top-size*.34f);
-            bowR.cubicTo(cx+size*.46f,top-size*.10f,
+            bowR.cubicTo(cx+size*.18f,top-size*.30f,
+                cx+size*.49f,top-size*.31f,
+                cx+size*.44f,top-size*.23f);
+            bowR.cubicTo(cx+size*.39f,top-size*.10f,
                 cx+size*.15f,top-size*.04f,cx,top-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
@@ -3089,6 +3126,18 @@ public final class MainActivity extends ComponentActivity {
                 c.drawLine(m[0],m[1],m[2],m[3],p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
+        // The three source-reference section headings use Nunito Black,
+        // unlike the slimmer row captions. Keep coordinates independent of
+        // mission values and share one drawing path without allocating fonts.
+        void missionSectionTitle(String title,float baseline,float textSize){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setTextScaleX(1f);p.setFakeBoldText(false);
+            p.setTypeface(displayFont);p.setTextSize(textSize);
+            p.setStrokeWidth(0f);p.setColor(ink);
+            p.setTextAlign(Paint.Align.LEFT);
+            c.drawText(title,63f,baseline,p);
+            p.setTextAlign(Paint.Align.CENTER);
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
             // This reference places Back at y≈40 native px, not at the
@@ -3114,7 +3163,8 @@ public final class MainActivity extends ComponentActivity {
             rays(43,sunY,19,0xffffb431);
             p.setShader(null);p.setColor(0xffffb431);
             p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
-            txt("Dnevne",110,portrait?150:204,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle("Dnevne",155f,20.5f);
+            else txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
             if(portrait&&theme!=1)
                 missionWeeklyHeaderIcon(43,portrait?346:420);
@@ -3129,21 +3179,23 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffff5e5);
             fitted(completedAchievements()+"/2",337,countTop+18,
                 13,66,muted,true);
-            missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
+            missionRow("Spoji 20 pločica","Spoji bilo koje pločice 20 puta.",
                 todayMerges,20,50,portrait?160:212,TEAL);
             boolean noUndo512=(rewardFlags&2)!=0 ||
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
             missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
-            txt("Tjedne",105,portrait?348:422,23,ink,true);
-            missionRow("Igraj 7 dana zaredom","Sedam različitih dana",
+            if(portrait&&theme==0)missionSectionTitle("Tjedne",352f,20.5f);
+            else txt("Tjedne",105,portrait?348:422,23,ink,true);
+            missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
             missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
-            txt("Postignuća",132,portrait?542:638,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle("Postignuća",550f,16.1f);
+            else txt("Postignuća",132,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Dosegni pločicu 1024",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
-            missionRow("Kralj rezultata","Osvoji 50.000 bodova",
+            missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
                 best,50000,1000,portrait?627:741,0xffff934b);
         }
         void missionPeriodPill(String period,int y){
@@ -3203,9 +3255,9 @@ public final class MainActivity extends ComponentActivity {
             leftFitted(name,103,titleBaseline,portrait?15.5f:17.5f,
                 179,ink,true);
             if(name.startsWith("Dosegni 512")){
-                leftFitted("Ostvari pločicu 512",103,
+                leftFitted("Ostvari pločicu 512 bez korištenja",103,
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
-                leftFitted("bez korištenja poništavanja",103,
+                leftFitted("opcije poništi potez.",103,
                     y+(portrait?46:55),portrait?10:11,177,muted,false);
             }else{
                 leftFitted(sub,103,y+(portrait?38:48),
@@ -3239,15 +3291,22 @@ public final class MainActivity extends ComponentActivity {
                 270,y+(portrait?59:68),11,45,muted,true);
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
-            float rewardCenter=portrait?345:323;
+            // Golden stars in the owner image sit slightly to the right
+            // and lower than the previous vector icons. Keep the award
+            // text and layout untouched and move only the illustration.
+            boolean sourceMissionStar=portrait&&theme==0;
+            float rewardCenter=sourceMissionStar?349:portrait?345:323;
             if(portrait&&theme!=1)
                 gradient(315,y+4,54,61,15,0xfffff9e7,0xfffff0d3);
             else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,y+(portrait?23:29),
-                portrait?31:29,0xffffad1a);
-            fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
+            icon("star",rewardCenter,
+                y+(sourceMissionStar?33:portrait?23:29),
+                sourceMissionStar?31:portrait?31:29,0xffffad1a);
+            // Ensure the real award amount remains below the artwork.
+            fitted("+"+fmt(reward),rewardCenter,
+                y+(sourceMissionStar?61:portrait?55:62),
                 portrait?14:13,portrait?49:63,ink,true);
         }
         JSONArray history() {

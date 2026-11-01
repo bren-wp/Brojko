@@ -3352,6 +3352,141 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void missionsSectionHeadingsUseSourceWeightAndLeftAlignment(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // All source headings start at ~150px and use solid
+                    // navy lettering. Keep the three baselines separate.
+                    int[][] regions={
+                        {133,310,450,380},
+                        {133,785,453,847},
+                        {133,1248,536,1312}
+                    };
+                    for(int index=0;index<regions.length;index++){
+                        int[] region=regions[index];
+                        int minimumX=1000,maximumX=-1,minimumY=2000;
+                        int inkPixels=0;
+                        for(int y=region[1];y<region[3];y++)
+                            for(int x=region[0];x<region[2];x++){
+                                int rgb=bitmap.getPixel(x,y);
+                                int red=android.graphics.Color.red(rgb);
+                                int green=android.graphics.Color.green(rgb);
+                                int blue=android.graphics.Color.blue(rgb);
+                                if(red<88&&green<110&&blue<155){
+                                    minimumX=Math.min(minimumX,x);
+                                    maximumX=Math.max(maximumX,x);
+                                    minimumY=Math.min(minimumY,y);
+                                    inkPixels++;
+                                }
+                            }
+                        assertTrue("Heading must render as solid text",
+                            inkPixels>500);
+                        assertTrue("Section titles must share source left edge",
+                            minimumX>=133&&minimumX<=180);
+                        assertTrue("Headings must fit before reward pills",
+                            maximumX<region[2]);
+                        if(index==2){
+                            assertTrue("Achievement heading must sit beneath",
+                                minimumY>=1250);
+                            assertTrue("Achievement heading must be compact",
+                                maximumX<=408);
+                        }
+                    }
+                    captureReference(activity,view,
+                        "missions-section-titles-941x1672");
+                    assertEquals("Rendering headings never grants currency",
+                        0,activity.rewardFlags);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void missionsGoldenRewardStarMatchesOwnerSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldTile=activity.recordTile;
+            int oldBest=activity.best,oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Absolute pixels at the 941x1672 owner reference:
+                    // the first reward star belongs near (822,456),
+                    // rather than the previous smaller star at (811,433).
+                    int pixels=0;
+                    long sumX=0L,sumY=0L;
+                    for(int y=399;y<488;y++)for(int x=770;x<860;x++){
+                        int color=bitmap.getPixel(x,y);
+                        int red=android.graphics.Color.red(color);
+                        int green=android.graphics.Color.green(color);
+                        int blue=android.graphics.Color.blue(color);
+                        if(red>190&&green>90&&green<230&&blue<145&&
+                                red>green+30){
+                            pixels++;sumX+=x;sumY+=y;
+                        }
+                    }
+                    assertTrue("Reward star must fill the owner source area",
+                        pixels>=1950);
+                    float centroidX=sumX/(float)pixels;
+                    float centroidY=sumY/(float)pixels;
+                    assertEquals("Golden reward star horizontal source centroid",
+                        822f,centroidX,12f);
+                    assertEquals("Golden reward star vertical source centroid",
+                        456f,centroidY,12f);
+                    assertEquals("Rendering rewards never grants extra stars",
+                        0,activity.rewardFlags);
+                    assertEquals(8400,activity.best);
+                    captureReference(activity,view,
+                        "missions-reward-star-source-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void illustratedMissionsKeepRealProgressAndDistinctColors(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
@@ -3387,8 +3522,8 @@ public class ScreensSmokeTest {
                         android.graphics.Color.green(teal)>
                             android.graphics.Color.red(teal)+20);
                     int reward=bmp.getPixel(
-                        Math.round(view.offX+345*view.scale),
-                        Math.round(view.offY+184*view.scale));
+                        Math.round(view.offX+349*view.scale),
+                        Math.round(view.offY+193*view.scale));
                     assertTrue("Reward star must be saturated gold",
                         android.graphics.Color.red(reward)>
                             android.graphics.Color.blue(reward)+65);
@@ -3558,6 +3693,69 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyIntroStrokesMatchOwnerSourcePixelsWithoutTouchOverlap(){
+        rule.getScenario().onActivity(activity->{
+            String prior=activity.page;
+            int priorTheme=activity.theme,priorStreak=activity.streak;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                activity.theme=0;
+                activity.streak=7;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Source reference: four orange/yellow rays on
+                    // either side of the subtitle, outside the words.
+                    float[][] centers={
+                        {56.5f,122f},{46.5f,140.5f},
+                        {344.5f,122.5f},{353.5f,140f}
+                    };
+                    int[] expectedColors={
+                        0xffff913a,0xffffb32f,0xffffa73c,0xffff7248
+                    };
+                    for(int i=0;i<centers.length;i++){
+                        int x=Math.round(view.offX+
+                            centers[i][0]*view.scale);
+                        int y=Math.round(view.offY+
+                            centers[i][1]*view.scale);
+                        int pixel=bitmap.getPixel(x,y);
+                        assertTrue("Each accent must render an orange stroke",
+                            android.graphics.Color.red(pixel)>195 &&
+                            android.graphics.Color.green(pixel)>65 &&
+                            android.graphics.Color.blue(pixel)<165);
+                        int expected=expectedColors[i];
+                        assertTrue("Accent should retain source-orange palette",
+                            Math.abs(android.graphics.Color.red(pixel)-
+                                android.graphics.Color.red(expected))<55);
+                    }
+                    int help=0,cta=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if(tap.label.startsWith("Pomoć za cilj: "))help++;
+                        if(tap.label.equals("Započni izazov")||
+                            tap.label.equals("Nastavi izazov")||
+                            tap.label.equals("Igraj ponovno"))cta++;
+                    }
+                    assertEquals("Daily help remains functional",3,help);
+                    assertEquals("Only one start CTA is present",1,cta);
+                    captureReference(activity,view,
+                        "daily-intro-rays-source-941x1672");
+                }finally{bitmap.recycle();}
+                assertEquals("Drawing cannot change daily streak",7,
+                    activity.streak);
+            }finally{
+                activity.page=prior;activity.theme=priorTheme;
+                activity.streak=priorStreak;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailySourceStreakFixtureKeepsRealActionsAndRaisedTiles(){
         rule.getScenario().onActivity(activity->{
             String originalPage=activity.page;
@@ -3592,7 +3790,9 @@ public class ScreensSmokeTest {
                     assertTrue("Seven-day flame must be saturated orange, not alpha-grey",
                         android.graphics.Color.red(flame)>
                             android.graphics.Color.blue(flame)+35);
-                    int giftX=Math.round(board.offX+70f*board.scale);
+                    // The source gift has two GOLD straps at x≈170/259;
+                    // its actual PURPLE front panel is at x≈214.
+                    int giftX=Math.round(board.offX+91f*board.scale);
                     int giftY=Math.round(board.offY+615f*board.scale);
                     int purple=image.getPixel(giftX,giftY);
                     assertTrue("Reward gift needs saturated purple body",
@@ -3621,6 +3821,68 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGiftHasOpaqueRibbonCompactBowAndSourceWidth(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            String oldDaily=activity.lastDaily;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;activity.streak=7;
+                activity.lastDaily="";activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bmp));
+                    // Two separate opaque gold straps frame the purple
+                    // center in the owner's 941x1672 original.
+                    for(int x:new int[]{170,259}){
+                        int ribbon=bmp.getPixel(x,1480);
+                        assertTrue("Both source gold straps must be opaque",
+                            android.graphics.Color.red(ribbon)>195 &&
+                            android.graphics.Color.green(ribbon)>105 &&
+                            android.graphics.Color.blue(ribbon)<145);
+                    }
+                    int center=bmp.getPixel(214,1480);
+                    assertTrue("Gift center must remain purple, not a gold band",
+                        android.graphics.Color.blue(center)>
+                        android.graphics.Color.red(center)+20 &&
+                        android.graphics.Color.blue(center)>
+                        android.graphics.Color.green(center)+55);
+                    int leftWall=bmp.getPixel(132,1462);
+                    assertTrue("Purple present should extend to source left edge",
+                        android.graphics.Color.blue(leftWall)>
+                        android.graphics.Color.red(leftWall)+18);
+                    int topYellow=1672;
+                    for(int y=1310;y<1395;y++)for(int x=140;x<278;x++){
+                        int color=bmp.getPixel(x,y);
+                        int red=android.graphics.Color.red(color);
+                        int green=android.graphics.Color.green(color);
+                        int blue=android.graphics.Color.blue(color);
+                        if(red>205&&green>105&&green<240&&blue<150
+                                &&red>green+15)
+                            topYellow=Math.min(topYellow,y);
+                    }
+                    assertTrue("Bow must sit below the last goal row",
+                        topYellow>=1335 && topYellow<=1385);
+                    captureReference(activity,view,
+                        "daily-gift-opaque-ribbon-941x1672");
+                    assertEquals("Drawing gift must preserve streak",7,
+                        activity.streak);
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.streak=oldStreak;activity.lastDaily=oldDaily;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGiftStaysSaturatedAfterItsTransparentShadow(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;int oldTheme=activity.theme;
@@ -3634,7 +3896,9 @@ public class ScreensSmokeTest {
                 Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
                 try{
                     board.draw(new Canvas(bmp));
-                    int x=Math.round(board.offX+71f*board.scale);
+                    // Sample the unchanged purple center, not the
+                    // newly restored gold strap at the former x≈167.
+                    int x=Math.round(board.offX+91f*board.scale);
                     int y=Math.round(board.offY+617f*board.scale);
                     int color=bmp.getPixel(x,y);
                     assertTrue("Reward purple must not fade to its pastel panel",
