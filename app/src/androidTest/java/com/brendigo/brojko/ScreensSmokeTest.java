@@ -3209,6 +3209,73 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void missionsSourceProgressPalettePreservesRealFractions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int daily=image.getPixel(
+                        Math.round(view.offX+140f*view.scale),
+                        Math.round(view.offY+213f*view.scale));
+                    assertTrue("Daily merges progress must be owner-source blue",
+                        android.graphics.Color.blue(daily)>
+                            android.graphics.Color.green(daily)+55 &&
+                        android.graphics.Color.green(daily)>
+                            android.graphics.Color.red(daily)+70);
+                    int record=image.getPixel(
+                        Math.round(view.offX+112f*view.scale),
+                        Math.round(view.offY+680f*view.scale));
+                    assertTrue("Score record progress must be violet",
+                        android.graphics.Color.blue(record)>
+                            android.graphics.Color.green(record)+80 &&
+                        android.graphics.Color.red(record)>
+                            android.graphics.Color.green(record)+25);
+                    int empty=image.getPixel(
+                        Math.round(view.offX+145f*view.scale),
+                        Math.round(view.offY+603f*view.scale));
+                    // Completing only half of the 1024 milestone is *not*
+                    // a visual 50%-filled unlock or a reward.
+                    assertEquals(0,view.completedAchievements());
+                    assertEquals(0,activity.rewardFlags);
+                    assertTrue("Zero-progress master remains neutral",
+                        Math.abs(android.graphics.Color.red(empty)-
+                            android.graphics.Color.green(empty))<65);
+                    assertTrue("All six real tasks fit on reference portrait",
+                        view.maxScroll<1.1f);
+                    captureReference(activity,view,
+                        "missions-source-progress-palette-941x1672");
+                    // The user's saved values must never change in onDraw.
+                    assertEquals(12,activity.todayMerges);
+                    assertEquals(8400,activity.best);
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;
+                activity.recordTile=oldTile;activity.best=oldBest;
+                activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionMasterUnlockBarMatchesItsBinaryCounter(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
