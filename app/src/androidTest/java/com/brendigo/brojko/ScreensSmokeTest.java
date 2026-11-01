@@ -4428,6 +4428,71 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void themeAnimationUsesThreeSourcePillsAndPersistsSelection(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldAnimation=activity.animation;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    for(int index=0;index<3;index++){
+                        activity.animation=index;
+                        board.draw(new Canvas(bitmap));
+                        int activeX=Math.round(board.offX+
+                            (205+index*54f+28f)*board.scale);
+                        int inactiveX=Math.round(board.offX+
+                            (205+((index+1)%3)*54f+28f)*board.scale);
+                        int y=Math.round(board.offY+600f*board.scale);
+                        int active=bitmap.getPixel(activeX,y);
+                        int inactive=bitmap.getPixel(inactiveX,y);
+                        assertTrue("Selected animation pill must be coral",
+                            android.graphics.Color.red(active)>
+                            android.graphics.Color.green(active)+55);
+                        assertTrue("Unselected animation pill remains neutral",
+                            android.graphics.Color.red(inactive)-
+                            android.graphics.Color.green(inactive)<45);
+                        int targets=0;
+                        for(MainActivity.BoardScreen.Tap tap:board.taps){
+                            if("Niska".equals(tap.label)||
+                                "Srednja".equals(tap.label)||
+                                "Visoka".equals(tap.label)){
+                                targets++;
+                                assertTrue("Animation choice touch height >=45",
+                                    tap.bottom-tap.top>=45f);
+                            }
+                        }
+                        assertEquals("All three animation settings reachable",3,
+                            targets);
+                        if(index==1)captureReference(activity,board,
+                            "themes-animation-pill-941x1672");
+                    }
+                    MainActivity.BoardScreen.Tap middle=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Srednja".equals(tap.label))middle=tap;
+                    assertNotNull(middle);
+                    middle.action.run();
+                    assertEquals("Real persisted animation setting",1,
+                        activity.prefs.getInt("animation",-1));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.animation=oldAnimation;
+                activity.persist();
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themesPhaseSevenRendersOwnerLayoutAndKeepsRealPreferences(){
         rule.getScenario().onActivity(activity->{
             final String oldPage=activity.page;
