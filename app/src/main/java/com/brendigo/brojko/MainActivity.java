@@ -3200,8 +3200,17 @@ public final class MainActivity extends ComponentActivity {
             boolean binaryMilestone=name.startsWith("Majstor");
             float fraction=binaryMilestone?(value>=target?1f:0f):
                 Math.max(0,Math.min(1,(float)value/target));
+            // The owner's light-theme source uses a blue first daily
+            // progress bar and a violet score-record bar. Keep their real
+            // fraction/counter and the pictogram color independent; never
+            // recolor progress in the dark theme or fabricate milestones.
+            int progressAccent=accent;
+            if(portrait&&theme==0){
+                if(name.startsWith("Spoji 20"))progressAccent=0xff2aa5ff;
+                else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
+            }
             if(fraction>0)shape(104,progressY,
-                151*fraction,7,4,accent);
+                151*fraction,7,4,progressAccent);
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
