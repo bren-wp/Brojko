@@ -3092,6 +3092,18 @@ public final class MainActivity extends ComponentActivity {
                 c.drawLine(m[0],m[1],m[2],m[3],p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
+        // The three source-reference section headings use Nunito Black,
+        // unlike the slimmer row captions. Keep coordinates independent of
+        // mission values and share one drawing path without allocating fonts.
+        void missionSectionTitle(String title,float baseline){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setTextScaleX(1f);p.setFakeBoldText(false);
+            p.setTypeface(displayFont);p.setTextSize(20.5f);
+            p.setStrokeWidth(0f);p.setColor(ink);
+            p.setTextAlign(Paint.Align.LEFT);
+            c.drawText(title,63f,baseline,p);
+            p.setTextAlign(Paint.Align.CENTER);
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
             // This reference places Back at y≈40 native px, not at the
@@ -3117,7 +3129,8 @@ public final class MainActivity extends ComponentActivity {
             rays(43,sunY,19,0xffffb431);
             p.setShader(null);p.setColor(0xffffb431);
             p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
-            txt("Dnevne",110,portrait?150:204,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle("Dnevne",155f);
+            else txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
             if(portrait&&theme!=1)
                 missionWeeklyHeaderIcon(43,portrait?346:420);
@@ -3138,12 +3151,14 @@ public final class MainActivity extends ComponentActivity {
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
             missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
-            txt("Tjedne",105,portrait?348:422,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle("Tjedne",352f);
+            else txt("Tjedne",105,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
             missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
-            txt("Postignuća",132,portrait?542:638,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle("Postignuća",542f);
+            else txt("Postignuća",132,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Dosegni pločicu 1024",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
