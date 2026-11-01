@@ -30,6 +30,7 @@ CAPTURES = (
     "daily-source-streak7-941x1672.png",
     "daily-intro-rays-source-941x1672.png",
     "daily-gift-opaque-ribbon-941x1672.png",
+    "daily-gift-bow-hollows-941x1672.png",
     "missions-six-real-progress-941x1672.png",
     "missions-source-progress-palette-941x1672.png",
     "missions-reward-star-source-941x1672.png",
