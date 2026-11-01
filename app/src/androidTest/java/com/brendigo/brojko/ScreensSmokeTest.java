@@ -3693,6 +3693,69 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyIntroStrokesMatchOwnerSourcePixelsWithoutTouchOverlap(){
+        rule.getScenario().onActivity(activity->{
+            String prior=activity.page;
+            int priorTheme=activity.theme,priorStreak=activity.streak;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                activity.theme=0;
+                activity.streak=7;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Source reference: four orange/yellow rays on
+                    // either side of the subtitle, outside the words.
+                    float[][] centers={
+                        {56.5f,122f},{46.5f,140.5f},
+                        {344.5f,122.5f},{353.5f,140f}
+                    };
+                    int[] expectedColors={
+                        0xffff913a,0xffffb32f,0xffffa73c,0xffff7248
+                    };
+                    for(int i=0;i<centers.length;i++){
+                        int x=Math.round(view.offX+
+                            centers[i][0]*view.scale);
+                        int y=Math.round(view.offY+
+                            centers[i][1]*view.scale);
+                        int pixel=bitmap.getPixel(x,y);
+                        assertTrue("Each accent must render an orange stroke",
+                            android.graphics.Color.red(pixel)>195 &&
+                            android.graphics.Color.green(pixel)>65 &&
+                            android.graphics.Color.blue(pixel)<165);
+                        int expected=expectedColors[i];
+                        assertTrue("Accent should retain source-orange palette",
+                            Math.abs(android.graphics.Color.red(pixel)-
+                                android.graphics.Color.red(expected))<55);
+                    }
+                    int help=0,cta=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if(tap.label.startsWith("Pomoć za cilj: "))help++;
+                        if(tap.label.equals("Započni izazov")||
+                            tap.label.equals("Nastavi izazov")||
+                            tap.label.equals("Igraj ponovno"))cta++;
+                    }
+                    assertEquals("Daily help remains functional",3,help);
+                    assertEquals("Only one start CTA is present",1,cta);
+                    captureReference(activity,view,
+                        "daily-intro-rays-source-941x1672");
+                }finally{bitmap.recycle();}
+                assertEquals("Drawing cannot change daily streak",7,
+                    activity.streak);
+            }finally{
+                activity.page=prior;activity.theme=priorTheme;
+                activity.streak=priorStreak;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailySourceStreakFixtureKeepsRealActionsAndRaisedTiles(){
         rule.getScenario().onActivity(activity->{
             String originalPage=activity.page;
