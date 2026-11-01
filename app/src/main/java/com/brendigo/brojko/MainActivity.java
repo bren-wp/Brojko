@@ -3742,15 +3742,20 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                themeChoiceSurface(x+7,y+18,102,96,i);
+                // The reference uses a restrained inset tray for Light,
+                // but Dark and Vivid fill nearly the entire preview panel.
+                // Their old 102x96 tray started 13 units too low and left
+                // large unintended white margins at the top and bottom.
+                if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
+                else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    themePreviewTile(x+15+xx*45,y+29+yy*38,40,35,colors[j],0);
+                    themePreviewTile(x+15+xx*43,y+21+yy*41,40,40,colors[j],0);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*45,y+55+yy*38,19,WHITE,true);
+                        x+35+xx*43,y+50+yy*41,19,WHITE,true);
                 }
                 fitted(names[i],x+58,y+157,16,108,ink,true);
                 // Original design: selector beneath the four numbered tiles.
