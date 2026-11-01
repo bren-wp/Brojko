@@ -72,3 +72,19 @@ Pritom je na izvornoj slici svaki naziv odjeljka poravnat blizu 150. piksela po 
 Regresijski test `missionsSectionHeadingsUseSourceWeightAndLeftAlignment` provjerava stvarne tamne piksele sva tri zaglavlja, zajednički početni rub, ograničenu širinu i nepromijenjene korisničke vrijednosti. Snima pravi Android PNG `missions-section-titles-941x1672.png`, koji je dodan obveznom validatoru. **Gornje RGB MAE vrijednosti su početne, ne rezultat nove izmjene.**
 
 Novi screenshot QA nakon posljednjeg SHA mora ponovno potvrditi sva tri regionalna RGB MAE i uspješne instrumentacijske testove prije bilo kakvog mergea.
+
+
+### Prva stvarna iteracija naslova (commit `da49475`)
+
+Tri posljednja workflowa na tom commitu uspješno su završila, uključujući pravi Android UI screenshot QA run `41357015358`. Preuzet je aktualni PNG, uspoređen s istim vlasnikovim izvornikom bez skaliranja.
+
+| Regija | Početni RGB MAE | Prva iteracija |
+|---|---:|---:|
+| Cijeli zaslon | 24,384 | **24,062** |
+| Dnevne | 35,662 | **23,065** |
+| Tjedne | 38,336 | **29,389** |
+| Postignuća | 46,264 | 46,165 |
+
+Mjerenje tekstnih granica pokazuje da je `Postignuća` i dalje preširoko i previsoko: izvornik zauzima približno **x 151–344, y 1270–1299 px** (unutar regionalne maske), a prva nova snimka **x 151–402, y 1238–1283 px**. Zbog toga je u sljedećoj iteraciji **samo** taj naslov dobio manju veličinu (16,1 jedinica) i nižu osnovnu liniju (`550` umjesto `542`), bez pomicanja kartica ili nagrada. Novi test dodatno provjerava kompaktnost i spuštanje teksta.
+
+Ove MAE vrijednosti odnose se samo na **prvu iteraciju**. Aktualni HEAD i smanjeni naslov moraju proći sva tri workflowa, a novi PNG biti ponovno izmjeren prije zatvaranja Draft PR-a.
