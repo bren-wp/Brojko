@@ -38,8 +38,10 @@ Ove vrijednosti su **baseline prije promjene u ovoj fazi**, ne rezultat dorade.
 
 1. **Statistika**: naslov široke KPI kartice „Niz pobjeda” na referentnom portretnom Canvas rasporedu ostaje jedan redak. Ne mijenjaju se izračun stvarnog niza, arhiva, font drugih kartica ni brojčane vrijednosti.
 2. **Teme i izgled**: izvorna animacijska kontrola sastoji se od jednolične vodoravne podloge i kratkog koraljnog odabranog segmenta, ne od napunjenog postotnog napretka i velike kružne ručice. Tri odabira `Niska`, `Srednja`, `Visoka` i spremljena postavka `animation` ostaju funkcionalni.
-3. Nov instrumentacijski test `themeAnimationUsesThreeSourcePillsAndPersistsSelection` provjerava boju sva tri odabira, tri dodirne zone, spremanje vrijednosti i stvarnu PNG snimku `themes-animation-pill-941x1672.png`.
-4. Validator Android emulatora zahtijeva novu stvarnu PNG snimku.
+3. **Gornji odabir tema**: na izvornom PNG-u tamna i živopisna podloga započinju više i zauzimaju širi pregled od prethodno renderiranog (približno 102 × 96 logičkih jedinica s pomakom +18 od vrha kartice). Odvojeni geometrijski parametri za svijetlu i druge dvije teme sada renderiraju tamni/živopisni pregled oko 110 × 115, bliže stvarnoj referenci. Obje 2×2 minijature sada imaju 40 × 40 i korigirani vertikalni početak, bez promjene stvarne ploče igre.
+4. Instrumentacijski test `themeAnimationUsesThreeSourcePillsAndPersistsSelection` provjerava boju sva tri odabira, tri dodirne zone, spremanje vrijednosti i stvarnu snimku `themes-animation-pill-941x1672.png`.
+5. Test `themesDarkAndVividPreviewsFillRealSourceBounds` provjerava da obje tamne/živopisne podloge dosežu izvorne gornje i donje zone bez brisanja funkcionalnih kartica; snimka `themes-choice-bounds-941x1672.png`.
+6. Emulator validator zahtijeva obje nove stvarne PNG snimke.
 
 ## Uvjeti
 
