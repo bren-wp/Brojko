@@ -84,3 +84,10 @@ Android screenshot QA `41360518251` za commit `77f582a` završio je uspješno i 
 Izvornik ne prikazuje središnji zlatni pojas. Na y=1480 px ima dvije odvojene zlatne vrpce, oko x=156–183 i x=247–271, između kojih je vidljiva ljubičasta površina oko x=214. Prva nova snimka imala je jednu vrpcu x≈197–230. Zato su sada zamijenjene **dvjema lokalnim neprozirnim vrpcama** i širokim zlatnim povezom na poklopcu, a regresijski test traži zlatnu boju na x=170 i x=259 te ljubičastu na x=214.
 
 To je stvaran uzrok regresije, ne promjena u korisničkom stanju ili testnom fixtureu. **Prva iteracija nije prihvaćena.** Sljedeća Android screenshot serija na posljednjem commitu mora ponovno dokazati smanjenje RGB MAE. Tamna tema, stvarno osvajanje nagrada i povijest korisnika nisu predmet fixturea; ne smiju se lažirati.
+
+
+### Screenshot QA druge iteracije — stvarni uzrok neuspjeha testa
+
+Na commitu `6ec14a4` workflow `41361499169` završio je s **2 neuspjela od 105 testova**. Stvarni log pokazuje da su `dailyGiftStaysSaturatedAfterItsTransparentShadow` i `dailySourceStreakFixtureKeepsRealActionsAndRaisedTiles` očekivali ljubičastu boju na položaju prethodne lijeve strane poklona (oko x=165–167 px). Sada se na tom položaju, kao i na vlasnikovu izvorniku, nalazi **zlatna lijeva vrpca**. Dva stara testa zbog toga su mjerila pogrešan materijal, a nisu potvrdila stvarni pad nove funkcionalnosti.
+
+U sljedećem commitu oba stara testa nastavljaju provjeravati zasićenu ljubičastu, ali na pravom središnjem dijelu poklona (x≈214 px). Novi testovi dodatno i neovisno provjeravaju dvije zlatne vrpce (x=170/259) i ljubičasto središte (x=214). Nije uklonjeno nijedno testno očekivanje niti je isključen emulator QA. **CI zadnjeg commita mora ponovno proći** prije završne RGB usporedbe.
