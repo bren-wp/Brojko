@@ -3849,6 +3849,19 @@ public class ScreensSmokeTest {
                         assertTrue("Both bow openings must be amber, not flat yellow",
                             red>135&&green<185&&blue<130&&red>green+45);
                     }
+                    // On the source the center above the knot remains
+                    // ivory at y=1365, while the knot is golden at y=1390.
+                    // The old knot appeared more than 20px too early.
+                    int above=image.getPixel(210,1365);
+                    assertTrue("Space above bow knot must stay ivory",
+                        android.graphics.Color.blue(above)>205 &&
+                        Math.abs(android.graphics.Color.blue(above)-
+                            android.graphics.Color.red(above))<55);
+                    int knot=image.getPixel(210,1390);
+                    assertTrue("Bow knot belongs below hollow loops",
+                        android.graphics.Color.red(knot)>225 &&
+                        android.graphics.Color.green(knot)>145 &&
+                        android.graphics.Color.blue(knot)<175);
                     // The two independent straps and real 250-star reward
                     // remain untouched by this visual-only bow change.
                     int left=image.getPixel(170,1480);
