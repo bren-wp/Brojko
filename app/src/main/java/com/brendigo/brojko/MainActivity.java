@@ -66,6 +66,12 @@ public final class MainActivity extends ComponentActivity {
     private static final float[][] MISSION_CORAL_RAYS={
         {-10f,-10f,-33f},{11f,-7f,38f},{-12f,12f,36f}
     };
+    // Reused on each Canvas frame; no per-frame array allocations.
+    private static final float[][] MISSION_HEADER_RAYS={
+        {35f,86f,41f,92f},{28f,103f,39f,103f},{35f,112f,41f,108f},
+        {363f,85f,357f,92f},{374f,103f,363f,103f},
+        {363f,111f,357f,108f}
+    };
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -3079,11 +3085,8 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xffff9844);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(6.5f);p.setStrokeCap(Paint.Cap.ROUND);
-            float[][] marks={
-                {35,86,41,92},{28,103,39,103},{35,112,41,108},
-                {363,85,357,92},{374,103,363,103},{363,111,357,108}
-            };
-            for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
+            for(float[] m:MISSION_HEADER_RAYS)
+                c.drawLine(m[0],m[1],m[2],m[3],p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
         void missions() {
