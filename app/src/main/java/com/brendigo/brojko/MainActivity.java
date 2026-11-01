@@ -2664,6 +2664,27 @@ public final class MainActivity extends ComponentActivity {
             }
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
+        // Exact 941x1672 owner screenshot has four short orange marks
+        // beside the introductory subtitle. Static geometry avoids new
+        // allocations during Canvas redraw and stays outside its text.
+        private static final float[][] DAILY_INTRO_MARKS={
+            {52f,117f,61f,127f}, {40f,140f,53f,141f},
+            {347f,118f,342f,127f}, {347f,140f,360f,140f}
+        };
+        private static final int[] DAILY_INTRO_COLORS={
+            0xffff913a,0xffffb32f,0xffffa73c,0xffff7248
+        };
+        void dailyIntroMarks(){
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            for(int i=0;i<DAILY_INTRO_MARKS.length;i++){
+                float[] m=DAILY_INTRO_MARKS[i];
+                p.setColor(DAILY_INTRO_COLORS[i]);
+                p.setStrokeWidth(i%2==0?7f:8f);
+                c.drawLine(m[0],m[1],m[2],m[3],p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void dailyHeaderAccents(float cx,float cy){
             // Source heading uses three solid coral confetti strokes rather
             // than the tiny evenly spaced dots of the shared rays() utility.
@@ -2713,6 +2734,7 @@ public final class MainActivity extends ComponentActivity {
                 25,46,CORAL,true);
             fitted("dana zaredom",portrait?344:335,streakTop+
                 (portrait?60:65),12,83,muted,true);
+            if(portrait&&theme==0)dailyIntroMarks();
             if(portrait){
                 // The original portrait artwork has two subtitle lines,
                 // spaced between the date pill and the illustrative board.
