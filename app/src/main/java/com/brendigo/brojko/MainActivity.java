@@ -3235,6 +3235,20 @@ public final class MainActivity extends ComponentActivity {
             }
             return wins;
         }
+        // Archived rows can legitimately contain zero points (a finished
+        // no-merge session), or legacy negative values from an old backup.
+        // Do not render an apparently empty axis as a positive chart.
+        // Compute the maximum once for either renderer, without altering data.
+        int statisticsChartMaximum(JSONArray rows,int count){
+            int maximum=0;
+            for(int i=0;i<count;i++){
+                JSONObject row=rows.optJSONObject(i);
+                if(row==null)continue;
+                int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
+                maximum=Math.max(maximum,value);
+            }
+            return maximum;
+        }
         void statistics(){
             if(referencePortraitLayout){statisticsCompact();return;}
             title("Statistika");
@@ -3259,17 +3273,14 @@ public final class MainActivity extends ComponentActivity {
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
+            int ceiling=statisticsChartMaximum(data,count);
             if(count==0){
                 txt("Grafikon će se prikazati nakon",200,519,16,muted,false);
                 txt("prve završene partije.",200,545,16,muted,false);
+            }else if(ceiling==0){
+                txt(chartMetric==0?"Nema zabilježenih bodova.":
+                    "Nema zabilježenih pločica.",200,532,16,muted,false);
             }else{
-                int ceiling=1;
-                for(int i=0;i<count;i++){
-                    JSONObject row=data.optJSONObject(i);
-                    if(row==null)continue;
-                    int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
-                    ceiling=Math.max(ceiling,value);
-                }
                 float chartLeft=42,barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
@@ -3632,17 +3643,14 @@ public final class MainActivity extends ComponentActivity {
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
+            int ceiling=statisticsChartMaximum(data,count);
             if(count==0){
                 txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
                 txt("prve završene partije.",200,436,15,muted,false);
+            }else if(ceiling==0){
+                txt(chartMetric==0?"Nema zabilježenih bodova.":
+                    "Nema zabilježenih pločica.",200,429,15,muted,false);
             }else{
-                int ceiling=1;
-                for(int i=0;i<count;i++){
-                    JSONObject row=data.optJSONObject(i);
-                    if(row==null)continue;
-                    int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
-                    ceiling=Math.max(ceiling,value);
-                }
                 float barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
