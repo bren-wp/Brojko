@@ -23,6 +23,9 @@ Izvorna korisnikova referenca: `Slika ChatGPT 24. lis 2026. 22_15_16-7(20261101-
 - Traka aktivne misije `Spoji 20 pločica` na svijetlom portretnom zaslonu sada koristi izvorno **plavu** paletu `#2AA5FF` (prije tirkizna `#2EC4B6`). Isti stvarni napredak `value / 20` ostaje vezan uz lokalnu igru.
 - Traka `Kralj rezultata` sada je **ljubičasta** `#A16CFA` (prije narančasta). Omjer i dalje izračunava stvarni `best / 50000`.
 - Ikonice i njihove vlastite boje nisu dirane, kao ni tamna tema, spremanje, misije, zvijezde, nagrade ili njihova jednokratna dodjela.
+- Zaglavlje: specifična misijska strelica Natrag podignuta je s generičkog y=43 na y=16 logičkih jedinica kako bi odgovarala korisnikovu izvornom PNG-u, uz istu funkciju `navigate("home")` i isti pristupačni naziv `Natrag`.
+- Dodano je šest koraljno-narančastih dekorativnih poteza lijevo i desno od naslova; geometrija je statična i ne alocira nizove u svakom Canvas okviru. Naslov je prilagođen tako da dekoracija ne prekriva tekst.
+- Novi test također mjeri stvarne boje lijevog i desnog poteza te pristupačno dodirno područje tipke Natrag.
 - Nedovršeno binarno postignuće `Majstor spajanja` pri vrijednosti `512 / 1024` zadržava traku bez napretka i brojač `0 / 1`; nema izmišljene 50%-tne nagrade.
 
 ## Regresijski testovi i QA
