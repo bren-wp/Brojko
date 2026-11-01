@@ -2969,7 +2969,7 @@ public final class MainActivity extends ComponentActivity {
             // Deep amber interiors create the hollow 3D loops visible in
             // the source rather than flat light-cream ellipse highlights.
             float holeY=top-size*.13f;
-            for(int side:new int[]{-1,1}){
+            for(int side=-1;side<=1;side+=2){
                 float holeX=cx+side*size*.255f;
                 c.save();c.rotate(side*18f,holeX,holeY);
                 p.setColor(WHITE);
