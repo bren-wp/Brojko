@@ -2938,36 +2938,48 @@ public final class MainActivity extends ComponentActivity {
             gradient(left+width*.23f,top+size*.015f,
                 width*.54f,size*.115f,4f,
                 0xffffed78,0xffffb21e);
+            // Two looped ribbons with recessed amber openings.
+            // The previous solid yellow caps had no opening and started
+            // above the actual bow on the owner's 941x1672 source image.
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.18f,top-size*.30f,
-                cx-size*.49f,top-size*.31f,
-                cx-size*.44f,top-size*.23f);
-            bowL.cubicTo(cx-size*.39f,top-size*.10f,
+            bowL.cubicTo(cx-size*.17f,top-size*.23f,
+                cx-size*.41f,top-size*.28f,
+                cx-size*.39f,top-size*.19f);
+            bowL.cubicTo(cx-size*.39f,top-size*.08f,
                 cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
             bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.18f,top-size*.30f,
-                cx+size*.49f,top-size*.31f,
-                cx+size*.44f,top-size*.23f);
-            bowR.cubicTo(cx+size*.39f,top-size*.10f,
+            bowR.cubicTo(cx+size*.17f,top-size*.23f,
+                cx+size*.41f,top-size*.28f,
+                cx+size*.39f,top-size*.19f);
+            bowR.cubicTo(cx+size*.39f,top-size*.08f,
                 cx+size*.15f,top-size*.04f,cx,top-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
-            p.setColor(0xffe88a0b);
-            c.save();c.translate(0,1f);c.drawPath(bowL,p);
-            c.drawPath(bowR,p);c.restore();
-            p.setShader(new LinearGradient(cx-size*.5f,top-size*.55f,
-                cx+size*.5f,top-size*.13f,
-                0xffffed76,0xffffaf15,Shader.TileMode.CLAMP));
+            p.setColor(0xffd5750b);
+            c.save();c.translate(0,1.2f);
+            c.drawPath(bowL,p);c.drawPath(bowR,p);c.restore();
+            p.setShader(new LinearGradient(cx,top-size*.31f,
+                cx,top-size*.05f,
+                0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
-            p.setColor(0xfffff2a7);
-            c.drawOval(cx-size*.44f,top-size*.35f,
-                cx-size*.16f,top-size*.19f,p);
-            c.drawOval(cx+size*.16f,top-size*.35f,
-                cx+size*.44f,top-size*.19f,p);
+            // Deep amber interiors create the hollow 3D loops visible in
+            // the source rather than flat light-cream ellipse highlights.
+            float holeY=top-size*.13f;
+            for(int side:new int[]{-1,1}){
+                float holeX=cx+side*size*.255f;
+                c.save();c.rotate(side*18f,holeX,holeY);
+                p.setColor(WHITE);
+                p.setShader(new LinearGradient(holeX,holeY-size*.09f,
+                    holeX,holeY+size*.09f,
+                    0xff9b4d0c,0xffed9710,Shader.TileMode.CLAMP));
+                c.drawOval(holeX-size*.055f,holeY-size*.083f,
+                    holeX+size*.055f,holeY+size*.083f,p);
+                p.setShader(null);c.restore();
+            }
             gradient(cx-size*.145f,top-size*.22f,
                 size*.29f,size*.21f,6,
                 0xffffeb77,0xffffa51c);
