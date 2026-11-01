@@ -966,7 +966,8 @@ public final class MainActivity extends ComponentActivity {
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xffffdc65:
-                    golden?0xffffed87:lighten(color,.43f);
+                    golden?("missions".equals(page)?0xffffd45b:0xffffed87):
+                    lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
                 // rather than the lighter outline-like mission style.
                 int edge=victoryGold?0xffffa722:
@@ -3129,21 +3130,21 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffff5e5);
             fitted(completedAchievements()+"/2",337,countTop+18,
                 13,66,muted,true);
-            missionRow("Spoji 20 pločica","Spoji pločice tijekom dana",
+            missionRow("Spoji 20 pločica","Spoji bilo koje pločice 20 puta.",
                 todayMerges,20,50,portrait?160:212,TEAL);
             boolean noUndo512=(rewardFlags&2)!=0 ||
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
             missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
             txt("Tjedne",105,portrait?348:422,23,ink,true);
-            missionRow("Igraj 7 dana zaredom","Sedam različitih dana",
+            missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
             missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
             txt("Postignuća",132,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Dosegni pločicu 1024",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
-            missionRow("Kralj rezultata","Osvoji 50.000 bodova",
+            missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
                 best,50000,1000,portrait?627:741,0xffff934b);
         }
         void missionPeriodPill(String period,int y){
@@ -3203,9 +3204,9 @@ public final class MainActivity extends ComponentActivity {
             leftFitted(name,103,titleBaseline,portrait?15.5f:17.5f,
                 179,ink,true);
             if(name.startsWith("Dosegni 512")){
-                leftFitted("Ostvari pločicu 512",103,
+                leftFitted("Ostvari pločicu 512 bez korištenja",103,
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
-                leftFitted("bez korištenja poništavanja",103,
+                leftFitted("opcije poništi potez.",103,
                     y+(portrait?46:55),portrait?10:11,177,muted,false);
             }else{
                 leftFitted(sub,103,y+(portrait?38:48),
@@ -3239,14 +3240,17 @@ public final class MainActivity extends ComponentActivity {
                 270,y+(portrait?59:68),11,45,muted,true);
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
-            float rewardCenter=portrait?345:323;
+            // Golden stars in the owner image sit slightly to the right
+            // and lower than the previous vector icons. Keep the award
+            // text and layout untouched and move only the illustration.
+            float rewardCenter=portrait?349:323;
             if(portrait&&theme!=1)
                 gradient(315,y+4,54,61,15,0xfffff9e7,0xfffff0d3);
             else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,y+(portrait?23:29),
-                portrait?31:29,0xffffad1a);
+            icon("star",rewardCenter,y+(portrait?33:29),
+                portrait?35:29,0xffffad1a);
             fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
                 portrait?14:13,portrait?49:63,ink,true);
         }
