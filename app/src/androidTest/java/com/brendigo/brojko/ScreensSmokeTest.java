@@ -3837,13 +3837,21 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     view.draw(new Canvas(bmp));
-                    // The former Paint alpha made the vertical gold strip
-                    // semi-transparent; this must be visibly golden, not lilac.
-                    int ribbon=bmp.getPixel(214,1480);
-                    assertTrue("Gift ribbon must be opaque yellow",
-                        android.graphics.Color.red(ribbon)>195 &&
-                        android.graphics.Color.green(ribbon)>105 &&
-                        android.graphics.Color.blue(ribbon)<145);
+                    // Two separate opaque gold straps frame the purple
+                    // center in the owner's 941x1672 original.
+                    for(int x:new int[]{170,259}){
+                        int ribbon=bmp.getPixel(x,1480);
+                        assertTrue("Both source gold straps must be opaque",
+                            android.graphics.Color.red(ribbon)>195 &&
+                            android.graphics.Color.green(ribbon)>105 &&
+                            android.graphics.Color.blue(ribbon)<145);
+                    }
+                    int center=bmp.getPixel(214,1480);
+                    assertTrue("Gift center must remain purple, not a gold band",
+                        android.graphics.Color.blue(center)>
+                        android.graphics.Color.red(center)+20 &&
+                        android.graphics.Color.blue(center)>
+                        android.graphics.Color.green(center)+55);
                     int leftWall=bmp.getPixel(132,1462);
                     assertTrue("Purple present should extend to source left edge",
                         android.graphics.Color.blue(leftWall)>
