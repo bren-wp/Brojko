@@ -941,14 +941,16 @@ public final class MainActivity extends ComponentActivity {
                     // Only the victory card uses the soft, pillow-like points
                 // of the owner's 941x1672 reward illustration.
                 float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
-                    (page.equals("win")?5.15f:5.35f);
+                    (page.equals("win")?5.15f:
+                        ("missions".equals(page)&&theme==0?5.85f:5.35f));
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
                 Path star=new Path();
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
-                    float corner=page.equals("win")?.73f:.82f;
+                    float corner=page.equals("win")?.73f:
+                        ("missions".equals(page)&&theme==0?.72f:.82f);
                     float startX=xs[i]*corner+xs[prev]*(1f-corner);
                     float startY=ys[i]*corner+ys[prev]*(1f-corner);
                     float endX=xs[i]*corner+xs[next]*(1f-corner);
@@ -3252,8 +3254,10 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?0xff3b3b4c:0xfffff0d5);
             icon("star",rewardCenter,
                 y+(sourceMissionStar?33:portrait?23:29),
-                sourceMissionStar?35:portrait?31:29,0xffffad1a);
-            fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
+                sourceMissionStar?31:portrait?31:29,0xffffad1a);
+            // Ensure the real award amount remains below the artwork.
+            fitted("+"+fmt(reward),rewardCenter,
+                y+(sourceMissionStar?61:portrait?55:62),
                 portrait?14:13,portrait?49:63,ink,true);
         }
         JSONArray history() {
