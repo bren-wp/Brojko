@@ -34,7 +34,22 @@ Novi `classicFourByFourReferenceUsesSourceTopLightingAndRealControls` instrument
 4. Provjerava da sam prikaz ne mijenja rezultat.
 5. Sprema novu **stvarnu emulator snimku** `classic-source-lighting-941x1672.png`.
 
-Validator zahtijeva tu novu snimku. Po završetku Android UI QA potrebno je ponovno izračunati RGB MAE na usporedivom fixtureu; **1:1 se ne smije tvrditi prije ovjerenog mjerenja**.
+Validator zahtijeva tu novu snimku.
+
+### Prva stvarna QA iteracija i kalibracija
+
+Prva potpuna Android UI QA serija za commit `b5e29cf` (run [41350868215](https://github.com/bren-wp/Brojko/actions/runs/41350868215)) bila je **uspješna**. Preuzet je njezin stvarni emulator ZIP, bez lažnih prikaza.
+
+| Ista regija (941 × 1672 px) | Prije | Nakon prvog sjaja |
+|---|---:|---:|
+| Cijeli zaslon | 20,785 | **20,459** |
+| Ploča 4×4 | 21,453 | **20,867** |
+| Gornji rub prve pločice | 12,659 | 14,230 |
+| Sredina prve pločice | 16,412 | 16,412 |
+
+Prvi sjaj je poboljšao ukupno odstupanje, ali bio je **prejak u gornjoj ROI pločice**. Zbog toga je njegova početna neprozirnost smanjena s `0x6a` na `0x46`, bez mijenjanja pozicije ili ostalih vizualnih komponenti. Sljedeća emulator serija mora potvrditi mjerljive rezultate zadnjeg commita; gornja tablica **nije** mjerenje zadnje kalibracije.
+
+**1:1 se ne smije tvrditi bez cjelovitog vizualnog prihvaćanja.**
 
 ## Kriteriji prije zatvaranja
 
