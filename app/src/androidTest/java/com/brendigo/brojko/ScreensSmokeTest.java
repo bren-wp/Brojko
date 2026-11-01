@@ -2290,6 +2290,79 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
+        rule.getScenario().onActivity(activity->{
+            final TileGame previousGame=activity.game;
+            final String previousPage=activity.page;
+            final int previousTheme=activity.theme;
+            final int previousStyle=activity.tileStyle;
+            final int previousAnimation=activity.animation;
+            final int previousBest=activity.best;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // This is an isolated screenshot fixture, NOT user progress.
+                activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;activity.game.cells[1]=2;
+                assertTrue(activity.game.move(TileGame.LEFT).changed);
+                activity.game.cells=new int[]{
+                    2,4,8,16,
+                    8,16,2,4,
+                    32,64,8,2,
+                    128,16,32,256
+                };
+                activity.game.peak=256;
+                activity.game.moves=33;
+                activity.game.score=1316;
+                activity.best=3864;
+                activity.theme=0;
+                activity.tileStyle=0;
+                activity.animation=0;
+                activity.page="game";
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap pixels=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(pixels));
+                    int tileX=Math.round(board.offX+43f*board.scale);
+                    int highlightY=Math.round(board.offY+174f*board.scale);
+                    int bodyY=Math.round(board.offY+197f*board.scale);
+                    int highlight=pixels.getPixel(tileX,highlightY);
+                    int body=pixels.getPixel(tileX,bodyY);
+                    assertTrue("First coral tile must have a narrow source highlight",
+                        android.graphics.Color.green(highlight)>
+                            android.graphics.Color.green(body)+20);
+                    int controls=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Novo".equals(tap.label)||
+                            "Poništi".equals(tap.label)||
+                            "Završi".equals(tap.label)){
+                            controls++;
+                            assertTrue("Game controls remain touch-accessible",
+                                tap.bottom-tap.top>=90f);
+                        }
+                    assertEquals("Real game controls remain functional",3,controls);
+                    assertEquals("Screenshot must not change game score",
+                        1316,activity.game.score);
+                    captureReference(activity,board,
+                        "classic-source-lighting-941x1672");
+                }finally{pixels.recycle();}
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.tileStyle=previousStyle;
+                activity.animation=previousAnimation;
+                activity.best=previousBest;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void originalPixelReferencesUseIdenticalRepresentativeGameData(){
         rule.getScenario().onActivity(activity->{
             TileGame prior=activity.game;
@@ -3135,6 +3208,93 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void missionsSourceProgressPalettePreservesRealFractions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int leftRay=image.getPixel(
+                        Math.round(view.offX+38f*view.scale),
+                        Math.round(view.offY+89f*view.scale));
+                    int rightRay=image.getPixel(
+                        Math.round(view.offX+360f*view.scale),
+                        Math.round(view.offY+89f*view.scale));
+                    for(int ray:new int[]{leftRay,rightRay}){
+                        assertTrue("Mission headline needs orange accent rays",
+                            android.graphics.Color.red(ray)>220 &&
+                            android.graphics.Color.green(ray)<180 &&
+                            android.graphics.Color.blue(ray)<145);
+                    }
+                    MainActivity.BoardScreen.Tap back=null;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Natrag".equals(tap.label))back=tap;
+                    assertNotNull("Mission Back must be accessible",back);
+                    assertTrue("Back must sit at the owner's top-left position",
+                        back.top<=19 && back.bottom<=68);
+                    assertTrue("Back target remains at least 48 units tall",
+                        back.bottom-back.top>=48);
+                    int daily=image.getPixel(
+                        Math.round(view.offX+140f*view.scale),
+                        Math.round(view.offY+213f*view.scale));
+                    assertTrue("Daily merges progress must be owner-source blue",
+                        android.graphics.Color.blue(daily)>
+                            android.graphics.Color.green(daily)+55 &&
+                        android.graphics.Color.green(daily)>
+                            android.graphics.Color.red(daily)+70);
+                    int record=image.getPixel(
+                        Math.round(view.offX+112f*view.scale),
+                        Math.round(view.offY+680f*view.scale));
+                    assertTrue("Score record progress must be violet",
+                        android.graphics.Color.blue(record)>
+                            android.graphics.Color.green(record)+80 &&
+                        android.graphics.Color.red(record)>
+                            android.graphics.Color.green(record)+25);
+                    int empty=image.getPixel(
+                        Math.round(view.offX+145f*view.scale),
+                        Math.round(view.offY+603f*view.scale));
+                    // Completing only half of the 1024 milestone is *not*
+                    // a visual 50%-filled unlock or a reward.
+                    assertEquals(0,view.completedAchievements());
+                    assertEquals(0,activity.rewardFlags);
+                    assertTrue("Zero-progress master remains neutral",
+                        Math.abs(android.graphics.Color.red(empty)-
+                            android.graphics.Color.green(empty))<65);
+                    assertTrue("All six real tasks fit on reference portrait",
+                        view.maxScroll<1.1f);
+                    captureReference(activity,view,
+                        "missions-source-progress-palette-941x1672");
+                    // The user's saved values must never change in onDraw.
+                    assertEquals(12,activity.todayMerges);
+                    assertEquals(8400,activity.best);
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;
+                activity.recordTile=oldTile;activity.best=oldBest;
+                activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
 
     @Test public void missionMasterUnlockBarMatchesItsBinaryCounter(){
         rule.getScenario().onActivity(activity->{

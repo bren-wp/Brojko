@@ -12,6 +12,11 @@
 
 **Povuci. Spoji. Ostvari 2048. Nadmaši vlastiti rekord!**
 
+<a href="https://play.google.com/store/apps/details?id=com.brendigo.brojko" aria-label="Preuzmi Brojko na Google Play">
+  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/hr_badge_web_generic.png"
+       alt="Preuzmite na Google Play" height="72">
+</a>
+
 [📲 Preuzmi Brojko](https://github.com/bren-wp/Brojko/releases) · [🔐 Pravila privatnosti](PRIVACY.md) · [🌐 Brendigo](https://brendigo.com)
 
 </div>
@@ -68,9 +73,13 @@ Ne postoji automatska sinkronizacija u oblaku. Po želji uključi lokalni podsje
 
 Brojko podržava **Android 7.0 i novije verzije**.
 
-[**Preuzmi najnovije izdanje Brojko za Android**](https://github.com/bren-wp/Brojko/releases)
+**Preuzmi aplikaciju na Google Playu:**
 
-*GitHub izdanja mogu sadržavati testni APK te Android App Bundle. Produkcijska distribucija putem Google Playa ovisi o odgovarajućem potpisivanju i objavi.*
+[![Preuzmite na Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/hr_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.brendigo.brojko)
+
+Alternativno: [**Preuzmi najnovije izdanje Brojko za Android**](https://github.com/bren-wp/Brojko/releases)
+
+*GitHub izdanja mogu sadržavati testni APK i Android App Bundle. Dostupnost na Google Playu ovisi o državi, uređaju i statusu objave.*
 
 ---
 

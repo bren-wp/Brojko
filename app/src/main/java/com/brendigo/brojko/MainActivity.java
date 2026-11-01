@@ -66,6 +66,12 @@ public final class MainActivity extends ComponentActivity {
     private static final float[][] MISSION_CORAL_RAYS={
         {-10f,-10f,-33f},{11f,-7f,38f},{-12f,12f,36f}
     };
+    // Reused on each Canvas frame; no per-frame array allocations.
+    private static final float[][] MISSION_HEADER_RAYS={
+        {35f,86f,41f,92f},{28f,103f,39f,103f},{35f,112f,41f,108f},
+        {363f,85f,357f,92f},{374f,103f,363f,103f},
+        {363f,111f,357f,108f}
+    };
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -1999,6 +2005,13 @@ public final class MainActivity extends ComponentActivity {
             shape(x,y+2f,w,h-1f,radius,darken(color,.16f));
             gradient(x,y,w,h-3f,radius,
                 lighten(color,.23f),color);
+            // The owner's 941x1672 tiles have a narrow luminous band
+            // above the number. A full-height uniform gradient washed out
+            // this highlight; keep the extra light only in the top fifth.
+            p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x,y+h*.20f,
+                0x46ffffff,0x00ffffff,Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
             c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
@@ -3066,14 +3079,30 @@ public final class MainActivity extends ComponentActivity {
             if((rewardFlags&16)!=0)result++;
             return result;
         }
+        // Six warm orange rays are present beside the title in the owner's
+        // 941x1672 mission reference. Keep them outside the text and back hitbox.
+        void missionHeaderRays(){
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0xffff9844);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(6.5f);p.setStrokeCap(Paint.Cap.ROUND);
+            for(float[] m:MISSION_HEADER_RAYS)
+                c.drawLine(m[0],m[1],m[2],m[3],p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
-            back();brand(portrait?45:67,39);
-            // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",125,portrait?99:128,
+            // This reference places Back at y≈40 native px, not at the
+            // generic detail-page y≈100 px. Same action and TalkBack label.
+            if(portrait)button("","back",13,16,45,45,card,false,
+                ()->navigate("home"));
+            else back();
+            brand(portrait?45:67,39);
+            // The owner's title leaves space for orange rays on both sides.
+            if(portrait&&theme==0)missionHeaderRays();
+            fitted("Misije i",portrait?116:125,portrait?105:128,
                 portrait?36:33,142,ink,true);
-            fitted("postignuća",274,portrait?99:128,
-                portrait?36:33,203,CORAL,true);
+            fitted("postignuća",portrait?265:274,portrait?105:128,
+                portrait?36:33,portrait?187:203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
             int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
@@ -3193,8 +3222,17 @@ public final class MainActivity extends ComponentActivity {
             boolean binaryMilestone=name.startsWith("Majstor");
             float fraction=binaryMilestone?(value>=target?1f:0f):
                 Math.max(0,Math.min(1,(float)value/target));
+            // The owner's light-theme source uses a blue first daily
+            // progress bar and a violet score-record bar. Keep their real
+            // fraction/counter and the pictogram color independent; never
+            // recolor progress in the dark theme or fabricate milestones.
+            int progressAccent=accent;
+            if(portrait&&theme==0){
+                if(name.startsWith("Spoji 20"))progressAccent=0xff2aa5ff;
+                else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
+            }
             if(fraction>0)shape(104,progressY,
-                151*fraction,7,4,accent);
+                151*fraction,7,4,progressAccent);
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
