@@ -1999,6 +1999,13 @@ public final class MainActivity extends ComponentActivity {
             shape(x,y+2f,w,h-1f,radius,darken(color,.16f));
             gradient(x,y,w,h-3f,radius,
                 lighten(color,.23f),color);
+            // The owner's 941x1672 tiles have a narrow luminous band
+            // above the number. A full-height uniform gradient washed out
+            // this highlight; keep the extra light only in the top fifth.
+            p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x,y+h*.20f,
+                0x6affffff,0x00ffffff,Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
             c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
