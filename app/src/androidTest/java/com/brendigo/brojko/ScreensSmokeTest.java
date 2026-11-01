@@ -3231,6 +3231,26 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     view.draw(new Canvas(image));
+                    int leftRay=image.getPixel(
+                        Math.round(view.offX+38f*view.scale),
+                        Math.round(view.offY+89f*view.scale));
+                    int rightRay=image.getPixel(
+                        Math.round(view.offX+360f*view.scale),
+                        Math.round(view.offY+89f*view.scale));
+                    for(int ray:new int[]{leftRay,rightRay}){
+                        assertTrue("Mission headline needs orange accent rays",
+                            android.graphics.Color.red(ray)>220 &&
+                            android.graphics.Color.green(ray)<180 &&
+                            android.graphics.Color.blue(ray)<145);
+                    }
+                    MainActivity.BoardScreen.Tap back=null;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Natrag".equals(tap.label))back=tap;
+                    assertNotNull("Mission Back must be accessible",back);
+                    assertTrue("Back must sit at the owner's top-left position",
+                        back.top<=19 && back.bottom<=68);
+                    assertTrue("Back target remains at least 48 units tall",
+                        back.bottom-back.top>=48);
                     int daily=image.getPixel(
                         Math.round(view.offX+140f*view.scale),
                         Math.round(view.offY+213f*view.scale));
