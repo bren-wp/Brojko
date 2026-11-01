@@ -3362,8 +3362,17 @@ public final class MainActivity extends ComponentActivity {
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
-            fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
-            fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
+            // The reference's wide streak KPI has a *single* heading.
+            // Keep two lines for the other four cards; the narrow 4x4
+            // typography must not cause the streak title to wrap.
+            if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
+                leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
+            }else{
+                fitted(top,labelX,y+(dense?24:31),
+                    width<=118?13:16,labelWidth,ink,true);
+                fitted(bottom,labelX,y+(dense?41:48),
+                    width<=118?13:16,labelWidth,ink,true);
+            }
             fitted(value,x+width/2,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
                 width-10,accent,true);
@@ -3807,9 +3816,13 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Jačina animacija",208,570,17,162,ink,true);
             leftFitted("Koliko su izražene animacije spajanja.",
                 208,588,9.5f,166,muted,false);
-            shape(211,599,159,8,5,theme==1?0xff536078:0xffe8ded1);
-            shape(211,599,11+animation*68,8,5,CORAL);
-            shape(211+animation*68,592,22,22,11,CORAL);
+            // Source 941x1672: one pill-shaped selection per intensity,
+            // not a progress fill and oversized circular thumb.
+            shape(205,594,165,13,7,theme==1?0xff536078:0xffeee5d9);
+            float activeX=205+animation*54f;
+            shape(activeX-2,592,60,17,9,WHITE);
+            gradient(activeX,594,56,13,7,
+                lighten(CORAL,.04f),CORAL);
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
