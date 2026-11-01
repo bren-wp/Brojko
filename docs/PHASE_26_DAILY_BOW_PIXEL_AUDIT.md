@@ -36,3 +36,20 @@ U postojećem Android Java/Canvas rendereru `dailyRewardGift()`:
 - [ ] Nastaviti preostale regije u istom Draft PR-u.
 
 **Bez mergea ili izdanja bez zahtjeva korisnika. Ne tvrditi 1:1 dok ne postoji pixel potvrda.**
+
+
+## Prva prava emulator iteracija i drugi geometrijski zahvat
+
+GitHub Actions `41363562944` nakon prvog zahvata završio je uspješno. Snimka iz stvarnog Android emulatorskog artefakta `13106382021` ima izvornih 941 × 1672 px i isti fixture. Usporedba s vlasnikovim izvornikom provedena je bez poravnanja ili skaliranja:
+
+| Regija | Prije | Nakon prve iteracije |
+|---|---:|---:|
+| Cijeli zaslon | 17,027 | **16,970** |
+| Panel nagrade | 22,013 | **21,486** |
+| Poklon | 25,717 | **23,955** |
+| Mašna | 28,971 | **24,398** |
+| Tijelo i vrpce | 31,339 | 31,339 |
+
+Detaljniji pixel audit pokazao je još jednu razliku: u vlasnikovu izvorniku sredina iznad mašne na x=210, y=1365 je gotovo bijela `(238,236,254)`, a na prvoj novoj snimci bila je prerano zlatna `(255,220,99)`. Originalni čvor počinje niže: oko y=1378 i ostaje zlatan na y=1390. Zato je u svijetlom portretnom prikazu centralni čvor spušten promjenom `top-size*.22` na `top-size*.11` i skraćen s `size*.21` na `size*.18`. Tamna tema i ostali layouti čuvaju dosadašnju geometriju.
+
+Instrumentacijski test dodatno mjeri stvarni krem-bijeli prostor na x=210, y=1365 i zlatni čvor na x=210, y=1390. **Gornji MAE rezultat je prva iteracija, ne nova izmjena čvora.** Novu iteraciju treba izračunati iz posljednjeg uspješnog emulator artefakta.
