@@ -3073,14 +3073,33 @@ public final class MainActivity extends ComponentActivity {
             if((rewardFlags&16)!=0)result++;
             return result;
         }
+        // Six warm orange rays are present beside the title in the owner's
+        // 941x1672 mission reference. Keep them outside the text and back hitbox.
+        void missionHeaderRays(){
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(0xffff9844);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(6.5f);p.setStrokeCap(Paint.Cap.ROUND);
+            float[][] marks={
+                {35,86,41,92},{28,103,39,103},{35,112,41,108},
+                {363,85,357,92},{374,103,363,103},{363,111,357,108}
+            };
+            for(float[] m:marks)c.drawLine(m[0],m[1],m[2],m[3],p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
-            back();brand(portrait?45:67,39);
-            // Keep both header words clear of the upper-left back button.
-            fitted("Misije i",125,portrait?99:128,
+            // This reference places Back at y≈40 native px, not at the
+            // generic detail-page y≈100 px. Same action and TalkBack label.
+            if(portrait)button("","back",13,16,45,45,card,false,
+                ()->navigate("home"));
+            else back();
+            brand(portrait?45:67,39);
+            // The owner's title leaves space for orange rays on both sides.
+            if(portrait&&theme==0)missionHeaderRays();
+            fitted("Misije i",portrait?116:125,portrait?105:128,
                 portrait?36:33,142,ink,true);
-            fitted("postignuća",274,portrait?99:128,
-                portrait?36:33,203,CORAL,true);
+            fitted("postignuća",portrait?265:274,portrait?105:128,
+                portrait?36:33,portrait?187:203,CORAL,true);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
             int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
