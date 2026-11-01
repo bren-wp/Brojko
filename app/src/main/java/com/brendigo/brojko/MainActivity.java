@@ -2898,15 +2898,18 @@ public final class MainActivity extends ComponentActivity {
             // Measured: first bow rose into the final objective row.
             // Raise the box lid, extend the body, but lower its bow tips.
             float top=cy-size*.22f;
-            float left=cx-size*.40f;
-            float width=size*.80f;
-            float height=size*.62f;
+            // Original has a broader opaque box and a compact bow above
+            // the reward panel, not a narrow translucent parcel.
+            float left=cx-size*.47f;
+            float width=size*.94f;
+            float height=size*.64f;
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
             c.drawRoundRect(left,top+3f,left+width,top+height+3f,
                 9.0f,9.0f,p);
             p.clearShadowLayer();
+            p.setColor(WHITE); // gradient() retains the Paint alpha
             gradient(left,top,width,height,9,
                 0xffba82ff,0xff7034d3);
             // Side wall and inset highlight give the box a rounded body.
@@ -2917,6 +2920,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(left+1.3f,top+1.3f,
                 left+width-1.3f,top+height-2.0f,8,8,p);
             p.setStyle(Paint.Style.FILL);
+            p.setColor(WHITE); // do not inherit the translucent rim alpha
             gradient(cx-size*.09f,top,size*.18f,height,2.8f,
                 0xffffeb75,0xffffaa1d);
             // Raised purple lid, with golden horizontal band.
@@ -2928,18 +2932,18 @@ public final class MainActivity extends ComponentActivity {
                 0xffffed78,0xffffb21e);
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.19f,top-size*.44f,
-                cx-size*.64f,top-size*.46f,
-                cx-size*.51f,top-size*.34f);
-            bowL.cubicTo(cx-size*.46f,top-size*.10f,
+            bowL.cubicTo(cx-size*.18f,top-size*.30f,
+                cx-size*.49f,top-size*.31f,
+                cx-size*.44f,top-size*.23f);
+            bowL.cubicTo(cx-size*.39f,top-size*.10f,
                 cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
             bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.19f,top-size*.44f,
-                cx+size*.64f,top-size*.46f,
-                cx+size*.51f,top-size*.34f);
-            bowR.cubicTo(cx+size*.46f,top-size*.10f,
+            bowR.cubicTo(cx+size*.18f,top-size*.30f,
+                cx+size*.49f,top-size*.31f,
+                cx+size*.44f,top-size*.23f);
+            bowR.cubicTo(cx+size*.39f,top-size*.10f,
                 cx+size*.15f,top-size*.04f,cx,top-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
