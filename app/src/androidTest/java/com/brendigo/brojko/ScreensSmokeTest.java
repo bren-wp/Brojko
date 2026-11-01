@@ -3379,10 +3379,12 @@ public class ScreensSmokeTest {
                     int[][] regions={
                         {133,310,450,380},
                         {133,785,453,847},
-                        {133,1210,536,1295}
+                        {133,1248,536,1312}
                     };
-                    for(int[] region:regions){
-                        int minimumX=1000,maximumX=-1,inkPixels=0;
+                    for(int index=0;index<regions.length;index++){
+                        int[] region=regions[index];
+                        int minimumX=1000,maximumX=-1,minimumY=2000;
+                        int inkPixels=0;
                         for(int y=region[1];y<region[3];y++)
                             for(int x=region[0];x<region[2];x++){
                                 int rgb=bitmap.getPixel(x,y);
@@ -3392,6 +3394,7 @@ public class ScreensSmokeTest {
                                 if(red<88&&green<110&&blue<155){
                                     minimumX=Math.min(minimumX,x);
                                     maximumX=Math.max(maximumX,x);
+                                    minimumY=Math.min(minimumY,y);
                                     inkPixels++;
                                 }
                             }
@@ -3401,6 +3404,12 @@ public class ScreensSmokeTest {
                             minimumX>=133&&minimumX<=180);
                         assertTrue("Headings must fit before reward pills",
                             maximumX<region[2]);
+                        if(index==2){
+                            assertTrue("Achievement heading must sit beneath",
+                                minimumY>=1250);
+                            assertTrue("Achievement heading must be compact",
+                                maximumX<=408);
+                        }
                     }
                     captureReference(activity,view,
                         "missions-section-titles-941x1672");
