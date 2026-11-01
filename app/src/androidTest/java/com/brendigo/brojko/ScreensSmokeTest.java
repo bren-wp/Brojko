@@ -1738,6 +1738,90 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void statisticsEmptyAndZeroOnlyMetricsKeepHistoryAccessible(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            String oldHistory=activity.prefs.getString("history","[]");
+            int oldMetric=activity.chartMetric,oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            String noPositiveRows=
+                "[{\\"score\\":0,\\"peak\\":0,\\"day\\":\\"1. stu 2026.\\"},"+
+                "{\\"score\\":0,\\"peak\\":0,\\"day\\":\\"31. lis 2026.\\"}]";
+            try{
+                activity.page="stats";
+                assertTrue(activity.prefs.edit()
+                    .putString("history",noPositiveRows).commit());
+                org.json.JSONArray rows=checkedHistory(noPositiveRows);
+                for(int[] dimensions:new int[][]{{941,1672},{360,600}}){
+                    view.measure(View.MeasureSpec.makeMeasureSpec(
+                            dimensions[0],View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(
+                            dimensions[1],View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,dimensions[0],dimensions[1]);
+                    for(int theme:new int[]{0,1}){
+                        activity.theme=theme;
+                        activity.updateBars();
+                        for(int metric=0;metric<2;metric++){
+                            activity.chartMetric=metric;
+                            assertEquals("No positive archived chart metric",0,
+                                view.statisticsChartMaximum(rows,rows.length()));
+                            Bitmap frame=Bitmap.createBitmap(dimensions[0],
+                                dimensions[1],Bitmap.Config.ARGB_8888);
+                            try{
+                                view.draw(new Canvas(frame));
+                                int historyLinks=0,metricToggles=0;
+                                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                    if(tap.label.startsWith("Detalji partije"))
+                                        historyLinks++;
+                                    if(tap.label.startsWith("Grafikon "))
+                                        metricToggles++;
+                                }
+                                assertEquals("Zero scores are still real history",2,
+                                    historyLinks);
+                                assertEquals("Both metrics remain selectable",2,
+                                    metricToggles);
+                                if(dimensions[0]==941&&theme==0)
+                                    captureReference(activity,view,metric==0?
+                                        "stats-zero-only-scores-941x1672":
+                                        "stats-zero-only-tiles-941x1672");
+                            }finally{frame.recycle();}
+                        }
+                    }
+                }
+                activity.chartMetric=0;activity.theme=0;
+                activity.prefs.edit().putString("history","[]").commit();
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap empty=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(empty));
+                    assertEquals("Empty archive must have no history actions",
+                        0,view.taps.stream().filter(
+                            tap->tap.label.startsWith("Detalji partije")).count());
+                    captureReference(activity,view,
+                        "stats-no-history-941x1672");
+                }finally{empty.recycle();}
+                assertEquals("Negative legacy scores must not make a bar",0,
+                    view.statisticsChartMaximum(checkedHistory(
+                        "[{\\"score\\":-10,\\"peak\\":-2}]"),1));
+                assertEquals("Small positive values must remain visible",1,
+                    view.statisticsChartMaximum(checkedHistory(
+                        "[{\\"score\\":1,\\"peak\\":1}]"),1));
+            }finally{
+                activity.prefs.edit().putString("history",oldHistory).commit();
+                activity.chartMetric=oldMetric;
+                activity.theme=oldTheme;
+                activity.page=oldPage;
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statsZeroValuesNeverProduceFakeChartBars(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
