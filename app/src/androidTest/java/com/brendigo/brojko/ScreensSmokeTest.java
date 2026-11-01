@@ -1745,8 +1745,8 @@ public class ScreensSmokeTest {
             int oldMetric=activity.chartMetric,oldTheme=activity.theme;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             String noPositiveRows=
-                "[{\\"score\\":0,\\"peak\\":0,\\"day\\":\\"1. stu 2026.\\"},"+
-                "{\\"score\\":0,\\"peak\\":0,\\"day\\":\\"31. lis 2026.\\"}]";
+                "[{\"score\":0,\"peak\":0,\"day\":\"1. stu 2026.\"},"+
+                "{\"score\":0,\"peak\":0,\"day\":\"31. lis 2026.\"}]";
             try{
                 activity.page="stats";
                 assertTrue(activity.prefs.edit()
@@ -1799,18 +1799,20 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     view.draw(new Canvas(empty));
+                    int emptyHistoryLinks=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if(tap.label.startsWith("Detalji partije"))emptyHistoryLinks++;
                     assertEquals("Empty archive must have no history actions",
-                        0,view.taps.stream().filter(
-                            tap->tap.label.startsWith("Detalji partije")).count());
+                        0,emptyHistoryLinks);
                     captureReference(activity,view,
                         "stats-no-history-941x1672");
                 }finally{empty.recycle();}
                 assertEquals("Negative legacy scores must not make a bar",0,
                     view.statisticsChartMaximum(checkedHistory(
-                        "[{\\"score\\":-10,\\"peak\\":-2}]"),1));
+                        "[{\"score\":-10,\"peak\":-2}]"),1));
                 assertEquals("Small positive values must remain visible",1,
                     view.statisticsChartMaximum(checkedHistory(
-                        "[{\\"score\\":1,\\"peak\\":1}]"),1));
+                        "[{\"score\":1,\"peak\":1}]"),1));
             }finally{
                 activity.prefs.edit().putString("history",oldHistory).commit();
                 activity.chartMetric=oldMetric;
