@@ -38,6 +38,8 @@ CAPTURES = (
     "stats-no-history-941x1672.png",
     "themes-peach-style-swatches-941x1672.png",
     "themes-phase07-owner-reference-941x1672.png",
+    "themes-animation-pill-941x1672.png",
+    "themes-choice-bounds-941x1672.png",
     "reference-settings-polished-941x1672.png",
     "settings-phase08-source-on-941x1672.png",
     "settings-back-arrow-941x1672.png",

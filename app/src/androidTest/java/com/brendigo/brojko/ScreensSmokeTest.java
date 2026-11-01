@@ -2380,7 +2380,7 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void animationHighKnobFitsInBothThemeLayouts(){
+    @Test public void animationHighSelectionFitsInBothThemeLayouts(){
         rule.getScenario().onActivity(activity->{
             int oldAnimation=activity.animation;
             String oldPage=activity.page;
@@ -2402,9 +2402,19 @@ public class ScreensSmokeTest {
                         int sampleY=(int)((compact?601:759)*view.scale+view.offY);
                         int centerX=(int)(358*view.scale+view.offX);
                         int outsideX=(int)(387*view.scale+view.offX);
-                        assertEquals("High animation knob should be inside the panel",
-                            MainActivity.CORAL,bmp.getPixel(centerX,sampleY));
-                        assertNotEquals("Slider knob must not spill beyond panel",
+                        int chosenColor=bmp.getPixel(centerX,sampleY);
+                        if(compact){
+                            // The source portrait now uses a short gradient
+                            // segment rather than a solid circular knob.
+                            assertTrue("High animation segment is coral",
+                                android.graphics.Color.red(chosenColor)>
+                                android.graphics.Color.green(chosenColor)+55);
+                        }else{
+                            // The taller layout keeps its existing round knob.
+                            assertEquals("High animation knob is inside the panel",
+                                MainActivity.CORAL,chosenColor);
+                        }
+                        assertNotEquals("Slider selection must not spill beyond panel",
                             MainActivity.CORAL,bmp.getPixel(outsideX,sampleY));
                     }finally{bmp.recycle();}
                 }
@@ -4428,6 +4438,127 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void themesDarkAndVividPreviewsFillRealSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int darkX=Math.round(board.offX+202f*board.scale);
+                    int vividX=Math.round(board.offX+319f*board.scale);
+                    int top=Math.round(board.offY+179f*board.scale);
+                    int vividTop=Math.round(board.offY+174f*board.scale);
+                    int bottom=Math.round(board.offY+279f*board.scale);
+                    int darkTop=bitmap.getPixel(darkX,top);
+                    // x=202 coincides with the grey radio selection badge
+                    // at y=279; sample the actual lower navy tray beside it.
+                    int darkBottomX=Math.round(board.offX+230f*board.scale);
+                    int darkBottom=bitmap.getPixel(darkBottomX,bottom);
+                    int vivid=bitmap.getPixel(vividX,vividTop);
+                    assertTrue("Dark preview must reach upper source bounds",
+                        android.graphics.Color.red(darkTop)<85 &&
+                        android.graphics.Color.blue(darkTop)<115);
+                    assertTrue("Dark preview must reach lower source bounds",
+                        android.graphics.Color.red(darkBottom)<85);
+                    assertTrue("Vivid preview reaches upper purple source bounds",
+                        android.graphics.Color.blue(vivid)>180 &&
+                        android.graphics.Color.blue(vivid)>
+                            android.graphics.Color.green(vivid)+80);
+                    int cards=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Svijetla".equals(tap.label)||
+                            "Tamna".equals(tap.label)||
+                            "Živopisna".equals(tap.label)){
+                            cards++;
+                            assertTrue("Preview card remains interactive",
+                                tap.bottom-tap.top>=140);
+                        }
+                    assertEquals(3,cards);
+                    captureReference(activity,board,
+                        "themes-choice-bounds-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void themeAnimationUsesThreeSourcePillsAndPersistsSelection(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldAnimation=activity.animation;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";
+                activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    for(int index=0;index<3;index++){
+                        activity.animation=index;
+                        board.draw(new Canvas(bitmap));
+                        int activeX=Math.round(board.offX+
+                            (205+index*54f+28f)*board.scale);
+                        int inactiveX=Math.round(board.offX+
+                            (205+((index+1)%3)*54f+28f)*board.scale);
+                        int y=Math.round(board.offY+600f*board.scale);
+                        int active=bitmap.getPixel(activeX,y);
+                        int inactive=bitmap.getPixel(inactiveX,y);
+                        assertTrue("Selected animation pill must be coral",
+                            android.graphics.Color.red(active)>
+                            android.graphics.Color.green(active)+55);
+                        assertTrue("Unselected animation pill remains neutral",
+                            android.graphics.Color.red(inactive)-
+                            android.graphics.Color.green(inactive)<45);
+                        int targets=0;
+                        for(MainActivity.BoardScreen.Tap tap:board.taps){
+                            if("Niska".equals(tap.label)||
+                                "Srednja".equals(tap.label)||
+                                "Visoka".equals(tap.label)){
+                                targets++;
+                                assertTrue("Animation choice touch height >=45",
+                                    tap.bottom-tap.top>=45f);
+                            }
+                        }
+                        assertEquals("All three animation settings reachable",3,
+                            targets);
+                        if(index==1)captureReference(activity,board,
+                            "themes-animation-pill-941x1672");
+                    }
+                    MainActivity.BoardScreen.Tap middle=null;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Srednja".equals(tap.label))middle=tap;
+                    assertNotNull(middle);
+                    middle.action.run();
+                    assertEquals("Real persisted animation setting",1,
+                        activity.prefs.getInt("animation",-1));
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.animation=oldAnimation;
+                activity.persist();
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themesPhaseSevenRendersOwnerLayoutAndKeepsRealPreferences(){
         rule.getScenario().onActivity(activity->{
             final String oldPage=activity.page;
@@ -4477,7 +4608,10 @@ public class ScreensSmokeTest {
                     // (x=158,y=188), where the cream backing shows through.
                     // Sample the dark material between the corner and tiles.
                     int x=Math.round(board.offX+195*board.scale);
-                    int y=Math.round(board.offY+189*board.scale);
+                    // The updated 2x2 thumbnail starts at y=186; the old
+                    // y=189 probe now falls *inside* its coral 2 tile.
+                    // Read the navy background just above the tile instead.
+                    int y=Math.round(board.offY+177*board.scale);
                     int navy=bitmap.getPixel(x,y);
                     assertTrue("Dark preview uses navy material",
                         android.graphics.Color.red(navy)<90 &&

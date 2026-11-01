@@ -3362,8 +3362,17 @@ public final class MainActivity extends ComponentActivity {
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
-            fitted(top,labelX,y+(dense?24:31),width<=118?13:16,labelWidth,ink,true);
-            fitted(bottom,labelX,y+(dense?41:48),width<=118?13:16,labelWidth,ink,true);
+            // The reference's wide streak KPI has a *single* heading.
+            // Keep two lines for the other four cards; the narrow 4x4
+            // typography must not cause the streak title to wrap.
+            if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
+                leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
+            }else{
+                fitted(top,labelX,y+(dense?24:31),
+                    width<=118?13:16,labelWidth,ink,true);
+                fitted(bottom,labelX,y+(dense?41:48),
+                    width<=118?13:16,labelWidth,ink,true);
+            }
             fitted(value,x+width/2,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
                 width-10,accent,true);
@@ -3733,15 +3742,20 @@ public final class MainActivity extends ComponentActivity {
                     c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
-                themeChoiceSurface(x+7,y+18,102,96,i);
+                // The reference uses a restrained inset tray for Light,
+                // but Dark and Vivid fill nearly the entire preview panel.
+                // Their old 102x96 tray started 13 units too low and left
+                // large unintended white margins at the top and bottom.
+                if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
+                else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
                 int[] colors=i==2?
                     new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    themePreviewTile(x+15+xx*45,y+29+yy*38,40,35,colors[j],0);
+                    themePreviewTile(x+15+xx*43,y+21+yy*41,40,40,colors[j],0);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*45,y+55+yy*38,19,WHITE,true);
+                        x+35+xx*43,y+50+yy*41,19,WHITE,true);
                 }
                 fitted(names[i],x+58,y+157,16,108,ink,true);
                 // Original design: selector beneath the four numbered tiles.
@@ -3807,9 +3821,13 @@ public final class MainActivity extends ComponentActivity {
             leftFitted("Jačina animacija",208,570,17,162,ink,true);
             leftFitted("Koliko su izražene animacije spajanja.",
                 208,588,9.5f,166,muted,false);
-            shape(211,599,159,8,5,theme==1?0xff536078:0xffe8ded1);
-            shape(211,599,11+animation*68,8,5,CORAL);
-            shape(211+animation*68,592,22,22,11,CORAL);
+            // Source 941x1672: one pill-shaped selection per intensity,
+            // not a progress fill and oversized circular thumb.
+            shape(205,594,165,13,7,theme==1?0xff536078:0xffeee5d9);
+            float activeX=205+animation*54f;
+            shape(activeX-2,592,60,17,9,WHITE);
+            gradient(activeX,594,56,13,7,
+                lighten(CORAL,.04f),CORAL);
             String[] intensities={"Niska","Srednja","Visoka"};
             for(int i=0;i<3;i++){
                 int pos=i;
