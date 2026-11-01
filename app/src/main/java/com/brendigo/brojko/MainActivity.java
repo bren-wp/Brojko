@@ -2921,14 +2921,22 @@ public final class MainActivity extends ComponentActivity {
                 left+width-1.3f,top+height-2.0f,8,8,p);
             p.setStyle(Paint.Style.FILL);
             p.setColor(WHITE); // do not inherit the translucent rim alpha
-            gradient(cx-size*.09f,top,size*.18f,height,2.8f,
+            // The original gift has TWO gold edge straps with a purple
+            // front panel between them (not one centered ribbon).
+            // The widths correspond to x≈156..183 and x≈247..272
+            // on the owner's unscaled 941x1672 portrait reference.
+            gradient(cx-size*.31f,top,size*.14f,height,2.8f,
+                0xffffeb75,0xffffaa1d);
+            gradient(cx+size*.17f,top,size*.14f,height,2.8f,
                 0xffffeb75,0xffffaa1d);
             // Raised purple lid, with golden horizontal band.
             gradient(left-size*.025f,top-size*.075f,
                 width+size*.05f,size*.23f,7,
                 0xffcf9bff,0xff7a3bdb);
-            gradient(cx-size*.1f,top-size*.075f,
-                size*.20f,size*.23f,2.0f,
+            // Wide gold lid crossing under the center knot joins the
+            // two front straps in the owner illustration.
+            gradient(left+width*.23f,top+size*.015f,
+                width*.54f,size*.115f,4f,
                 0xffffed78,0xffffb21e);
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
