@@ -3352,6 +3352,67 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void missionsGoldenRewardStarMatchesOwnerSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            int oldMerges=activity.todayMerges,oldWeek=activity.weekPoints;
+            int oldStreak=activity.playDayStreak,oldTile=activity.recordTile;
+            int oldBest=activity.best,oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Absolute pixels at the 941x1672 owner reference:
+                    // the first reward star belongs near (822,456),
+                    // rather than the previous smaller star at (811,433).
+                    int pixels=0;
+                    long sumX=0L,sumY=0L;
+                    for(int y=399;y<488;y++)for(int x=770;x<860;x++){
+                        int color=bitmap.getPixel(x,y);
+                        int red=android.graphics.Color.red(color);
+                        int green=android.graphics.Color.green(color);
+                        int blue=android.graphics.Color.blue(color);
+                        if(red>190&&green>90&&green<230&&blue<145&&
+                                red>green+30){
+                            pixels++;sumX+=x;sumY+=y;
+                        }
+                    }
+                    assertTrue("Reward star must fill the owner source area",
+                        pixels>=1950);
+                    float centroidX=sumX/(float)pixels;
+                    float centroidY=sumY/(float)pixels;
+                    assertEquals("Golden reward star horizontal source centroid",
+                        822f,centroidX,12f);
+                    assertEquals("Golden reward star vertical source centroid",
+                        456f,centroidY,12f);
+                    assertEquals("Rendering rewards never grants extra stars",
+                        0,activity.rewardFlags);
+                    assertEquals(8400,activity.best);
+                    captureReference(activity,view,
+                        "missions-reward-star-source-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void illustratedMissionsKeepRealProgressAndDistinctColors(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
@@ -3387,8 +3448,8 @@ public class ScreensSmokeTest {
                         android.graphics.Color.green(teal)>
                             android.graphics.Color.red(teal)+20);
                     int reward=bmp.getPixel(
-                        Math.round(view.offX+345*view.scale),
-                        Math.round(view.offY+184*view.scale));
+                        Math.round(view.offX+349*view.scale),
+                        Math.round(view.offY+193*view.scale));
                     assertTrue("Reward star must be saturated gold",
                         android.graphics.Color.red(reward)>
                             android.graphics.Color.blue(reward)+65);
