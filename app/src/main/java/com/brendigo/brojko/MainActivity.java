@@ -966,7 +966,7 @@ public final class MainActivity extends ComponentActivity {
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xffffdc65:
-                    golden?("missions".equals(page)?0xffffd45b:0xffffed87):
+                    golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
                     lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
                 // rather than the lighter outline-like mission style.
@@ -3243,14 +3243,16 @@ public final class MainActivity extends ComponentActivity {
             // Golden stars in the owner image sit slightly to the right
             // and lower than the previous vector icons. Keep the award
             // text and layout untouched and move only the illustration.
-            float rewardCenter=portrait?349:323;
+            boolean sourceMissionStar=portrait&&theme==0;
+            float rewardCenter=sourceMissionStar?349:portrait?345:323;
             if(portrait&&theme!=1)
                 gradient(315,y+4,54,61,15,0xfffff9e7,0xfffff0d3);
             else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,y+(portrait?33:29),
-                portrait?35:29,0xffffad1a);
+            icon("star",rewardCenter,
+                y+(sourceMissionStar?33:portrait?23:29),
+                sourceMissionStar?35:portrait?31:29,0xffffad1a);
             fitted("+"+fmt(reward),rewardCenter,y+(portrait?55:62),
                 portrait?14:13,portrait?49:63,ink,true);
         }
