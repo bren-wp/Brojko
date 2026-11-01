@@ -3790,7 +3790,9 @@ public class ScreensSmokeTest {
                     assertTrue("Seven-day flame must be saturated orange, not alpha-grey",
                         android.graphics.Color.red(flame)>
                             android.graphics.Color.blue(flame)+35);
-                    int giftX=Math.round(board.offX+70f*board.scale);
+                    // The source gift has two GOLD straps at x≈170/259;
+                    // its actual PURPLE front panel is at x≈214.
+                    int giftX=Math.round(board.offX+91f*board.scale);
                     int giftY=Math.round(board.offY+615f*board.scale);
                     int purple=image.getPixel(giftX,giftY);
                     assertTrue("Reward gift needs saturated purple body",
@@ -3894,7 +3896,9 @@ public class ScreensSmokeTest {
                 Bitmap bmp=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
                 try{
                     board.draw(new Canvas(bmp));
-                    int x=Math.round(board.offX+71f*board.scale);
+                    // Sample the unchanged purple center, not the
+                    // newly restored gold strap at the former x≈167.
+                    int x=Math.round(board.offX+91f*board.scale);
                     int y=Math.round(board.offY+617f*board.scale);
                     int color=bmp.getPixel(x,y);
                     assertTrue("Reward purple must not fade to its pastel panel",
