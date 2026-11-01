@@ -67,3 +67,20 @@ Uz to je proširena ljubičasta kutija `0,80 → 0,94` puta veličine ilustracij
 ### Kriterij prihvaćanja
 
 Ove su vrijednosti **početna mjerenja, a ne rezultat najnovijeg commita**. Novi stvarni screenshot i sva tri uspješna GitHub Actions workflowa potrebni su za konačnu ponovljenu usporedbu; ako novi ROI MAE poraste ili novi test padne, ispravak se nastavlja u **istom PR-u #34**. PR ostaje Draft, bez mergea i izdanja.
+
+
+### Prva QA iteracija i ispravljena regresija vrpce
+
+Android screenshot QA `41360518251` za commit `77f582a` završio je uspješno i dostavio stvarni PNG. Njegova usporedba pokazala je **povećanje** ukupne pogreške jer je raniji, poluprozirni središnji pojas zamijenjen jednom neprozirnom vrpcom *na pogrešnom mjestu*:
+
+| Ista regija | Prije | Nakon prve iteracije | Promjena |
+|---|---:|---:|---:|
+| Cijeli Dnevni izazov | 17,430 | 17,614 | +0,184 |
+| Panel nagrade | 26,064 | 27,232 | +1,169 |
+| Poklon | 38,240 | 43,978 | +5,738 |
+| Mašna | 32,276 | **29,092** | −3,184 |
+| Tijelo i vrpca | 56,510 | 70,948 | +14,438 |
+
+Izvornik ne prikazuje središnji zlatni pojas. Na y=1480 px ima dvije odvojene zlatne vrpce, oko x=156–183 i x=247–271, između kojih je vidljiva ljubičasta površina oko x=214. Prva nova snimka imala je jednu vrpcu x≈197–230. Zato su sada zamijenjene **dvjema lokalnim neprozirnim vrpcama** i širokim zlatnim povezom na poklopcu, a regresijski test traži zlatnu boju na x=170 i x=259 te ljubičastu na x=214.
+
+To je stvaran uzrok regresije, ne promjena u korisničkom stanju ili testnom fixtureu. **Prva iteracija nije prihvaćena.** Sljedeća Android screenshot serija na posljednjem commitu mora ponovno dokazati smanjenje RGB MAE. Tamna tema, stvarno osvajanje nagrada i povijest korisnika nisu predmet fixturea; ne smiju se lažirati.
