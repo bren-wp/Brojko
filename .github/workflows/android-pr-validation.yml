@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate screenshot checker syntax
         run: python3 -m py_compile scripts/verify-emulator-screenshots.py
+      - name: Verify Croatian Google Play README badge and destination
+        run: python3 scripts/verify-google-play-readme.py
       - name: Verify branded launcher vectors and Android mask-safe geometry
         run: python3 scripts/verify-brand-assets.py
       - name: Guard Android 15/16 edge-to-edge and deprecated APIs
