@@ -2380,7 +2380,7 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void animationHighKnobFitsInBothThemeLayouts(){
+    @Test public void animationHighSelectionFitsInBothThemeLayouts(){
         rule.getScenario().onActivity(activity->{
             int oldAnimation=activity.animation;
             String oldPage=activity.page;
@@ -2402,9 +2402,19 @@ public class ScreensSmokeTest {
                         int sampleY=(int)((compact?601:759)*view.scale+view.offY);
                         int centerX=(int)(358*view.scale+view.offX);
                         int outsideX=(int)(387*view.scale+view.offX);
-                        assertEquals("High animation knob should be inside the panel",
-                            MainActivity.CORAL,bmp.getPixel(centerX,sampleY));
-                        assertNotEquals("Slider knob must not spill beyond panel",
+                        int chosenColor=bmp.getPixel(centerX,sampleY);
+                        if(compact){
+                            // The source portrait now uses a short gradient
+                            // segment rather than a solid circular knob.
+                            assertTrue("High animation segment is coral",
+                                android.graphics.Color.red(chosenColor)>
+                                android.graphics.Color.green(chosenColor)+55);
+                        }else{
+                            // The taller layout keeps its existing round knob.
+                            assertEquals("High animation knob is inside the panel",
+                                MainActivity.CORAL,chosenColor);
+                        }
+                        assertNotEquals("Slider selection must not spill beyond panel",
                             MainActivity.CORAL,bmp.getPixel(outsideX,sampleY));
                     }finally{bmp.recycle();}
                 }
@@ -4449,7 +4459,10 @@ public class ScreensSmokeTest {
                     int vividTop=Math.round(board.offY+174f*board.scale);
                     int bottom=Math.round(board.offY+279f*board.scale);
                     int darkTop=bitmap.getPixel(darkX,top);
-                    int darkBottom=bitmap.getPixel(darkX,bottom);
+                    // x=202 coincides with the grey radio selection badge
+                    // at y=279; sample the actual lower navy tray beside it.
+                    int darkBottomX=Math.round(board.offX+230f*board.scale);
+                    int darkBottom=bitmap.getPixel(darkBottomX,bottom);
                     int vivid=bitmap.getPixel(vividX,vividTop);
                     assertTrue("Dark preview must reach upper source bounds",
                         android.graphics.Color.red(darkTop)<85 &&
@@ -4595,7 +4608,10 @@ public class ScreensSmokeTest {
                     // (x=158,y=188), where the cream backing shows through.
                     // Sample the dark material between the corner and tiles.
                     int x=Math.round(board.offX+195*board.scale);
-                    int y=Math.round(board.offY+189*board.scale);
+                    // The updated 2x2 thumbnail starts at y=186; the old
+                    // y=189 probe now falls *inside* its coral 2 tile.
+                    // Read the navy background just above the tile instead.
+                    int y=Math.round(board.offY+177*board.scale);
                     int navy=bitmap.getPixel(x,y);
                     assertTrue("Dark preview uses navy material",
                         android.graphics.Color.red(navy)<90 &&
