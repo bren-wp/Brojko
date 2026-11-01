@@ -3352,6 +3352,71 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void missionsSectionHeadingsUseSourceWeightAndLeftAlignment(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // All source headings start at ~150px and use solid
+                    // navy lettering. Keep the three baselines separate.
+                    int[][] regions={
+                        {133,310,450,380},
+                        {133,785,453,847},
+                        {133,1210,536,1295}
+                    };
+                    for(int[] region:regions){
+                        int minimumX=1000,maximumX=-1,inkPixels=0;
+                        for(int y=region[1];y<region[3];y++)
+                            for(int x=region[0];x<region[2];x++){
+                                int rgb=bitmap.getPixel(x,y);
+                                int red=android.graphics.Color.red(rgb);
+                                int green=android.graphics.Color.green(rgb);
+                                int blue=android.graphics.Color.blue(rgb);
+                                if(red<88&&green<110&&blue<155){
+                                    minimumX=Math.min(minimumX,x);
+                                    maximumX=Math.max(maximumX,x);
+                                    inkPixels++;
+                                }
+                            }
+                        assertTrue("Heading must render as solid text",
+                            inkPixels>500);
+                        assertTrue("Section titles must share source left edge",
+                            minimumX>=133&&minimumX<=180);
+                        assertTrue("Headings must fit before reward pills",
+                            maximumX<region[2]);
+                    }
+                    captureReference(activity,view,
+                        "missions-section-titles-941x1672");
+                    assertEquals("Rendering headings never grants currency",
+                        0,activity.rewardFlags);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionsGoldenRewardStarMatchesOwnerSourceBounds(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
