@@ -54,3 +54,21 @@ Postojeći `illustratedMissionsKeepRealProgressAndDistinctColors` uzorkuje novu 
 - [ ] Nastaviti sljedeći zaslon tek uz stvarne dokaze.
 
 **Bez mergea i bez objavljivanja novog izdanja. 1:1 nije potvrđen.**
+
+
+## Nastavak u istom Draft PR-u — izvorni naslovi odjeljaka
+
+Na stvarnoj Android snimci iz uspješnog workflowa `41355720844` uspoređeni su vlasnikov PNG i emulator, 941 × 1672 px, bez promjene dimenzija, pomaka ni stanja testnog fixturea.
+
+| Regija | Koordinate [x0,y0,x1,y1) | RGB MAE prije |
+|---|---|---:|
+| Cijeli zaslon Misija | [0,0,941,1672) | 24,384 |
+| Dnevne — naslov | [130,305,465,375) | 35,662 |
+| Tjedne — naslov | [130,775,465,845) | 38,336 |
+| Postignuća — naslov | [130,1210,530,1300) | 46,264 |
+
+Pritom je na izvornoj slici svaki naziv odjeljka poravnat blizu 150. piksela po X osi, uz podebljanu tipografiju, a prethodni emulator imao je različito centriranje i tanji font. U svijetlom portretnom prikazu uveden je specijalizirani lokalni Canvas `missionSectionTitle()` koji koristi postojeći `displayFont` (Nunito Black), vlastito lijevo poravnanje i veličinu 20,5 logičkih jedinica, bez dodatnih resursa, fontova ili vanjskih biblioteka. Tamna tema i druge veličine zadržavaju postojeći prikaz.
+
+Regresijski test `missionsSectionHeadingsUseSourceWeightAndLeftAlignment` provjerava stvarne tamne piksele sva tri zaglavlja, zajednički početni rub, ograničenu širinu i nepromijenjene korisničke vrijednosti. Snima pravi Android PNG `missions-section-titles-941x1672.png`, koji je dodan obveznom validatoru. **Gornje RGB MAE vrijednosti su početne, ne rezultat nove izmjene.**
+
+Novi screenshot QA nakon posljednjeg SHA mora ponovno potvrditi sva tri regionalna RGB MAE i uspješne instrumentacijske testove prije bilo kakvog mergea.
