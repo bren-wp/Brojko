@@ -2004,7 +2004,7 @@ public final class MainActivity extends ComponentActivity {
             // this highlight; keep the extra light only in the top fifth.
             p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
             p.setShader(new LinearGradient(x,y,x,y+h*.20f,
-                0x6affffff,0x00ffffff,Shader.TileMode.CLAMP));
+                0x46ffffff,0x00ffffff,Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
