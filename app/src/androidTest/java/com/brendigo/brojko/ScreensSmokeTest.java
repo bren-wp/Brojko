@@ -2290,6 +2290,79 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
+        rule.getScenario().onActivity(activity->{
+            final TileGame previousGame=activity.game;
+            final String previousPage=activity.page;
+            final int previousTheme=activity.theme;
+            final int previousStyle=activity.tileStyle;
+            final int previousAnimation=activity.animation;
+            final int previousBest=activity.best;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // This is an isolated screenshot fixture, NOT user progress.
+                activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[16];
+                activity.game.cells[0]=2;activity.game.cells[1]=2;
+                assertTrue(activity.game.move(TileGame.LEFT).changed);
+                activity.game.cells=new int[]{
+                    2,4,8,16,
+                    8,16,2,4,
+                    32,64,8,2,
+                    128,16,32,256
+                };
+                activity.game.peak=256;
+                activity.game.moves=33;
+                activity.game.score=1316;
+                activity.best=3864;
+                activity.theme=0;
+                activity.tileStyle=0;
+                activity.animation=0;
+                activity.page="game";
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap pixels=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(pixels));
+                    int tileX=Math.round(board.offX+43f*board.scale);
+                    int highlightY=Math.round(board.offY+174f*board.scale);
+                    int bodyY=Math.round(board.offY+197f*board.scale);
+                    int highlight=pixels.getPixel(tileX,highlightY);
+                    int body=pixels.getPixel(tileX,bodyY);
+                    assertTrue("First coral tile must have a narrow source highlight",
+                        android.graphics.Color.green(highlight)>
+                            android.graphics.Color.green(body)+20);
+                    int controls=0;
+                    for(MainActivity.BoardScreen.Tap tap:board.taps)
+                        if("Novo".equals(tap.label)||
+                            "Poništi".equals(tap.label)||
+                            "Završi".equals(tap.label)){
+                            controls++;
+                            assertTrue("Game controls remain touch-accessible",
+                                tap.bottom-tap.top>=90f);
+                        }
+                    assertEquals("Real game controls remain functional",3,controls);
+                    assertEquals("Screenshot must not change game score",
+                        1316,activity.game.score);
+                    captureReference(activity,board,
+                        "classic-source-lighting-941x1672");
+                }finally{pixels.recycle();}
+            }finally{
+                activity.game=previousGame;
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.tileStyle=previousStyle;
+                activity.animation=previousAnimation;
+                activity.best=previousBest;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void originalPixelReferencesUseIdenticalRepresentativeGameData(){
         rule.getScenario().onActivity(activity->{
             TileGame prior=activity.game;
