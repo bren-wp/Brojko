@@ -3819,6 +3819,60 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGiftHasOpaqueRibbonCompactBowAndSourceWidth(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            String oldDaily=activity.lastDaily;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;activity.streak=7;
+                activity.lastDaily="";activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bmp));
+                    // The former Paint alpha made the vertical gold strip
+                    // semi-transparent; this must be visibly golden, not lilac.
+                    int ribbon=bmp.getPixel(214,1480);
+                    assertTrue("Gift ribbon must be opaque yellow",
+                        android.graphics.Color.red(ribbon)>195 &&
+                        android.graphics.Color.green(ribbon)>105 &&
+                        android.graphics.Color.blue(ribbon)<145);
+                    int leftWall=bmp.getPixel(132,1462);
+                    assertTrue("Purple present should extend to source left edge",
+                        android.graphics.Color.blue(leftWall)>
+                        android.graphics.Color.red(leftWall)+18);
+                    int topYellow=1672;
+                    for(int y=1310;y<1395;y++)for(int x=140;x<278;x++){
+                        int color=bmp.getPixel(x,y);
+                        int red=android.graphics.Color.red(color);
+                        int green=android.graphics.Color.green(color);
+                        int blue=android.graphics.Color.blue(color);
+                        if(red>205&&green>105&&green<240&&blue<150
+                                &&red>green+15)
+                            topYellow=Math.min(topYellow,y);
+                    }
+                    assertTrue("Bow must sit below the last goal row",
+                        topYellow>=1335 && topYellow<=1385);
+                    captureReference(activity,view,
+                        "daily-gift-opaque-ribbon-941x1672");
+                    assertEquals("Drawing gift must preserve streak",7,
+                        activity.streak);
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.streak=oldStreak;activity.lastDaily=oldDaily;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGiftStaysSaturatedAfterItsTransparentShadow(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;int oldTheme=activity.theme;
