@@ -20,6 +20,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.LinearGradient;
+import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -3756,6 +3757,22 @@ public final class MainActivity extends ComponentActivity {
             // Shadow uses translucent Paint; reset it before an opaque shader.
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-2,17,top,bottom);
+            if(preset==2&&theme==0&&referencePortraitLayout){
+                // Owner's vivid theme swatch is 2D: cyan lower-left,
+                // purple lower-right. The old vertical gradient left
+                // both corners the same uniform blue. Native radial
+                // overlays belong to this preview, not real game tiles.
+                p.setStyle(Paint.Style.FILL);
+                p.setShader(new RadialGradient(x+w*.10f,y+h*.98f,
+                    w*.87f,new int[]{0x8300dcff,0x4600bbf8,0x0000bbf8},
+                    null,Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                p.setShader(new RadialGradient(x+w*1.08f,y+h*.98f,
+                    w*.96f,new int[]{0xddc047ff,0x85a642ff,0x00a642ff},
+                    null,Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                p.setShader(null);
+            }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setColor(preset==1?0x45ffffff:0x90ffffff);
             p.setStrokeWidth(1f);
