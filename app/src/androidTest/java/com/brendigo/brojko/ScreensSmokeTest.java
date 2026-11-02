@@ -4804,6 +4804,54 @@ public class ScreensSmokeTest {
         }
     }
 
+    @Test public void homeCornerArtUsesSourceSaturatedPalette(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int coral=bitmap.getPixel(30,95);
+                    int teal=bitmap.getPixel(820,135);
+                    assertTrue("Home top-left tile should be warm coral",
+                        android.graphics.Color.red(coral)>235&&
+                        android.graphics.Color.blue(coral)<115);
+                    assertTrue("Home top-right tile should stay vivid teal",
+                        android.graphics.Color.green(teal)>205&&
+                        android.graphics.Color.blue(teal)>195);
+                    int modeCards=0,shortcuts=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if(tap.label.startsWith("Klasično ")||
+                           tap.label.startsWith("Opušteno ")||
+                           tap.label.startsWith("Dnevni izazov "))
+                            modeCards++;
+                        if("Misije".equals(tap.label)||
+                           "Statistika".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))
+                            shortcuts++;
+                    }
+                    assertEquals("All three modes remain accessible",3,modeCards);
+                    assertEquals("All four Home shortcuts remain accessible",4,shortcuts);
+                    captureReference(activity,view,
+                        "home-saturated-corner-art-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashOwnerTilePaletteKeepsSaturatedFaces(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
