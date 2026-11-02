@@ -2933,6 +2933,30 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void splashAfterDelayNavigatesOnlyToHomeAndRestoresTimer(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            long oldStart=activity.splashStartedAtElapsedMs;
+            try{
+                android.os.Bundle saved=new android.os.Bundle();
+                activity.onSaveInstanceState(saved);
+                assertEquals("Rotation must preserve original splash start",
+                    oldStart,saved.getLong("brojko_splash_started",-1L));
+                activity.page="settings";
+                activity.finishSplash.run();
+                assertEquals("Splash timer must not steal a later screen",
+                    "settings",activity.page);
+                activity.page="splash";
+                activity.finishSplash.run();
+                assertEquals("Splash completion opens Home automatically",
+                    "home",activity.page);
+            }finally{
+                activity.page=oldPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashDurationMeetsOwnerTwoToThreeSecondContract(){
         // Test the configured interval, not unstable emulator launch time.
         assertTrue("Branded splash must remain visible >= 2 seconds",
