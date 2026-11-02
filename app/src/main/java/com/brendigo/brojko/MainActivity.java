@@ -79,6 +79,12 @@ public final class MainActivity extends ComponentActivity {
     // then automatically enter Home. Never hold the player on Splash
     // longer than needed; display data are prepared off this timer.
     static final long SPLASH_DURATION_MS=2700L;
+    long splashStartedAtElapsedMs=android.os.SystemClock.elapsedRealtime();
+    // A single cancellable callback prevents obsolete Activities from
+    // navigating after a rotation, split-screen resize or recreation.
+    final Runnable finishSplash=()->{
+        if("splash".equals(page))navigate("home");
+    };
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
     int chartMetric=0;
@@ -137,6 +143,9 @@ public final class MainActivity extends ComponentActivity {
         }catch(Exception ignored){game=null;}
         float restoredScroll=0f;
         if(bundle!=null){
+            // Rotation must NOT restart the full 2.7-second brand timer.
+            splashStartedAtElapsedMs=bundle.getLong("brojko_splash_started",
+                android.os.SystemClock.elapsedRealtime());
             String restored=bundle.getString("brojko_game", "");
             if(!restored.isEmpty()){
                 try{game=TileGame.fromJson(new JSONObject(restored));}
@@ -153,9 +162,12 @@ public final class MainActivity extends ComponentActivity {
         }
         screen=new BoardScreen(this);setContentView(screen);
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
-        screen.postDelayed(()->{
-            if("splash".equals(page))navigate("home");
-        },SPLASH_DURATION_MS);
+        if("splash".equals(page)){
+            long elapsed=Math.max(0L,android.os.SystemClock.elapsedRealtime()-
+                splashStartedAtElapsedMs);
+            long remaining=Math.max(0L,SPLASH_DURATION_MS-elapsed);
+            screen.postDelayed(finishSplash,remaining);
+        }
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
@@ -614,6 +626,7 @@ public final class MainActivity extends ComponentActivity {
         // Keep the current game, page and scroll offset rather than returning
         // to the splash screen or losing the active move after rotation.
         out.putString("brojko_page",page);
+        out.putLong("brojko_splash_started",splashStartedAtElapsedMs);
         out.putString("brojko_mode",pendingMode);
         out.putInt("brojko_history_index",selectedHistoryIndex);
         out.putInt("brojko_chart_metric",chartMetric);
@@ -625,7 +638,11 @@ public final class MainActivity extends ComponentActivity {
         if(!skipPersistOnPauseAfterImport)persist();
         super.onPause();
     }
-    @Override protected void onDestroy(){if(tones!=null){tones.release();tones=null;}super.onDestroy();}
+    @Override protected void onDestroy(){
+        if(screen!=null)screen.removeCallbacks(finishSplash);
+        if(tones!=null){tones.release();tones=null;}
+        super.onDestroy();
+    }
 
     final class BoardScreen extends View {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
