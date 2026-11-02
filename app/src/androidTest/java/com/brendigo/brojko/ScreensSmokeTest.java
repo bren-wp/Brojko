@@ -4792,6 +4792,179 @@ public class ScreensSmokeTest {
         });
     }
 
+    private void captureResponsiveViewport(MainActivity activity,
+                                           Bitmap bitmap,String name){
+        File directory=new File(activity.getExternalFilesDir(null),"screenshots");
+        assertTrue(directory.isDirectory()||directory.mkdirs());
+        try(FileOutputStream output=new FileOutputStream(
+                new File(directory,name+".png"))){
+            assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
+        }catch(java.io.IOException error){
+            throw new AssertionError("Cannot write actual viewport screenshot "+name,error);
+        }
+    }
+
+    @Test public void splashAndHomeFitSeventeenScreenSizesAndKeepAllActions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+            final int[][] sizes={
+                {320,480},{360,600},{360,640},{360,800},
+                {393,873},{412,915},{540,960},{600,1024},
+                {800,1280},{941,1672},{1080,2400},{1440,3200},
+                {480,320},{800,360},{960,540},{1280,800},
+                {2560,1600}
+            };
+            try{
+                activity.theme=0;
+                assertEquals("Preserve 3.2-second branded Splash",
+                    3200L,MainActivity.SPLASH_DURATION_MS);
+                for(String page:new String[]{"splash","home"}){
+                    activity.page=page;
+                    for(int[] size:sizes){
+                        int width=size[0],height=size[1];
+                        screen.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        screen.layout(0,0,width,height);
+                        Bitmap bmp=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            screen.draw(new Canvas(bmp));
+                            assertTrue("Positive scaling on "+page+" "+
+                                width+"x"+height,screen.scale>0f);
+                            assertTrue("400-unit width must fit "+width+"x"+height,
+                                screen.offX>=-.1f&&
+                                screen.offX+400f*screen.scale<=width+.1f);
+                            if("splash".equals(page)){
+                                assertEquals("Splash must not scroll",0f,
+                                    screen.maxScroll,.01f);
+                                float upper=screen.referencePortraitLayout?
+                                    58f:74f;
+                                float lower=screen.referencePortraitLayout?
+                                    628f:824f;
+                                assertTrue("Splash top must fit "+width+"x"+height,
+                                    screen.offY+upper*screen.scale>=-1f);
+                                assertTrue("Splash slogan must fit "+
+                                    width+"x"+height,
+                                    screen.offY+lower*screen.scale<=height+1f);
+                            }else{
+                                int scores=0,modes=0,shortcuts=0,hero=0;
+                                float visibleBottom=(height-screen.offY)/
+                                    screen.scale+screen.maxScroll;
+                                for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                                    if("Najbolji rezultat".equals(tap.label)||
+                                       "Zadnji rezultat".equals(tap.label))
+                                        scores++;
+                                    if(tap.label.startsWith("Klasično ")||
+                                       tap.label.startsWith("Opušteno ")||
+                                       tap.label.startsWith("Dnevni izazov "))
+                                        modes++;
+                                    if("Misije".equals(tap.label)||
+                                       "Statistika".equals(tap.label)||
+                                       "Teme".equals(tap.label)||
+                                       "Postavke".equals(tap.label))
+                                        shortcuts++;
+                                    if("Nova igra".equals(tap.label)||
+                                       "Nastavi igru".equals(tap.label))
+                                        hero++;
+                                    assertTrue("Home action must remain reachable: "+
+                                        tap.label+" on "+width+"x"+height,
+                                        tap.top>=0&&tap.bottom<=visibleBottom+2f);
+                                }
+                                assertEquals("Two real score cards",2,scores);
+                                assertEquals("Three real game-mode actions",3,modes);
+                                assertEquals("Four Home shortcuts",4,shortcuts);
+                                assertEquals("One playable hero",1,hero);
+                                if(width>height){
+                                    assertTrue("Landscape shortcuts must stay"+
+                                        " at least 48 physical pixels wide",
+                                        88f*screen.scale>=48f);
+                                }
+                                if(screen.maxScroll>0f){
+                                    screen.scrollOffset=screen.maxScroll;
+                                    screen.draw(new Canvas(bmp));
+                                    for(MainActivity.BoardScreen.Tap tap:screen.taps)
+                                        if("Misije".equals(tap.label)||
+                                           "Statistika".equals(tap.label)||
+                                           "Teme".equals(tap.label)||
+                                           "Postavke".equals(tap.label)){
+                                            float bottom=screen.offY+
+                                                tap.bottom*screen.scale;
+                                            assertTrue("Scrolled shortcut "+
+                                                tap.label+" must be visible",
+                                                bottom<=height+2f);
+                                        }
+                                    screen.scrollOffset=0f;
+                                }
+                            }
+                            if((width==320&&height==480)||
+                               (width==941&&height==1672)||
+                               (width==800&&height==360)||
+                               (width==360&&height==800)){
+                                // Actual Canvas pixels, never synthesized mockups.
+                                screen.scrollOffset=0f;
+                                screen.draw(new Canvas(bmp));
+                                captureResponsiveViewport(activity,bmp,
+                                    page+"-responsive-"+width+"x"+height);
+                            }
+                        }finally{bmp.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashHomeDarkThemeAlsoRetainsSmallAndLargeGeometry(){
+        rule.getScenario().onActivity(activity->{
+            String page=activity.page;
+            int theme=activity.theme;
+            MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+            try{
+                activity.theme=1;
+                for(String target:new String[]{"splash","home"}){
+                    activity.page=target;
+                    for(int[] size:new int[][]{
+                            {320,480},{941,1672},{800,360},{1280,800}}){
+                        screen.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        screen.layout(0,0,size[0],size[1]);
+                        Bitmap bmp=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            screen.draw(new Canvas(bmp));
+                            float bottom=screen.referencePortraitLayout?
+                                628f:824f;
+                            if("splash".equals(target))
+                                assertTrue("Dark Splash slogan clipped",
+                                    screen.offY+bottom*screen.scale<=size[1]+1f);
+                            else{
+                                int count=0;
+                                for(MainActivity.BoardScreen.Tap tap:screen.taps)
+                                    if("Misije".equals(tap.label)||
+                                       "Statistika".equals(tap.label)||
+                                       "Teme".equals(tap.label)||
+                                       "Postavke".equals(tap.label))count++;
+                                assertEquals("Dark Home shortcuts must survive",
+                                    4,count);
+                            }
+                        }finally{bmp.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=page;activity.theme=theme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitSplashFillsWidthWithoutScrollingOrClippingSlogan(){
         rule.getScenario().onActivity(activity->{
             String old=activity.page;
