@@ -20,6 +20,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.LinearGradient;
+import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -1008,10 +1009,10 @@ public final class MainActivity extends ComponentActivity {
                 flame.close();
                 c.save();c.translate(0,1f);p.setColor(0x270b1740);
                 c.drawPath(flame,p);c.restore();
-                // setColor(0x27...) above also sets Paint alpha to 15%.
-                // Restore opaque paint before the Daily streak gradient;
-                // otherwise the orange flame looks washed-out grey.
-                if("daily".equals(page))p.setColor(WHITE);
+                // setColor(0x27...) above sets Paint alpha to 15%.
+                // Restore opacity on EVERY flame, not only Daily:
+                // the owner's Statistics streak flame is vivid purple.
+                p.setColor(WHITE);
                 p.setShader(new LinearGradient(4,2,18,23,
                     lighten(color,.26f),darken(color,.07f),
                     Shader.TileMode.CLAMP));
@@ -2958,11 +2959,15 @@ public final class MainActivity extends ComponentActivity {
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     158,rewardY+17,12,190,muted,true);
+                // Owner's portrait reference has a heavier, wider
+                // reward heading and NO +250 badge in this card.
+                // The 250-star reward is still real and disclosed in
+                // the success/result overlay; no gameplay logic changes.
                 leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
-                    158,rewardY+40,18,157,ink,true);
-                // Preserve the actual earned currency while retaining the
-                // reference's explanatory reward copy.
-                fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
+                    158,rewardY+40,theme==0?19.5f:18f,
+                    theme==0?200f:157f,ink,true);
+                if(theme!=0)
+                    fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
                 leftFitted(finished?"Današnja nagrada već je preuzeta.":
                     "Dovrši sve ciljeve i osvoji",158,rewardY+57,10.5f,
                     198,muted,false);
@@ -3360,11 +3365,12 @@ public final class MainActivity extends ComponentActivity {
             else txt("Tjedne",105,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
-            missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
+            missionRow("Ostvari 10.000 bodova ukupno",
+                "Skupi ukupno 10.000 bodova u svim igrama.",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
             if(portrait&&theme==0)missionSectionTitle("Postignuća",550f,16.1f);
             else txt("Postignuća",132,portrait?542:638,23,ink,true);
-            missionRow("Majstor spajanja","Dosegni pločicu 1024",
+            missionRow("Majstor spajanja","Ostvari pločicu 1024.",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
                 best,50000,1000,portrait?627:741,0xffff934b);
@@ -3430,14 +3436,31 @@ public final class MainActivity extends ComponentActivity {
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
                 leftFitted("opcije poništi potez.",103,
                     y+(portrait?46:55),portrait?10:11,177,muted,false);
+            }else if(portrait&&name.startsWith("Ostvari 10.000")){
+                // Two source lines avoid the previously shortened and
+                // misleading one-line mission subtitle.
+                leftFitted("Skupi ukupno 10.000 bodova u svim",103,
+                    y+38,11.5f,178,muted,false);
+                leftFitted("igrama.",103,y+50,11.5f,177,muted,false);
             }else{
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
             }
             // Thicker progress track and a separate adjacent counter: the
             // reference places progress and 12 / 20 on a common baseline.
-            float progressY=y+(portrait?50:59);
-            shape(104,progressY,151,7,4,
+            // The owner's two-line 10k mission has its bar near
+            // y=1169px; the previous one-line layout drew it at 1139px,
+            // directly through the second description line.
+            boolean twoLineWeeklyScore=portrait&&theme==0&&
+                name.startsWith("Ostvari 10.000");
+            float progressY=y+(portrait?50:59)+(twoLineWeeklyScore?13f:0f);
+            // Owner's 941x1672 source has two progress widths:
+            // standard tasks end at x≈631px, while 10k/50k score
+            // counters need more room and end near x≈573px.
+            // Only the light portrait illustration uses these widths.
+            float barWidth=(portrait&&theme==0)?
+                (target>=10000?140f:164f):151f;
+            shape(104,progressY,barWidth,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             // "Majstor" is an unlock, not an incremental reward. Keep
             // the filled bar consistent with its 0/1 or 1/1 counter:
@@ -3455,11 +3478,14 @@ public final class MainActivity extends ComponentActivity {
                 else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
             }
             if(fraction>0)shape(104,progressY,
-                151*fraction,7,4,progressAccent);
+                barWidth*fraction,7,4,progressAccent);
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
-                270,y+(portrait?59:68),11,45,muted,true);
+                portrait&&theme==0?(target>=10000?284:294):270,
+                y+(portrait?59:68)+(twoLineWeeklyScore?10f:0f),11,
+                portrait&&theme==0?(target>=10000?60:42):45,
+                muted,true);
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
             // Golden stars in the owner image sit slightly to the right
@@ -3736,6 +3762,22 @@ public final class MainActivity extends ComponentActivity {
             // Shadow uses translucent Paint; reset it before an opaque shader.
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-2,17,top,bottom);
+            if(preset==2&&theme==0&&referencePortraitLayout){
+                // Owner's vivid theme swatch is 2D: cyan lower-left,
+                // purple lower-right. The old vertical gradient left
+                // both corners the same uniform blue. Native radial
+                // overlays belong to this preview, not real game tiles.
+                p.setStyle(Paint.Style.FILL);
+                p.setShader(new RadialGradient(x+w*.10f,y+h*.98f,
+                    w*.87f,new int[]{0x8300dcff,0x4600bbf8,0x0000bbf8},
+                    null,Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                p.setShader(new RadialGradient(x+w*1.08f,y+h*.98f,
+                    w*.96f,new int[]{0xddc047ff,0x85a642ff,0x00a642ff},
+                    null,Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                p.setShader(null);
+            }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setColor(preset==1?0x45ffffff:0x90ffffff);
             p.setStrokeWidth(1f);
