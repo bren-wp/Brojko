@@ -2867,6 +2867,14 @@ public class ScreensSmokeTest {
                         tealCenter>=784&&tealCenter<=835);
                     assertTrue("Owner teal center y≈93: "+tealCenterY,
                         tealCenterY>=68&&tealCenterY<=122);
+                    // Owner 4x4 first coral miniature at native
+                    // (90,975) is RGB(253,97,71). Older Android tile
+                    // was (255,134,105), too light and chalky.
+                    int homeMiniCoral=bitmap.getPixel(90,975);
+                    assertTrue("Home miniature coral matches source depth",
+                        android.graphics.Color.red(homeMiniCoral)>230&&
+                        android.graphics.Color.green(homeMiniCoral)<128&&
+                        android.graphics.Color.blue(homeMiniCoral)<105);
                     int belowHero=bitmap.getPixel(450,892);
                     assertTrue("Home CTA lip must end before y=892",
                         android.graphics.Color.green(belowHero)>195&&
