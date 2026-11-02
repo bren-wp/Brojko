@@ -4022,6 +4022,60 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailySourceRewardCardHasNoExtraPurpleBadge(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            String originalLastDaily=activity.lastDaily;
+            int originalTheme=activity.theme;
+            TileGame originalGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                activity.theme=0;
+                activity.lastDaily="";
+                activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap screenshot=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(screenshot));
+                    int purpleInk=0;
+                    // In the user's original the reward heading has no
+                    // +250 pill/text. The previous real emulator included
+                    // 750 saturated purple pixels in this unscaled ROI.
+                    for(int y=1360;y<1495;y++)
+                        for(int x=730;x<890;x++){
+                            int color=screenshot.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>110&&red<230&&green<175&&blue>red+15)
+                                purpleInk++;
+                        }
+                    assertTrue("Source reward card must not contain an "+
+                        "extra purple badge: "+purpleInk,purpleInk<65);
+                    int start=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Započni izazov".equals(tap.label))start++;
+                    assertEquals("Challenge start action remains accessible",
+                        1,start);
+                    captureReference(activity,view,
+                        "daily-reward-no-extra-badge-941x1672");
+                }finally{screenshot.recycle();}
+            }finally{
+                activity.page=originalPage;
+                activity.lastDaily=originalLastDaily;
+                activity.theme=originalTheme;
+                activity.game=originalGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGiftBowHasHollowAmberLoopsOnRealEmulator(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page,oldDaily=activity.lastDaily;
