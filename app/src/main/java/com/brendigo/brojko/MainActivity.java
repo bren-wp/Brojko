@@ -942,7 +942,8 @@ public final class MainActivity extends ComponentActivity {
                 // of the owner's 941x1672 reward illustration.
                 float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
                     (page.equals("win")?5.15f:
-                        ("missions".equals(page)&&theme==0?5.85f:5.35f));
+                        ("missions".equals(page)&&theme==0?5.85f:
+                         ("daily".equals(page)&&theme==0&&referencePortraitLayout?5.75f:5.35f)));
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
@@ -950,7 +951,8 @@ public final class MainActivity extends ComponentActivity {
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
                     float corner=page.equals("win")?.73f:
-                        ("missions".equals(page)&&theme==0?.72f:.82f);
+                        ("missions".equals(page)&&theme==0?.72f:
+                         ("daily".equals(page)&&theme==0&&referencePortraitLayout?.73f:.82f));
                     float startX=xs[i]*corner+xs[prev]*(1f-corner);
                     float startY=ys[i]*corner+ys[prev]*(1f-corner);
                     float endX=xs[i]*corner+xs[next]*(1f-corner);
@@ -965,9 +967,12 @@ public final class MainActivity extends ComponentActivity {
                 boolean golden=Color.red(color)>200 &&
                     Color.green(color)>100&&Color.blue(color)<140;
                 boolean victoryGold=golden&&page.equals("win");
+                boolean dailyGoalGold=golden&&page.equals("daily")&&
+                    theme==0&&referencePortraitLayout;
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xffffdc65:
+                    dailyGoalGold?0xffffd252:
                     golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
                     lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
@@ -982,13 +987,13 @@ public final class MainActivity extends ComponentActivity {
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
-                p.setStrokeWidth(victoryGold?.72f:1.05f);
+                p.setStrokeWidth(victoryGold?.72f:dailyGoalGold?.86f:1.05f);
                 p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
                 // Keep the original broad glint outside the victory modal;
                 // its 3D stars instead have a subtle warm highlight.
                 p.setShader(new LinearGradient(6,4,17,12,
-                    victoryGold?0x40ffffff:0x7fffffff,
+                    victoryGold?0x40ffffff:dailyGoalGold?0x30ffffff:0x7fffffff,
                     0x00ffffff,Shader.TileMode.CLAMP));
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
@@ -2873,8 +2878,12 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Ostvari")){
                 // The reference draws the earned-star symbol on the white card,
                 // not a separate orange square tile.
-                icon("star",glyphCenter,y+height/2f,
-                    portrait?35:39,0xffffb51a);
+                // The owner reference star is plumper and slightly right
+                // of the earlier 35-unit pale outline on the 941x1672 ROI.
+                boolean sourceStar=portrait&&theme==0;
+                icon("star",glyphCenter+(sourceStar?2f:0f),
+                    y+height/2f+(sourceStar?1f:0f),
+                    sourceStar?38.5f:portrait?35:39,0xffffb51a);
             }else{
                 // Blue opposite-facing arrows directly on the row background.
                 if(portrait&&theme!=1)
