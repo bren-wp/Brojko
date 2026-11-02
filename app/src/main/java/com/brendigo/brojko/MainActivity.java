@@ -2411,8 +2411,22 @@ public final class MainActivity extends ComponentActivity {
                 p.setStrokeJoin(Paint.Join.ROUND);
                 p.setStrokeWidth(2.6f);p.setColor(WHITE);
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
-                p.setStyle(Paint.Style.FILL);p.setColor(ink);
+                // Source "Bravo!" has about 17% more filled navy
+                // glyph area than the old emulator. Keep the existing
+                // individual tilt/positions and bright outer outline,
+                // but thicken ONLY the foreground in the light 941x1672
+                // win composition (not standard text or dark UI).
+                p.setColor(ink);
+                if(theme==0&&referencePortraitLayout){
+                    p.setStyle(Paint.Style.FILL_AND_STROKE);
+                    p.setStrokeJoin(Paint.Join.ROUND);
+                    p.setStrokeWidth(1.8f);
+                }else{
+                    p.setStyle(Paint.Style.FILL);
+                    p.setStrokeWidth(0f);
+                }
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
                 c.restore();
                 left+=glyphWidth-3.1f;
             }
