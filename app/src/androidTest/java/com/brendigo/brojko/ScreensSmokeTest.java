@@ -3285,6 +3285,57 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void missionProgressTracksMatchSourceRowLengths(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int regularX=Math.round(view.offX+260f*view.scale);
+                    int regularY=Math.round(view.offY+213f*view.scale);
+                    int shortX=Math.round(view.offX+251f*view.scale);
+                    int shortY=Math.round(view.offY+487f*view.scale);
+                    int regular=image.getPixel(regularX,regularY);
+                    int shortTrack=image.getPixel(shortX,shortY);
+                    // Standard source gray bar extends to x~631px,
+                    // but long-counter bars end around x~573px.
+                    assertTrue("Standard task track must extend right",
+                        android.graphics.Color.red(regular)<245);
+                    assertTrue("10k mission leaves room for its counter",
+                        android.graphics.Color.red(shortTrack)>238);
+                    assertEquals("Visible values must remain real",12,
+                        activity.todayMerges);
+                    assertEquals("Weekly score unchanged",6250,
+                        activity.weekPoints);
+                    captureReference(activity,view,
+                        "missions-source-track-lengths-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionsSourceProgressPalettePreservesRealFractions(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
