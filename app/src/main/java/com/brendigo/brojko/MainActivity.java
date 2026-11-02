@@ -1677,16 +1677,20 @@ public final class MainActivity extends ComponentActivity {
                 splashAccentStroke(36,88,49,94,CORAL);
                 splashAccentStroke(341,77,335,92,TEAL);
                 splashAccentStroke(349,100,336,104,TEAL);
-                c.save();c.rotate(-18,115,111);
+                // Owner artwork: coral tile top edge descends to the right.
+                // The old negative rotation inverted its 3D perspective.
+                c.save();c.rotate(18,115,111);
                 splashFloatingTile(63,62,104,101,24,TILES[1]);
                 txt("2",115,134,57,WHITE,true);c.restore();
-                c.save();c.rotate(17,289,123);
+                // Owner artwork: turquoise top edge ascends to the right.
+                c.save();c.rotate(-17,289,123);
                 splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
                 c.save();c.rotate(-17,42,236);
                 splashFloatingTile(-12,187,106,100,22,TILES[3]);
                 txt("8",42,256,56,WHITE,true);c.restore();
-                c.save();c.rotate(18,374,234);
+                // Owner artwork: yellow tile leans counterclockwise.
+                c.save();c.rotate(-18,374,234);
                 splashFloatingTile(323,182,104,104,24,TILES[4]);
                 txt("16",375,255,46,WHITE,true);c.restore();
                 splashAccentStroke(92,499,102,507,CORAL);
