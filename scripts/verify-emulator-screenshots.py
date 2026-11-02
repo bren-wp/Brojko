@@ -14,6 +14,8 @@ ROOT = Path("android-screenshots/screenshots")
 TEST_LOG = Path("instrumentation-results.txt")
 CAPTURES = (
     "splash-full-width-portrait-reference-941x1672.png",
+    "splash-coral-source-941x1672.png",
+    "home-classic-preview-source-941x1672.png",
     "splash-phase09-owner-941x1672.png",
     "pause-branded-modal-941x1672.png",
     "confirm-new-session-941x1672.png",
