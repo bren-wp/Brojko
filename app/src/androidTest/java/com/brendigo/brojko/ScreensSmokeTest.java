@@ -3359,6 +3359,14 @@ public class ScreensSmokeTest {
                     int shortY=Math.round(view.offY+487f*view.scale);
                     int regular=image.getPixel(regularX,regularY);
                     int shortTrack=image.getPixel(shortX,shortY);
+                    int weeklyOrange=image.getPixel(
+                        Math.round(view.offX+160f*view.scale),
+                        Math.round(view.offY+500f*view.scale));
+                    assertTrue("10k orange bar must be below the two-line "+
+                        "description (owner y~1169px)",
+                        android.graphics.Color.red(weeklyOrange)>215&&
+                        android.graphics.Color.green(weeklyOrange)<205&&
+                        android.graphics.Color.blue(weeklyOrange)<165);
                     // Standard source gray bar extends to x~631px,
                     // but long-counter bars end around x~573px.
                     assertTrue("Standard task track must extend right",
