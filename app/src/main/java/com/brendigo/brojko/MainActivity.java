@@ -1563,6 +1563,23 @@ public final class MainActivity extends ComponentActivity {
             shape(x+1f,y+4.5f,w-1f,h-3f,radius,extrusion);
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-4f,radius,faceTop,faceBottom);
+            // The owner source uses a broad *diffuse* 3D light on the
+            // upper-left corner of coral and turquoise tiles. The
+            // previous straight top-to-bottom shader was too flat there
+            // (teal RGB at native 610,210: 59,227,218 vs owner
+            // 132,252,242). Add only a fading highlight; do not change
+            // the tile silhouette, game tiles or hit areas.
+            if(theme==0&&referencePortraitLayout&&
+                (color==TILES[1]||color==TILES[2])){
+                p.setStyle(Paint.Style.FILL);
+                p.setColor(WHITE);
+                p.setShader(new android.graphics.RadialGradient(
+                    x+w*.13f,y+h*.11f,w*.62f,
+                    new int[]{0x65ffffff,0x17ffffff,0x00ffffff},
+                    new float[]{0f,.47f,1f},Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-4f,radius,radius,p);
+                p.setShader(null);
+            }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(1.15f);p.setColor(0x48ffffff);
             c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
