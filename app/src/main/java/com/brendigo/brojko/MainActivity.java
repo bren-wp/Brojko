@@ -1588,6 +1588,10 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(displayFont);
             p.setTextSize(size);
             p.setTextScaleX(1f);
+            // Median navy in both owner-supplied logo crops is near
+            // RGB(30,43,74), versus generic UI ink RGB(30,42,68).
+            // Keep this adjustment exclusive to the light wordmark.
+            final int wordmarkInk=theme==0?0xff1e2b4a:ink;
             float left=p.measureText("Br"),right=p.measureText("jko");
             float gap=size*.09f,tile=size*.74f;
             float start=200f-(left+right+tile+2f*gap)/2f;
@@ -1599,7 +1603,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-10.6f,0);
             c.scale(1.185f,1f,3.6f,y);
-            txt("Br",start+left/2f,y,size,ink,true);
+            txt("Br",start+left/2f,y,size,wordmarkInk,true);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1623,7 +1627,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-36.2f,0);
             c.scale(1.25f,.92f,228f,316f);
-            txt("jko",bx+tile+gap+right/2f,y,size,ink,true);
+            txt("jko",bx+tile+gap+right/2f,y,size,wordmarkInk,true);
             c.restore();
             c.restore();
 
