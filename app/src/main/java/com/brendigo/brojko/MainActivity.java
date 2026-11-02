@@ -2863,8 +2863,13 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Dosegni")){
                 // Only the numeric 256 pictogram is a numbered game tile.
                 styledTile(40,tileY,iconSize,iconSize,12,goalColor,0);
-                fitted("256",glyphCenter,y+height/2f+7,
-                    portrait?20:22,iconSize-3,WHITE,true);
+                // The owner's reference uses a compact white numeral
+                // inside this pink tile; the former size 20 overfilled it.
+                // Keep other layout modes unchanged.
+                float goalNumberSize=portrait&&theme==0?16f:
+                    portrait?20f:22f;
+                fitted("256",glyphCenter,y+height/2f+6,
+                    goalNumberSize,iconSize-3,WHITE,true);
             }else if(name.startsWith("Ostvari")){
                 // The reference draws the earned-star symbol on the white card,
                 // not a separate orange square tile.
