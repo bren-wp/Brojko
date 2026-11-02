@@ -1232,7 +1232,9 @@ public final class MainActivity extends ComponentActivity {
                     "Nastavi igrati".equals(label);
                 boolean victoryShare=page.equals("win")&&
                     "Podijeli rezultat".equals(label);
-                float lip=flatDaily?2.5f:homeHero?6f:
+                // Source Home CTA ends near y=879px, whereas the old
+                // 6-unit extrusion extended to ~895px at 941x1672.
+                float lip=flatDaily?2.5f:homeHero?1f:
                     (victoryPrimary||victoryShare?2.7f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
@@ -1791,9 +1793,13 @@ public final class MainActivity extends ComponentActivity {
         }
         void home(){
             boolean portrait=referencePortraitLayout;
-            c.save();c.rotate(-16,35,76);
+            // Source top corners: warm coral centroid x≈92,y≈102;
+            // turquoise centroid x≈811,y≈93. Older native PNG had
+            // x≈83,y≈105 and x≈855,y≈109. Translate ONLY their
+            // decorative Canvas transforms; interactive cards stay put.
+            c.save();c.translate(4f,-1.4f);c.rotate(-16,35,76);
             homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
-            c.save();c.rotate(15,365,56);
+            c.save();c.translate(-18f,-7f);c.rotate(15,365,56);
             homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
             homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
