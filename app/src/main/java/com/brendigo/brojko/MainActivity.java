@@ -2182,11 +2182,20 @@ public final class MainActivity extends ComponentActivity {
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
             float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
+            // Owner's 941x1672 Classic reference has its first row
+            // ~5px lower, with ~2px more separation per subsequent row.
+            // Scope to active light Classic only: the Win backdrop, 5x5,
+            // Daily and dark / custom tile styles retain their geometry.
+            final boolean classicSourceGeometry=tallFour&&
+                referencePortraitLayout&&"game".equals(page)&&
+                "classic".equals(game.mode)&&theme==0&&tileStyle==0;
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (victoryBoard?90.5f:(tallFour?94f:tile+gap))*y;
+                    (classicSourceGeometry?2f:0f)+
+                    (victoryBoard?90.5f:
+                        (tallFour?(classicSourceGeometry?95f:94f):tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
@@ -2210,7 +2219,10 @@ public final class MainActivity extends ComponentActivity {
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
                         (n==5?33:44)-(digits>3?(digits-3)*7:0);
-                    fitted(str,rx+tile/2,ry+tileHeight*.62f,
+                    // 2048 numeral baseline in the user's active Classic
+                    // artwork is ~17-18px lower than the old Canvas result.
+                    fitted(str,rx+tile/2,
+                        ry+tileHeight*(classicSource?.68f:.62f),
                         fontsize,tile-7,WHITE,true);
                 }
             }
