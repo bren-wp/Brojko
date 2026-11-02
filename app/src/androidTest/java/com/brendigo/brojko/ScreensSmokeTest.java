@@ -2963,6 +2963,52 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void vividThemePreviewHasSourceCyanAndPurpleCorners(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;
+                activity.tileStyle=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int left=image.getPixel(650,650);
+                    int right=image.getPixel(860,635);
+                    // Original swatch: cyan left RGB(9,162,253),
+                    // purple right RGB(161,76,253).
+                    // Old Android gradient: left RGB(31,121,234),
+                    // right RGB(38,119,235), both almost the same blue.
+                    assertTrue("Vivid preview left must be cyan-blue",
+                        android.graphics.Color.green(left)>139&&
+                        android.graphics.Color.blue(left)>231);
+                    assertTrue("Vivid preview right must be purple",
+                        android.graphics.Color.red(right)>86&&
+                        android.graphics.Color.blue(right)>214);
+                    int choices=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label))choices++;
+                    assertEquals("All three themes stay selectable",3,choices);
+                    captureReference(activity,view,
+                        "themes-vivid-cyan-purple-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themesSourceCompositionKeepsAllThemeStylesAndTabs(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
