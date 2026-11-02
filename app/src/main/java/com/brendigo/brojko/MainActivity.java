@@ -2958,11 +2958,15 @@ public final class MainActivity extends ComponentActivity {
             if(portrait){
                 leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
                     158,rewardY+17,12,190,muted,true);
+                // Owner's portrait reference has a heavier, wider
+                // reward heading and NO +250 badge in this card.
+                // The 250-star reward is still real and disclosed in
+                // the success/result overlay; no gameplay logic changes.
                 leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
-                    158,rewardY+40,18,157,ink,true);
-                // Preserve the actual earned currency while retaining the
-                // reference's explanatory reward copy.
-                fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
+                    158,rewardY+40,theme==0?19.5f:18f,
+                    theme==0?200f:157f,ink,true);
+                if(theme!=0)
+                    fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
                 leftFitted(finished?"Današnja nagrada već je preuzeta.":
                     "Dovrši sve ciljeve i osvoji",158,rewardY+57,10.5f,
                     198,muted,false);
