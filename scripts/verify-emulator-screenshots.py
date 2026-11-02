@@ -14,6 +14,8 @@ ROOT = Path("android-screenshots/screenshots")
 TEST_LOG = Path("instrumentation-results.txt")
 CAPTURES = (
     "splash-full-width-portrait-reference-941x1672.png",
+    "splash-coral-source-941x1672.png",
+    "home-classic-preview-source-941x1672.png",
     "splash-phase09-owner-941x1672.png",
     "pause-branded-modal-941x1672.png",
     "confirm-new-session-941x1672.png",
@@ -30,6 +32,9 @@ CAPTURES = (
     "daily-source-streak7-941x1672.png",
     "daily-intro-rays-source-941x1672.png",
     "daily-gift-opaque-ribbon-941x1672.png",
+    "daily-gift-bow-hollows-941x1672.png",
+    "daily-goal-256-compact-941x1672.png",
+    "daily-goal-3000-gold-star-941x1672.png",
     "missions-six-real-progress-941x1672.png",
     "missions-source-progress-palette-941x1672.png",
     "missions-reward-star-source-941x1672.png",
@@ -59,6 +64,13 @@ COMPACT_CAPTURES = (
     "compact-360x600-stats.png",
     "compact-360x600-themes.png",
     "compact-360x600-settings.png",
+)
+# These are actual Canvas renders at the declared independent viewport size.
+# An actual API-36 emulator also tests live system insets/navigation separately.
+RESPONSIVE_CAPTURES = (
+    *((f"{page}-responsive-{width}x{height}.png", (width, height))
+      for page in ("splash", "home")
+      for width, height in ((320, 480), (941, 1672), (800, 360), (360, 800))),
 )
 # These are functional states, not source mockups: require a real capture
 # for each independently reachable mode, dialog, and settings subpage.
@@ -100,6 +112,7 @@ def verify() -> None:
     for name, expected_size in (
         *((name, (941, 1672)) for name in CAPTURES),
         *((name, (360, 600)) for name in COMPACT_CAPTURES),
+        *RESPONSIVE_CAPTURES,
         ("phase10-adaptive-icon-safe-512.png", (512, 512)),
     ):
         path = ROOT / name

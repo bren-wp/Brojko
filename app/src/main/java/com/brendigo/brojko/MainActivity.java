@@ -942,7 +942,8 @@ public final class MainActivity extends ComponentActivity {
                 // of the owner's 941x1672 reward illustration.
                 float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
                     (page.equals("win")?5.15f:
-                        ("missions".equals(page)&&theme==0?5.85f:5.35f));
+                        ("missions".equals(page)&&theme==0?5.85f:
+                         ("daily".equals(page)&&theme==0&&referencePortraitLayout?5.75f:5.35f)));
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
@@ -950,7 +951,8 @@ public final class MainActivity extends ComponentActivity {
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
                     float corner=page.equals("win")?.73f:
-                        ("missions".equals(page)&&theme==0?.72f:.82f);
+                        ("missions".equals(page)&&theme==0?.72f:
+                         ("daily".equals(page)&&theme==0&&referencePortraitLayout?.73f:.82f));
                     float startX=xs[i]*corner+xs[prev]*(1f-corner);
                     float startY=ys[i]*corner+ys[prev]*(1f-corner);
                     float endX=xs[i]*corner+xs[next]*(1f-corner);
@@ -965,9 +967,12 @@ public final class MainActivity extends ComponentActivity {
                 boolean golden=Color.red(color)>200 &&
                     Color.green(color)>100&&Color.blue(color)<140;
                 boolean victoryGold=golden&&page.equals("win");
+                boolean dailyGoalGold=golden&&page.equals("daily")&&
+                    theme==0&&referencePortraitLayout;
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xffffdc65:
+                    dailyGoalGold?0xffffd252:
                     golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
                     lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
@@ -982,13 +987,13 @@ public final class MainActivity extends ComponentActivity {
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
-                p.setStrokeWidth(victoryGold?.72f:1.05f);
+                p.setStrokeWidth(victoryGold?.72f:dailyGoalGold?.86f:1.05f);
                 p.setColor(edge);c.drawPath(star,p);
                 p.setStyle(Paint.Style.FILL);
                 // Keep the original broad glint outside the victory modal;
                 // its 3D stars instead have a subtle warm highlight.
                 p.setShader(new LinearGradient(6,4,17,12,
-                    victoryGold?0x40ffffff:0x7fffffff,
+                    victoryGold?0x40ffffff:dailyGoalGold?0x30ffffff:0x7fffffff,
                     0x00ffffff,Shader.TileMode.CLAMP));
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
@@ -1381,9 +1386,35 @@ public final class MainActivity extends ComponentActivity {
             // Landscape phones and resizable tablets must keep the whole
             // interaction region reachable; portrait stays pixel-identical.
             boolean landscape=usableWidth>usableHeight;
-            scale=landscape?Math.min(usableWidth/400f,usableHeight/720f):
+            // Landscape Splash must fit the complete 880-unit scene.
+            // Other landscape screens retain touch-sized controls and scroll
+            // if their 880-unit content is taller than the available window.
+            // Landscape Home uses larger touch-friendly shortcut cards.
+            // It can scroll vertically instead of shrinking the buttons.
+            float landscapeScale=Math.min(usableWidth/400f,
+                usableHeight/(page.equals("splash")?880f:
+                    page.equals("home")?580f:720f));
+            if(landscape&&page.equals("home")){
+                // Very short split-screen and foldable windows previously made
+                // all four 88-unit Home shortcuts too small to touch. Grow
+                // them toward 48 dp, but never crop the 400-unit canvas or
+                // make the 120-unit shortcut card taller than the viewport.
+                // Vertical scrolling, not horizontal clipping, absorbs the
+                // extra height. Portrait reference pixels are unchanged.
+                float desiredTouchScale=48f*getResources()
+                    .getDisplayMetrics().density/88f;
+                landscapeScale=Math.min(usableWidth/400f,
+                    Math.min(usableHeight/120f,
+                        Math.max(landscapeScale,desiredTouchScale)));
+            }
+            scale=landscape?landscapeScale:
                 (compact?usableWidth/400f:
                     Math.min(usableWidth/400f,usableHeight/880f));
+            // A 320x480 compact phone cannot fit the 628-unit slogan with
+            // pure width scaling. Cap only Splash; the 941x1672 design
+            // reference and its native positions remain unchanged.
+            if(page.equals("splash")&&compact)
+                scale=Math.min(scale,usableHeight/640f);
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
                     (statsTouchExploration()?
@@ -1406,11 +1437,13 @@ public final class MainActivity extends ComponentActivity {
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
-                (compact?Math.max(0,contentHeight-usableHeight/scale):0);
+                ((compact||landscape)?
+                    Math.max(0,contentHeight-usableHeight/scale):0);
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
             offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
-            offY=compact?getPaddingTop()-scrollOffset*scale:
+            offY=(compact||landscape&&!page.equals("splash"))?
+                getPaddingTop()-scrollOffset*scale:
                 getPaddingTop()+(usableHeight-880*scale)/2f;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             taps.clear();
@@ -1614,7 +1647,17 @@ public final class MainActivity extends ComponentActivity {
                 // phrases sit about 10 design units higher than before.
                 // Keep the source's compact gap between coral and teal.
                 card(17,552,366,58,30,theme==1?card:0xfffff0db);
-                fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
+                // Source reference uses a stronger coral (#FD5A3E)
+                // and taller strokes than the previous flat Nunito text.
+                // Limit the adjustment to the owner's light Splash.
+                if(theme==0){
+                    c.save();
+                    c.scale(1f,1.12f,127f,588f);
+                    c.translate(0f,.5f);
+                    fitted("Spajaj brojeve.",127,594,24.2f,187,
+                        0xfffd5a3e,true);
+                    c.restore();
+                }else fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
                 fitted("Ruši rekorde.",287,594,23.8f,179,TEAL,true);
                 return;
             }
@@ -1791,9 +1834,14 @@ public final class MainActivity extends ComponentActivity {
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
                 float space=cols==5?2.1f:2.2f;
-                float side=cols==5?17.0f:21.5f;
-                float left=x+(w-(side+space)*cols+space)/2;
-                float top=y+(portrait?14:(cols==5?20:19));
+                boolean sourceClassic=portrait&&theme==0&&cols==4;
+                // Reference miniature has a slightly larger grid, shifted
+                // right/down; keep 5x5 and other themes untouched.
+                float side=cols==5?17.0f:sourceClassic?22.8f:21.5f;
+                float left=x+(w-(side+space)*cols+space)/2+
+                    (sourceClassic?4f:0f);
+                float top=y+(portrait?14:(cols==5?20:19))+
+                    (sourceClassic?3f:0f);
                 // Decorative Home preview only; the actual 5x5 engine is
                 // unchanged. Allocate the palette once per thumbnail.
                 // The relaxed thumbnail is a fixed, *decorative*
@@ -2863,13 +2911,22 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Dosegni")){
                 // Only the numeric 256 pictogram is a numbered game tile.
                 styledTile(40,tileY,iconSize,iconSize,12,goalColor,0);
-                fitted("256",glyphCenter,y+height/2f+7,
-                    portrait?20:22,iconSize-3,WHITE,true);
+                // The owner's reference uses a compact white numeral
+                // inside this pink tile; the former size 20 overfilled it.
+                // Keep other layout modes unchanged.
+                float goalNumberSize=portrait&&theme==0?16f:
+                    portrait?20f:22f;
+                fitted("256",glyphCenter,y+height/2f+6,
+                    goalNumberSize,iconSize-3,WHITE,true);
             }else if(name.startsWith("Ostvari")){
                 // The reference draws the earned-star symbol on the white card,
                 // not a separate orange square tile.
-                icon("star",glyphCenter,y+height/2f,
-                    portrait?35:39,0xffffb51a);
+                // The owner reference star is plumper and slightly right
+                // of the earlier 35-unit pale outline on the 941x1672 ROI.
+                boolean sourceStar=portrait&&theme==0;
+                icon("star",glyphCenter+(sourceStar?2f:0f),
+                    y+height/2f+(sourceStar?1f:0f),
+                    sourceStar?38.5f:portrait?35:39,0xffffb51a);
             }else{
                 // Blue opposite-facing arrows directly on the row background.
                 if(portrait&&theme!=1)
@@ -2938,38 +2995,56 @@ public final class MainActivity extends ComponentActivity {
             gradient(left+width*.23f,top+size*.015f,
                 width*.54f,size*.115f,4f,
                 0xffffed78,0xffffb21e);
+            // Two looped ribbons with recessed amber openings.
+            // The previous solid yellow caps had no opening and started
+            // above the actual bow on the owner's 941x1672 source image.
             Path bowL=new Path();
             bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.18f,top-size*.30f,
-                cx-size*.49f,top-size*.31f,
-                cx-size*.44f,top-size*.23f);
-            bowL.cubicTo(cx-size*.39f,top-size*.10f,
+            bowL.cubicTo(cx-size*.17f,top-size*.23f,
+                cx-size*.41f,top-size*.28f,
+                cx-size*.39f,top-size*.19f);
+            bowL.cubicTo(cx-size*.39f,top-size*.08f,
                 cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
             bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.18f,top-size*.30f,
-                cx+size*.49f,top-size*.31f,
-                cx+size*.44f,top-size*.23f);
-            bowR.cubicTo(cx+size*.39f,top-size*.10f,
+            bowR.cubicTo(cx+size*.17f,top-size*.23f,
+                cx+size*.41f,top-size*.28f,
+                cx+size*.39f,top-size*.19f);
+            bowR.cubicTo(cx+size*.39f,top-size*.08f,
                 cx+size*.15f,top-size*.04f,cx,top-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
-            p.setColor(0xffe88a0b);
-            c.save();c.translate(0,1f);c.drawPath(bowL,p);
-            c.drawPath(bowR,p);c.restore();
-            p.setShader(new LinearGradient(cx-size*.5f,top-size*.55f,
-                cx+size*.5f,top-size*.13f,
-                0xffffed76,0xffffaf15,Shader.TileMode.CLAMP));
+            p.setColor(0xffd5750b);
+            c.save();c.translate(0,1.2f);
+            c.drawPath(bowL,p);c.drawPath(bowR,p);c.restore();
+            p.setShader(new LinearGradient(cx,top-size*.31f,
+                cx,top-size*.05f,
+                0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
-            p.setColor(0xfffff2a7);
-            c.drawOval(cx-size*.44f,top-size*.35f,
-                cx-size*.16f,top-size*.19f,p);
-            c.drawOval(cx+size*.16f,top-size*.35f,
-                cx+size*.44f,top-size*.19f,p);
-            gradient(cx-size*.145f,top-size*.22f,
-                size*.29f,size*.21f,6,
+            // Deep amber interiors create the hollow 3D loops visible in
+            // the source rather than flat light-cream ellipse highlights.
+            float holeY=top-size*.13f;
+            for(int side=-1;side<=1;side+=2){
+                float holeX=cx+side*size*.255f;
+                c.save();c.rotate(side*18f,holeX,holeY);
+                p.setColor(WHITE);
+                p.setShader(new LinearGradient(holeX,holeY-size*.09f,
+                    holeX,holeY+size*.09f,
+                    0xff9b4d0c,0xffed9710,Shader.TileMode.CLAMP));
+                c.drawOval(holeX-size*.055f,holeY-size*.083f,
+                    holeX+size*.055f,holeY+size*.083f,p);
+                p.setShader(null);c.restore();
+            }
+            // On the light portrait reference the central bow knot starts
+            // below the hollow loops. Its previous top covered the cream
+            // background 20px too early above the owner's gold center.
+            boolean sourceGift=referencePortraitLayout&&theme==0;
+            float knotTop=top-size*(sourceGift?.11f:.22f);
+            float knotHeight=size*(sourceGift?.18f:.21f);
+            gradient(cx-size*.145f,knotTop,
+                size*.29f,knotHeight,6,
                 0xffffeb77,0xffffa51c);
         }
         void dailyGiftBursts(float cx,float cy){

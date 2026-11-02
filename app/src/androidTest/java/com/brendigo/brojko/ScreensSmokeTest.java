@@ -3693,6 +3693,131 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void daily3000PointStarMatchesSourceGoldAreaAndKeepsRealGoal(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDaily=activity.lastDaily;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldStreak=activity.streak;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // Deterministic reference-only fixture; no write to disk.
+                activity.page="daily";activity.theme=0;
+                activity.tileStyle=0;activity.lastDaily="";
+                activity.streak=7;activity.game=null;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int goldenPixels=0;
+                    long sumX=0L,sumY=0L;
+                    // Original gold star: 4063 saturated gold pixels
+                    // inside this exact unscaled source reference box.
+                    for(int y=1080;y<1210;y++)
+                        for(int x=60;x<195;x++){
+                            int color=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>190&&green>90&&blue<155&&
+                                    red>green+24){
+                                goldenPixels++;
+                                sumX+=x;
+                                sumY+=y;
+                            }
+                        }
+                    assertTrue("Second goal star must have saturated gold fill",
+                        goldenPixels>2900);
+                    assertTrue("Gold shape must not bleed into goal text",
+                        goldenPixels<6000);
+                    float cx=sumX/(float)goldenPixels;
+                    float cy=sumY/(float)goldenPixels;
+                    assertEquals("Gold star source horizontal centroid",
+                        146.6f,cx,11f);
+                    assertEquals("Gold star source vertical centroid",
+                        1150.6f,cy,11f);
+                    int help=0;
+                    for(MainActivity.BoardScreen.Tap t:board.taps)
+                        if("Pomoć za cilj: Ostvari 3000 bodova".equals(t.label))
+                            help++;
+                    assertEquals("3000-point goal help must remain clickable",
+                        1,help);
+                    assertNull("Drawing must not fabricate a live daily game",
+                        activity.game);
+                    assertEquals("Drawing cannot change streak",7,
+                        activity.streak);
+                    captureReference(activity,board,
+                        "daily-goal-3000-gold-star-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.streak=oldStreak;
+                activity.lastDaily=oldDaily;activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailyGoal256UsesCompactSourceSizedNumeral(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDay=activity.lastDaily;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            int oldStyle=activity.tileStyle;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                activity.tileStyle=0;activity.lastDaily="";
+                activity.streak=7;activity.game=null;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bmp));
+                    // Against the actual 941x1672 source PNG, the old
+                    // oversized numeral occupied >1100 ivory pixels in
+                    // this fixed tile-only region, while source has ~617.
+                    int brightCount=0;
+                    for(int y=1000;y<1060;y++)
+                        for(int x=108;x<181;x++){
+                            int color=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            int highest=Math.max(red,Math.max(green,blue));
+                            int lowest=Math.min(red,Math.min(green,blue));
+                            if(lowest>220&&highest-lowest<30)
+                                brightCount++;
+                        }
+                    assertTrue("The goal numeral must remain readable",
+                        brightCount>350);
+                    assertTrue("Numeral must not fill the complete pink tile",
+                        brightCount<1000);
+                    assertEquals("Numeral rendering must not create a game",
+                        null,activity.game);
+                    assertEquals("Daily streak must remain unchanged",
+                        7,activity.streak);
+                    captureReference(activity,board,
+                        "daily-goal-256-compact-941x1672");
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.streak=oldStreak;
+                activity.lastDaily=oldDay;activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyIntroStrokesMatchOwnerSourcePixelsWithoutTouchOverlap(){
         rule.getScenario().onActivity(activity->{
             String prior=activity.page;
@@ -3817,6 +3942,74 @@ public class ScreensSmokeTest {
                 activity.tileStyle=originalStyle;activity.streak=originalStreak;
                 activity.game=originalGame;activity.lastDaily=originalLastDaily;
                 activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailyGiftBowHasHollowAmberLoopsOnRealEmulator(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDaily=activity.lastDaily;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                activity.streak=7;activity.lastDaily="";
+                activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    // The owner's bow has deep amber hollows at both
+                    // 3D loops, not uniform pale-yellow oval fills.
+                    for(int x:new int[]{165,263}){
+                        int rgb=image.getPixel(x,1374);
+                        int red=android.graphics.Color.red(rgb);
+                        int green=android.graphics.Color.green(rgb);
+                        int blue=android.graphics.Color.blue(rgb);
+                        assertTrue("Both bow openings must be amber, not flat yellow",
+                            red>135&&green<185&&blue<130&&red>green+45);
+                    }
+                    // On the source the center above the knot remains
+                    // ivory at y=1365, while the knot is golden at y=1390.
+                    // The old knot appeared more than 20px too early.
+                    int above=image.getPixel(210,1365);
+                    assertTrue("Space above bow knot must stay ivory",
+                        android.graphics.Color.blue(above)>205 &&
+                        Math.abs(android.graphics.Color.blue(above)-
+                            android.graphics.Color.red(above))<55);
+                    int knot=image.getPixel(210,1390);
+                    assertTrue("Bow knot belongs below hollow loops",
+                        android.graphics.Color.red(knot)>225 &&
+                        android.graphics.Color.green(knot)>145 &&
+                        android.graphics.Color.blue(knot)<175);
+                    // The two independent straps and real 250-star reward
+                    // remain untouched by this visual-only bow change.
+                    int left=image.getPixel(170,1480);
+                    int middle=image.getPixel(214,1480);
+                    int right=image.getPixel(259,1480);
+                    assertTrue("Left strap stays gold",
+                        android.graphics.Color.red(left)>195 &&
+                        android.graphics.Color.blue(left)<145);
+                    assertTrue("Gift center stays purple",
+                        android.graphics.Color.blue(middle)>
+                        android.graphics.Color.red(middle)+20);
+                    assertTrue("Right strap stays gold",
+                        android.graphics.Color.red(right)>195 &&
+                        android.graphics.Color.blue(right)<145);
+                    assertEquals("Drawing does not change daily streak",
+                        7,activity.streak);
+                    captureReference(activity,view,
+                        "daily-gift-bow-hollows-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.streak=oldStreak;activity.lastDaily=oldDaily;
+                activity.game=oldGame;activity.screen.invalidate();
             }
         });
     }
@@ -4595,6 +4788,390 @@ public class ScreensSmokeTest {
             }finally{
                 activity.page=previousPage;activity.tileStyle=previousStyle;
                 activity.theme=previousTheme;activity.screen.invalidate();
+            }
+        });
+    }
+
+    private void captureResponsiveViewport(MainActivity activity,
+                                           Bitmap bitmap,String name){
+        File directory=new File(activity.getExternalFilesDir(null),"screenshots");
+        assertTrue(directory.isDirectory()||directory.mkdirs());
+        try(FileOutputStream output=new FileOutputStream(
+                new File(directory,name+".png"))){
+            assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
+        }catch(java.io.IOException error){
+            throw new AssertionError("Cannot write actual viewport screenshot "+name,error);
+        }
+    }
+
+    @Test public void splashSourceCoralSloganKeepsTallStrongLettering(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int colored=0,minimumY=1672,maximumY=0;
+                    for(int y=1300;y<1490;y++)
+                        for(int x=80;x<490;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>210&&green<170&&blue<145&&
+                                    red>green+75){
+                                colored++;
+                                minimumY=Math.min(minimumY,y);
+                                maximumY=Math.max(maximumY,y);
+                            }
+                        }
+                    // Old real screenshot: 6015 saturated text pixels;
+                    // owner's reference: 8351. Protect taller coral glyphs.
+                    assertTrue("Splash slogan must not look faded",
+                        colored>6200);
+                    assertTrue("Splash slogan top matches source",
+                        minimumY<=1357);
+                    assertTrue("Splash slogan must not shrink vertically",
+                        maximumY>=1408);
+                    assertEquals("No splash scrolling",0f,view.maxScroll,.01f);
+                    captureReference(activity,view,
+                        "splash-coral-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void homeSourceClassicThumbnailHasFullColoredGrid(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldBest=activity.best;
+            int oldLast=activity.lastScore;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;activity.game=null;
+                activity.best=12560;activity.lastScore=3864;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int colored=0,minX=941,maxX=0;
+                    for(int y=910;y<1140;y++)
+                        for(int x=55;x<315;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>210&&green<170&&blue<145&&
+                                    red>green+75){
+                                colored++;minX=Math.min(minX,x);
+                                maxX=Math.max(maxX,x);
+                            }
+                        }
+                    assertTrue("Source Home mini-grid must be filled",
+                        colored>6500);
+                    assertTrue("Classic thumbnail begins within card",minX>=58);
+                    assertTrue("Classic thumbnail should span source right edge",
+                        maxX>=288&&maxX<=312);
+                    int modeCount=0;
+                    for(MainActivity.BoardScreen.Tap t:view.taps)
+                        if(t.label.startsWith("Klasično "))modeCount++;
+                    assertEquals("Real Classic action must survive",1,modeCount);
+                    assertEquals(12560,activity.best);
+                    assertEquals(3864,activity.lastScore);
+                    captureReference(activity,view,
+                        "home-classic-preview-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.best=oldBest;activity.lastScore=oldLast;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashAndHomeFitSeventeenScreenSizesAndKeepAllActions(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+            final int[][] sizes={
+                {320,480},{360,600},{360,640},{360,800},
+                {393,873},{412,915},{540,960},{600,1024},
+                {800,1280},{941,1672},{1080,2400},{1440,3200},
+                {480,320},{800,360},{960,540},{1280,800},
+                {2560,1600}
+            };
+            try{
+                activity.theme=0;
+                assertEquals("Preserve 3.2-second branded Splash",
+                    3200L,MainActivity.SPLASH_DURATION_MS);
+                for(String page:new String[]{"splash","home"}){
+                    activity.page=page;
+                    for(int[] size:sizes){
+                        int width=size[0],height=size[1];
+                        screen.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        screen.layout(0,0,width,height);
+                        Bitmap bmp=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            screen.draw(new Canvas(bmp));
+                            assertTrue("Positive scaling on "+page+" "+
+                                width+"x"+height,screen.scale>0f);
+                            assertTrue("400-unit width must fit "+width+"x"+height,
+                                screen.offX>=-.1f&&
+                                screen.offX+400f*screen.scale<=width+.1f);
+                            if("splash".equals(page)){
+                                assertEquals("Splash must not scroll",0f,
+                                    screen.maxScroll,.01f);
+                                float upper=screen.referencePortraitLayout?
+                                    58f:74f;
+                                float lower=screen.referencePortraitLayout?
+                                    628f:824f;
+                                assertTrue("Splash top must fit "+width+"x"+height,
+                                    screen.offY+upper*screen.scale>=-1f);
+                                assertTrue("Splash slogan must fit "+
+                                    width+"x"+height,
+                                    screen.offY+lower*screen.scale<=height+1f);
+                            }else{
+                                int scores=0,modes=0,shortcuts=0,hero=0;
+                                float visibleBottom=(height-screen.offY)/
+                                    screen.scale+screen.maxScroll;
+                                for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                                    if("Najbolji rezultat".equals(tap.label)||
+                                       "Zadnji rezultat".equals(tap.label))
+                                        scores++;
+                                    if(tap.label.startsWith("Klasično ")||
+                                       tap.label.startsWith("Opušteno ")||
+                                       tap.label.startsWith("Dnevni izazov "))
+                                        modes++;
+                                    if("Misije".equals(tap.label)||
+                                       "Statistika".equals(tap.label)||
+                                       "Teme".equals(tap.label)||
+                                       "Postavke".equals(tap.label))
+                                        shortcuts++;
+                                    if("Nova igra".equals(tap.label)||
+                                       "Nastavi igru".equals(tap.label))
+                                        hero++;
+                                    assertTrue("Home action must remain reachable: "+
+                                        tap.label+" on "+width+"x"+height,
+                                        tap.top>=0&&tap.bottom<=visibleBottom+2f);
+                                }
+                                assertEquals("Two real score cards",2,scores);
+                                assertEquals("Three real game-mode actions",3,modes);
+                                assertEquals("Four Home shortcuts",4,shortcuts);
+                                assertEquals("One playable hero",1,hero);
+                                if(width>height){
+                                    assertTrue("Landscape shortcuts must stay"+
+                                        " at least 48 physical pixels wide",
+                                        88f*screen.scale>=48f);
+                                }
+                                if(screen.maxScroll>0f){
+                                    screen.scrollOffset=screen.maxScroll;
+                                    screen.draw(new Canvas(bmp));
+                                    for(MainActivity.BoardScreen.Tap tap:screen.taps)
+                                        if("Misije".equals(tap.label)||
+                                           "Statistika".equals(tap.label)||
+                                           "Teme".equals(tap.label)||
+                                           "Postavke".equals(tap.label)){
+                                            float bottom=screen.offY+
+                                                tap.bottom*screen.scale;
+                                            assertTrue("Scrolled shortcut "+
+                                                tap.label+" must be visible",
+                                                bottom<=height+2f);
+                                        }
+                                    screen.scrollOffset=0f;
+                                }
+                            }
+                            if((width==320&&height==480)||
+                               (width==941&&height==1672)||
+                               (width==800&&height==360)||
+                               (width==360&&height==800)){
+                                // Actual Canvas pixels, never synthesized mockups.
+                                screen.scrollOffset=0f;
+                                screen.draw(new Canvas(bmp));
+                                captureResponsiveViewport(activity,bmp,
+                                    page+"-responsive-"+width+"x"+height);
+                            }
+                        }finally{bmp.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashHomeDarkThemeAlsoRetainsSmallAndLargeGeometry(){
+        rule.getScenario().onActivity(activity->{
+            String page=activity.page;
+            int theme=activity.theme;
+            MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+            try{
+                activity.theme=1;
+                for(String target:new String[]{"splash","home"}){
+                    activity.page=target;
+                    for(int[] size:new int[][]{
+                            {320,480},{941,1672},{800,360},{1280,800}}){
+                        screen.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        screen.layout(0,0,size[0],size[1]);
+                        Bitmap bmp=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            screen.draw(new Canvas(bmp));
+                            float bottom=screen.referencePortraitLayout?
+                                628f:824f;
+                            if("splash".equals(target))
+                                assertTrue("Dark Splash slogan clipped",
+                                    screen.offY+bottom*screen.scale<=size[1]+1f);
+                            else{
+                                int count=0;
+                                for(MainActivity.BoardScreen.Tap tap:screen.taps)
+                                    if("Misije".equals(tap.label)||
+                                       "Statistika".equals(tap.label)||
+                                       "Teme".equals(tap.label)||
+                                       "Postavke".equals(tap.label))count++;
+                                assertEquals("Dark Home shortcuts must survive",
+                                    4,count);
+                            }
+                        }finally{bmp.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=page;activity.theme=theme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    /**
+     * Real Canvas and MotionEvent regression for split-screen, foldable and
+     * window-inset geometry. Synthetic viewports cannot cover every physical
+     * Android device/DPI; the full on-emulator suite remains mandatory.
+     */
+    @Test public void splashHomeInsetAndCompactLandscapeTouchMatrix(){
+        rule.getScenario().onActivity(activity->{
+            String savedPage=activity.page;
+            int savedTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            final int[][] sizes={
+                {240,320},{320,240},{320,480},{393,873},{480,320},
+                {600,280},{800,240},{800,360},{960,540},{1280,800},
+                {1080,2400}
+            };
+            final String[] labels={"Misije","Statistika","Teme","Postavke"};
+            final String[] destinations={"missions","stats","themes","settings"};
+            try{
+                // Matches a system-bars/cutout safe-area, including the Home
+                // controls near the bottom of a compact multi-window.
+                view.setPadding(16,24,16,24);
+                for(int theme:new int[]{0,1}){
+                    activity.theme=theme;
+                    for(int[] size:sizes){
+                        int width=size[0],height=size[1];
+                        view.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,width,height);
+                        Bitmap image=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            activity.page="splash";
+                            view.draw(new Canvas(image));
+                            assertTrue("Splash width within safe area at "+
+                                width+"x"+height,view.offX>=15.9f&&
+                                view.offX+400f*view.scale<=width-15.9f);
+                            float lastSloganY=view.referencePortraitLayout?
+                                628f:824f;
+                            assertTrue("Splash slogan below safe-area bottom at "+
+                                width+"x"+height,
+                                view.offY+lastSloganY*view.scale<=height-23f);
+                            assertEquals("Splash cannot scroll",0f,
+                                view.maxScroll,.01f);
+
+                            for(int index=0;index<labels.length;index++){
+                                activity.page="home";
+                                // First draw establishes maxScroll/touch bounds.
+                                view.draw(new Canvas(image));
+                                float availableHeight=height-48f;
+                                float targetBottom=690f;
+                                view.scrollOffset=Math.min(view.maxScroll,
+                                    Math.max(0f,targetBottom-
+                                        availableHeight/view.scale));
+                                view.draw(new Canvas(image));
+                                if(width>height){
+                                    float density=activity.getResources()
+                                        .getDisplayMetrics().density;
+                                    float possibleMin=Math.min(
+                                        (width-32f)/400f,
+                                        Math.min(availableHeight/120f,
+                                            48f*density/88f));
+                                    assertTrue("Landscape Home shortcut scale "+
+                                        width+"x"+height,
+                                        view.scale+0.01f>=possibleMin);
+                                }
+                                MainActivity.BoardScreen.Tap chosen=null;
+                                for(MainActivity.BoardScreen.Tap tap:view.taps)
+                                    if(labels[index].equals(tap.label)){
+                                        chosen=tap;break;
+                                    }
+                                assertNotNull("Missing Home shortcut "+
+                                    labels[index],chosen);
+                                float x=view.offX+
+                                    (chosen.left+chosen.right)*.5f*view.scale;
+                                float y=view.offY+
+                                    (chosen.top+chosen.bottom)*.5f*view.scale;
+                                assertTrue("Shortcut outside horizontal safe area "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    x>=16f&&x<=width-16f);
+                                assertTrue("Shortcut outside vertical safe area "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    y>=24f&&y<=height-24f);
+                                long now=android.os.SystemClock.uptimeMillis();
+                                MotionEvent down=MotionEvent.obtain(
+                                    now,now,MotionEvent.ACTION_DOWN,x,y,0);
+                                MotionEvent up=MotionEvent.obtain(
+                                    now,now+10,MotionEvent.ACTION_UP,x,y,0);
+                                try{
+                                    assertTrue(view.onTouchEvent(down));
+                                    assertTrue(view.onTouchEvent(up));
+                                }finally{
+                                    down.recycle();up.recycle();
+                                }
+                                assertEquals("Touch navigation failed "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    destinations[index],activity.page);
+                            }
+                        }finally{image.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=savedPage;activity.theme=savedTheme;
+                activity.screen.invalidate();
             }
         });
     }
