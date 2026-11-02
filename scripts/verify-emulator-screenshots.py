@@ -63,6 +63,13 @@ COMPACT_CAPTURES = (
     "compact-360x600-themes.png",
     "compact-360x600-settings.png",
 )
+# These are actual Canvas renders at the declared independent viewport size.
+# An actual API-36 emulator also tests live system insets/navigation separately.
+RESPONSIVE_CAPTURES = (
+    *((f"{page}-responsive-{width}x{height}.png", (width, height))
+      for page in ("splash", "home")
+      for width, height in ((320, 480), (941, 1672), (800, 360), (360, 800))),
+)
 # These are functional states, not source mockups: require a real capture
 # for each independently reachable mode, dialog, and settings subpage.
 REQUIRED_STATES = (
@@ -103,6 +110,7 @@ def verify() -> None:
     for name, expected_size in (
         *((name, (941, 1672)) for name in CAPTURES),
         *((name, (360, 600)) for name in COMPACT_CAPTURES),
+        *RESPONSIVE_CAPTURES,
         ("phase10-adaptive-icon-safe-512.png", (512, 512)),
     ):
         path = ROOT / name
