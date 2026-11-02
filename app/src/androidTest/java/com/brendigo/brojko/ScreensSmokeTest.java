@@ -3336,6 +3336,49 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void statisticsStreakFlameUsesOpaqueSourcePurple(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="stats";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap actual=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(actual));
+                    int purple=0;
+                    for(int y=555;y<730;y++)
+                        for(int x=500;x<665;x++){
+                            int pixel=actual.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>70&&red<195&&green>40&&green<155&&
+                                    blue>red+25&&blue>green+70)
+                                purple++;
+                        }
+                    // Owner's original has 5961 saturated purple px
+                    // here; old native screenshot had NONE because the
+                    // previous shadow's 15% alpha leaked into the fill.
+                    assertTrue("Statistics flame must be opaque purple: "+
+                        purple,purple>1500&&purple<11500);
+                    captureReference(activity,view,
+                        "stats-opaque-streak-flame-941x1672");
+                }finally{actual.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionsSourceProgressPalettePreservesRealFractions(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
