@@ -2290,6 +2290,67 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicNumeralBaselineMatchesOwnerReference(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldAnimation=activity.animation;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[]{
+                    2,4,8,16,8,16,2,4,32,64,8,2,128,16,32,256
+                };
+                activity.page="game";
+                activity.theme=0;activity.tileStyle=0;
+                activity.animation=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    long sumY=0;
+                    int pixels=0;
+                    // Isolate the white numeral 2 in the first coral cell.
+                    // Owner source white-glyph centroid y=512.5;
+                    // old emulator was y=494.5 (18px too high).
+                    for(int y=430;y<575;y++)
+                        for(int x=90;x<205;x++){
+                            int color=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>238&&green>238&&blue>238&&
+                                Math.max(red,Math.max(green,blue))-
+                                Math.min(red,Math.min(green,blue))<14){
+                                sumY+=y;
+                                pixels++;
+                            }
+                        }
+                    assertTrue("First Classic 2 must be visibly rendered",
+                        pixels>1000);
+                    float centerY=sumY/(float)pixels;
+                    assertTrue("Classic 2 numeral baseline from owner image: "+
+                        centerY,centerY>=505f&&centerY<=520f);
+                    assertEquals("No simulated score changes",0,
+                        activity.game.score);
+                    captureReference(activity,board,
+                        "classic-source-numeral-baseline-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
         rule.getScenario().onActivity(activity->{
             final TileGame previousGame=activity.game;
@@ -4802,6 +4863,108 @@ public class ScreensSmokeTest {
         }catch(java.io.IOException error){
             throw new AssertionError("Cannot write actual viewport screenshot "+name,error);
         }
+    }
+
+    @Test public void homeCornerArtUsesSourceSaturatedPalette(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int coral=bitmap.getPixel(30,95);
+                    int teal=bitmap.getPixel(820,135);
+                    assertTrue("Home top-left tile should be warm coral",
+                        android.graphics.Color.red(coral)>235&&
+                        android.graphics.Color.blue(coral)<115);
+                    // Owner's unscaled image at (820,135) is RGB
+                    // (41,212,202). The previous real emulator had
+                    // (57,199,186); the improved one (27,203,197).
+                    // Compare channels to the owner source with an
+                    // explicit rasterization tolerance, not a green
+                    // threshold above the actual successful render.
+                    assertTrue("Home teal must match owner source RGB",
+                        Math.abs(android.graphics.Color.red(teal)-41)<=22&&
+                        Math.abs(android.graphics.Color.green(teal)-212)<=18&&
+                        Math.abs(android.graphics.Color.blue(teal)-202)<=14);
+                    int modeCards=0,shortcuts=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if(tap.label.startsWith("Klasično ")||
+                           tap.label.startsWith("Opušteno ")||
+                           tap.label.startsWith("Dnevni izazov "))
+                            modeCards++;
+                        if("Misije".equals(tap.label)||
+                           "Statistika".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))
+                            shortcuts++;
+                    }
+                    assertEquals("All three modes remain accessible",3,modeCards);
+                    assertEquals("All four Home shortcuts remain accessible",4,shortcuts);
+                    captureReference(activity,view,
+                        "home-saturated-corner-art-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashOwnerTilePaletteKeepsSaturatedFaces(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            int previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";
+                activity.theme=0;
+                activity.tileStyle=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int coral=bitmap.getPixel(200,270);
+                    int teal=bitmap.getPixel(600,280);
+                    int blue=bitmap.getPixel(140,600);
+                    // These are measured interior sample locations in
+                    // the owner's unscaled 941x1672 illustration; they
+                    // intentionally exclude the white tile numerals.
+                    assertTrue("Coral face must not be pale pink",
+                        android.graphics.Color.red(coral)>=245&&
+                        android.graphics.Color.blue(coral)<=108);
+                    assertTrue("Turquoise face must retain blue/green depth",
+                        android.graphics.Color.green(teal)>=205&&
+                        android.graphics.Color.blue(teal)>=195);
+                    assertTrue("Blue face must remain vivid",
+                        android.graphics.Color.blue(blue)>=238);
+                    assertEquals("Splash cannot add scroll",0f,
+                        view.maxScroll,.01f);
+                    captureReference(activity,view,
+                        "splash-saturated-faces-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.tileStyle=previousStyle;
+                activity.screen.invalidate();
+            }
+        });
     }
 
     @Test public void splashSourceCoralSloganKeepsTallStrongLettering(){

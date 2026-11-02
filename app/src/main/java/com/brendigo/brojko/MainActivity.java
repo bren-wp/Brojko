@@ -1508,18 +1508,41 @@ public final class MainActivity extends ComponentActivity {
                                 float radius,int color){
             // Native illustration-like extrusion and highlight. Other
             // screens continue using their established styledTile renderer.
+            // Source artwork is notably more saturated than the ordinary
+            // gameplay palette. Apply the measured face hues ONLY to the
+            // light Splash illustration; real game tiles stay unchanged.
+            int faceTop=lighten(color,.20f);
+            int faceBottom=darken(color,.035f);
+            int extrusion=darken(color,.13f);
+            if(theme==0){
+                if(color==TILES[1]){           // 2 · coral
+                    faceTop=0xffff9464;faceBottom=0xffff5a3d;
+                    extrusion=0xffea453a;
+                }else if(color==TILES[2]){    // 4 · turquoise
+                    faceTop=0xff3ee5dc;faceBottom=0xff0fc2bd;
+                    extrusion=0xff0baba5;
+                }else if(color==TILES[3]){    // 8 · blue
+                    faceTop=0xff5bb1ff;faceBottom=0xff278feb;
+                    extrusion=0xff1e76cc;
+                }else if(color==TILES[4]){    // 16 · yellow
+                    faceTop=0xffffd26e;faceBottom=0xffffae42;
+                    extrusion=0xffdf8d25;
+                }else if(color==TILES[7]){    // 64 · purple
+                    faceTop=0xffd67af6;faceBottom=0xffac4de2;
+                    extrusion=0xff8d42cc;
+                }
+            }
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
             p.setShader(null);p.setColor(0xfff8eee2);
             p.setShadowLayer(13f,0f,7f,0x3ca9835a);
             c.drawRoundRect(x+1.7f,y+2.4f,x+w+1.2f,y+h+1.8f,
                 radius,radius,p);
             p.clearShadowLayer();
-            shape(x+1f,y+4.5f,w-1f,h-3f,radius,darken(color,.13f));
+            shape(x+1f,y+4.5f,w-1f,h-3f,radius,extrusion);
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,w,h-4f,radius,
-                lighten(color,.20f),darken(color,.035f));
+            gradient(x,y,w,h-4f,radius,faceTop,faceBottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(1.5f);p.setColor(0x77ffffff);
+            p.setStrokeWidth(1.15f);p.setColor(0x48ffffff);
             c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
                 radius-2,radius-2,p);
             p.setStrokeWidth(1.8f);p.setColor(0x42ffffff);
@@ -1565,6 +1588,10 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(displayFont);
             p.setTextSize(size);
             p.setTextScaleX(1f);
+            // Median navy in both owner-supplied logo crops is near
+            // RGB(30,43,74), versus generic UI ink RGB(30,42,68).
+            // Keep this adjustment exclusive to the light wordmark.
+            final int wordmarkInk=theme==0?0xff1e2b4a:ink;
             float left=p.measureText("Br"),right=p.measureText("jko");
             float gap=size*.09f,tile=size*.74f;
             float start=200f-(left+right+tile+2f*gap)/2f;
@@ -1576,7 +1603,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-10.6f,0);
             c.scale(1.185f,1f,3.6f,y);
-            txt("Br",start+left/2f,y,size,ink,true);
+            txt("Br",start+left/2f,y,size,wordmarkInk,true);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1585,8 +1612,14 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-4.25f,2.2f);
             c.scale(.90f,.66f,137.6f,394.36f);
-            styledTile(bx,y-size*.78f,tile,tile,
-                Math.max(7,size*.16f),CORAL,0);
+            // The branded 2 must have the same rich coral face as the
+            // owner's original, not the paler general gameplay cell.
+            if(theme==0)
+                splashFloatingTile(bx,y-size*.78f,tile,tile,
+                    Math.max(7,size*.16f),CORAL);
+            else
+                styledTile(bx,y-size*.78f,tile,tile,
+                    Math.max(7,size*.16f),CORAL,0);
             txt("2",bx+tile/2f,y-size*.20f,size*.52f,WHITE,true);
             c.restore();
 
@@ -1594,7 +1627,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-36.2f,0);
             c.scale(1.25f,.92f,228f,316f);
-            txt("jko",bx+tile+gap+right/2f,y,size,ink,true);
+            txt("jko",bx+tile+gap+right/2f,y,size,wordmarkInk,true);
             c.restore();
             c.restore();
 
@@ -1713,7 +1746,13 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(15f,0f,9f,0x3abf9b73);
             c.drawRoundRect(x+3f,y+7f,x+w+3f,y+h+7f,radius,radius,p);
             p.clearShadowLayer();
-            styledTile(x,y,w,h,radius,color,0);
+            // Home's corner tiles are the same raised brand pieces as the
+            // Splash artwork, not gameplay cells. Reuse the saturated
+            // face palette only in the source-sized light portrait.
+            if(theme==0&&referencePortraitLayout)
+                splashFloatingTile(x,y,w,h,radius,color);
+            else
+                styledTile(x,y,w,h,radius,color,0);
             fitted(Integer.toString(value),x+w/2f,y+h*.68f,
                 value>=16?40:47,w-12,WHITE,true);
         }
@@ -2143,11 +2182,20 @@ public final class MainActivity extends ComponentActivity {
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
             float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
+            // Owner's 941x1672 Classic reference has its first row
+            // ~5px lower, with ~2px more separation per subsequent row.
+            // Scope to active light Classic only: the Win backdrop, 5x5,
+            // Daily and dark / custom tile styles retain their geometry.
+            final boolean classicSourceGeometry=tallFour&&
+                referencePortraitLayout&&"game".equals(page)&&
+                "classic".equals(game.mode)&&theme==0&&tileStyle==0;
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (victoryBoard?90.5f:(tallFour?94f:tile+gap))*y;
+                    (classicSourceGeometry?2f:0f)+
+                    (victoryBoard?90.5f:
+                        (tallFour?(classicSourceGeometry?95f:94f):tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
@@ -2171,7 +2219,10 @@ public final class MainActivity extends ComponentActivity {
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
                         (n==5?33:44)-(digits>3?(digits-3)*7:0);
-                    fitted(str,rx+tile/2,ry+tileHeight*.62f,
+                    // 2048 numeral baseline in the user's active Classic
+                    // artwork is ~17-18px lower than the old Canvas result.
+                    fitted(str,rx+tile/2,
+                        ry+tileHeight*(classicSource?.68f:.62f),
                         fontsize,tile-7,WHITE,true);
                 }
             }
