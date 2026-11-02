@@ -1389,8 +1389,11 @@ public final class MainActivity extends ComponentActivity {
             // Landscape Splash must fit the complete 880-unit scene.
             // Other landscape screens retain touch-sized controls and scroll
             // if their 880-unit content is taller than the available window.
+            // Landscape Home uses larger touch-friendly shortcut cards.
+            // It can scroll vertically instead of shrinking the buttons.
             scale=landscape?Math.min(usableWidth/400f,
-                usableHeight/(page.equals("splash")?880f:720f)):
+                usableHeight/(page.equals("splash")?880f:
+                    page.equals("home")?580f:720f)):
                 (compact?usableWidth/400f:
                     Math.min(usableWidth/400f,usableHeight/880f));
             // A 320x480 compact phone cannot fit the 628-unit slogan with
