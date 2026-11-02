@@ -2757,13 +2757,103 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void splashBrandRemainsVisibleForAtLeastThreeSeconds(){
-        // Compare the configured interval rather than wall-clock sleep:
-        // flaky emulator boot times are not representative of production.
-        assertTrue("Splash must last at least 3000 ms",
-            MainActivity.SPLASH_DURATION_MS>=3000L);
-        assertTrue("Splash should not block users for too long",
-            MainActivity.SPLASH_DURATION_MS<=4500L);
+    @Test public void splashAutoAdvancesBetweenTwoAndThreeSeconds(){
+        // Avoid wall-clock sleeps: CI emulator boot and scheduling are noisy.
+        // The Activity posts Home navigation with this exact duration.
+        assertTrue("Splash must remain visible for at least 2 seconds",
+            MainActivity.SPLASH_DURATION_MS>=2000L);
+        assertTrue("Splash must auto-advance no later than 3 seconds",
+            MainActivity.SPLASH_DURATION_MS<=3000L);
+    }
+
+    @Test public void ownerSplashAndVictoryReferencePixelsAreNativeAndFunctional(){
+        // The user supplied two byte-identical 941x1672 Splash references
+        // and one Victory reference. All three use the same native renderer;
+        // never insert a full-screen static reference bitmap.
+        rule.getScenario().onActivity(activity->{
+            String savedPage=activity.page;
+            int savedTheme=activity.theme;
+            TileGame savedGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+            view.layout(0,0,941,1672);
+            Bitmap splash=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            Bitmap victory=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            try{
+                activity.theme=0;
+                activity.page="splash";
+                view.draw(new Canvas(splash));
+                assertEquals("The owner's warm Splash canvas is independent of Home",
+                    MainActivity.SPLASH_LIGHT_CANVAS,view.bg);
+                assertEquals("Splash has no accidental touch actions",0,view.taps.size());
+                int cream=splash.getPixel(470,1150);
+                assertTrue("Warm off-white source field has no blue tint",
+                    android.graphics.Color.red(cream)>=250&&
+                    android.graphics.Color.green(cream)>=248&&
+                    android.graphics.Color.blue(cream)<=248);
+                int upperCoral=splash.getPixel(185,240);
+                int upperTeal=splash.getPixel(605,248);
+                assertTrue("Upper-left 2 remains raised coral",
+                    android.graphics.Color.red(upperCoral)>
+                        android.graphics.Color.blue(upperCoral)+70);
+                assertTrue("Upper-right 4 remains turquoise",
+                    android.graphics.Color.green(upperTeal)>
+                        android.graphics.Color.red(upperTeal)+40);
+                captureReference(activity,view,
+                    "owner-splash-01-02-native-941x1672");
+
+                activity.game=new TileGame("classic","",2148L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                view.draw(new Canvas(victory));
+                assertEquals("Victory backdrop must hide all board touch targets",
+                    3,view.taps.size());
+                String[] actions={"Nastavi igrati","Nova igra","Podijeli rezultat"};
+                for(int i=0;i<actions.length;i++){
+                    assertEquals("Only the three source modal actions are reachable",
+                        actions[i],view.taps.get(i).label);
+                    assertTrue("Modal button remains genuinely tappable",
+                        view.taps.get(i).action!=null);
+                }
+                int primary=victory.getPixel(205,1020);
+                int share=victory.getPixel(205,1300);
+                assertTrue("Continue pill stays source coral",
+                    android.graphics.Color.red(primary)>200&&
+                    android.graphics.Color.blue(primary)<135);
+                assertTrue("Share pill stays source blue",
+                    android.graphics.Color.blue(share)>
+                        android.graphics.Color.red(share)+35);
+                captureReference(activity,view,
+                    "owner-victory-03-native-941x1672");
+
+                // The reference reads 2.048, but production must render the
+                // actual score, not hard-code the screenshot's demonstration.
+                activity.game.score=4096;
+                Bitmap updated=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(updated));
+                    int changed=0;
+                    for(int y=820;y<955;y+=2)
+                        for(int x=180;x<460;x+=2)
+                            if(victory.getPixel(x,y)!=updated.getPixel(x,y))changed++;
+                    assertTrue("Victory score label must respond to real score",
+                        changed>90);
+                }finally{updated.recycle();}
+            }finally{
+                splash.recycle();victory.recycle();
+                activity.page=savedPage;activity.theme=savedTheme;
+                activity.game=savedGame;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
     }
 
     @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
@@ -5366,8 +5456,8 @@ public class ScreensSmokeTest {
             };
             try{
                 activity.theme=0;
-                assertEquals("Preserve 3.2-second branded Splash",
-                    3200L,MainActivity.SPLASH_DURATION_MS);
+                assertEquals("Show branded Splash for 2.8 seconds",
+                    2800L,MainActivity.SPLASH_DURATION_MS);
                 for(String page:new String[]{"splash","home"}){
                     activity.page=page;
                     for(int[] size:sizes){
