@@ -4920,6 +4920,58 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void splashAndHomeSourceWordmarkRetainsHeavyNavySilhouette(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.theme=0;
+                for(String current:new String[]{"splash","home"}){
+                    activity.page=current;
+                    board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(1672,
+                            View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,941,1672);
+                    Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        board.draw(new Canvas(bitmap));
+                        int left="splash".equals(current)?60:120;
+                        int top="splash".equals(current)?675:185;
+                        int right="splash".equals(current)?885:800;
+                        int bottom="splash".equals(current)?1060:470;
+                        int navy=0;
+                        for(int y=top;y<bottom;y++)
+                            for(int x=left;x<right;x++){
+                                int color=bitmap.getPixel(x,y);
+                                int red=android.graphics.Color.red(color);
+                                int green=android.graphics.Color.green(color);
+                                int blue=android.graphics.Color.blue(color);
+                                if(red<95&&green<125&&blue<158&&blue>red)
+                                    navy++;
+                            }
+                        // Owner originals: Splash 92,082 and Home 54,366
+                        // filled navy pixels in these exact native ROIs.
+                        // Older emulator: 81,114 / 46,102. Require a real
+                        // improvement without allowing extreme overfilling.
+                        int minimum="splash".equals(current)?83000:48000;
+                        int maximum="splash".equals(current)?107000:66000;
+                        assertTrue("Source wordmark navy coverage: "+current+
+                            " = "+navy,navy>=minimum&&navy<=maximum);
+                        captureReference(activity,board,
+                            current+"-owner-wordmark-weight-941x1672");
+                    }finally{bitmap.recycle();}
+                }
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashOwnerTilePaletteKeepsSaturatedFaces(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
