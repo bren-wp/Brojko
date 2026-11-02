@@ -1608,8 +1608,14 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-4.25f,2.2f);
             c.scale(.90f,.66f,137.6f,394.36f);
-            styledTile(bx,y-size*.78f,tile,tile,
-                Math.max(7,size*.16f),CORAL,0);
+            // The branded 2 must have the same rich coral face as the
+            // owner's original, not the paler general gameplay cell.
+            if(theme==0)
+                splashFloatingTile(bx,y-size*.78f,tile,tile,
+                    Math.max(7,size*.16f),CORAL);
+            else
+                styledTile(bx,y-size*.78f,tile,tile,
+                    Math.max(7,size*.16f),CORAL,0);
             txt("2",bx+tile/2f,y-size*.20f,size*.52f,WHITE,true);
             c.restore();
 
