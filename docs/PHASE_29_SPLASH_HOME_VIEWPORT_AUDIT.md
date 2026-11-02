@@ -42,3 +42,32 @@ Ova matrica pokriva tipične i rubne veličine, **ne doslovno sve postojeće And
 - [ ] Pokazati regionalne RGB MAE vrijednosti bez tvrdnje o 1:1 prije stvarne usporedbe.
 
 **Bez mergea i bez novog izdanja.** Čuvaju se svi postojeći podaci, paket i potpisivanje.
+
+
+## Drugi prolaz — izvorne boje Splasha i minijatura Klasične igre
+
+Nakon što je prvi prolaz uspješno testiran na **17 veličina** (Android UI run `41369365604`, ukupno **110 instrumentacijskih testova**) preuzeta je stvarna snimka. Izvorni Splash i Home, dostavljeni od vlasnika na 941×1672, uspoređeni su s jednakim emulator screenshotom bez skaliranja i pomicanja. Rezultat prvog prolaza ostao je **bitno identičan** prethodnom screenshotu na toj rezoluciji, što potvrđuje da adaptivni raspored nije regresirao izvorni izgled.
+
+| Regija | RGB MAE nakon prvog prolaza |
+|---|---:|
+| Splash cijeli zaslon | 19,433 |
+| Splash logo | 27,803 |
+| Splash slogan | 11,578 |
+| Home cijeli zaslon — istovjetan fixture | 23,186 |
+| Home logo | 24,901 |
+| Home rezultati | 18,279 |
+| Home glavna tipka | 21,474 |
+| Home kartice načina | 26,953 |
+| Home prečaci | 14,142 |
+
+### Utvrđene lokalne razlike
+
+Splashov koraljni sloganski tekst `Spajaj brojeve.` na izvorniku ima približno **8351 zasićeni koraljni piksel** i dominantnu boju `(253,90,62)`, dok prethodna stvarna snimka ima **6015** i `(255,122,91)`. Novi nativni Canvas crta ga u `#FD5A3E` te umjereno povećava vertikalni profil slova, **samo u svijetlom kompaktno-orijentiranom Splashu**. Zadržava se ista horizontalna pozicija i 3200 ms trajanja.
+
+Na Homeu je dekorativna minijatura igre 4×4 imala preusko i previsoko obojeno područje — približno x70..281 i y941..1102 prema vlasnikovom x72..297 i y947..1115, izmjereno na istom izrezu i kriteriju koraljne boje. Samo ta svijetla portretna minijatura koristi pločice 22,8 (prije 21,5) dizajnerskih jedinica te je pomaknuta 4 jedinice udesno i 3 dolje. **Aktivna ploča 4×4, pravila igre, 5×5, tamna tema i korisnički podaci nisu promijenjeni.**
+
+Dodana dva instrumentacijska testa:
+- `splashSourceCoralSloganKeepsTallStrongLettering`, stvarni PNG `splash-coral-source-941x1672.png`;
+- `homeSourceClassicThumbnailHasFullColoredGrid`, stvarni PNG `home-classic-preview-source-941x1672.png`, s privremenim, izoliranim rezultatima 12.560/3.864.
+
+Obje snimke moraju proći screenshot validator. **Gornje MAE vrijednosti su početne za drugi prolaz**: konačno poboljšanje treba provjeriti isključivo prema posljednjem uspješnom Android emulator artefaktu. Ako je regionalni MAE povećan, kalibraciju treba vratiti ili korigirati u istom Draft PR-u.
