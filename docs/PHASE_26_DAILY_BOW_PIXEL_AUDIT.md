@@ -53,3 +53,16 @@ GitHub Actions `41363562944` nakon prvog zahvata završio je uspješno. Snimka i
 Detaljniji pixel audit pokazao je još jednu razliku: u vlasnikovu izvorniku sredina iznad mašne na x=210, y=1365 je gotovo bijela `(238,236,254)`, a na prvoj novoj snimci bila je prerano zlatna `(255,220,99)`. Originalni čvor počinje niže: oko y=1378 i ostaje zlatan na y=1390. Zato je u svijetlom portretnom prikazu centralni čvor spušten promjenom `top-size*.22` na `top-size*.11` i skraćen s `size*.21` na `size*.18`. Tamna tema i ostali layouti čuvaju dosadašnju geometriju.
 
 Instrumentacijski test dodatno mjeri stvarni krem-bijeli prostor na x=210, y=1365 i zlatni čvor na x=210, y=1390. **Gornji MAE rezultat je prva iteracija, ne nova izmjena čvora.** Novu iteraciju treba izračunati iz posljednjeg uspješnog emulator artefakta.
+
+
+## Faza 27: stvarna ciljna pločica 256 na Dnevnom izazovu
+
+Nakon mjerenja zadnje uspješne emulator snimke `daily-source-streak7-941x1672.png` iz PR-a #35, uspoređene s originalom `Slika ChatGPT 24. lis 2026. 22_15_15-6(20261101-200916).png`, otkriven je prevelik bijeli natpis **256** na prvoj ciljnoj pločici. Oba izvora imaju točno 941 × 1672, bez pomicanja ili skaliranja.
+
+U podregiji `[108,1000,181,1060)` maska svijetlih, gotovo neutralnih piksela (`min(R,G,B)>220`, `max-min<30`) ima **617 piksela na originalu**, a **1168 na prethodnoj stvarnoj emulator snimci**. Primjetna razlika dolazi od veličine natpisa, ne od stvarnog cilja igre.
+
+U izvornom Java/Canvas `dailyGoalRow()` veličina fonta broja 256 smanjena je s 20 na 16 jedinica, a osnovna linija blago je povišena, isključivo za svijetlu portretnu temu. Nije promijenjena vrijednost pločice, uvjet `peak>=256`, spremanje igre, stil ostalih tema ni dodirne zone pomoći.
+
+Novi `dailyGoal256UsesCompactSourceSizedNumeral` instrumentacijski test izravno čita stvarne piksele determinističkog emulator fixturea na 941 × 1672, provjerava da bijeli natpis ostaje čitljiv, ali ne prepunjava pločicu, i sprema stvarni `daily-goal-256-compact-941x1672.png`. Screenshot validator zahtijeva tu novu PNG datoteku.
+
+**Prethodnih 617/1168 piksela nisu rezultati nove izmjene.** Za prihvaćanje je potrebno preuzeti posljednji screenshot QA ZIP i izračunati isti maskirani broj, RGB MAE ciljne pločice i cijelog zaslona. PR ostaje Draft, bez mergea ili nove objave, sve dok ne bude potvrđena nova snimka.
