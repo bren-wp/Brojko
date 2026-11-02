@@ -2290,6 +2290,67 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicNumeralBaselineMatchesOwnerReference(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldAnimation=activity.animation;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",2124L);
+                activity.game.cells=new int[]{
+                    2,4,8,16,8,16,2,4,32,64,8,2,128,16,32,256
+                };
+                activity.page="game";
+                activity.theme=0;activity.tileStyle=0;
+                activity.animation=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    long sumY=0;
+                    int pixels=0;
+                    // Isolate the white numeral 2 in the first coral cell.
+                    // Owner source white-glyph centroid y=512.5;
+                    // old emulator was y=494.5 (18px too high).
+                    for(int y=430;y<575;y++)
+                        for(int x=90;x<205;x++){
+                            int color=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>238&&green>238&&blue>238&&
+                                Math.max(red,Math.max(green,blue))-
+                                Math.min(red,Math.min(green,blue))<14){
+                                sumY+=y;
+                                pixels++;
+                            }
+                        }
+                    assertTrue("First Classic 2 must be visibly rendered",
+                        pixels>1000);
+                    float centerY=sumY/(float)pixels;
+                    assertTrue("Classic 2 numeral baseline from owner image: "+
+                        centerY,centerY>=505f&&centerY<=520f);
+                    assertEquals("No simulated score changes",0,
+                        activity.game.score);
+                    captureReference(activity,board,
+                        "classic-source-numeral-baseline-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
         rule.getScenario().onActivity(activity->{
             final TileGame previousGame=activity.game;
