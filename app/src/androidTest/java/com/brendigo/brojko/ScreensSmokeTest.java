@@ -4375,15 +4375,17 @@ public class ScreensSmokeTest {
                 int actions=0;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Nastavi igrati".equals(tap.label)){
-                        assertEquals("Primary action top matches source",417f,tap.top,.1f);
+                        assertEquals("Primary action top matches source",422f,tap.top,.1f);
                         assertEquals("Primary action width matches source",
                             252f,tap.right-tap.left,.1f);
                         actions++;
                     }else if("Nova igra".equals(tap.label)){
                         assertEquals("Secondary action top matches source",478f,tap.top,.1f);
+                        assertEquals("Secondary card fills owner's cream band",
+                            60f,tap.bottom-tap.top,.1f);
                         actions++;
                     }else if("Podijeli rezultat".equals(tap.label)){
-                        assertEquals("Share action top matches source",532f,tap.top,.1f);
+                        assertEquals("Share action top matches source",539f,tap.top,.1f);
                         assertTrue("All actions fit inside reference modal",
                             tap.bottom<=597f);
                         actions++;
