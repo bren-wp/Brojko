@@ -2757,13 +2757,14 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void splashBrandRemainsVisibleForAtLeastThreeSeconds(){
-        // Compare the configured interval rather than wall-clock sleep:
-        // flaky emulator boot times are not representative of production.
-        assertTrue("Splash must last at least 3000 ms",
-            MainActivity.SPLASH_DURATION_MS>=3000L);
-        assertTrue("Splash should not block users for too long",
-            MainActivity.SPLASH_DURATION_MS<=4500L);
+    @Test public void splashDurationMeetsOwnerTwoToThreeSecondContract(){
+        // Test the configured interval, not unstable emulator launch time.
+        assertTrue("Branded splash must remain visible >= 2 seconds",
+            MainActivity.SPLASH_DURATION_MS>=2000L);
+        assertTrue("Splash must enter Home by 3 seconds",
+            MainActivity.SPLASH_DURATION_MS<=3000L);
+        assertEquals("The native branded launch duration",2700L,
+            MainActivity.SPLASH_DURATION_MS);
     }
 
     @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
@@ -5164,8 +5165,8 @@ public class ScreensSmokeTest {
             };
             try{
                 activity.theme=0;
-                assertEquals("Preserve 3.2-second branded Splash",
-                    3200L,MainActivity.SPLASH_DURATION_MS);
+                assertEquals("Preserve owner's 2.7-second branded Splash",
+                    2700L,MainActivity.SPLASH_DURATION_MS);
                 for(String page:new String[]{"splash","home"}){
                     activity.page=page;
                     for(int[] size:sizes){
