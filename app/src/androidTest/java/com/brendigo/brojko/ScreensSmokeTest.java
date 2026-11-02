@@ -2805,6 +2805,14 @@ public class ScreensSmokeTest {
                         tealR<=tealL-9);
                     assertTrue("Yellow 16 must ascend rightward",
                         yellowR<=yellowL-9);
+                    int tealGlint=bitmap.getPixel(610,210);
+                    // Owner sample (132,252,242). Earlier native flat
+                    // tile returned (59,227,218) at this exact pixel.
+                    assertTrue("Upper teal source tile needs diffuse 3D "+
+                        "lighting, not flat fill",
+                        android.graphics.Color.red(tealGlint)>=94&&
+                        android.graphics.Color.green(tealGlint)>=222&&
+                        android.graphics.Color.blue(tealGlint)>=210);
                     assertEquals("Splash has no scrolling",0f,
                         view.maxScroll,.01f);
                     captureReference(activity,view,
