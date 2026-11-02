@@ -50,7 +50,9 @@ import org.json.JSONObject;
 /** Brojko: offline, native number-merging game. Every visible action is functional. */
 public final class MainActivity extends ComponentActivity {
     static final int INK=0xff1e2a44, CREAM=0xfffff8ee,
-        LIGHT_CANVAS=0xfffefcf6, CORAL=0xffff7a5b,
+        LIGHT_CANVAS=0xfffefcf6,
+        // The owner's two identical Splash references are warmer than Home.
+        SPLASH_LIGHT_CANVAS=0xfffefcf4, CORAL=0xffff7a5b,
         TEAL=0xff2ec4b6, MUTED=0xff77849a, WHITE=Color.WHITE;
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
@@ -76,9 +78,9 @@ public final class MainActivity extends ComponentActivity {
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
-    // Allow the full branded opening illustration to be read before Home.
-    // Previously 1350 ms was too brief, especially on faster devices.
-    static final long SPLASH_DURATION_MS=3200L;
+    // Keep the supplied Brojko Splash on screen for 2–3 seconds before Home.
+    // 2800 ms is long enough to read the logo without a 3.2-second delay.
+    static final long SPLASH_DURATION_MS=2800L;
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
     int chartMetric=0;
@@ -679,7 +681,8 @@ public final class MainActivity extends ComponentActivity {
             boolean dark=theme==1;
             // The very light canvas matches the user-provided nine portrait
             // reference screens; retain CREAM on warm cards and buttons.
-            bg=dark?0xff14233a:LIGHT_CANVAS;
+            bg=dark?0xff14233a:
+                ("splash".equals(page)?SPLASH_LIGHT_CANVAS:LIGHT_CANVAS);
             card=dark?0xff263653:0xfffffdfa;
             ink=dark?0xffeff6ff:INK;
             muted=dark?0xffaabbce:MUTED;
