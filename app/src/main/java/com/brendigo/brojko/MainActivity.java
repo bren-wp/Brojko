@@ -75,9 +75,10 @@ public final class MainActivity extends ComponentActivity {
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
-    // Allow the full branded opening illustration to be read before Home.
-    // Previously 1350 ms was too brief, especially on faster devices.
-    static final long SPLASH_DURATION_MS=3200L;
+    // Keep the supplied full-screen branding visible for 2–3 seconds,
+    // then automatically enter Home. Never hold the player on Splash
+    // longer than needed; display data are prepared off this timer.
+    static final long SPLASH_DURATION_MS=2700L;
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
     int chartMetric=0;
