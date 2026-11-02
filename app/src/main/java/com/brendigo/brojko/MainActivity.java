@@ -1579,6 +1579,26 @@ public final class MainActivity extends ComponentActivity {
             c.drawText("256",364,726,p);
             p.clearShadowLayer();c.restore();
         }
+        // Logo-specific, rounded fill+stroke reproduces the extra
+        // counterweight visible in the owner's painted wordmark. Using
+        // normal txt() elsewhere keeps Croatian UI labels unchanged.
+        void raisedWordmarkLetters(String letters,float cx,float baseline,
+                                   float size,int color){
+            if(theme!=0){
+                txt(letters,cx,baseline,size,color,true);
+                return;
+            }
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextScaleX(1f);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(1.8f);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setColor(color);
+            c.drawText(letters,cx,baseline,p);
+            p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
+        }
         // Splash-only wordmark: the source uses wider rounded lettering,
         // a shorter coral number tile and three pronounced accent strokes.
         // Never substitute a reference bitmap: draw each part natively so
@@ -1603,7 +1623,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-10.6f,0);
             c.scale(1.185f,1f,3.6f,y);
-            txt("Br",start+left/2f,y,size,wordmarkInk,true);
+            raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1627,7 +1647,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-36.2f,0);
             c.scale(1.25f,.92f,228f,316f);
-            txt("jko",bx+tile+gap+right/2f,y,size,wordmarkInk,true);
+            raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
             c.restore();
             c.restore();
 
@@ -1935,7 +1955,18 @@ public final class MainActivity extends ComponentActivity {
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
                 c.scale(1f,1.40f,105f,60f);
-                fitted("Klasično",105,89,43,201,ink,true);
+                // Source's rounded Classic heading has more navy ink
+                // within almost identical outer bounds. The general
+                // typography and other modes retain their normal fitted().
+                float headingSize=43f;
+                p.setTextScaleX(1f);p.setTypeface(displayFont);
+                p.setTextSize(headingSize);
+                while(p.measureText("Klasično")>201f&&headingSize>10f){
+                    headingSize=Math.max(10f,headingSize-1f);
+                    p.setTextSize(headingSize);
+                }
+                raisedWordmarkLetters("Klasično",105,89,
+                    headingSize,ink);
                 c.restore();
                 // Thick coral rays in the owner reference are distinct
                 // strokes, not the tiny dots of the generic rays() helper.
@@ -2380,8 +2411,22 @@ public final class MainActivity extends ComponentActivity {
                 p.setStrokeJoin(Paint.Join.ROUND);
                 p.setStrokeWidth(2.6f);p.setColor(WHITE);
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
-                p.setStyle(Paint.Style.FILL);p.setColor(ink);
+                // Source "Bravo!" has about 17% more filled navy
+                // glyph area than the old emulator. Keep the existing
+                // individual tilt/positions and bright outer outline,
+                // but thicken ONLY the foreground in the light 941x1672
+                // win composition (not standard text or dark UI).
+                p.setColor(ink);
+                if(theme==0&&referencePortraitLayout){
+                    p.setStyle(Paint.Style.FILL_AND_STROKE);
+                    p.setStrokeJoin(Paint.Join.ROUND);
+                    p.setStrokeWidth(1.8f);
+                }else{
+                    p.setStyle(Paint.Style.FILL);
+                    p.setStrokeWidth(0f);
+                }
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
                 c.restore();
                 left+=glyphWidth-3.1f;
             }

@@ -2397,6 +2397,21 @@ public class ScreensSmokeTest {
                     assertTrue("First coral tile must have a narrow source highlight",
                         android.graphics.Color.green(highlight)>
                             android.graphics.Color.green(body)+20);
+                    int navyHeadingPixels=0;
+                    for(int y=180;y<330;y++)
+                        for(int x=30;x<485;x++){
+                            int pixel=pixels.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<100&&green<140&&blue<170&&blue>red)
+                                navyHeadingPixels++;
+                        }
+                    // Owner Classic heading ROI has 17,176 navy pixels;
+                    // earlier real emulator had only 13,731.
+                    assertTrue("Source-like Classic 4x4 heading coverage: "+
+                        navyHeadingPixels,navyHeadingPixels>=14500&&
+                        navyHeadingPixels<=23000);
                     int controls=0;
                     for(MainActivity.BoardScreen.Tap tap:board.taps)
                         if("Novo".equals(tap.label)||
@@ -4647,6 +4662,20 @@ public class ScreensSmokeTest {
                         android.graphics.Color.green(cta)>=70 &&
                         android.graphics.Color.green(cta)<=170 &&
                         android.graphics.Color.blue(cta)<125);
+                    int bravoNavy=0;
+                    for(int y=510;y<750;y++)
+                        for(int x=240;x<790;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<100&&green<140&&blue<170&&blue>red)
+                                bravoNavy++;
+                        }
+                    // Owner Bravo! reference mask: 32,716 native px;
+                    // previous real emulator mask: 28,048.
+                    assertTrue("Victory heading source-like navy weight: "+
+                        bravoNavy,bravoNavy>=29400&&bravoNavy<=38000);
                     int reachable=0;
                     for(MainActivity.BoardScreen.Tap tap:view.taps){
                         if("Nastavi igrati".equals(tap.label)||
@@ -4915,6 +4944,58 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashAndHomeSourceWordmarkRetainsHeavyNavySilhouette(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.theme=0;
+                for(String current:new String[]{"splash","home"}){
+                    activity.page=current;
+                    board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(1672,
+                            View.MeasureSpec.EXACTLY));
+                    board.layout(0,0,941,1672);
+                    Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        board.draw(new Canvas(bitmap));
+                        int left="splash".equals(current)?60:120;
+                        int top="splash".equals(current)?675:185;
+                        int right="splash".equals(current)?885:800;
+                        int bottom="splash".equals(current)?1060:470;
+                        int navy=0;
+                        for(int y=top;y<bottom;y++)
+                            for(int x=left;x<right;x++){
+                                int color=bitmap.getPixel(x,y);
+                                int red=android.graphics.Color.red(color);
+                                int green=android.graphics.Color.green(color);
+                                int blue=android.graphics.Color.blue(color);
+                                if(red<95&&green<125&&blue<158&&blue>red)
+                                    navy++;
+                            }
+                        // Owner originals: Splash 92,082 and Home 54,366
+                        // filled navy pixels in these exact native ROIs.
+                        // Older emulator: 81,114 / 46,102. Require a real
+                        // improvement without allowing extreme overfilling.
+                        int minimum="splash".equals(current)?83000:48000;
+                        int maximum="splash".equals(current)?107000:66000;
+                        assertTrue("Source wordmark navy coverage: "+current+
+                            " = "+navy,navy>=minimum&&navy<=maximum);
+                        captureReference(activity,board,
+                            current+"-owner-wordmark-weight-941x1672");
+                    }finally{bitmap.recycle();}
+                }
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
                 activity.screen.invalidate();
             }
         });
