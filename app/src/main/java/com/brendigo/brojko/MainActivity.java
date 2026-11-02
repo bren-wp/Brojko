@@ -1391,9 +1391,23 @@ public final class MainActivity extends ComponentActivity {
             // if their 880-unit content is taller than the available window.
             // Landscape Home uses larger touch-friendly shortcut cards.
             // It can scroll vertically instead of shrinking the buttons.
-            scale=landscape?Math.min(usableWidth/400f,
+            float landscapeScale=Math.min(usableWidth/400f,
                 usableHeight/(page.equals("splash")?880f:
-                    page.equals("home")?580f:720f)):
+                    page.equals("home")?580f:720f));
+            if(landscape&&page.equals("home")){
+                // Very short split-screen and foldable windows previously made
+                // all four 88-unit Home shortcuts too small to touch. Grow
+                // them toward 48 dp, but never crop the 400-unit canvas or
+                // make the 120-unit shortcut card taller than the viewport.
+                // Vertical scrolling, not horizontal clipping, absorbs the
+                // extra height. Portrait reference pixels are unchanged.
+                float desiredTouchScale=48f*getResources()
+                    .getDisplayMetrics().density/88f;
+                landscapeScale=Math.min(usableWidth/400f,
+                    Math.min(usableHeight/120f,
+                        Math.max(landscapeScale,desiredTouchScale)));
+            }
+            scale=landscape?landscapeScale:
                 (compact?usableWidth/400f:
                     Math.min(usableWidth/400f,usableHeight/880f));
             // A 320x480 compact phone cannot fit the 628-unit slogan with

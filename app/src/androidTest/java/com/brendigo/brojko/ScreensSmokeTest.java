@@ -5067,6 +5067,115 @@ public class ScreensSmokeTest {
         });
     }
 
+    /**
+     * Real Canvas and MotionEvent regression for split-screen, foldable and
+     * window-inset geometry. Synthetic viewports cannot cover every physical
+     * Android device/DPI; the full on-emulator suite remains mandatory.
+     */
+    @Test public void splashHomeInsetAndCompactLandscapeTouchMatrix(){
+        rule.getScenario().onActivity(activity->{
+            String savedPage=activity.page;
+            int savedTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            final int[][] sizes={
+                {240,320},{320,240},{320,480},{393,873},{480,320},
+                {600,280},{800,240},{800,360},{960,540},{1280,800},
+                {1080,2400}
+            };
+            final String[] labels={"Misije","Statistika","Teme","Postavke"};
+            final String[] destinations={"missions","stats","themes","settings"};
+            try{
+                // Matches a system-bars/cutout safe-area, including the Home
+                // controls near the bottom of a compact multi-window.
+                view.setPadding(16,24,16,24);
+                for(int theme:new int[]{0,1}){
+                    activity.theme=theme;
+                    for(int[] size:sizes){
+                        int width=size[0],height=size[1];
+                        view.measure(View.MeasureSpec.makeMeasureSpec(width,
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(height,
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,width,height);
+                        Bitmap image=Bitmap.createBitmap(width,height,
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            activity.page="splash";
+                            view.draw(new Canvas(image));
+                            assertTrue("Splash width within safe area at "+
+                                width+"x"+height,view.offX>=15.9f&&
+                                view.offX+400f*view.scale<=width-15.9f);
+                            float lastSloganY=view.referencePortraitLayout?
+                                628f:824f;
+                            assertTrue("Splash slogan below safe-area bottom at "+
+                                width+"x"+height,
+                                view.offY+lastSloganY*view.scale<=height-23f);
+                            assertEquals("Splash cannot scroll",0f,
+                                view.maxScroll,.01f);
+
+                            for(int index=0;index<labels.length;index++){
+                                activity.page="home";
+                                // First draw establishes maxScroll/touch bounds.
+                                view.draw(new Canvas(image));
+                                float availableHeight=height-48f;
+                                float targetBottom=690f;
+                                view.scrollOffset=Math.min(view.maxScroll,
+                                    Math.max(0f,targetBottom-
+                                        availableHeight/view.scale));
+                                view.draw(new Canvas(image));
+                                if(width>height){
+                                    float density=activity.getResources()
+                                        .getDisplayMetrics().density;
+                                    float possibleMin=Math.min(
+                                        (width-32f)/400f,
+                                        Math.min(availableHeight/120f,
+                                            48f*density/88f));
+                                    assertTrue("Landscape Home shortcut scale "+
+                                        width+"x"+height,
+                                        view.scale+0.01f>=possibleMin);
+                                }
+                                MainActivity.BoardScreen.Tap chosen=null;
+                                for(MainActivity.BoardScreen.Tap tap:view.taps)
+                                    if(labels[index].equals(tap.label)){
+                                        chosen=tap;break;
+                                    }
+                                assertNotNull("Missing Home shortcut "+
+                                    labels[index],chosen);
+                                float x=view.offX+
+                                    (chosen.left+chosen.right)*.5f*view.scale;
+                                float y=view.offY+
+                                    (chosen.top+chosen.bottom)*.5f*view.scale;
+                                assertTrue("Shortcut outside horizontal safe area "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    x>=16f&&x<=width-16f);
+                                assertTrue("Shortcut outside vertical safe area "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    y>=24f&&y<=height-24f);
+                                long now=android.os.SystemClock.uptimeMillis();
+                                MotionEvent down=MotionEvent.obtain(
+                                    now,now,MotionEvent.ACTION_DOWN,x,y,0);
+                                MotionEvent up=MotionEvent.obtain(
+                                    now,now+10,MotionEvent.ACTION_UP,x,y,0);
+                                try{
+                                    assertTrue(view.onTouchEvent(down));
+                                    assertTrue(view.onTouchEvent(up));
+                                }finally{
+                                    down.recycle();up.recycle();
+                                }
+                                assertEquals("Touch navigation failed "+
+                                    labels[index]+" on "+width+"x"+height,
+                                    destinations[index],activity.page);
+                            }
+                        }finally{image.recycle();}
+                    }
+                }
+            }finally{
+                activity.page=savedPage;activity.theme=savedTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void portraitSplashFillsWidthWithoutScrollingOrClippingSlogan(){
         rule.getScenario().onActivity(activity->{
             String old=activity.page;

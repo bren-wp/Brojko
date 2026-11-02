@@ -71,3 +71,17 @@ Dodana dva instrumentacijska testa:
 - `homeSourceClassicThumbnailHasFullColoredGrid`, stvarni PNG `home-classic-preview-source-941x1672.png`, s privremenim, izoliranim rezultatima 12.560/3.864.
 
 Obje snimke moraju proći screenshot validator. **Gornje MAE vrijednosti su početne za drugi prolaz**: konačno poboljšanje treba provjeriti isključivo prema posljednjem uspješnom Android emulator artefaktu. Ako je regionalni MAE povećan, kalibraciju treba vratiti ili korigirati u istom Draft PR-u.
+
+
+## Treći prolaz — 11 dodatnih window/inset konfiguracija i stvarni touch događaji
+
+Na prethodnom HEAD-u `1e96d427` sve tri Android CI provjere bile su uspješne. Uvedena je dodatna regresijska provjera `splashHomeInsetAndCompactLandscapeTouchMatrix`, usmjerena na neobično niske prozore u vodoravnom prikazu (split-screen, resizable activity, foldable) i sigurna područja oko sistemskih traka.
+
+- Dodatne dimenzije: **240×320, 320×240, 320×480, 393×873, 480×320, 600×280, 800×240, 800×360, 960×540, 1280×800 i 1080×2400**; svaka u svijetloj i tamnoj temi.
+- Testna `BoardScreen` instanca ima 16 px vodoravnog i 24 px okomitog paddinga kako bi se testirala geometrija safe-area insets bez izmišljanja punih emulator uređaja.
+- Splash test potvrđuje da je slogan unutar sigurnog prostora, širina sadržaja ne prelazi rubove te da nema skrolanja.
+- Home test šalje **stvarne Android `MotionEvent.ACTION_DOWN` / `ACTION_UP` događaje** u središte svakog od četiri prečaca nakon pomicanja sadržaja, i potvrđuje točno odredište: misije, statistika, teme i postavke. Ne kreira niti mijenja igračev rezultat.
+- Na niskom landscape Home prikazu cilj je do 48 dp širine prečaca, ali skala uvijek ostaje ograničena raspoloživom širinom i visinom kartice. U geometriji koja fizički ne može zadovoljiti 48 dp, prečaci koriste najveću izvedivu skalu uz mogućnost skrolanja.
+- Izvorni **941×1672 portretni Splash/Home**, trajanje Splasha, grafičke boje i položaji nisu promijenjeni.
+
+**Ograničenja:** više sintetičkih viewporta ne znači testiranje svakog fizičkog Android uređaja; stvarne razlike gustoće, font scale, multi-window upravljanja i sistemskih insets po proizvođaču i dalje zahtijevaju uređaje/emulatore. CI rezultat nove revizije potrebno je potvrditi na posljednjem HEAD-u. Nije tvrdnja o 1:1 podudaranju.
