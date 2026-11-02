@@ -2770,6 +2770,8 @@ public class ScreensSmokeTest {
                 return y;
         }
         return -1;
+    }
+
     @Test public void splashAutoAdvancesBetweenTwoAndThreeSeconds(){
         // Avoid wall-clock sleeps: CI emulator boot and scheduling are noisy.
         // The Activity posts Home navigation with this exact duration.
