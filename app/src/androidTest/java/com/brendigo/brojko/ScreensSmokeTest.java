@@ -4804,6 +4804,53 @@ public class ScreensSmokeTest {
         }
     }
 
+    @Test public void splashOwnerTilePaletteKeepsSaturatedFaces(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            int previousStyle=activity.tileStyle;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";
+                activity.theme=0;
+                activity.tileStyle=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int coral=bitmap.getPixel(200,270);
+                    int teal=bitmap.getPixel(600,280);
+                    int blue=bitmap.getPixel(140,600);
+                    // These are measured interior sample locations in
+                    // the owner's unscaled 941x1672 illustration; they
+                    // intentionally exclude the white tile numerals.
+                    assertTrue("Coral face must not be pale pink",
+                        android.graphics.Color.red(coral)>=245&&
+                        android.graphics.Color.blue(coral)<=108);
+                    assertTrue("Turquoise face must retain blue/green depth",
+                        android.graphics.Color.green(teal)>=205&&
+                        android.graphics.Color.blue(teal)>=195);
+                    assertTrue("Blue face must remain vivid",
+                        android.graphics.Color.blue(blue)>=238);
+                    assertEquals("Splash cannot add scroll",0f,
+                        view.maxScroll,.01f);
+                    captureReference(activity,view,
+                        "splash-saturated-faces-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.tileStyle=previousStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashSourceCoralSloganKeepsTallStrongLettering(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;int oldTheme=activity.theme;
