@@ -1386,9 +1386,18 @@ public final class MainActivity extends ComponentActivity {
             // Landscape phones and resizable tablets must keep the whole
             // interaction region reachable; portrait stays pixel-identical.
             boolean landscape=usableWidth>usableHeight;
-            scale=landscape?Math.min(usableWidth/400f,usableHeight/720f):
+            // Landscape Splash must fit the complete 880-unit scene.
+            // Other landscape screens retain touch-sized controls and scroll
+            // if their 880-unit content is taller than the available window.
+            scale=landscape?Math.min(usableWidth/400f,
+                usableHeight/(page.equals("splash")?880f:720f)):
                 (compact?usableWidth/400f:
                     Math.min(usableWidth/400f,usableHeight/880f));
+            // A 320x480 compact phone cannot fit the 628-unit slogan with
+            // pure width scaling. Cap only Splash; the 941x1672 design
+            // reference and its native positions remain unchanged.
+            if(page.equals("splash")&&compact)
+                scale=Math.min(scale,usableHeight/640f);
             float contentHeight=page.equals("stats")?
                 (referencePortraitLayout?
                     (statsTouchExploration()?
@@ -1411,11 +1420,13 @@ public final class MainActivity extends ComponentActivity {
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
-                (compact?Math.max(0,contentHeight-usableHeight/scale):0);
+                ((compact||landscape)?
+                    Math.max(0,contentHeight-usableHeight/scale):0);
             if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
             scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
             offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
-            offY=compact?getPaddingTop()-scrollOffset*scale:
+            offY=(compact||landscape&&!page.equals("splash"))?
+                getPaddingTop()-scrollOffset*scale:
                 getPaddingTop()+(usableHeight-880*scale)/2f;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             taps.clear();
