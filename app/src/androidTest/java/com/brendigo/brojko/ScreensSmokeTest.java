@@ -3693,6 +3693,76 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void daily3000PointStarMatchesSourceGoldAreaAndKeepsRealGoal(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDaily=activity.lastDaily;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldStreak=activity.streak;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                // Deterministic reference-only fixture; no write to disk.
+                activity.page="daily";activity.theme=0;
+                activity.tileStyle=0;activity.lastDaily="";
+                activity.streak=7;activity.game=null;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bitmap));
+                    int goldenPixels=0;
+                    long sumX=0L,sumY=0L;
+                    // Original gold star: 4063 saturated gold pixels
+                    // inside this exact unscaled source reference box.
+                    for(int y=1080;y<1210;y++)
+                        for(int x=60;x<195;x++){
+                            int color=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>190&&green>90&&blue<155&&
+                                    red>green+24){
+                                goldenPixels++;
+                                sumX+=x;
+                                sumY+=y;
+                            }
+                        }
+                    assertTrue("Second goal star must have saturated gold fill",
+                        goldenPixels>2900);
+                    assertTrue("Gold shape must not bleed into goal text",
+                        goldenPixels<6000);
+                    float cx=sumX/(float)goldenPixels;
+                    float cy=sumY/(float)goldenPixels;
+                    assertEquals("Gold star source horizontal centroid",
+                        146.6f,cx,11f);
+                    assertEquals("Gold star source vertical centroid",
+                        1150.6f,cy,11f);
+                    int help=0;
+                    for(MainActivity.BoardScreen.Tap t:board.taps)
+                        if("Pomoć za cilj: Ostvari 3000 bodova".equals(t.label))
+                            help++;
+                    assertEquals("3000-point goal help must remain clickable",
+                        1,help);
+                    assertNull("Drawing must not fabricate a live daily game",
+                        activity.game);
+                    assertEquals("Drawing cannot change streak",7,
+                        activity.streak);
+                    captureReference(activity,board,
+                        "daily-goal-3000-gold-star-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.streak=oldStreak;
+                activity.lastDaily=oldDaily;activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyGoal256UsesCompactSourceSizedNumeral(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page,oldDay=activity.lastDaily;
