@@ -4662,6 +4662,20 @@ public class ScreensSmokeTest {
                         android.graphics.Color.green(cta)>=70 &&
                         android.graphics.Color.green(cta)<=170 &&
                         android.graphics.Color.blue(cta)<125);
+                    int bravoNavy=0;
+                    for(int y=510;y<750;y++)
+                        for(int x=240;x<790;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<100&&green<140&&blue<170&&blue>red)
+                                bravoNavy++;
+                        }
+                    // Owner Bravo! reference mask: 32,716 native px;
+                    // previous real emulator mask: 28,048.
+                    assertTrue("Victory heading source-like navy weight: "+
+                        bravoNavy,bravoNavy>=29400&&bravoNavy<=38000);
                     int reachable=0;
                     for(MainActivity.BoardScreen.Tap tap:view.taps){
                         if("Nastavi igrati".equals(tap.label)||
