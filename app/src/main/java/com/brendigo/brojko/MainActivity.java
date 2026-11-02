@@ -83,7 +83,9 @@ public final class MainActivity extends ComponentActivity {
     // A single cancellable callback prevents obsolete Activities from
     // navigating after a rotation, split-screen resize or recreation.
     final Runnable finishSplash=()->{
-        if("splash".equals(page))navigate("home");
+        // Explicit instance access also avoids a Java illegal-forward-
+        // reference when the page field is initialized below.
+        if("splash".equals(this.page))navigate("home");
     };
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
