@@ -1508,18 +1508,41 @@ public final class MainActivity extends ComponentActivity {
                                 float radius,int color){
             // Native illustration-like extrusion and highlight. Other
             // screens continue using their established styledTile renderer.
+            // Source artwork is notably more saturated than the ordinary
+            // gameplay palette. Apply the measured face hues ONLY to the
+            // light Splash illustration; real game tiles stay unchanged.
+            int faceTop=lighten(color,.20f);
+            int faceBottom=darken(color,.035f);
+            int extrusion=darken(color,.13f);
+            if(theme==0){
+                if(color==TILES[1]){           // 2 · coral
+                    faceTop=0xffff9464;faceBottom=0xffff5a3d;
+                    extrusion=0xffea453a;
+                }else if(color==TILES[2]){    // 4 · turquoise
+                    faceTop=0xff3ee5dc;faceBottom=0xff0fc2bd;
+                    extrusion=0xff0baba5;
+                }else if(color==TILES[3]){    // 8 · blue
+                    faceTop=0xff5bb1ff;faceBottom=0xff278feb;
+                    extrusion=0xff1e76cc;
+                }else if(color==TILES[4]){    // 16 · yellow
+                    faceTop=0xffffd26e;faceBottom=0xffffae42;
+                    extrusion=0xffdf8d25;
+                }else if(color==TILES[7]){    // 64 · purple
+                    faceTop=0xffd67af6;faceBottom=0xffac4de2;
+                    extrusion=0xff8d42cc;
+                }
+            }
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
             p.setShader(null);p.setColor(0xfff8eee2);
             p.setShadowLayer(13f,0f,7f,0x3ca9835a);
             c.drawRoundRect(x+1.7f,y+2.4f,x+w+1.2f,y+h+1.8f,
                 radius,radius,p);
             p.clearShadowLayer();
-            shape(x+1f,y+4.5f,w-1f,h-3f,radius,darken(color,.13f));
+            shape(x+1f,y+4.5f,w-1f,h-3f,radius,extrusion);
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,w,h-4f,radius,
-                lighten(color,.20f),darken(color,.035f));
+            gradient(x,y,w,h-4f,radius,faceTop,faceBottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(1.5f);p.setColor(0x77ffffff);
+            p.setStrokeWidth(1.15f);p.setColor(0x48ffffff);
             c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
                 radius-2,radius-2,p);
             p.setStrokeWidth(1.8f);p.setColor(0x42ffffff);
