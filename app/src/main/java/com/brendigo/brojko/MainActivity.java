@@ -1579,6 +1579,26 @@ public final class MainActivity extends ComponentActivity {
             c.drawText("256",364,726,p);
             p.clearShadowLayer();c.restore();
         }
+        // Logo-specific, rounded fill+stroke reproduces the extra
+        // counterweight visible in the owner's painted wordmark. Using
+        // normal txt() elsewhere keeps Croatian UI labels unchanged.
+        void raisedWordmarkLetters(String letters,float cx,float baseline,
+                                   float size,int color){
+            if(theme!=0){
+                txt(letters,cx,baseline,size,color,true);
+                return;
+            }
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextScaleX(1f);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(1.8f);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setColor(color);
+            c.drawText(letters,cx,baseline,p);
+            p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
+        }
         // Splash-only wordmark: the source uses wider rounded lettering,
         // a shorter coral number tile and three pronounced accent strokes.
         // Never substitute a reference bitmap: draw each part natively so
@@ -1603,7 +1623,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-10.6f,0);
             c.scale(1.185f,1f,3.6f,y);
-            txt("Br",start+left/2f,y,size,wordmarkInk,true);
+            raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1627,7 +1647,7 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.translate(-36.2f,0);
             c.scale(1.25f,.92f,228f,316f);
-            txt("jko",bx+tile+gap+right/2f,y,size,wordmarkInk,true);
+            raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
             c.restore();
             c.restore();
 
