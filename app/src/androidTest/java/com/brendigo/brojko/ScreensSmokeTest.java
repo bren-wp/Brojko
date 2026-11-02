@@ -2397,6 +2397,21 @@ public class ScreensSmokeTest {
                     assertTrue("First coral tile must have a narrow source highlight",
                         android.graphics.Color.green(highlight)>
                             android.graphics.Color.green(body)+20);
+                    int navyHeadingPixels=0;
+                    for(int y=180;y<330;y++)
+                        for(int x=30;x<485;x++){
+                            int pixel=pixels.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<100&&green<140&&blue<170&&blue>red)
+                                navyHeadingPixels++;
+                        }
+                    // Owner Classic heading ROI has 17,176 navy pixels;
+                    // earlier real emulator had only 13,731.
+                    assertTrue("Source-like Classic 4x4 heading coverage: "+
+                        navyHeadingPixels,navyHeadingPixels>=14500&&
+                        navyHeadingPixels<=23000);
                     int controls=0;
                     for(MainActivity.BoardScreen.Tap tap:board.taps)
                         if("Novo".equals(tap.label)||
