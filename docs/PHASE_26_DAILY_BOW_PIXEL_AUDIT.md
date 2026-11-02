@@ -66,3 +66,21 @@ U izvornom Java/Canvas `dailyGoalRow()` veličina fonta broja 256 smanjena je s 
 Novi `dailyGoal256UsesCompactSourceSizedNumeral` instrumentacijski test izravno čita stvarne piksele determinističkog emulator fixturea na 941 × 1672, provjerava da bijeli natpis ostaje čitljiv, ali ne prepunjava pločicu, i sprema stvarni `daily-goal-256-compact-941x1672.png`. Screenshot validator zahtijeva tu novu PNG datoteku.
 
 **Prethodnih 617/1168 piksela nisu rezultati nove izmjene.** Za prihvaćanje je potrebno preuzeti posljednji screenshot QA ZIP i izračunati isti maskirani broj, RGB MAE ciljne pločice i cijelog zaslona. PR ostaje Draft, bez mergea ili nove objave, sve dok ne bude potvrđena nova snimka.
+
+
+## Faza 28 — zvjezdica cilja „Ostvari 3000 bodova”
+
+Nastavak na istoj otvorenoj razvojnoj grani i u Draft PR-u #35. Izvornik `Slika ChatGPT 24. lis 2026. 22_15_15-6(20261101-200916).png` i stvarni emulator screenshot `daily-goal-256-compact-941x1672.png` posljednjeg uspješnog QA-a imaju točno 941 × 1672 px i odgovarajući fixture. Nisu skalirani niti pomicani.
+
+U izvornom drugom dnevnom cilju nagradna zvjezdica ima **puni, izdignuti zlatni volumen**. Stvarni prikaz u Android rendereru bio je blijed, uži i blago previsoko/lijevo. U istom ROI-u `[60,1080,195,1210)`, uz zasićenu zlatnu masku `R>190 && G>90 && B<155 && R>G+24`, izvorni PNG ima **4063 piksela**, a prethodni emulator **2582**. Izvorni maskirani centroid je približno (146,64; 1150,63), a prethodni (142,04; 1146,28). Polazni RGB MAE ovog ROI-a je **16,024**.
+
+**Stvarna promjena:** u postojećem nativnom Java/Canvas rendereru za svijetlu portretnu Dnevnu igru povećana je ciljna zlatna zvjezdica s 35 na 38,5 logičkih jedinica, pomaknuta približno 2 jedinice udesno i 1 dolje, produbljena je zlatna ispuna i smanjen bijeli sjaj. Zaobljene petokrake dobile su jači volumen i manje šiljaste rubove. Ostale zvjezdice, druge teme, nagrade, vrijednost cilja, pravilnik igre i svi korisnički podaci zadržavaju postojeće ponašanje.
+
+Instrumentacijski test `daily3000PointStarMatchesSourceGoldAreaAndKeepsRealGoal` prikazuje pravi Android Canvas u 941 × 1672, mjeri broj i centroid zlatnih piksela, provjerava funkcionalnu pomoć druge misije, da iscrtavanje nije pokrenulo lažnu igru ili promijenilo streak te snima `daily-goal-3000-gold-star-941x1672.png`. Validator zahtijeva novu stvarnu snimku.
+
+- [ ] Sva tri obavezna workflowa uspješna na **posljednjem HEAD-u**.
+- [ ] Novi RGB MAE, maska i centroid iz posljednjeg stvarnog emulator artefakta.
+- [ ] Korekcija u istom PR-u ako test ili regionalna usporedba pokažu regresiju.
+- [ ] Ostali zasloni i UI stanja ostaju otvoreni za budući pixel audit.
+
+Nijedan rezultat nove izmjene ne smije se navesti kao potvrđen prije stvarnog screenshot QA-a. Nema mergea ni izdanja. Izmjerena blizina reference nije automatski 1:1.
