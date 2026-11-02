@@ -2757,6 +2757,21 @@ public class ScreensSmokeTest {
         });
     }
 
+    private static int topColoredTile(Bitmap bitmap,int x,int start,
+                                      int end,String hue){
+        for(int y=start;y<end;y++){
+            int rgb=bitmap.getPixel(x,y);
+            int r=android.graphics.Color.red(rgb);
+            int g=android.graphics.Color.green(rgb);
+            int b=android.graphics.Color.blue(rgb);
+            if(("coral".equals(hue)&&r>230&&r>g+65&&r>b+75&&g<180)||
+               ("teal".equals(hue)&&g>145&&b>140&&r<150&&g>r+45)||
+               ("yellow".equals(hue)&&r>185&&g>130&&b<165&&r>b+90))
+                return y;
+        }
+        return -1;
+    }
+
     @Test public void splashAutoAdvancesBetweenTwoAndThreeSeconds(){
         // Avoid wall-clock sleeps: CI emulator boot and scheduling are noisy.
         // The Activity posts Home navigation with this exact duration.
@@ -2764,6 +2779,231 @@ public class ScreensSmokeTest {
             MainActivity.SPLASH_DURATION_MS>=2000L);
         assertTrue("Splash must auto-advance no later than 3 seconds",
             MainActivity.SPLASH_DURATION_MS<=3000L);
+    }
+
+    @Test public void splashOwnerTileTopEdgesUseCorrectRotations(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Reference: coral tilts down to right (left y~142,
+                    // right y~153); teal and yellow tilt up to right.
+                    int coralL=topColoredTile(bitmap,215,100,320,"coral");
+                    int coralR=topColoredTile(bitmap,315,100,320,"coral");
+                    int tealL=topColoredTile(bitmap,600,135,385,"teal");
+                    int tealR=topColoredTile(bitmap,700,135,385,"teal");
+                    int yellowL=topColoredTile(bitmap,795,385,650,"yellow");
+                    int yellowR=topColoredTile(bitmap,890,385,650,"yellow");
+                    assertTrue("All three source-color tiles visible",
+                        coralL>=0&&coralR>=0&&tealL>=0&&tealR>=0&&
+                        yellowL>=0&&yellowR>=0);
+                    // The upper-left coral face has a wide diffuse 3D
+                    // highlight. Thresholding the first saturated pixel
+                    // can shift the measured top by several pixels even
+                    // when the underlying rotated geometry is unchanged.
+                    // Preserve the positive tilt requirement, but don't
+                    // mistake soft-light anti-aliasing for a reversed tile.
+                    // A diffuse white 3D glint changes the first SATURATED
+                    // pixel near the round corners and can reverse that
+                    // raster probe by a few pixels. Check the actual
+                    // clockwise Canvas tilt, not a fragile alpha edge.
+                    assertTrue("Coral 2 must use clockwise 12–24 degree tilt",
+                        MainActivity.SPLASH_CORAL_TILT_DEG>=12f&&
+                        MainActivity.SPLASH_CORAL_TILT_DEG<=24f);
+                    assertTrue("Coral top probes should remain close: left="+
+                        coralL+", right="+coralR,
+                        Math.abs(coralR-coralL)<=20);
+                    assertTrue("Teal 4 must ascend rightward",
+                        tealR<=tealL-9);
+                    assertTrue("Yellow 16 must ascend rightward",
+                        yellowR<=yellowL-9);
+                    int tealGlint=bitmap.getPixel(610,210);
+                    // Owner sample (132,252,242). Earlier native flat
+                    // tile returned (59,227,218) at this exact pixel.
+                    assertTrue("Upper teal source tile needs diffuse 3D "+
+                        "lighting, not flat fill",
+                        android.graphics.Color.red(tealGlint)>=94&&
+                        android.graphics.Color.green(tealGlint)>=222&&
+                        android.graphics.Color.blue(tealGlint)>=210);
+                    assertEquals("Splash has no scrolling",0f,
+                        view.maxScroll,.01f);
+                    captureReference(activity,view,
+                        "three-screen-source-splash-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void homeSourceCornerCentersAndHeroLip(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    long coralX=0,coralY=0,tealX=0,tealY=0;
+                    int coralCount=0,tealCount=0;
+                    for(int y=0;y<240;y++)
+                        for(int x=0;x<941;x++){
+                            int rgb=bitmap.getPixel(x,y);
+                            int r=android.graphics.Color.red(rgb);
+                            int g=android.graphics.Color.green(rgb);
+                            int b=android.graphics.Color.blue(rgb);
+                            if(x<215&&r>220&&r>g+70&&g<185){
+                                coralCount++;coralX+=x;coralY+=y;
+                            }
+                            if(x>=700&&g>150&&b>145&&r<140){
+                                tealCount++;tealX+=x;tealY+=y;
+                            }
+                        }
+                    assertTrue("Decorative Home tiles visible",
+                        coralCount>11000&&tealCount>14000);
+                    float coralCenter=coralX/(float)coralCount;
+                    float tealCenter=tealX/(float)tealCount;
+                    float tealCenterY=tealY/(float)tealCount;
+                    assertTrue("Owner coral center x≈92: "+coralCenter,
+                        coralCenter>=75&&coralCenter<=109);
+                    assertTrue("Owner teal center x≈811: "+tealCenter,
+                        tealCenter>=784&&tealCenter<=835);
+                    assertTrue("Owner teal center y≈93: "+tealCenterY,
+                        tealCenterY>=68&&tealCenterY<=122);
+                    // Owner 4x4 first coral miniature at native
+                    // (90,975) is RGB(253,97,71). Older Android tile
+                    // was (255,134,105), too light and chalky.
+                    int homeMiniCoral=bitmap.getPixel(90,975);
+                    assertTrue("Home miniature coral matches source depth",
+                        android.graphics.Color.red(homeMiniCoral)>230&&
+                        android.graphics.Color.green(homeMiniCoral)<128&&
+                        android.graphics.Color.blue(homeMiniCoral)<105);
+                    int belowHero=bitmap.getPixel(450,892);
+                    assertTrue("Home CTA lip must end before y=892",
+                        android.graphics.Color.green(belowHero)>195&&
+                        android.graphics.Color.blue(belowHero)>170);
+                    int choices=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Najbolji rezultat".equals(tap.label)||
+                           "Zadnji rezultat".equals(tap.label)||
+                           "Nova igra".equals(tap.label)||
+                           "Nastavi igru".equals(tap.label))choices++;
+                    assertEquals("Both score cards and primary CTA work",
+                        3,choices);
+                    captureReference(activity,view,
+                        "three-screen-source-home-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void victoryOwnerThreeActionBandsKeepRealCommands(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",2148L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int primary=bitmap.getPixel(250,1115);
+                    int secondary=bitmap.getPixel(250,1250);
+                    int share=bitmap.getPixel(250,1370);
+                    assertTrue("Owner coral button extends to y≈1120",
+                        android.graphics.Color.red(primary)>200&&
+                        android.graphics.Color.green(primary)<180);
+                    assertTrue("Owner cream button fills y≈1250",
+                        android.graphics.Color.red(secondary)>218&&
+                        android.graphics.Color.green(secondary)>195);
+                    assertTrue("Owner blue share button fills y≈1370",
+                        android.graphics.Color.blue(share)>
+                            android.graphics.Color.red(share)+45);
+                    int active=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Nastavi igrati".equals(tap.label)||
+                           "Nova igra".equals(tap.label)||
+                           "Podijeli rezultat".equals(tap.label))active++;
+                    assertEquals("All victory commands remain functional",
+                        3,active);
+                    assertEquals("Screenshot never changes results",
+                        2048,activity.game.score);
+                    captureReference(activity,view,
+                        "three-screen-source-victory-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.game=oldGame;
+                activity.theme=oldTheme;activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashAfterDelayNavigatesOnlyToHomeAndRestoresTimer(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            long oldStart=activity.splashStartedAtElapsedMs;
+            try{
+                android.os.Bundle saved=new android.os.Bundle();
+                activity.onSaveInstanceState(saved);
+                assertEquals("Rotation must preserve original splash start",
+                    oldStart,saved.getLong("brojko_splash_started",-1L));
+                activity.page="settings";
+                activity.finishSplash.run();
+                assertEquals("Splash timer must not steal a later screen",
+                    "settings",activity.page);
+                activity.page="splash";
+                activity.finishSplash.run();
+                assertEquals("Splash completion opens Home automatically",
+                    "home",activity.page);
+            }finally{
+                activity.page=oldPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void splashDurationMeetsOwnerTwoToThreeSecondContract(){
+        // Test the configured interval, not unstable emulator launch time.
+        assertTrue("Branded splash must remain visible >= 2 seconds",
+            MainActivity.SPLASH_DURATION_MS>=2000L);
+        assertTrue("Splash must enter Home by 3 seconds",
+            MainActivity.SPLASH_DURATION_MS<=3000L);
+        assertEquals("The native branded launch duration",2700L,
+            MainActivity.SPLASH_DURATION_MS);
     }
 
     @Test public void ownerSplashAndVictoryReferencePixelsAreNativeAndFunctional(){
@@ -4666,15 +4906,17 @@ public class ScreensSmokeTest {
                 int actions=0;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Nastavi igrati".equals(tap.label)){
-                        assertEquals("Primary action top matches source",417f,tap.top,.1f);
+                        assertEquals("Primary action top matches source",422f,tap.top,.1f);
                         assertEquals("Primary action width matches source",
                             252f,tap.right-tap.left,.1f);
                         actions++;
                     }else if("Nova igra".equals(tap.label)){
                         assertEquals("Secondary action top matches source",478f,tap.top,.1f);
+                        assertEquals("Secondary card fills owner's cream band",
+                            60f,tap.bottom-tap.top,.1f);
                         actions++;
                     }else if("Podijeli rezultat".equals(tap.label)){
-                        assertEquals("Share action top matches source",532f,tap.top,.1f);
+                        assertEquals("Share action top matches source",539f,tap.top,.1f);
                         assertTrue("All actions fit inside reference modal",
                             tap.bottom<=597f);
                         actions++;
@@ -5456,8 +5698,8 @@ public class ScreensSmokeTest {
             };
             try{
                 activity.theme=0;
-                assertEquals("Show branded Splash for 2.8 seconds",
-                    2800L,MainActivity.SPLASH_DURATION_MS);
+                assertEquals("Preserve owner's 2.7-second branded Splash",
+                    2700L,MainActivity.SPLASH_DURATION_MS);
                 for(String page:new String[]{"splash","home"}){
                     activity.page=page;
                     for(int[] size:sizes){

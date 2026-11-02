@@ -78,9 +78,20 @@ public final class MainActivity extends ComponentActivity {
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
-    // Keep the supplied Brojko Splash on screen for 2–3 seconds before Home.
-    // 2800 ms is long enough to read the logo without a 3.2-second delay.
-    static final long SPLASH_DURATION_MS=2800L;
+    // Keep the supplied full-screen branding visible for 2–3 seconds,
+    // then automatically enter Home. Never hold the player on Splash
+    // longer than needed; display data are prepared off this timer.
+    static final long SPLASH_DURATION_MS=2700L;
+    // Source artwork's coral 2 top edge is rotated clockwise, down to the right.
+    static final float SPLASH_CORAL_TILT_DEG=18f;
+    long splashStartedAtElapsedMs=android.os.SystemClock.elapsedRealtime();
+    // A single cancellable callback prevents obsolete Activities from
+    // navigating after a rotation, split-screen resize or recreation.
+    final Runnable finishSplash=()->{
+        // Explicit instance access also avoids a Java illegal-forward-
+        // reference when the page field is initialized below.
+        if("splash".equals(this.page))navigate("home");
+    };
     String page="splash", pendingMode="classic";
     int selectedHistoryIndex=0;
     int chartMetric=0;
@@ -139,6 +150,9 @@ public final class MainActivity extends ComponentActivity {
         }catch(Exception ignored){game=null;}
         float restoredScroll=0f;
         if(bundle!=null){
+            // Rotation must NOT restart the full 2.7-second brand timer.
+            splashStartedAtElapsedMs=bundle.getLong("brojko_splash_started",
+                android.os.SystemClock.elapsedRealtime());
             String restored=bundle.getString("brojko_game", "");
             if(!restored.isEmpty()){
                 try{game=TileGame.fromJson(new JSONObject(restored));}
@@ -155,9 +169,12 @@ public final class MainActivity extends ComponentActivity {
         }
         screen=new BoardScreen(this);setContentView(screen);
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
-        screen.postDelayed(()->{
-            if("splash".equals(page))navigate("home");
-        },SPLASH_DURATION_MS);
+        if("splash".equals(page)){
+            long elapsed=Math.max(0L,android.os.SystemClock.elapsedRealtime()-
+                splashStartedAtElapsedMs);
+            long remaining=Math.max(0L,SPLASH_DURATION_MS-elapsed);
+            screen.postDelayed(finishSplash,remaining);
+        }
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
@@ -616,6 +633,7 @@ public final class MainActivity extends ComponentActivity {
         // Keep the current game, page and scroll offset rather than returning
         // to the splash screen or losing the active move after rotation.
         out.putString("brojko_page",page);
+        out.putLong("brojko_splash_started",splashStartedAtElapsedMs);
         out.putString("brojko_mode",pendingMode);
         out.putInt("brojko_history_index",selectedHistoryIndex);
         out.putInt("brojko_chart_metric",chartMetric);
@@ -627,7 +645,11 @@ public final class MainActivity extends ComponentActivity {
         if(!skipPersistOnPauseAfterImport)persist();
         super.onPause();
     }
-    @Override protected void onDestroy(){if(tones!=null){tones.release();tones=null;}super.onDestroy();}
+    @Override protected void onDestroy(){
+        if(screen!=null)screen.removeCallbacks(finishSplash);
+        if(tones!=null){tones.release();tones=null;}
+        super.onDestroy();
+    }
 
     final class BoardScreen extends View {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
@@ -1235,7 +1257,9 @@ public final class MainActivity extends ComponentActivity {
                     "Nastavi igrati".equals(label);
                 boolean victoryShare=page.equals("win")&&
                     "Podijeli rezultat".equals(label);
-                float lip=flatDaily?2.5f:homeHero?6f:
+                // Source Home CTA ends near y=879px, whereas the old
+                // 6-unit extrusion extended to ~895px at 941x1672.
+                float lip=flatDaily?2.5f:homeHero?1f:
                     (victoryPrimary||victoryShare?2.7f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
@@ -1545,6 +1569,23 @@ public final class MainActivity extends ComponentActivity {
             shape(x+1f,y+4.5f,w-1f,h-3f,radius,extrusion);
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-4f,radius,faceTop,faceBottom);
+            // The owner source uses a broad *diffuse* 3D light on the
+            // upper-left corner of coral and turquoise tiles. The
+            // previous straight top-to-bottom shader was too flat there
+            // (teal RGB at native 610,210: 59,227,218 vs owner
+            // 132,252,242). Add only a fading highlight; do not change
+            // the tile silhouette, game tiles or hit areas.
+            if(theme==0&&referencePortraitLayout&&
+                (color==TILES[1]||color==TILES[2])){
+                p.setStyle(Paint.Style.FILL);
+                p.setColor(WHITE);
+                p.setShader(new android.graphics.RadialGradient(
+                    x+w*.13f,y+h*.11f,w*.62f,
+                    new int[]{0x65ffffff,0x17ffffff,0x00ffffff},
+                    new float[]{0f,.47f,1f},Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-4f,radius,radius,p);
+                p.setShader(null);
+            }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(1.15f);p.setColor(0x48ffffff);
             c.drawRoundRect(x+2,y+1.6f,x+w-2,y+h-6.7f,
@@ -1680,16 +1721,20 @@ public final class MainActivity extends ComponentActivity {
                 splashAccentStroke(36,88,49,94,CORAL);
                 splashAccentStroke(341,77,335,92,TEAL);
                 splashAccentStroke(349,100,336,104,TEAL);
-                c.save();c.rotate(-18,115,111);
+                // Owner artwork: coral tile top edge descends to the right.
+                // The old negative rotation inverted its 3D perspective.
+                c.save();c.rotate(SPLASH_CORAL_TILT_DEG,115,111);
                 splashFloatingTile(63,62,104,101,24,TILES[1]);
                 txt("2",115,134,57,WHITE,true);c.restore();
-                c.save();c.rotate(17,289,123);
+                // Owner artwork: turquoise top edge ascends to the right.
+                c.save();c.rotate(-17,289,123);
                 splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
                 c.save();c.rotate(-17,42,236);
                 splashFloatingTile(-12,187,106,100,22,TILES[3]);
                 txt("8",42,256,56,WHITE,true);c.restore();
-                c.save();c.rotate(18,374,234);
+                // Owner artwork: yellow tile leans counterclockwise.
+                c.save();c.rotate(-18,374,234);
                 splashFloatingTile(323,182,104,104,24,TILES[4]);
                 txt("16",375,255,46,WHITE,true);c.restore();
                 splashAccentStroke(92,499,102,507,CORAL);
@@ -1790,9 +1835,13 @@ public final class MainActivity extends ComponentActivity {
         }
         void home(){
             boolean portrait=referencePortraitLayout;
-            c.save();c.rotate(-16,35,76);
+            // Source top corners: warm coral centroid x≈92,y≈102;
+            // turquoise centroid x≈811,y≈93. Older native PNG had
+            // x≈83,y≈105 and x≈855,y≈109. Translate ONLY their
+            // decorative Canvas transforms; interactive cards stay put.
+            c.save();c.translate(4f,-1.4f);c.rotate(-16,35,76);
             homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
-            c.save();c.rotate(15,365,56);
+            c.save();c.translate(-18f,-7f);c.rotate(15,365,56);
             homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
             homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
@@ -1885,6 +1934,34 @@ public final class MainActivity extends ComponentActivity {
                 portrait?11:12,w-6,muted);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
+        // The 4×4 miniature on the owner's Home has softer contours
+        // and stronger saturation than gameplay tiles. It must remain
+        // a purely decorative grid, with no changes to the engine.
+        void homeClassicPreviewTile(float x,float y,float side,int color){
+            int top=lighten(color,.02f),bottom=darken(color,.09f);
+            if(color==TILES[1]||color==TILES[5]){
+                top=0xffff825f;bottom=0xffff634c;
+            }else if(color==TILES[2]||color==TILES[10]){
+                top=0xff52e6d5;bottom=0xff1dc4b2;
+            }else if(color==TILES[3]||color==TILES[9]){
+                top=0xff5ab2ff;bottom=0xff258eed;
+            }else if(color==TILES[4]||color==TILES[11]){
+                top=0xffffd36d;bottom=0xffffb03e;
+            }else if(color==TILES[7]||color==TILES[8]){
+                top=0xffce75f4;bottom=0xff9b4ee0;
+            }
+            float radius=5.0f;
+            // Shallow bevel with light ambient shadow rather than the
+            // hard double-white keyline of a real gameplay tile.
+            shape(x+.6f,y+2f,side-.9f,side-1f,radius,
+                darken(bottom,.12f));
+            gradient(x,y,side,side-2f,radius,top,bottom);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.45f);p.setColor(0x42ffffff);
+            c.drawRoundRect(x+1f,y+.8f,x+side-1f,y+side-3.3f,
+                radius-1f,radius-1f,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
+        }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
             boolean portrait=referencePortraitLayout;
@@ -1924,7 +2001,9 @@ public final class MainActivity extends ComponentActivity {
                     float py=top+(i/cols)*(side+space);
                     int v=values[Math.min(values.length-1,i)];
                     int col=cols==5?relaxedPreview[i]:tileColor(v);
-                    glossyTile(px,py,side,side,4,col);
+                    if(sourceClassic)
+                        homeClassicPreviewTile(px,py,side,col);
+                    else glossyTile(px,py,side,side,4,col);
                     if(cols==4)fitted(""+v,px+side/2,py+side*.67f,
                         v>99?8.4f:12,side-2,WHITE,true);
                 }
@@ -2493,12 +2572,16 @@ public final class MainActivity extends ComponentActivity {
             fitted(fmt(game.score),136,392,35,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
             for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
-            button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
+            // The owner's 941x1672 overlay has three almost touching
+            // action bands: coral y~994..1120, cream y~1122..1267,
+            // blue y~1269..1377. Old native buttons floated too high,
+            // especially the short cream row; keep every action live.
+            button("Nastavi igrati","play",74,422,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
-            button("Nova igra","refresh",74,478,252,49,card,false,
+            button("Nova igra","refresh",74,478,252,60,card,false,
                 ()->newGame(game.mode));
-            button("Podijeli rezultat","share",74,532,252,49,
+            button("Podijeli rezultat","share",74,539,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // There is no separately supplied owner's Game Over PNG. Keep the
