@@ -3364,11 +3364,12 @@ public final class MainActivity extends ComponentActivity {
             else txt("Tjedne",105,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
                 playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
-            missionRow("Ostvari 10.000 bodova ukupno","Skupljaj bodove tijekom tjedna",
+            missionRow("Ostvari 10.000 bodova ukupno",
+                "Skupi ukupno 10.000 bodova u svim igrama.",
                 weekPoints,10000,200,portrait?434:516,0xffff934b);
             if(portrait&&theme==0)missionSectionTitle("Postignuća",550f,16.1f);
             else txt("Postignuća",132,portrait?542:638,23,ink,true);
-            missionRow("Majstor spajanja","Dosegni pločicu 1024",
+            missionRow("Majstor spajanja","Ostvari pločicu 1024.",
                 recordTile,1024,500,portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
                 best,50000,1000,portrait?627:741,0xffff934b);
@@ -3434,6 +3435,12 @@ public final class MainActivity extends ComponentActivity {
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
                 leftFitted("opcije poništi potez.",103,
                     y+(portrait?46:55),portrait?10:11,177,muted,false);
+            }else if(portrait&&name.startsWith("Ostvari 10.000")){
+                // Two source lines avoid the previously shortened and
+                // misleading one-line mission subtitle.
+                leftFitted("Skupi ukupno 10.000 bodova u svim",103,
+                    y+38,11.5f,178,muted,false);
+                leftFitted("igrama.",103,y+50,11.5f,177,muted,false);
             }else{
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
@@ -3441,7 +3448,13 @@ public final class MainActivity extends ComponentActivity {
             // Thicker progress track and a separate adjacent counter: the
             // reference places progress and 12 / 20 on a common baseline.
             float progressY=y+(portrait?50:59);
-            shape(104,progressY,151,7,4,
+            // Owner's 941x1672 source has two progress widths:
+            // standard tasks end at x≈631px, while 10k/50k score
+            // counters need more room and end near x≈573px.
+            // Only the light portrait illustration uses these widths.
+            float barWidth=(portrait&&theme==0)?
+                (target>=10000?140f:164f):151f;
+            shape(104,progressY,barWidth,7,4,
                 theme==1?0xff40516c:0xffdce3e8);
             // "Majstor" is an unlock, not an incremental reward. Keep
             // the filled bar consistent with its 0/1 or 1/1 counter:
@@ -3459,11 +3472,14 @@ public final class MainActivity extends ComponentActivity {
                 else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
             }
             if(fraction>0)shape(104,progressY,
-                151*fraction,7,4,progressAccent);
+                barWidth*fraction,7,4,progressAccent);
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
-                270,y+(portrait?59:68),11,45,muted,true);
+                portrait&&theme==0?(target>=10000?284:294):270,
+                y+(portrait?59:68),11,
+                portrait&&theme==0?(target>=10000?60:42):45,
+                muted,true);
             // Narrower, right-aligned reward bay matches the source card
             // and gives the adjacent real-progress counter enough space.
             // Golden stars in the owner image sit slightly to the right
