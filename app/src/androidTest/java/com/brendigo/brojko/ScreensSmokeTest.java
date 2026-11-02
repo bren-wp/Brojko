@@ -4825,9 +4825,16 @@ public class ScreensSmokeTest {
                     assertTrue("Home top-left tile should be warm coral",
                         android.graphics.Color.red(coral)>235&&
                         android.graphics.Color.blue(coral)<115);
-                    assertTrue("Home top-right tile should stay vivid teal",
-                        android.graphics.Color.green(teal)>205&&
-                        android.graphics.Color.blue(teal)>195);
+                    // Owner's unscaled image at (820,135) is RGB
+                    // (41,212,202). The previous real emulator had
+                    // (57,199,186); the improved one (27,203,197).
+                    // Compare channels to the owner source with an
+                    // explicit rasterization tolerance, not a green
+                    // threshold above the actual successful render.
+                    assertTrue("Home teal must match owner source RGB",
+                        Math.abs(android.graphics.Color.red(teal)-41)<=22&&
+                        Math.abs(android.graphics.Color.green(teal)-212)<=18&&
+                        Math.abs(android.graphics.Color.blue(teal)-202)<=14);
                     int modeCards=0,shortcuts=0;
                     for(MainActivity.BoardScreen.Tap tap:view.taps){
                         if(tap.label.startsWith("Klasično ")||
