@@ -1955,7 +1955,18 @@ public final class MainActivity extends ComponentActivity {
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
                 c.scale(1f,1.40f,105f,60f);
-                fitted("Klasično",105,89,43,201,ink,true);
+                // Source's rounded Classic heading has more navy ink
+                // within almost identical outer bounds. The general
+                // typography and other modes retain their normal fitted().
+                float headingSize=43f;
+                p.setTextScaleX(1f);p.setTypeface(displayFont);
+                p.setTextSize(headingSize);
+                while(p.measureText("Klasično")>201f&&headingSize>10f){
+                    headingSize=Math.max(10f,headingSize-1f);
+                    p.setTextSize(headingSize);
+                }
+                raisedWordmarkLetters("Klasično",105,89,
+                    headingSize,ink);
                 c.restore();
                 // Thick coral rays in the owner reference are distinct
                 // strokes, not the tiny dots of the generic rays() helper.
