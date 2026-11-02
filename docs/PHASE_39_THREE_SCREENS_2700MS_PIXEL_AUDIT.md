@@ -61,3 +61,36 @@ Test `victoryOwnerThreeActionBandsKeepRealCommands` mjeri stvarnu boju na y1115/
 - [ ] Ne tvrditi 1:1 samo na temelju kompilacije; ne spajati i ne izdavati APK/AAB dok provjere nisu gotove.
 
 **Opseg ovog PR-a strogo su navedena tri zaslona. Ne dirati rad u PR38 za Daily/Missions/Stats/Themes.**
+
+
+## Faza 39.1 — ponovna usporedba nakon zelenog UI CI-a 9100a625
+
+Korištene su **posljednje tri** korisnikove PNG datoteke iz razgovora:
+- Splash: `Slika ChatGPT 24. lis 2026. 22_15_06-2(20261102-223941).png`
+- Home: `Slika ChatGPT 24. lis 2026. 22_15_13-3(20261102-223941).png`
+- Pobjeda: `Slika ChatGPT 24. lis 2026. 22_15_14-5(20261102-223929).png`
+
+Pravi Android screenshotovi iz **potpuno zelenog** [UI QA 41535505288](https://github.com/bren-wp/Brojko/actions/runs/41535505288), artefakt `13183767537`: `three-screen-source-splash-941x1672.png`, `home-controlled-reference-941x1672.png`, `golden-state-win-941x1672.png`. Svi su uspoređeni **piksel za piksel RGB** bez interpolacije i pomicanja na 941×1672. Isti testni fixture mora se koristiti pri staroj i novoj emulaciji.
+
+| Zaslon | Prije 39.0 | Provjereni 9100a625 | Delta |
+|---|---:|---:|---:|
+| Splash, cijeli | 18,587 | **17,497** | **−1,090** |
+| Splash, gornje pločice x0..941 y90..700 | 17,170 | **14,207** | **−2,963** |
+| Home, cijeli (kontrolirani fixture) | 22,241 | **20,512** | **−1,729** |
+| Home, gornji dio x0..941 y0..500 | 30,250 | **27,177** | **−3,073** |
+| Home, glavna CTA x55..895 y675..880 | 19,452 | **18,473** | **−0,979** |
+| Pobjeda, cijeli (`golden-state-win`, isti fixture) | 18,077 | **16,693** | **−1,384** |
+| Pobjeda, gumbi x155..760 y975..1380 | 29,546 | **18,537** | **−11,009** |
+
+**Opasnost od lažne regresije:** `three-screen-source-victory-941x1672.png` snimljen je s drugačijim game board testnim fixtureom (gotovo sve prazne pločice) i daje cijeli MAE **19,431**. Ta brojka **nije usporediva** sa starim `golden-state-win` koji sadržava punu referentnu ploču. Na `golden-state-win` istoga fixturea stvarna Pobjeda se poboljšala. Produkcija uvijek pokazuje **stvarno korisnikovo stanje igre**.
+
+### Faza 39.2 — difuzni odsjaj i Home minijatura (nakon mjerenja gore)
+
+- `splashFloatingTile`: nativni radijalni bijeli odsjaj malog intenziteta gore lijevo, samo za koraljnu/tirkiznu dekoraciju u svijetlom referentnom portretu (uključujući Home top-corners); igraće ćelije nisu izmijenjene. Teal točka (610,210) izvorni RGB≈(132,252,242), prethodni native (59,227,218). Test `splashOwnerTileTopEdgesUseCorrectRotations` proširen stvarnom pixel-provjerom te točke.
+- `homeClassicPreviewTile`: mekša ivica i zasićeniji gradijenti samo malih 4×4 dekorativnih pločica na Homeu. Originalna koraljna pločica (90,975) ≈(253,97,71), ranija prava emulacija (255,134,105). Funkcionalno stanje i 4×4 igra nisu mijenjani.
+- `homeSourceCornerCentersAndHeroLip` proširen testom koraljnog piksela u minijaturi.
+- **Nove vrijednosti RGB MAE nakon posljednja dva zahvata još nisu potvrđene**. Ne koristiti tablicu iznad kao dokaz njihova uspjeha: treba čekati završetak i analizu stvarnih PNG-ova na zadnjem commitu.
+
+### Stroge granice
+
+U ovom PR-u nema izmjena Daily/Missions/Stats/Themes/Settings, nema statičnih screenshotova kao pozadinskih slika, nema kopiranja lažnih demo bodova u produkciju, nema novih release artefakata ni mergea bez zelenog CI-a i aktualnog vizualnog testa.
