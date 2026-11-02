@@ -3693,6 +3693,61 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyGoal256UsesCompactSourceSizedNumeral(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page,oldDay=activity.lastDaily;
+            int oldTheme=activity.theme,oldStreak=activity.streak;
+            int oldStyle=activity.tileStyle;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";activity.theme=0;
+                activity.tileStyle=0;activity.lastDaily="";
+                activity.streak=7;activity.game=null;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bmp));
+                    // Against the actual 941x1672 source PNG, the old
+                    // oversized numeral occupied >1100 ivory pixels in
+                    // this fixed tile-only region, while source has ~617.
+                    int brightCount=0;
+                    for(int y=1000;y<1060;y++)
+                        for(int x=108;x<181;x++){
+                            int color=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            int highest=Math.max(red,Math.max(green,blue));
+                            int lowest=Math.min(red,Math.min(green,blue));
+                            if(lowest>220&&highest-lowest<30)
+                                brightCount++;
+                        }
+                    assertTrue("The goal numeral must remain readable",
+                        brightCount>350);
+                    assertTrue("Numeral must not fill the complete pink tile",
+                        brightCount<1000);
+                    assertEquals("Numeral rendering must not create a game",
+                        null,activity.game);
+                    assertEquals("Daily streak must remain unchanged",
+                        7,activity.streak);
+                    captureReference(activity,board,
+                        "daily-goal-256-compact-941x1672");
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.streak=oldStreak;
+                activity.lastDaily=oldDay;activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyIntroStrokesMatchOwnerSourcePixelsWithoutTouchOverlap(){
         rule.getScenario().onActivity(activity->{
             String prior=activity.page;
