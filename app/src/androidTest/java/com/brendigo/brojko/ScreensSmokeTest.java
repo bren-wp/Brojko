@@ -4804,6 +4804,108 @@ public class ScreensSmokeTest {
         }
     }
 
+    @Test public void splashSourceCoralSloganKeepsTallStrongLettering(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="splash";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int colored=0,minimumY=1672,maximumY=0;
+                    for(int y=1300;y<1490;y++)
+                        for(int x=80;x<490;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>210&&green<170&&blue<145&&
+                                    red>green+75){
+                                colored++;
+                                minimumY=Math.min(minimumY,y);
+                                maximumY=Math.max(maximumY,y);
+                            }
+                        }
+                    // Old real screenshot: 6015 saturated text pixels;
+                    // owner's reference: 8351. Protect taller coral glyphs.
+                    assertTrue("Splash slogan must not look faded",
+                        colored>6200);
+                    assertTrue("Splash slogan top matches source",
+                        minimumY<=1357);
+                    assertTrue("Splash slogan must not shrink vertically",
+                        maximumY>=1408);
+                    assertEquals("No splash scrolling",0f,view.maxScroll,.01f);
+                    captureReference(activity,view,
+                        "splash-coral-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void homeSourceClassicThumbnailHasFullColoredGrid(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldBest=activity.best;
+            int oldLast=activity.lastScore;
+            TileGame oldGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;activity.game=null;
+                activity.best=12560;activity.lastScore=3864;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int colored=0,minX=941,maxX=0;
+                    for(int y=910;y<1140;y++)
+                        for(int x=55;x<315;x++){
+                            int pixel=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>210&&green<170&&blue<145&&
+                                    red>green+75){
+                                colored++;minX=Math.min(minX,x);
+                                maxX=Math.max(maxX,x);
+                            }
+                        }
+                    assertTrue("Source Home mini-grid must be filled",
+                        colored>6500);
+                    assertTrue("Classic thumbnail begins within card",minX>=58);
+                    assertTrue("Classic thumbnail should span source right edge",
+                        maxX>=288&&maxX<=312);
+                    int modeCount=0;
+                    for(MainActivity.BoardScreen.Tap t:view.taps)
+                        if(t.label.startsWith("Klasično "))modeCount++;
+                    assertEquals("Real Classic action must survive",1,modeCount);
+                    assertEquals(12560,activity.best);
+                    assertEquals(3864,activity.lastScore);
+                    captureReference(activity,view,
+                        "home-classic-preview-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.best=oldBest;activity.lastScore=oldLast;
+                activity.game=oldGame;activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashAndHomeFitSeventeenScreenSizesAndKeepAllActions(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
