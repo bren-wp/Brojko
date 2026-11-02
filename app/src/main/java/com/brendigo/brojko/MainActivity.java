@@ -2494,12 +2494,16 @@ public final class MainActivity extends ComponentActivity {
             fitted(fmt(game.score),136,392,35,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
             for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
-            button("Nastavi igrati","play",74,417,252,53,CORAL,true,()->{
+            // The owner's 941x1672 overlay has three almost touching
+            // action bands: coral y~994..1120, cream y~1122..1267,
+            // blue y~1269..1377. Old native buttons floated too high,
+            // especially the short cream row; keep every action live.
+            button("Nastavi igrati","play",74,422,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
-            button("Nova igra","refresh",74,478,252,49,card,false,
+            button("Nova igra","refresh",74,478,252,60,card,false,
                 ()->newGame(game.mode));
-            button("Podijeli rezultat","share",74,532,252,49,
+            button("Podijeli rezultat","share",74,539,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // There is no separately supplied owner's Game Over PNG. Keep the
