@@ -1633,7 +1633,17 @@ public final class MainActivity extends ComponentActivity {
                 // phrases sit about 10 design units higher than before.
                 // Keep the source's compact gap between coral and teal.
                 card(17,552,366,58,30,theme==1?card:0xfffff0db);
-                fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
+                // Source reference uses a stronger coral (#FD5A3E)
+                // and taller strokes than the previous flat Nunito text.
+                // Limit the adjustment to the owner's light Splash.
+                if(theme==0){
+                    c.save();
+                    c.scale(1f,1.12f,127f,588f);
+                    c.translate(0f,.5f);
+                    fitted("Spajaj brojeve.",127,594,24.2f,187,
+                        0xfffd5a3e,true);
+                    c.restore();
+                }else fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
                 fitted("Ruši rekorde.",287,594,23.8f,179,TEAL,true);
                 return;
             }
@@ -1810,9 +1820,14 @@ public final class MainActivity extends ComponentActivity {
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
                 float space=cols==5?2.1f:2.2f;
-                float side=cols==5?17.0f:21.5f;
-                float left=x+(w-(side+space)*cols+space)/2;
-                float top=y+(portrait?14:(cols==5?20:19));
+                boolean sourceClassic=portrait&&theme==0&&cols==4;
+                // Reference miniature has a slightly larger grid, shifted
+                // right/down; keep 5x5 and other themes untouched.
+                float side=cols==5?17.0f:sourceClassic?22.8f:21.5f;
+                float left=x+(w-(side+space)*cols+space)/2+
+                    (sourceClassic?4f:0f);
+                float top=y+(portrait?14:(cols==5?20:19))+
+                    (sourceClassic?3f:0f);
                 // Decorative Home preview only; the actual 5x5 engine is
                 // unchanged. Allocate the palette once per thumbnail.
                 // The relaxed thumbnail is a fixed, *decorative*
