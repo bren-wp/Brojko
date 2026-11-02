@@ -1928,6 +1928,34 @@ public final class MainActivity extends ComponentActivity {
                 portrait?11:12,w-6,muted);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
+        // The 4×4 miniature on the owner's Home has softer contours
+        // and stronger saturation than gameplay tiles. It must remain
+        // a purely decorative grid, with no changes to the engine.
+        void homeClassicPreviewTile(float x,float y,float side,int color){
+            int top=lighten(color,.02f),bottom=darken(color,.09f);
+            if(color==TILES[1]||color==TILES[5]){
+                top=0xffff825f;bottom=0xffff634c;
+            }else if(color==TILES[2]||color==TILES[10]){
+                top=0xff52e6d5;bottom=0xff1dc4b2;
+            }else if(color==TILES[3]||color==TILES[9]){
+                top=0xff5ab2ff;bottom=0xff258eed;
+            }else if(color==TILES[4]||color==TILES[11]){
+                top=0xffffd36d;bottom=0xffffb03e;
+            }else if(color==TILES[7]||color==TILES[8]){
+                top=0xffce75f4;bottom=0xff9b4ee0;
+            }
+            float radius=5.0f;
+            // Shallow bevel with light ambient shadow rather than the
+            // hard double-white keyline of a real gameplay tile.
+            shape(x+.6f,y+2f,side-.9f,side-1f,radius,
+                darken(bottom,.12f));
+            gradient(x,y,side,side-2f,radius,top,bottom);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.45f);p.setColor(0x42ffffff);
+            c.drawRoundRect(x+1f,y+.8f,x+side-1f,y+side-3.3f,
+                radius-1f,radius-1f,p);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
+        }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
             boolean portrait=referencePortraitLayout;
@@ -1967,7 +1995,9 @@ public final class MainActivity extends ComponentActivity {
                     float py=top+(i/cols)*(side+space);
                     int v=values[Math.min(values.length-1,i)];
                     int col=cols==5?relaxedPreview[i]:tileColor(v);
-                    glossyTile(px,py,side,side,4,col);
+                    if(sourceClassic)
+                        homeClassicPreviewTile(px,py,side,col);
+                    else glossyTile(px,py,side,side,4,col);
                     if(cols==4)fitted(""+v,px+side/2,py+side*.67f,
                         v>99?8.4f:12,side-2,WHITE,true);
                 }
