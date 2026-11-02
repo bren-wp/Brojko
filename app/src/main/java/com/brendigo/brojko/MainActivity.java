@@ -3448,7 +3448,12 @@ public final class MainActivity extends ComponentActivity {
             }
             // Thicker progress track and a separate adjacent counter: the
             // reference places progress and 12 / 20 on a common baseline.
-            float progressY=y+(portrait?50:59);
+            // The owner's two-line 10k mission has its bar near
+            // y=1169px; the previous one-line layout drew it at 1139px,
+            // directly through the second description line.
+            boolean twoLineWeeklyScore=portrait&&theme==0&&
+                name.startsWith("Ostvari 10.000");
+            float progressY=y+(portrait?50:59)+(twoLineWeeklyScore?13f:0f);
             // Owner's 941x1672 source has two progress widths:
             // standard tasks end at x≈631px, while 10k/50k score
             // counters need more room and end near x≈573px.
@@ -3478,7 +3483,7 @@ public final class MainActivity extends ComponentActivity {
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
                 portrait&&theme==0?(target>=10000?284:294):270,
-                y+(portrait?59:68),11,
+                y+(portrait?59:68)+(twoLineWeeklyScore?10f:0f),11,
                 portrait&&theme==0?(target>=10000?60:42):45,
                 muted,true);
             // Narrower, right-aligned reward bay matches the source card
