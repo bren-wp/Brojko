@@ -1736,7 +1736,13 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(15f,0f,9f,0x3abf9b73);
             c.drawRoundRect(x+3f,y+7f,x+w+3f,y+h+7f,radius,radius,p);
             p.clearShadowLayer();
-            styledTile(x,y,w,h,radius,color,0);
+            // Home's corner tiles are the same raised brand pieces as the
+            // Splash artwork, not gameplay cells. Reuse the saturated
+            // face palette only in the source-sized light portrait.
+            if(theme==0&&referencePortraitLayout)
+                splashFloatingTile(x,y,w,h,radius,color);
+            else
+                styledTile(x,y,w,h,radius,color,0);
             fitted(Integer.toString(value),x+w/2f,y+h*.68f,
                 value>=16?40:47,w-12,WHITE,true);
         }
