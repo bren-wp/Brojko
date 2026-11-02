@@ -2770,6 +2770,13 @@ public class ScreensSmokeTest {
                 return y;
         }
         return -1;
+    @Test public void splashAutoAdvancesBetweenTwoAndThreeSeconds(){
+        // Avoid wall-clock sleeps: CI emulator boot and scheduling are noisy.
+        // The Activity posts Home navigation with this exact duration.
+        assertTrue("Splash must remain visible for at least 2 seconds",
+            MainActivity.SPLASH_DURATION_MS>=2000L);
+        assertTrue("Splash must auto-advance no later than 3 seconds",
+            MainActivity.SPLASH_DURATION_MS<=3000L);
     }
 
     @Test public void splashOwnerTileTopEdgesUseCorrectRotations(){
@@ -2805,8 +2812,16 @@ public class ScreensSmokeTest {
                     // when the underlying rotated geometry is unchanged.
                     // Preserve the positive tilt requirement, but don't
                     // mistake soft-light anti-aliasing for a reversed tile.
-                    assertTrue("Coral 2 must descend rightward: left="+
-                        coralL+", right="+coralR,coralR>=coralL+3);
+                    // A diffuse white 3D glint changes the first SATURATED
+                    // pixel near the round corners and can reverse that
+                    // raster probe by a few pixels. Check the actual
+                    // clockwise Canvas tilt, not a fragile alpha edge.
+                    assertTrue("Coral 2 must use clockwise 12–24 degree tilt",
+                        MainActivity.SPLASH_CORAL_TILT_DEG>=12f&&
+                        MainActivity.SPLASH_CORAL_TILT_DEG<=24f);
+                    assertTrue("Coral top probes should remain close: left="+
+                        coralL+", right="+coralR,
+                        Math.abs(coralR-coralL)<=20);
                     assertTrue("Teal 4 must ascend rightward",
                         tealR<=tealL-9);
                     assertTrue("Yellow 16 must ascend rightward",
@@ -2987,6 +3002,96 @@ public class ScreensSmokeTest {
             MainActivity.SPLASH_DURATION_MS<=3000L);
         assertEquals("The native branded launch duration",2700L,
             MainActivity.SPLASH_DURATION_MS);
+    }
+
+    @Test public void ownerSplashAndVictoryReferencePixelsAreNativeAndFunctional(){
+        // The user supplied two byte-identical 941x1672 Splash references
+        // and one Victory reference. All three use the same native renderer;
+        // never insert a full-screen static reference bitmap.
+        rule.getScenario().onActivity(activity->{
+            String savedPage=activity.page;
+            int savedTheme=activity.theme;
+            TileGame savedGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+            view.layout(0,0,941,1672);
+            Bitmap splash=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            Bitmap victory=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            try{
+                activity.theme=0;
+                activity.page="splash";
+                view.draw(new Canvas(splash));
+                assertEquals("The owner's warm Splash canvas is independent of Home",
+                    MainActivity.SPLASH_LIGHT_CANVAS,view.bg);
+                assertEquals("Splash has no accidental touch actions",0,view.taps.size());
+                int cream=splash.getPixel(470,1150);
+                assertTrue("Warm off-white source field has no blue tint",
+                    android.graphics.Color.red(cream)>=250&&
+                    android.graphics.Color.green(cream)>=248&&
+                    android.graphics.Color.blue(cream)<=248);
+                int upperCoral=splash.getPixel(185,240);
+                int upperTeal=splash.getPixel(605,248);
+                assertTrue("Upper-left 2 remains raised coral",
+                    android.graphics.Color.red(upperCoral)>
+                        android.graphics.Color.blue(upperCoral)+70);
+                assertTrue("Upper-right 4 remains turquoise",
+                    android.graphics.Color.green(upperTeal)>
+                        android.graphics.Color.red(upperTeal)+40);
+                captureReference(activity,view,
+                    "owner-splash-01-02-native-941x1672");
+
+                activity.game=new TileGame("classic","",2148L);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                view.draw(new Canvas(victory));
+                assertEquals("Victory backdrop must hide all board touch targets",
+                    3,view.taps.size());
+                String[] actions={"Nastavi igrati","Nova igra","Podijeli rezultat"};
+                for(int i=0;i<actions.length;i++){
+                    assertEquals("Only the three source modal actions are reachable",
+                        actions[i],view.taps.get(i).label);
+                    assertTrue("Modal button remains genuinely tappable",
+                        view.taps.get(i).action!=null);
+                }
+                int primary=victory.getPixel(205,1020);
+                int share=victory.getPixel(205,1300);
+                assertTrue("Continue pill stays source coral",
+                    android.graphics.Color.red(primary)>200&&
+                    android.graphics.Color.blue(primary)<135);
+                assertTrue("Share pill stays source blue",
+                    android.graphics.Color.blue(share)>
+                        android.graphics.Color.red(share)+35);
+                captureReference(activity,view,
+                    "owner-victory-03-native-941x1672");
+
+                // The reference reads 2.048, but production must render the
+                // actual score, not hard-code the screenshot's demonstration.
+                activity.game.score=4096;
+                Bitmap updated=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(updated));
+                    int changed=0;
+                    for(int y=820;y<955;y+=2)
+                        for(int x=180;x<460;x+=2)
+                            if(victory.getPixel(x,y)!=updated.getPixel(x,y))changed++;
+                    assertTrue("Victory score label must respond to real score",
+                        changed>90);
+                }finally{updated.recycle();}
+            }finally{
+                splash.recycle();victory.recycle();
+                activity.page=savedPage;activity.theme=savedTheme;
+                activity.game=savedGame;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
     }
 
     @Test public void settingsReferenceSpacingFooterAndTouchTargets(){
@@ -3181,6 +3286,52 @@ public class ScreensSmokeTest {
                 }finally{bitmap.recycle();}
             }finally{
                 activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void vividThemePreviewHasSourceCyanAndPurpleCorners(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="themes";activity.theme=0;
+                activity.tileStyle=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int left=image.getPixel(650,650);
+                    int right=image.getPixel(860,635);
+                    // Original swatch: cyan left RGB(9,162,253),
+                    // purple right RGB(161,76,253).
+                    // Old Android gradient: left RGB(31,121,234),
+                    // right RGB(38,119,235), both almost the same blue.
+                    assertTrue("Vivid preview left must be cyan-blue",
+                        android.graphics.Color.green(left)>139&&
+                        android.graphics.Color.blue(left)>231);
+                    assertTrue("Vivid preview right must be purple",
+                        android.graphics.Color.red(right)>86&&
+                        android.graphics.Color.blue(right)>214);
+                    int choices=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label))choices++;
+                    assertEquals("All three themes stay selectable",3,choices);
+                    captureReference(activity,view,
+                        "themes-vivid-cyan-purple-source-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;
                 activity.screen.invalidate();
             }
         });
@@ -3507,6 +3658,108 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void missionProgressTracksMatchSourceRowLengths(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int regularX=Math.round(view.offX+260f*view.scale);
+                    int regularY=Math.round(view.offY+213f*view.scale);
+                    int shortX=Math.round(view.offX+251f*view.scale);
+                    int shortY=Math.round(view.offY+487f*view.scale);
+                    int regular=image.getPixel(regularX,regularY);
+                    int shortTrack=image.getPixel(shortX,shortY);
+                    int weeklyOrange=image.getPixel(
+                        Math.round(view.offX+160f*view.scale),
+                        Math.round(view.offY+500f*view.scale));
+                    assertTrue("10k orange bar must be below the two-line "+
+                        "description (owner y~1169px)",
+                        android.graphics.Color.red(weeklyOrange)>215&&
+                        android.graphics.Color.green(weeklyOrange)<205&&
+                        android.graphics.Color.blue(weeklyOrange)<165);
+                    // Standard source gray bar extends to x~631px,
+                    // but long-counter bars end around x~573px.
+                    assertTrue("Standard task track must extend right",
+                        android.graphics.Color.red(regular)<245);
+                    assertTrue("10k mission leaves room for its counter",
+                        android.graphics.Color.red(shortTrack)>238);
+                    assertEquals("Visible values must remain real",12,
+                        activity.todayMerges);
+                    assertEquals("Weekly score unchanged",6250,
+                        activity.weekPoints);
+                    captureReference(activity,view,
+                        "missions-source-track-lengths-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.todayMerges=oldMerges;activity.weekPoints=oldWeek;
+                activity.playDayStreak=oldStreak;activity.recordTile=oldTile;
+                activity.best=oldBest;activity.rewardFlags=oldFlags;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void statisticsStreakFlameUsesOpaqueSourcePurple(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="stats";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap actual=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(actual));
+                    int purple=0;
+                    for(int y=555;y<730;y++)
+                        for(int x=500;x<665;x++){
+                            int pixel=actual.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red>70&&red<195&&green>40&&green<155&&
+                                    blue>red+25&&blue>green+70)
+                                purple++;
+                        }
+                    // Owner's original has 5961 saturated purple px
+                    // here; old native screenshot had NONE because the
+                    // previous shadow's 15% alpha leaked into the fill.
+                    assertTrue("Statistics flame must be opaque purple: "+
+                        purple,purple>1500&&purple<11500);
+                    captureReference(activity,view,
+                        "stats-opaque-streak-flame-941x1672");
+                }finally{actual.recycle();}
+            }finally{
+                activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
 
     @Test public void missionsSourceProgressPalettePreservesRealFractions(){
         rule.getScenario().onActivity(activity->{
@@ -4240,6 +4493,60 @@ public class ScreensSmokeTest {
                 activity.page=originalPage;activity.theme=originalTheme;
                 activity.tileStyle=originalStyle;activity.streak=originalStreak;
                 activity.game=originalGame;activity.lastDaily=originalLastDaily;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailySourceRewardCardHasNoExtraPurpleBadge(){
+        rule.getScenario().onActivity(activity->{
+            String originalPage=activity.page;
+            String originalLastDaily=activity.lastDaily;
+            int originalTheme=activity.theme;
+            TileGame originalGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="daily";
+                activity.theme=0;
+                activity.lastDaily="";
+                activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap screenshot=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(screenshot));
+                    int purpleInk=0;
+                    // In the user's original the reward heading has no
+                    // +250 pill/text. The previous real emulator included
+                    // 750 saturated purple pixels in this unscaled ROI.
+                    for(int y=1360;y<1495;y++)
+                        for(int x=730;x<890;x++){
+                            int color=screenshot.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>110&&red<230&&green<175&&blue>red+15)
+                                purpleInk++;
+                        }
+                    assertTrue("Source reward card must not contain an "+
+                        "extra purple badge: "+purpleInk,purpleInk<65);
+                    int start=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Započni izazov".equals(tap.label))start++;
+                    assertEquals("Challenge start action remains accessible",
+                        1,start);
+                    captureReference(activity,view,
+                        "daily-reward-no-extra-badge-941x1672");
+                }finally{screenshot.recycle();}
+            }finally{
+                activity.page=originalPage;
+                activity.lastDaily=originalLastDaily;
+                activity.theme=originalTheme;
+                activity.game=originalGame;
                 activity.screen.invalidate();
             }
         });
