@@ -18,6 +18,11 @@ Measurements are before this PR and are **not** claimed as a new, validated 1:1 
 - Apply a restrained top-to-bottom deep-navy gradient to the light portrait Bravo! heading, where owner sampled RGB is roughly (31,52,87) near the top and (18,33,62) below.
 - Splash remains **2700 ms**, then automatically enters Home, preserving elapsed duration across rotation. Existing Home modes, actions, actual score and shared animations are untouched.
 
+## Bravo crown and share button calibration
+The supplied gold crown connected component spans roughly x=379..561 and y=377..518. Merged PR41 emulator started at y≈399 with an otherwise aligned lower rim. A native vertical-only 1.15x Canvas scaling about the lower rim and −1.5 design-unit translation now preserves width while moving the gold crown's top toward the screenshot. Added an emulator test with bounded source-like coordinates and confirmation that exactly three modal buttons remain active.
+
+For the **Podijeli rezultat** pill, shift only the light portrait share symbol 5 design units left and the text center approximately 2.5 design units right, preventing icon/text crowding. This is native, dynamic Canvas UI with a functional share action.
+
 ## Acceptance
 1. Re-run `Android pull request validation`, `Android 16 navigation bar and inset QA` and `Android UI smoke and screenshot QA` on **the exact current PR head SHA**.
 2. Download newly captured emulator screenshots. Compare **same game state**: Splash `three-screen-source-splash-941x1672.png`, Home `owner-home-12560-3864-941x1672.png`, Bravo `owner-bravo-full-board-2048-941x1672.png` against the three supplied PNGs, plus logo/CTA/score/crown subregions.
