@@ -2570,7 +2570,16 @@ public final class MainActivity extends ComponentActivity {
                     p.setStyle(Paint.Style.FILL);
                     p.setStrokeWidth(0f);
                 }
+                if(theme==0&&referencePortraitLayout){
+                    // Source Bravo! is embossed: RGB ~31/52/87 at the
+                    // upper face and ~18/33/62 near the baseline.
+                    // No shader is applied to dark mode or to game labels.
+                    p.setShader(new LinearGradient(0f,baseline-60f,
+                        0f,baseline,0xff20385d,0xff12213e,
+                        Shader.TileMode.CLAMP));
+                }
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                p.setShader(null);
                 p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
                 c.restore();
                 left+=glyphWidth-3.1f;
