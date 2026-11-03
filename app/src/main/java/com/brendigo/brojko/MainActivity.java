@@ -1273,11 +1273,11 @@ public final class MainActivity extends ComponentActivity {
                     flatDaily?0xffff8a60:
                     victoryPrimary?0xffff8054:
                     victoryShare?0xff66b0fc:
-                    homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
+                    homeHero?0xfffe9058:lighten(color,flatDaily?.10f:.18f),
                     flatDaily?0xffff593a:
                     victoryPrimary?0xffff5134:
                     victoryShare?0xff2f83ec:
-                    homeHero?0xffff5837:color);
+                    homeHero?0xfffe653b:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
@@ -1924,7 +1924,12 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffcf5e9);
             homeSoftCard(207,scoresY,171,scoresH,19,
                 theme==1?card:0xfffcf5e9);
-            icon("crown",53,scoresY+29,28,0xffffb228);
+            // Source Home best-score gold crown is 76 x 58 native px,
+            // where the prior emulator is 59 x 45. Keep the change
+            // confined to the light portrait Home illustration.
+            icon("crown",53,scoresY+
+                (portrait&&theme==0?35:29),
+                portrait&&theme==0?36:28,0xffffb228);
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
             // Source-matched 12.560 remains clear of the three right-hand
             // mini bars even for larger real records.
