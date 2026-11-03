@@ -1329,15 +1329,28 @@ public final class MainActivity extends ComponentActivity {
                     else icon(symbol,iconX,y+h/2,
                         Math.min(prominent?
                             (page.equals("daily")?34:homeHero?43:33):23,
-                            h*(page.equals("daily")?.65f:
+                            h*(page.equals("win")&&referencePortraitLayout
+                                &&theme==0?.66f:page.equals("daily")?.65f:
                                 homeHero?.57f:.52f)),iconColor);
                 }
                 float textCenter=x+(hasSymbol?(prominent?
-                    (homeHero&&label.length()>10?w*.62f:w*.58f):
+                    (homeHero&&label.length()>10?w*.62f:
+                        (page.equals("win")&&referencePortraitLayout&&theme==0
+                            ?w*.595f:w*.58f)):
                     (page.equals("win")&&"Nova igra".equals(label)?
-                        w*.59f:(w+38f)/2f)):w/2f);
+                        (referencePortraitLayout&&theme==0?w*.54f:w*.59f):
+                        (w+38f)/2f)):w/2f);
                 int labelColor=prominent?WHITE:ink;
-                float font=prominent?
+                // Pixel-measured 941×1672 owner Victory: native action text
+                // was 20–25% smaller than the real screenshot. Limit the
+                // calibration to the light compact 2048 modal.
+                boolean ownerWinLabel=page.equals("win")&&
+                    referencePortraitLayout&&theme==0;
+                float font=ownerWinLabel?
+                    ("Nastavi igrati".equals(label)?22.5f:
+                     "Nova igra".equals(label)?20.5f:
+                     "Podijeli rezultat".equals(label)?20.5f:16f):
+                    prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
                             Math.min(30,h*.37f):Math.min(36,h*.44f)):
@@ -1713,9 +1726,24 @@ public final class MainActivity extends ComponentActivity {
                 splashAmbient(161,24,40,43,-18,0x1fffbd94);
                 splashAmbient(167,198,35,38,14,0x12eabb93);
                 splashAmbient(84,475,71,67,-17,0x252ec4b6);
-                splashAmbient(321,444,79,78,20,0x21ff7a5b);
-                splashAmbient(111,633,66,67,13,0x25ffba30);
-                splashAmbient(173,636,65,65,29,0x282ec4b6);
+                splashAmbient(321,444,79,78,20,0x36ff7a5b);
+                // Pixel audit: yellow lower-left accent was incorrectly
+                // painted below centre; teal also sat ~70 pixels too far right.
+                // These are visual-only background pieces, never live tiles.
+                splashAmbient(-6,621,73,77,-18,0x25ffba30);
+                splashAmbient(141,636,65,65,29,0x282ec4b6);
+                // The user's blurred coral 32 behind the lower-right logo
+                // was absent from our prior native illustration.
+                if(theme==0){
+                    c.save();c.rotate(20f,360.5f,483f);
+                    p.clearShadowLayer();p.setShader(null);
+                    p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
+                    p.setTextSize(37f);p.setStyle(Paint.Style.FILL);
+                    p.setColor(0x79ffffff);
+                    p.setShadowLayer(8f,0,0,0x8bffffff);
+                    c.drawText("32",360.5f,499f,p);
+                    p.clearShadowLayer();c.restore();
+                }
                 // Reference accents sit OUTSIDE raised tiles.
                 splashAccentStroke(51,65,60,82,CORAL);
                 splashAccentStroke(36,88,49,94,CORAL);
@@ -1800,7 +1828,9 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(9f,0f,5.5f,0x28a78353);
             c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
             p.clearShadowLayer();
-            gradient(x,y,w,h,radius,lighten(color,.40f),color);
+            // Source Home cards use warm saturated interiors; the old
+            // 40% white mix washed out Classic/Daily reference panels.
+            gradient(x,y,w,h,radius,lighten(color,.16f),color);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0xb4ffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,radius-1,radius-1,p);
@@ -2554,9 +2584,9 @@ public final class MainActivity extends ComponentActivity {
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
-            // Pixel audit: original golden silhouette was ~21 px too wide
-            // and ~18 px too low at the 941x1672 reference viewport.
-            victoryCrown(200,187,98);
+            // Emulator gold mask x376–570/y350–515 versus reference
+            // x379–561/y376–517: shrink slightly and place lower.
+            victoryCrown(198,192,90);
             victoryHeadingRays();
             victoryHeading();
             if(theme==1)card(95,299,210,30,17,card);
@@ -2571,7 +2601,10 @@ public final class MainActivity extends ComponentActivity {
             txt("Tvoj rezultat",136,356,12,muted,false);
             fitted(fmt(game.score),136,392,35,113,ink,true);
             txt("Osvojene zvjezdice",264,356,11,muted,false);
-            for(int i=0;i<3;i++)icon("star",229+i*35,382,32,0xffffb526);
+            // Real reference star mask ~66×66 px; old 32-unit stars
+            // rasterized to only ~58×60 px at the 941×1672 viewport.
+            for(int i=0;i<3;i++)
+                icon("star",233f+i*32.3f,384f,36f,0xffffb526);
             // The owner's 941x1672 overlay has three almost touching
             // action bands: coral y~994..1120, cream y~1122..1267,
             // blue y~1269..1377. Old native buttons floated too high,

@@ -3006,6 +3006,72 @@ public class ScreensSmokeTest {
             MainActivity.SPLASH_DURATION_MS);
     }
 
+    @Test public void ownerHomeAndBravoScreenshotFixturesUseRealData(){
+        // The artwork contains example records 12.560 / 3.864 and a
+        // 2.048-point win. Match those values *only* in instrumentation
+        // screenshots, never in production or persisted player progress.
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            int previousBest=activity.best;
+            int previousLast=activity.lastScore;
+            TileGame previousGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+            view.layout(0,0,941,1672);
+            Bitmap image=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            try{
+                activity.theme=0;
+                activity.best=12560;
+                activity.lastScore=3864;
+                activity.game=null;
+                activity.page="home";
+                view.draw(new Canvas(image));
+                boolean newGame=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps)
+                    if("Nova igra".equals(tap.label))newGame=true;
+                assertTrue("Home fixture must show the real New Game action",
+                    newGame);
+                assertEquals("Home panel uses ordinary light Canvas",
+                    MainActivity.LIGHT_CANVAS,view.bg);
+                captureReference(activity,view,
+                    "owner-home-12560-3864-941x1672");
+
+                activity.game=new TileGame("classic","",2048L);
+                int[] referenceBoard={
+                    2,4,8,16,
+                    4,8,16,32,
+                    8,16,32,64,
+                    128,256,512,1024
+                };
+                assertEquals(16,activity.game.cells.length);
+                System.arraycopy(referenceBoard,0,activity.game.cells,0,16);
+                activity.game.score=2048;
+                activity.game.peak=2048;
+                activity.game.reached2048=true;
+                activity.page="win";
+                view.draw(new Canvas(image));
+                assertEquals("Only the three working result actions are tappable",
+                    3,view.taps.size());
+                for(MainActivity.BoardScreen.Tap tap:view.taps)
+                    assertNotNull("Every victory button has a live action",
+                        tap.action);
+                captureReference(activity,view,
+                    "owner-bravo-full-board-2048-941x1672");
+            }finally{
+                image.recycle();
+                activity.best=previousBest;activity.lastScore=previousLast;
+                activity.game=previousGame;activity.page=previousPage;
+                activity.theme=previousTheme;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void ownerSplashAndVictoryReferencePixelsAreNativeAndFunctional(){
         // The user supplied two byte-identical 941x1672 Splash references
         // and one Victory reference. All three use the same native renderer;
