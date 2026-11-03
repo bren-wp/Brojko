@@ -23,6 +23,11 @@ The supplied gold crown connected component spans roughly x=379..561 and y=377..
 
 For the **Podijeli rezultat** pill, shift only the light portrait share symbol 5 design units left and the text center approximately 2.5 design units right, preventing icon/text crowding. This is native, dynamic Canvas UI with a functional share action.
 
+## Home final icon and primary CTA
+At the owner's native 941×1672 reference, the **Najbolji rezultat** gold crown occupies approximately 76×58 px (x84..160, y539..597). Merged PR41's emulator occupied only 59×45 px (x95..154, y532..577). The light compact Home now renders the native crown at 36 design units, 6 units lower. Its screen footprint is covered by a new Android instrumentation test; light/dark landscape variants retain their existing settings.
+
+Source Home hero gradient samples (at x205): y700 RGB≈(254,144,88), y725≈(254,135,82), y815≈(254,102,60); prior emulator (255,130,82), (255,124,78), (255,102,64). The native light Home hero gradient now goes from #FE9058 to #FE653B; all other button types keep their prior shades.
+
 ## Acceptance
 1. Re-run `Android pull request validation`, `Android 16 navigation bar and inset QA` and `Android UI smoke and screenshot QA` on **the exact current PR head SHA**.
 2. Download newly captured emulator screenshots. Compare **same game state**: Splash `three-screen-source-splash-941x1672.png`, Home `owner-home-12560-3864-941x1672.png`, Bravo `owner-bravo-full-board-2048-941x1672.png` against the three supplied PNGs, plus logo/CTA/score/crown subregions.
