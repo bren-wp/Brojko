@@ -1656,8 +1656,18 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStrokeWidth(1.8f);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
+            // The owner's lettering has a softly illuminated upper face,
+            // rather than a flat monocolour fill. Apply only to the two
+            // illustrated light brand surfaces, not game text or dark mode.
+            boolean illustrated=(page.equals("splash")||page.equals("home"));
+            if(illustrated){
+                p.setStrokeWidth(2.9f);
+                p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
+                    0xff263657,0xff1d2947,Shader.TileMode.CLAMP));
+            }
             p.setColor(color);
             c.drawText(letters,cx,baseline,p);
+            p.setShader(null);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
         // Splash-only wordmark: the source uses wider rounded lettering,
@@ -1682,7 +1692,11 @@ public final class MainActivity extends ComponentActivity {
             c.scale(.80f,1.19f,200f,405f);
             // The navy B/r in the reference have a broader silhouette.
             c.save();
-            c.translate(-10.6f,0);
+            // Source-edge overlap audit: Br needed +13 native px on
+            // Splash and +16 px on the proportionally smaller Home logo.
+            // Keep these offsets inside the letters' own transform so the
+            // decorative coral rays and action hit areas never move.
+            c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
             raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
@@ -1691,7 +1705,12 @@ public final class MainActivity extends ComponentActivity {
             // Preserve its native shaded bevel, but remove the old extra
             // vertical stretch and align its bottom with the letterforms.
             c.save();
-            c.translate(-4.25f,2.2f);
+            // Align the emblem independently of the navy letters. The
+            // owner's Home red 2 is also ~6% shorter than its prior native
+            // render; shrink only the decorative Home emblem, from its top.
+            c.translate(-4.25f+(page.equals("home")?8.2f:3.2f),2.2f);
+            if(page.equals("home"))
+                c.scale(1f,.94f,bx,y-size*.78f);
             c.scale(.90f,.66f,137.6f,394.36f);
             // The branded 2 must have the same rich coral face as the
             // owner's original, not the paler general gameplay cell.
@@ -1706,7 +1725,9 @@ public final class MainActivity extends ComponentActivity {
 
             // The source's jko starts immediately after the number tile.
             c.save();
-            c.translate(-36.2f,0);
+            // The glyph ascender/counters now sit over their measured
+            // source columns. Only this wordmark is changed.
+            c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
             c.scale(1.25f,.92f,228f,316f);
             raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
             c.restore();
