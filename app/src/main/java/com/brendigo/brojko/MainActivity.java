@@ -1318,7 +1318,7 @@ public final class MainActivity extends ComponentActivity {
                     boolean winShare=page.equals("win")&&
                         "Podijeli rezultat".equals(label);
                     float iconX=x+(winSecondary?78f:
-                        winShare&&referencePortraitLayout&&theme==0?62f:
+                        winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
                         prominent?(page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
@@ -1338,7 +1338,7 @@ public final class MainActivity extends ComponentActivity {
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
-                            ?("Podijeli rezultat".equals(label)?w*.625f:w*.595f)
+                            ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
                     (page.equals("win")&&"Nova igra".equals(label)?
                         (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
@@ -2627,7 +2627,14 @@ public final class MainActivity extends ComponentActivity {
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
             // Emulator gold mask x376–570/y350–515 versus reference
             // x379–561/y376–517: shrink slightly and place lower.
+            // Source gold crown begins around native y=377. The earlier
+            // emulator began at y=399 and ended close to the correct
+            // y=518 rim; stretch only vertically around that lower edge.
+            c.save();
+            c.translate(0f,-1.5f);
+            c.scale(1f,1.15f,198f,220f);
             victoryCrown(198,192,90);
+            c.restore();
             victoryHeadingRays();
             victoryHeading();
             if(theme==1)card(95,299,210,30,17,card);
