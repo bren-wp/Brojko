@@ -1317,7 +1317,9 @@ public final class MainActivity extends ComponentActivity {
                         "Nova igra".equals(label);
                     boolean winShare=page.equals("win")&&
                         "Podijeli rezultat".equals(label);
-                    float iconX=x+(winSecondary?78f:winShare?69f:
+                    float iconX=x+(winSecondary?78f:
+                        winShare&&referencePortraitLayout&&theme==0?62f:
+                        winShare?69f:
                         prominent?(page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
                         Math.min(58f,w*.21f)):25f);
@@ -1336,9 +1338,10 @@ public final class MainActivity extends ComponentActivity {
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
-                            ?w*.595f:w*.58f)):
+                            ?("Podijeli rezultat".equals(label)?w*.625f:w*.595f)
+                            :w*.58f)):
                     (page.equals("win")&&"Nova igra".equals(label)?
-                        (referencePortraitLayout&&theme==0?w*.54f:w*.59f):
+                        (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
                         (w+38f)/2f)):w/2f);
                 int labelColor=prominent?WHITE:ink;
                 // Pixel-measured 941×1672 owner Victory: native action text
@@ -1828,9 +1831,12 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(9f,0f,5.5f,0x28a78353);
             c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
             p.clearShadowLayer();
-            // Source Home cards use warm saturated interiors; the old
-            // 40% white mix washed out Classic/Daily reference panels.
-            gradient(x,y,w,h,radius,lighten(color,.16f),color);
+            // Pixel audit after running the real emulator:
+            // 16% white mixing reduces source MAE for the three mode cards
+            // but adds error on the score and bottom shortcut cards.
+            // Calibrate ONLY the owner-supplied Home mode card row.
+            float homeWhiteMix=y>=380f&&y<560f?.16f:.40f;
+            gradient(x,y,w,h,radius,lighten(color,homeWhiteMix),color);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0xb4ffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-1,radius-1,radius-1,p);
@@ -2501,7 +2507,12 @@ public final class MainActivity extends ComponentActivity {
             // so the weight, overlap and subtle rotations work at any DPI.
             // Golden screenshot: previous heading was visibly ~20% taller
             // than the painted wordmark, especially the capital B.
-            c.save();c.scale(.95f,1.10f,200f,286f);
+            // Owner's painted Bravo! is marginally narrower and taller
+            // than the previous native word; adjust light compact only.
+            c.save();
+            if(theme==0&&referencePortraitLayout)
+                c.scale(.93f,1.14f,200f,284.5f);
+            else c.scale(.95f,1.10f,200f,286f);
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setTextSize(63f);
             p.setTextScaleX(1f);p.setFakeBoldText(false);
@@ -2533,7 +2544,7 @@ public final class MainActivity extends ComponentActivity {
                 if(theme==0&&referencePortraitLayout){
                     p.setStyle(Paint.Style.FILL_AND_STROKE);
                     p.setStrokeJoin(Paint.Join.ROUND);
-                    p.setStrokeWidth(1.8f);
+                    p.setStrokeWidth(1.3f);
                 }else{
                     p.setStyle(Paint.Style.FILL);
                     p.setStrokeWidth(0f);
