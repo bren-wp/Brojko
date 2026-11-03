@@ -5549,6 +5549,110 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void ownerHomeBestScoreCrownMatchesGoldReferenceFootprint(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bmp));
+                    int minX=941,minY=1672,maxX=0,maxY=0,count=0;
+                    for(int y=510;y<614;y++)
+                        for(int x=70;x<172;x++){
+                            int c=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(c);
+                            int green=android.graphics.Color.green(c);
+                            int blue=android.graphics.Color.blue(c);
+                            if(red>180&&green>92&&green<225&&
+                               blue<105&&red>green+20){
+                                count++;minX=Math.min(minX,x);
+                                maxX=Math.max(maxX,x);
+                                minY=Math.min(minY,y);
+                                maxY=Math.max(maxY,y);
+                            }
+                        }
+                    assertTrue("Source crown should have a rich gold fill: "+count,
+                        count>1900);
+                    // Owner reference gold bounding box ~x84..160,
+                    // y539..597. Leave several native px for rasterization.
+                    assertTrue("Home crown left edge "+minX,
+                        minX>=78&&minX<=97);
+                    assertTrue("Home crown right edge "+maxX,
+                        maxX>=151&&maxX<=174);
+                    assertTrue("Home crown top edge "+minY,
+                        minY>=529&&minY<=551);
+                    assertTrue("Home crown bottom edge "+maxY,
+                        maxY>=586&&maxY<=609);
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void ownerBravoCrownRetainsSourceVerticalGoldSilhouette(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            TileGame previousGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="win";activity.theme=0;
+                activity.game=new TileGame("classic","",2048L);
+                activity.game.score=2048;activity.game.peak=2048;
+                activity.game.reached2048=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bmp=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(bmp));
+                    int firstY=1672,lastY=0,pixels=0;
+                    // The owner's gold crown connected silhouette spans
+                    // about native y=377..518; the previous emulator was
+                    // compressed vertically, beginning around y=399.
+                    for(int y=365;y<530;y++)
+                        for(int x=380;x<560;x++){
+                            int c=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(c);
+                            int green=android.graphics.Color.green(c);
+                            int blue=android.graphics.Color.blue(c);
+                            if(red>210&&green>115&&green<225&&
+                               blue<110&&red>green+28){
+                                pixels++;
+                                firstY=Math.min(firstY,y);
+                                lastY=Math.max(lastY,y);
+                            }
+                        }
+                    assertTrue("Crown must be strongly filled gold",pixels>8500);
+                    assertTrue("Crown top too low/high: "+firstY,
+                        firstY>=370&&firstY<=393);
+                    assertTrue("Crown rim must match native source: "+lastY,
+                        lastY>=510&&lastY<=528);
+                    assertEquals("Modal remains the only active touch surface",
+                        3,board.taps.size());
+                }finally{bmp.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.game=previousGame;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void splashAndHomeSourceWordmarkRetainsHeavyNavySilhouette(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;

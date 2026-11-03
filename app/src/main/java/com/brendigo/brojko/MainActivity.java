@@ -1273,11 +1273,11 @@ public final class MainActivity extends ComponentActivity {
                     flatDaily?0xffff8a60:
                     victoryPrimary?0xffff8054:
                     victoryShare?0xff66b0fc:
-                    homeHero?0xffff8554:lighten(color,flatDaily?.10f:.18f),
+                    homeHero?0xfffe9058:lighten(color,flatDaily?.10f:.18f),
                     flatDaily?0xffff593a:
                     victoryPrimary?0xffff5134:
                     victoryShare?0xff2f83ec:
-                    homeHero?0xffff5837:color);
+                    homeHero?0xfffe653b:color);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
@@ -1318,7 +1318,7 @@ public final class MainActivity extends ComponentActivity {
                     boolean winShare=page.equals("win")&&
                         "Podijeli rezultat".equals(label);
                     float iconX=x+(winSecondary?78f:
-                        winShare&&referencePortraitLayout&&theme==0?62f:
+                        winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
                         prominent?(page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
@@ -1338,7 +1338,7 @@ public final class MainActivity extends ComponentActivity {
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
-                            ?("Podijeli rezultat".equals(label)?w*.625f:w*.595f)
+                            ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
                     (page.equals("win")&&"Nova igra".equals(label)?
                         (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
@@ -1656,8 +1656,18 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStrokeWidth(1.8f);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
+            // The owner's lettering has a softly illuminated upper face,
+            // rather than a flat monocolour fill. Apply only to the two
+            // illustrated light brand surfaces, not game text or dark mode.
+            boolean illustrated=(page.equals("splash")||page.equals("home"));
+            if(illustrated){
+                p.setStrokeWidth(2.9f);
+                p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
+                    0xff263657,0xff1d2947,Shader.TileMode.CLAMP));
+            }
             p.setColor(color);
             c.drawText(letters,cx,baseline,p);
+            p.setShader(null);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
         // Splash-only wordmark: the source uses wider rounded lettering,
@@ -1682,7 +1692,11 @@ public final class MainActivity extends ComponentActivity {
             c.scale(.80f,1.19f,200f,405f);
             // The navy B/r in the reference have a broader silhouette.
             c.save();
-            c.translate(-10.6f,0);
+            // Source-edge overlap audit: Br needed +13 native px on
+            // Splash and +16 px on the proportionally smaller Home logo.
+            // Keep these offsets inside the letters' own transform so the
+            // decorative coral rays and action hit areas never move.
+            c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
             raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
@@ -1691,7 +1705,12 @@ public final class MainActivity extends ComponentActivity {
             // Preserve its native shaded bevel, but remove the old extra
             // vertical stretch and align its bottom with the letterforms.
             c.save();
-            c.translate(-4.25f,2.2f);
+            // Align the emblem independently of the navy letters. The
+            // owner's Home red 2 is also ~6% shorter than its prior native
+            // render; shrink only the decorative Home emblem, from its top.
+            c.translate(-4.25f+(page.equals("home")?8.2f:3.2f),2.2f);
+            if(page.equals("home"))
+                c.scale(1f,.94f,bx,y-size*.78f);
             c.scale(.90f,.66f,137.6f,394.36f);
             // The branded 2 must have the same rich coral face as the
             // owner's original, not the paler general gameplay cell.
@@ -1706,7 +1725,9 @@ public final class MainActivity extends ComponentActivity {
 
             // The source's jko starts immediately after the number tile.
             c.save();
-            c.translate(-36.2f,0);
+            // The glyph ascender/counters now sit over their measured
+            // source columns. Only this wordmark is changed.
+            c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
             c.scale(1.25f,.92f,228f,316f);
             raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
             c.restore();
@@ -1903,7 +1924,12 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffcf5e9);
             homeSoftCard(207,scoresY,171,scoresH,19,
                 theme==1?card:0xfffcf5e9);
-            icon("crown",53,scoresY+29,28,0xffffb228);
+            // Source Home best-score gold crown is 76 x 58 native px,
+            // where the prior emulator is 59 x 45. Keep the change
+            // confined to the light portrait Home illustration.
+            icon("crown",53,scoresY+
+                (portrait&&theme==0?35:29),
+                portrait&&theme==0?36:28,0xffffb228);
             fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
             // Source-matched 12.560 remains clear of the three right-hand
             // mini bars even for larger real records.
@@ -2549,7 +2575,16 @@ public final class MainActivity extends ComponentActivity {
                     p.setStyle(Paint.Style.FILL);
                     p.setStrokeWidth(0f);
                 }
+                if(theme==0&&referencePortraitLayout){
+                    // Source Bravo! is embossed: RGB ~31/52/87 at the
+                    // upper face and ~18/33/62 near the baseline.
+                    // No shader is applied to dark mode or to game labels.
+                    p.setShader(new LinearGradient(0f,baseline-60f,
+                        0f,baseline,0xff20385d,0xff12213e,
+                        Shader.TileMode.CLAMP));
+                }
                 c.drawText(VICTORY_GLYPHS[i],middle,baseline,p);
+                p.setShader(null);
                 p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
                 c.restore();
                 left+=glyphWidth-3.1f;
@@ -2597,7 +2632,14 @@ public final class MainActivity extends ComponentActivity {
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
             // Emulator gold mask x376–570/y350–515 versus reference
             // x379–561/y376–517: shrink slightly and place lower.
+            // Source gold crown begins around native y=377. The earlier
+            // emulator began at y=399 and ended close to the correct
+            // y=518 rim; stretch only vertically around that lower edge.
+            c.save();
+            c.translate(0f,-1.5f);
+            c.scale(1f,1.15f,198f,220f);
             victoryCrown(198,192,90);
+            c.restore();
             victoryHeadingRays();
             victoryHeading();
             if(theme==1)card(95,299,210,30,17,card);
