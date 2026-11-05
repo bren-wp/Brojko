@@ -2828,6 +2828,12 @@ public final class MainActivity extends ComponentActivity {
             // #F8EAD9 with a thick white bevel.
             p.clearShadowLayer();p.setShader(null);
             shape(x+.5f,y+1.6f,width-1f,height,19,0x30c9a98c);
+            // shape() leaves its 0x30 alpha on Paint. A LinearGradient
+            // does not reset Paint alpha, so the intended warm ivory fill
+            // was almost transparent over the darker parent modal.
+            // Restore an opaque paint colour before filling this card,
+            // retaining the translucent lip as a separate lower layer.
+            p.setColor(WHITE);
             boolean sourceWin=theme==0&&referencePortraitLayout&&
                 "win".equals(page);
             gradient(x,y,width,height-1.8f,19,
