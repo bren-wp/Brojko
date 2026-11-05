@@ -12,7 +12,7 @@ CAPTURES = {
     "brojko-splash.png": "three-screen-source-splash-941x1672.png",
     "brojko-home.png": "owner-home-12560-3864-941x1672.png",
     "brojko-classic.png": "reference-941x1672-game-classic.png",
-    "brojko-relaxed.png": "game-real-relaxed.png",
+    "brojko-relaxed.png": "relaxed-raised-gameplay-941x1672.png",
     "brojko-daily.png": "daily-refined-board-gift-941x1672.png",
     "brojko-victory.png": "owner-bravo-full-board-2048-941x1672.png",
     "brojko-missions.png": "missions-six-real-progress-941x1672.png",

@@ -2351,6 +2351,93 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void relaxedFiveByFiveHasBrandedRaisedTilesAndRealActions(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldAnimation=activity.animation;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("relaxed","",20261105L);
+                assertEquals("Relaxed mode uses five columns",5,activity.game.size);
+                // Build a genuine Undo snapshot, then render a stable
+                // 25-cell board without inserting reference data in app code.
+                activity.game.cells=new int[25];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                assertTrue("Real five-column move must work",
+                    activity.game.move(TileGame.LEFT).changed);
+                activity.game.cells=new int[]{
+                    2,4,8,16,32,
+                    4,8,16,32,64,
+                    8,16,32,64,128,
+                    16,32,64,128,256,
+                    32,64,128,256,512
+                };
+                activity.game.score=3864;
+                activity.game.peak=512;
+                activity.game.moves=29;
+                activity.page="game";activity.theme=0;
+                activity.tileStyle=0;activity.animation=0;
+                int[] original=activity.game.cells.clone();
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap rendered=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(rendered));
+                    assertTrue("Painting must not change real 5×5 game cells",
+                        java.util.Arrays.equals(original,activity.game.cells));
+                    assertEquals("Painting must not change the score",
+                        3864,activity.game.score);
+                    // The first row contains coral and turquoise tiles.
+                    // Sample safely inside the face, outside raised edges
+                    // and white numerals, at native 941px width.
+                    int coral=rendered.getPixel(81,456);
+                    int teal=rendered.getPixel(251,456);
+                    assertTrue("5×5 coral tile keeps brand saturation",
+                        android.graphics.Color.red(coral)>
+                        android.graphics.Color.green(coral)+55);
+                    assertTrue("5×5 teal tile keeps brand saturation",
+                        android.graphics.Color.green(teal)>
+                        android.graphics.Color.red(teal)+25);
+                    // Distinct fifth row is above the three bottom actions;
+                    // the reference-scaled gameplay must never clip it.
+                    int rowFive=rendered.getPixel(82,1131);
+                    int belowBoard=rendered.getPixel(82,1275);
+                    assertTrue("Fifth-row tile must remain coloured",
+                        android.graphics.Color.red(rowFive)>80&&
+                        android.graphics.Color.blue(rowFive)>80);
+                    assertTrue("Controls must not cover the fifth row",
+                        android.graphics.Color.red(belowBoard)>220&&
+                        android.graphics.Color.green(belowBoard)>205);
+                    int newCount=0,undoCount=0,finishCount=0,pauseCount=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Novo".equals(tap.label))newCount++;
+                        if("Poništi".equals(tap.label))undoCount++;
+                        if("Završi".equals(tap.label))finishCount++;
+                        if("Pauziraj igru".equals(tap.label))pauseCount++;
+                    }
+                    assertEquals("New game remains available",1,newCount);
+                    assertEquals("Real Undo remains available",1,undoCount);
+                    assertEquals("End confirmation remains available",1,finishCount);
+                    assertEquals("Pause remains available",1,pauseCount);
+                    captureReference(activity,view,
+                        "relaxed-raised-gameplay-941x1672");
+                }finally{rendered.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
         rule.getScenario().onActivity(activity->{
             final TileGame previousGame=activity.game;

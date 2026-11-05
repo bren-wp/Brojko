@@ -2271,8 +2271,11 @@ public final class MainActivity extends ComponentActivity {
                     headingSize=Math.max(10f,headingSize-1f);
                     p.setTextSize(headingSize);
                 }
-                raisedWordmarkLetters("Klasično",105,89,
-                    headingSize,ink);
+                if(theme==0&&"game".equals(page))
+                    classicGameplayHeading(105f,89f,headingSize);
+                else
+                    raisedWordmarkLetters("Klasično",105,89,
+                        headingSize,ink);
                 c.restore();
                 // Thick coral rays in the owner reference are distinct
                 // strokes, not the tiny dots of the generic rays() helper.
@@ -2336,17 +2339,21 @@ public final class MainActivity extends ComponentActivity {
             float finishX=portraitFour?258:265;
             boolean classicArtwork=portraitFour&&theme==0&&
                 "classic".equals(game.mode);
+            // Rounded 5×5 shares the premium raised action-card material,
+            // but remains entirely separate from Classic board geometry.
+            boolean relaxedArtwork="game".equals(page)&&narrow&&
+                relaxed&&theme==0&&tileStyle==0;
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
-            if(classicArtwork)
+            if(classicArtwork||relaxedArtwork)
                 classicBottomControl("Novo","refresh",firstX,actionsY,
                     113,actionsH,()->requestNew(game.mode));
             else
                 button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
                     ()->requestNew(game.mode));
             if(game.canUndo()){
-                if(classicArtwork)
+                if(classicArtwork||relaxedArtwork)
                     classicBottomControl("Poništi","undo",undoX,actionsY,
                         112,actionsH,()->undo());
                 else
@@ -2374,6 +2381,24 @@ public final class MainActivity extends ComponentActivity {
         // All following art is scoped to the light-theme 4x4 gameplay
         // view. Do not change achievements, tile values, scoring, gameplay
         // physics, other themes, 5x5, or any modal/backdrop rendering.
+        // Source-calibrated 4×4 heading: the owner's thick, navy, rounded
+        // letterforms must not inherit the thinner generic caption stroke.
+        // This is drawn only for active Classic portrait gameplay.
+        void classicGameplayHeading(float x,float baseline,float fontSize){
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
+            p.setFakeBoldText(false);p.setTextScaleX(1f);
+            p.setTextSize(fontSize);p.setColor(ink);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeWidth(2.9f);
+            p.setShader(new LinearGradient(0f,baseline-fontSize,
+                0f,baseline,0xff293959,0xff1b2947,
+                Shader.TileMode.CLAMP));
+            c.drawText("Klasično",x,baseline,p);
+            p.setShader(null);p.setStrokeWidth(0f);
+            p.setStyle(Paint.Style.FILL);
+        }
         void classicBadge(float x,float y,float width,float height){
             shape(x,y+2.2f,width,height,17.5f,0xffdf5740);
             gradient(x,y,width,height-2f,17.5f,0xffff9270,0xffff6346);
@@ -2443,6 +2468,29 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
             c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
                 y+h-4.5f,radius-1.4f,radius-1.4f,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        // 5×5 is a real, independently responsive mode. These smaller
+        // rounded tiles share the branded depth / specular light of Classic,
+        // with softer elevation suited to the denser five-column grid.
+        // User scores, values, moves, tile taps and save state are untouched.
+        void relaxedRaisedTile(float x,float y,float w,float h,
+                               float radius,int color){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setColor(0xffdfd0be);
+            p.setShadowLayer(2.2f,0f,1.7f,0x33897458);
+            c.drawRoundRect(x,y+1.2f,x+w,y+h+1.2f,radius,radius,p);
+            p.clearShadowLayer();
+            shape(x,y+2f,w,h-1f,radius,darken(color,.14f));
+            gradient(x,y,w,h-2.7f,radius,lighten(color,.22f),color);
+            p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x,y+h*.19f,
+                0x39ffffff,0x00ffffff,Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h-2.7f,radius,radius,p);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.68f);p.setColor(0x67ffffff);
+            c.drawRoundRect(x+1.4f,y+1.4f,x+w-1.4f,y+h-4f,
+                Math.max(2f,radius-1.4f),Math.max(2f,radius-1.4f),p);
             p.setStyle(Paint.Style.FILL);
         }
         int classicReferenceTileColor(int value){
@@ -2545,8 +2593,14 @@ public final class MainActivity extends ComponentActivity {
                     boolean classicSource="game".equals(page)&&tallFour&&
                         "classic".equals(game.mode)&&theme==0&&
                         tileStyle==0&&referencePortraitLayout;
+                    boolean relaxedSource="game".equals(page)&&n==5&&
+                        "relaxed".equals(game.mode)&&theme==0&&
+                        tileStyle==0&&referencePortraitLayout;
                     if(classicSource)
                         classicRaisedTile(rx+inset,ry+inset,tile-2*inset,
+                            tileHeight-2*inset,round,color);
+                    else if(relaxedSource)
+                        relaxedRaisedTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);
                     else
                         glossyTile(rx+inset,ry+inset,tile-2*inset,
@@ -2555,11 +2609,14 @@ public final class MainActivity extends ComponentActivity {
                     int digits=str.length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
+                        relaxedSource? (digits>=3?31.5f:34f)-
+                            (digits>3?(digits-3)*6f:0f):
                         (n==5?33:44)-(digits>3?(digits-3)*7:0);
                     // 2048 numeral baseline in the user's active Classic
                     // artwork is ~17-18px lower than the old Canvas result.
                     fitted(str,rx+tile/2,
-                        ry+tileHeight*(classicSource?.68f:.62f),
+                        ry+tileHeight*(classicSource?.68f:
+                            relaxedSource?.66f:.62f),
                         fontsize,tile-7,WHITE,true);
                 }
             }
