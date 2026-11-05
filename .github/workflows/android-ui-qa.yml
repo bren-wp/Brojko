@@ -133,5 +133,4 @@ jobs:
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
         run: |
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
-          gh release upload "$RELEASE_TAG" marketing-screenshots/*.png \\
-            --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$RELEASE_TAG" marketing-screenshots/*.png --repo "$GITHUB_REPOSITORY" --clobber
