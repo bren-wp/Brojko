@@ -4161,6 +4161,31 @@ public final class MainActivity extends ComponentActivity {
                 ()->navigate("stats"));
         }
         void themesTabIcon(String type,float cx,float cy,float width,int color){
+            if("home".equals(type)&&referencePortraitLayout&&theme==0){
+                // Owner's Themes tab is a softly filled house, not the
+                // thin outlined home glyph. Keep its hitbox/navigation and
+                // every other screen's icon rendering unchanged.
+                c.save();c.translate(cx-width/2f,cy-width/2f);
+                c.scale(width/24f,width/24f);
+                p.clearShadowLayer();p.setShader(null);
+                p.setStyle(Paint.Style.FILL);p.setColor(color);
+                Path home=new Path();
+                home.moveTo(2f,10.2f);
+                home.quadTo(1.4f,9.3f,2.7f,8.2f);
+                home.lineTo(10.4f,2.1f);
+                home.quadTo(12f,.9f,13.6f,2.1f);
+                home.lineTo(21.3f,8.2f);
+                home.quadTo(22.6f,9.3f,22f,10.2f);
+                home.lineTo(21f,20f);
+                home.quadTo(20.9f,22f,18.7f,22f);
+                home.lineTo(5.3f,22f);
+                home.quadTo(3.1f,22f,3f,20f);
+                home.close();
+                c.drawPath(home,p);
+                p.setColor(CREAM);
+                c.drawRoundRect(9.6f,14.2f,14.4f,22.7f,2.2f,2.2f,p);
+                c.restore();return;
+            }
             if(!"crown".equals(type)&&!"palette".equals(type)){
                 icon(type,cx,cy,width,color);return;
             }
@@ -4621,8 +4646,14 @@ public final class MainActivity extends ComponentActivity {
                 final int index=i;float cx=65+i*90;
                 if(i==2)shape(205,639,90,61,25,
                     theme==1?0xff453a48:0xffffecdf);
-                themesTabIcon(glyphs[i],cx,658,26,i==2?CORAL:muted);
-                fitted(i==2?"Teme i izgled":tabs[i],cx,690,
+                // Native 941px source home icon is 50px wide, centered
+                // around x139,y1564. The generic glyph was right/up.
+                boolean sourceHome=theme==0&&i==0;
+                float iconX=sourceHome?59f:cx;
+                float iconY=sourceHome?665f:658f;
+                themesTabIcon(glyphs[i],iconX,iconY,
+                    sourceHome?24:26,i==2?CORAL:muted);
+                fitted(i==2?"Teme i izgled":tabs[i],iconX,690,
                     i==2?10:13,86,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
                     ()->navigate(destinations[index])));
