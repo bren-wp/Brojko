@@ -2341,7 +2341,8 @@ public final class MainActivity extends ComponentActivity {
                 "classic".equals(game.mode);
             // Rounded 5×5 shares the premium raised action-card material,
             // but remains entirely separate from Classic board geometry.
-            boolean relaxedArtwork=narrow&&relaxed&&theme==0&&tileStyle==0;
+            boolean relaxedArtwork="game".equals(page)&&narrow&&
+                relaxed&&theme==0&&tileStyle==0;
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
