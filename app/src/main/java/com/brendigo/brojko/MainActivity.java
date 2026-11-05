@@ -57,6 +57,21 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
+    // Owner-provided Home reference (941 x 1672): outline and two counters
+    // of the painted navy capital B. Coordinates are native reference px.
+    // Keeping this as three compact contours avoids a raster screenshot in
+    // production while preserving the original rounded, irregular silhouette.
+    private static final int[][] HOME_SOURCE_B_CONTOURS={
+        {289,220,273,215,240,216,192,226,180,231,173,238,170,245,
+         169,255,180,367,183,385,187,392,191,395,201,398,207,398,
+         250,392,281,384,299,374,311,360,316,348,318,337,318,329,
+         315,316,311,308,305,301,295,295,284,292,299,279,304,270,
+         307,259,307,247,305,239,298,227},
+        {265,328,266,331,265,339,257,347,250,350,234,353,228,350,
+         225,328,228,324,241,321,256,321,259,322},
+        {253,262,255,266,255,273,249,281,232,287,223,287,221,285,
+         219,274,219,264,221,261,230,258,244,257,248,258}
+    };
     // Reuse immutable victory lettering data; no array allocations in onDraw.
     private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
     private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
@@ -655,6 +670,7 @@ public final class MainActivity extends ComponentActivity {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         Canvas c;float scale,offX,offY,touchX,touchY;
+        Path ownerHomeBPath;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
@@ -1715,19 +1731,12 @@ public final class MainActivity extends ComponentActivity {
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
             if("home".equals(page)&&theme==0){
-                // Pixel audit at the owner's 941 x 1672 Home: navy B
-                // needs x=170..318 (emulator x=183..306), while the
-                // immediately adjacent r already matches within 2 px.
-                // Grow B independently; do not distort r or the Splash.
-                float bAdvance=p.measureText("B");
+                // The owner's B is painted, not a standard Nunito glyph.
+                // Home draws its source-measured native vector below; do
+                // not draw a second B here or alter the Splash wordmark.
                 float rAdvance=p.measureText("r");
-                float bCenter=start+bAdvance/2f;
-                float rCenter=start+left-rAdvance/2f;
-                c.save();
-                c.scale(1.20f,1.052f,bCenter,y-size*.58f);
-                raisedWordmarkLetters("B",bCenter,y,size,wordmarkInk);
-                c.restore();
-                raisedWordmarkLetters("r",rCenter,y,size,wordmarkInk);
+                raisedWordmarkLetters("r",start+left-rAdvance/2f,
+                    y,size,wordmarkInk);
             }else
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
@@ -1921,6 +1930,29 @@ public final class MainActivity extends ComponentActivity {
                     theme==1?0xff65758e:0xffe4e0d9);
             }
         }
+        // Home-only source-calibrated logo glyph: native scalable Canvas
+        // path, retaining the two transparent counters and warm navy depth.
+        // The 400/941 scale cancels BoardScreen's 941/400 reference scale.
+        void ownerHomeB(){
+            if(ownerHomeBPath==null){
+                ownerHomeBPath=new Path();
+                ownerHomeBPath.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:HOME_SOURCE_B_CONTOURS){
+                    ownerHomeBPath.moveTo(contour[0],contour[1]);
+                    for(int i=2;i<contour.length;i+=2)
+                        ownerHomeBPath.lineTo(contour[i],contour[i+1]);
+                    ownerHomeBPath.close();
+                }
+            }
+            c.save();
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(0f,215f,0f,399f,
+                0xff213152,0xff1c2a49,Shader.TileMode.CLAMP));
+            c.drawPath(ownerHomeBPath,p);
+            p.setShader(null);
+            c.restore();
+        }
         void home(){
             boolean portrait=referencePortraitLayout;
             // Source top corners: warm coral centroid x≈92,y≈102;
@@ -1954,6 +1986,7 @@ public final class MainActivity extends ComponentActivity {
                 c.scale(.775f,.74f,200f,0f);
                 splashWordmark();
                 c.restore();
+                if(theme==0)ownerHomeB();
                 txt("by Brendigo",265,184,15,muted,true);
             }else brand(197,72);
             if(!portrait)
