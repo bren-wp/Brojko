@@ -3743,7 +3743,11 @@ public final class MainActivity extends ComponentActivity {
         // a baked screenshot or substitute it for the user's actual progress.
         // Only the light portrait Missions row uses this silhouette.
         void missionRoyalCrown(float cx,float cy){
-            c.save();c.translate(cx,cy);
+            c.save();c.translate(cx-3.4f,cy+5.5f);
+            // Measured owner gold crown bounds are x79..200,y1523..1627.
+            // The first real Android trial was too high and slightly narrow.
+            // Scale the body about its lower rim so its baseline remains fixed.
+            c.scale(1.08f,.92f,0f,23f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             Path crown=new Path();
             crown.moveTo(-20f,-8f);
@@ -3767,7 +3771,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(0,-19,0,23,
-                0xffffef73,0xffffac22,Shader.TileMode.CLAMP));
+                0xfffff384,0xffffb32a,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);p.setShader(null);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(1.3f);p.setStrokeJoin(Paint.Join.ROUND);
@@ -3784,6 +3788,11 @@ public final class MainActivity extends ComponentActivity {
                 0xffffb933,0xffb95b0d,Shader.TileMode.CLAMP));
             c.drawOval(-12.6f,17f,12.6f,22.4f,p);p.setShader(null);
 
+            c.restore();
+            // Keep the jewel separate from the silhouette's vertical fit.
+            // Owner jewel centroid is near x144,y1577; resizing the body
+            // must not push that distinct red highlight down.
+            c.save();c.translate(cx-1f,cy-3.2f);
             // The owner reference has a rounded coral jewel, absent from
             // the former flat three-point icon.
             p.setColor(0x4a8a4928);c.drawOval(-4.6f,3.8f,5.4f,14.1f,p);
