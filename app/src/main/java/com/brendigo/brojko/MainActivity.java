@@ -1362,9 +1362,7 @@ public final class MainActivity extends ComponentActivity {
                     prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
-                            Math.min(31,h*.38f):
-                            (referencePortraitLayout&&theme==0?
-                                Math.min(36,h*.44f):Math.min(36,h*.44f))):
+                            Math.min(31,h*.38f):Math.min(36,h*.44f)):
                             Math.min(27,h*.34f)):
                     (h>=66?18:16);
                 // Home owner's "Nova igra" is x349..729 native px;
