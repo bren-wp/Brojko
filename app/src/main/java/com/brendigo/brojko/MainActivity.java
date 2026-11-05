@@ -1320,7 +1320,8 @@ public final class MainActivity extends ComponentActivity {
                     float iconX=x+(winSecondary?78f:
                         winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
-                        prominent?(page.equals("daily")&&
+                        prominent?(homeHero&&referencePortraitLayout&&theme==0?
+                            49f:page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
                         Math.min(58f,w*.21f)):25f);
                     if(winSecondary)
@@ -1328,6 +1329,9 @@ public final class MainActivity extends ComponentActivity {
                     else if(page.equals("daily")&&prominent&&
                         "play".equals(symbol))
                         dailyPlayGlyph(iconX,y+h/2f,32f,iconColor);
+                    else if(homeHero&&referencePortraitLayout&&theme==0&&
+                            "play".equals(symbol))
+                        dailyPlayGlyph(iconX,y+h/2f,43f,iconColor);
                     else icon(symbol,iconX,y+h/2,
                         Math.min(prominent?
                             (page.equals("daily")?34:homeHero?43:33):23,
@@ -1356,7 +1360,9 @@ public final class MainActivity extends ComponentActivity {
                     prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
-                            Math.min(30,h*.37f):Math.min(36,h*.44f)):
+                            Math.min(31,h*.38f):
+                            (referencePortraitLayout&&theme==0?
+                                Math.min(39,h*.48f):Math.min(36,h*.44f))):
                             Math.min(27,h*.34f)):
                     (h>=66?18:16);
                 fitted(label,textCenter,y+h/2+font*.35f,font,
@@ -1698,7 +1704,22 @@ public final class MainActivity extends ComponentActivity {
             // decorative coral rays and action hit areas never move.
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
-            raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
+            if("home".equals(page)&&theme==0){
+                // Pixel audit at the owner's 941 x 1672 Home: navy B
+                // needs x=170..318 (emulator x=183..306), while the
+                // immediately adjacent r already matches within 2 px.
+                // Grow B independently; do not distort r or the Splash.
+                float bAdvance=p.measureText("B");
+                float rAdvance=p.measureText("r");
+                float bCenter=start+bAdvance/2f;
+                float rCenter=start+left-rAdvance/2f;
+                c.save();
+                c.scale(1.20f,1.052f,bCenter,y-size*.58f);
+                raisedWordmarkLetters("B",bCenter,y,size,wordmarkInk);
+                c.restore();
+                raisedWordmarkLetters("r",rCenter,y,size,wordmarkInk);
+            }else
+                raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1930,15 +1951,24 @@ public final class MainActivity extends ComponentActivity {
             icon("crown",53,scoresY+
                 (portrait&&theme==0?35:29),
                 portrait&&theme==0?36:28,0xffffb228);
-            fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
+            // Owner titles sit ~12 native pixels above the PR43
+            // emulator's labels, inside unchanged tappable cards.
+            fitted("Najbolji rezultat",132,
+                scoresY+(portrait&&theme==0?24:29),13,117,muted,true);
             // Source-matched 12.560 remains clear of the three right-hand
             // mini bars even for larger real records.
-            fitted(fmt(best),112,scoresY+60,27,84,ink,true);
-            if(portrait)homeBestMiniChart(159,scoresY+58);
-            icon("stats",236,scoresY+30,27,0xff63799d);
-            fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
+            fitted(fmt(best),112,
+                scoresY+(portrait&&theme==0?54:60),
+                27,84,ink,true);
+            if(portrait)homeBestMiniChart(159,
+                scoresY+(theme==0?53:58));
+            icon("stats",236,
+                scoresY+(portrait&&theme==0?26:30),27,0xff63799d);
+            fitted("Zadnji rezultat",portrait?301:319,
+                scoresY+(portrait&&theme==0?24:29),
                 13,portrait?104:116,muted,true);
-            fitted(fmt(lastScore),portrait?296:311,scoresY+60,
+            fitted(fmt(lastScore),portrait?296:311,
+                scoresY+(portrait&&theme==0?54:60),
                 27,portrait?113:125,ink,true);
             if(portrait)
                 icon("chevron-right",365,scoresY+39,17,muted);
@@ -2031,7 +2061,13 @@ public final class MainActivity extends ComponentActivity {
             if(daily){
                 // Actual emulator comparison: the existing vector calendar
                 // tracks the owner's source better than the bulkier trial.
-                icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
+                // Owner 941 x 1672 daily calendar spans approximately
+                // native y=960..1125; PR43 was just 1007..1127. Lift
+                // and enlarge the illustrative icon, not its action box.
+                boolean ownerHomeCalendar=portrait&&theme==0;
+                icon("calendar",x+w/2,
+                    y+(ownerHomeCalendar?56:portrait?68:77),
+                    ownerHomeCalendar?88:69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
