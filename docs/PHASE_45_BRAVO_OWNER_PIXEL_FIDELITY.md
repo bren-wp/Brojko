@@ -41,6 +41,31 @@ Source victory file: `Slika ChatGPT 24. lis 2026. 22_15_14-5(20261102-225729).pn
 - Check compact 320×480, 360×600, 941×1672, landscape, themes and action focus. No merge/new release if code or screen state regresses.
 - A true 1:1 claim requires all pixels and functions to match; this PR is an iterative step, not such a claim.
 
+## Real emulator measurement after the first successful pass
+
+GitHub Actions UI run **42111753323**, artifact **13453498496**, captures from the exact 941×1672 Android screen, 133/133 instrumented tests green. Owner photo and same-state `golden-state-win-941x1672.png` were compared in RGB without scaling, warping or alignment:
+
+| ROI | Before | First verified change |
+|---|---:|---:|
+| **Whole Bravo** | **16.855** | **14.927** |
+| Navy Bravo heading | 40.042 | **9.610** |
+| Crown | 30.265 | **24.023** |
+| Real background board | 21.336 | **17.435** |
+| Score and stars | 22.697 | 22.697 |
+| Three buttons | 20.410 | 20.410 |
+
+The entire screen improved **11.4%** and the painted heading ROI improved **76.0%**. These are **first-pass values**, not final values for this branch.
+
+### Second ROI correction: scores and stars
+
+Owner score mask `2.048` is x217..433/y870..935. Real emulator before this change was x213..427/y863..922. Move the real score text +2.2 design units X and +5.5 Y, scale the painted glyph height 1.1× around the baseline, without changing the game data. Owner score cards' headings occupy y828..850; emulator titles were y817..841, about 10 native pixels too high and too wide. Use source-calibrated 10.5/10 pt light portrait labels at corrected baselines; keep dark/landscape intact.
+
+Owner summary backdrop RGB at pixel (220,830) ≈(250,241,228), prior emulator ≈(247,236,223). Lighten only the victory summary gradient by roughly (+3,+5,+5) RGB. Source reward star at pixel (530,893) ≈(254,227,111), prior emulator ≈(255,207,79); adjust only victory star's top and base pigments to restore its luminous gold shading. Leave the vector star silhouette, positions and earned-star logic unchanged.
+
+The first verified crown gold mask was x379..562/y371..518 (owner x379..562/y375..517). Reduce only vertical scale **0.969→0.942** about the same lower rim to align the top by ≈4 native pixels while keeping the original source width. The existing strict pixel test is not relaxed.
+
+A new instrumentation assertion verifies the **actual result** score bounds and the sampled warm-card and gold-star colours. Re-measure all ROIs against the owner file after the newest emulator QA; no merge or release on unverified claims.
+
 ## Next screens
 
 Once Bravo is verified, proceed by **newest measured MAE**: Home (remaining mode thumbnails, stats cards and lower shortcuts), then Splash (brand-letter contour, blurred distant tiles and tagline). Subsequently rank the gameplay 4×4, 5×5, Daily and remaining screens against their separate owner source images and real emulator captures, preserving exact play states.
