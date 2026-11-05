@@ -2341,8 +2341,11 @@ public final class MainActivity extends ComponentActivity {
                 "classic".equals(game.mode);
             // Rounded 5×5 shares the premium raised action-card material,
             // but remains entirely separate from Classic board geometry.
-            boolean relaxedArtwork="game".equals(page)&&narrow&&
-                relaxed&&theme==0&&tileStyle==0;
+            // Modern 20:9/21:9 phones must retain the same 5×5 raised
+            // tile and controls as the 941×1672 source portrait. Never
+            // apply these specialised shadows to landscape/modal pages.
+            boolean relaxedArtwork="game".equals(page)&&relaxed&&
+                theme==0&&tileStyle==0&&getHeight()>=getWidth();
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
@@ -2595,7 +2598,7 @@ public final class MainActivity extends ComponentActivity {
                         tileStyle==0&&referencePortraitLayout;
                     boolean relaxedSource="game".equals(page)&&n==5&&
                         "relaxed".equals(game.mode)&&theme==0&&
-                        tileStyle==0&&referencePortraitLayout;
+                        tileStyle==0&&getHeight()>=getWidth();
                     if(classicSource)
                         classicRaisedTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);

@@ -114,6 +114,7 @@ def verify() -> None:
         *((name, (941, 1672)) for name in CAPTURES),
         *((name, (360, 600)) for name in COMPACT_CAPTURES),
         *RESPONSIVE_CAPTURES,
+        ("relaxed-raised-gameplay-tall-1080x2400.png", (1080, 2400)),
         ("phase10-adaptive-icon-safe-512.png", (512, 512)),
     ):
         path = ROOT / name

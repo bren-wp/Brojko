@@ -54,24 +54,35 @@ public class ScreensSmokeTest {
         finally{bitmap.recycle();}
     }
 
-    // Renders the same production BoardScreen on an independent, non-attached
-    // Android View. The Activity window cannot resize the golden viewport.
-    private void captureReference(MainActivity activity,
-                                  MainActivity.BoardScreen view,String name){
-        assertEquals(941,view.getWidth());
-        assertEquals(1672,view.getHeight());
-        Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+    // Renders the production BoardScreen independently of the Activity window
+    // at an exact requested viewport. It never scales/relabels a 941x1672
+    // reference screenshot to pretend it came from a tall device.
+    private void captureSizedViewport(MainActivity activity,
+                                      MainActivity.BoardScreen view,String name,
+                                      int width,int height){
+        assertEquals("Screenshot width for "+name,width,view.getWidth());
+        assertEquals("Screenshot height for "+name,height,view.getHeight());
+        Bitmap bitmap=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         try{
             view.draw(new Canvas(bitmap));
-            File directory=new File(activity.getExternalFilesDir(null),"screenshots");
+            File root=activity.getExternalFilesDir(null);
+            assertNotNull("External test screenshot directory",root);
+            File directory=new File(root,"screenshots");
             assertTrue(directory.isDirectory()||directory.mkdirs());
             try(FileOutputStream output=new FileOutputStream(
                     new File(directory,name+".png"))){
                 assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
             }catch(java.io.IOException failure){
-                throw new AssertionError("Cannot save reference capture "+name,failure);
+                throw new AssertionError("Cannot save viewport capture "+name,failure);
             }
         }finally{bitmap.recycle();}
+    }
+
+    // 941x1672 is the fixed owner golden-reference contract. Other viewports
+    // use captureSizedViewport and must not silently bypass these assertions.
+    private void captureReference(MainActivity activity,
+                                  MainActivity.BoardScreen view,String name){
+        captureSizedViewport(activity,view,name,941,1672);
     }
 
     // Sample a complete decorative region, not one antialiased pixel.
@@ -2431,6 +2442,78 @@ public class ScreensSmokeTest {
                 }finally{rendered.recycle();}
             }finally{
                 activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void relaxedFiveByFiveRetainsRaisedTilesOnTallPhones(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldAnimation=activity.animation;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("relaxed","",20261106L);
+                activity.game.cells=new int[25];
+                activity.game.cells[0]=2;
+                activity.game.cells[1]=2;
+                assertTrue("Tall 5×5 must support a genuine merge",
+                    activity.game.move(TileGame.LEFT).changed);
+                activity.game.cells=new int[]{
+                    2,4,8,16,32,
+                    4,8,16,32,64,
+                    8,16,32,64,128,
+                    16,32,64,128,256,
+                    32,64,128,256,512
+                };
+                activity.game.score=3864;
+                activity.page="game";activity.theme=0;
+                activity.tileStyle=0;activity.animation=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(1080,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(2400,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,1080,2400);
+                Bitmap bitmap=Bitmap.createBitmap(1080,2400,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    assertTrue("Tall 1080×2400 uses the full game layout",
+                        !view.referencePortraitLayout);
+                    int first=bitmap.getPixel(88,655);
+                    int second=bitmap.getPixel(275,655);
+                    assertTrue("First tall tile must remain raised coral",
+                        android.graphics.Color.red(first)>
+                        android.graphics.Color.green(first)+55);
+                    assertTrue("Second tall tile must remain turquoise",
+                        android.graphics.Color.green(second)>
+                        android.graphics.Color.red(second)+25);
+                    int rowFive=bitmap.getPixel(88,1500);
+                    int gapBeforeButtons=bitmap.getPixel(88,1665);
+                    assertTrue("Fifth row must not be cut off on tall phones",
+                        android.graphics.Color.red(rowFive)>80&&
+                        android.graphics.Color.blue(rowFive)>80);
+                    assertTrue("Preserve visible space below the last tile",
+                        android.graphics.Color.red(gapBeforeButtons)>210);
+                    int actions=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Novo".equals(tap.label)||
+                           "Poništi".equals(tap.label)||
+                           "Završi".equals(tap.label)||
+                           "Pauziraj igru".equals(tap.label))actions++;
+                    assertEquals("All tall-screen game actions must work",
+                        4,actions);
+                    assertEquals("Never change actual score while drawing",
+                        3864,activity.game.score);
+                    captureSizedViewport(activity,view,
+                        "relaxed-raised-gameplay-tall-1080x2400",1080,2400);
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=previousGame;activity.page=previousPage;
                 activity.theme=oldTheme;activity.tileStyle=oldStyle;
                 activity.animation=oldAnimation;
                 activity.screen.invalidate();
