@@ -2465,10 +2465,10 @@ public final class MainActivity extends ComponentActivity {
             // this highlight; keep the extra light only in the top fifth.
             p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
             p.setShader(new LinearGradient(x,y,x,y+h*.20f,
-                0x46ffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                0x30ffffff,0x00ffffff,Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
+            p.setStrokeWidth(.75f);p.setColor(0x50ffffff);
             c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
                 y+h-4.5f,radius-1.4f,radius-1.4f,p);
             p.setStyle(Paint.Style.FILL);
@@ -2564,9 +2564,14 @@ public final class MainActivity extends ComponentActivity {
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
             float left=gridX-(tallFour?2.5f:0f);
+            // Source Classic has a slightly lighter cream tray. Limit the
+            // adjustment to active, light, rounded 4×4 gameplay.
+            boolean sourceClassicFrame=tallFour&&"game".equals(page)&&
+                "classic".equals(game.mode)&&theme==0&&tileStyle==0;
             card(left-4,gridY-4,gridSize+8,
                 gridSize+(victoryBoard?14:(tallFour?34:8)),23,
-                theme==1?0xff354661:0xfff2e5d3);
+                theme==1?0xff354661:
+                    sourceClassicFrame?0xfff6e9d6:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
             float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
@@ -2612,8 +2617,8 @@ public final class MainActivity extends ComponentActivity {
                     int digits=str.length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
-                        relaxedSource? (digits>=3?31.5f:34f)-
-                            (digits>3?(digits-3)*6f:0f):
+                        relaxedSource?Math.max(11f,(digits>=3?31.5f:34f)-
+                            (digits>3?(digits-3)*6f:0f)):
                         (n==5?33:44)-(digits>3?(digits-3)*7:0);
                     // 2048 numeral baseline in the user's active Classic
                     // artwork is ~17-18px lower than the old Canvas result.
