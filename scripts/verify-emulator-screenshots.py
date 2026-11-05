@@ -26,6 +26,7 @@ CAPTURES = (
     "home-source-accent-rays-941x1672.png",
     "home-controlled-reference-941x1672.png",
     "golden-state-game-941x1672.png",
+    "relaxed-raised-gameplay-941x1672.png",
     "classic-source-lighting-941x1672.png",
     "golden-state-win-941x1672.png",
     "daily-large-safe-primary-rays-941x1672.png",
