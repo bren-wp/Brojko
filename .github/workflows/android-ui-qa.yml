@@ -105,3 +105,33 @@ jobs:
           path: |
             android-screenshots/
             instrumentation-results.txt
+
+  publish-marketing:
+    name: Publish genuine Android gallery with the release
+    needs: emulator
+    # Never grant write access to untrusted PR builds. This job only
+    # publishes captures from a successful main-branch release run.
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: Brojko-real-device-UI
+          path: .
+      - name: Verify and stage unmodified emulator screenshots
+        run: python3 scripts/stage-marketing-screenshots.py
+      - name: Upload the 12 genuine screenshots to this exact release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+          gh release upload "$RELEASE_TAG" marketing-screenshots/*.png \\
+            --repo "$GITHUB_REPOSITORY" --clobber
