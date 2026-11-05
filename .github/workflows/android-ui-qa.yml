@@ -6,6 +6,12 @@ on:
     workflows: [Build and release Android]
     types: [completed]
   workflow_dispatch:
+
+concurrency:
+  # Cancel obsolete commits of the same PR, never cancel release QA jobs.
+  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 jobs:
@@ -16,10 +22,10 @@ jobs:
     env:
       BROJKO_BUILD_NUMBER: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.run_number || github.run_number }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -29,9 +35,9 @@ jobs:
           test -n "$SDKMANAGER"
           echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '9.6.0'
+          gradle-version: '9.8.2'
       - name: Prepare and verify Nunito font + OFL license
         run: bash scripts/prepare-nunito.sh
       - name: Enable KVM
@@ -98,10 +104,39 @@ jobs:
           exit 1
       - name: Upload real Android screen captures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Brojko-real-device-UI
           if-no-files-found: warn
           path: |
             android-screenshots/
             instrumentation-results.txt
+
+  publish-marketing:
+    name: Publish genuine Android gallery with the release
+    needs: emulator
+    # Never grant write access to untrusted PR builds. This job only
+    # publishes captures from a successful main-branch release run.
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: Brojko-real-device-UI
+          path: .
+      - name: Verify and stage unmodified emulator screenshots
+        run: python3 scripts/stage-marketing-screenshots.py
+      - name: Upload the 12 genuine screenshots to this exact release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+          gh release upload "$RELEASE_TAG" marketing-screenshots/*.png --repo "$GITHUB_REPOSITORY" --clobber

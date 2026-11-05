@@ -2,6 +2,12 @@ name: Android pull request validation
 on:
   pull_request:
     branches: [main]
+
+concurrency:
+  # Cancel obsolete commits of the same PR, never cancel release QA jobs.
+  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 jobs:
@@ -9,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate screenshot checker syntax
         run: python3 -m py_compile scripts/verify-emulator-screenshots.py
       - name: Verify Croatian Google Play README badge and destination
@@ -18,7 +24,7 @@ jobs:
         run: python3 scripts/verify-brand-assets.py
       - name: Guard Android 15/16 edge-to-edge and deprecated APIs
         run: bash scripts/verify-edge-to-edge.sh
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -27,9 +33,9 @@ jobs:
           SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '9.6.0'
+          gradle-version: '9.8.2'
       - name: Prepare open-source font and license
         run: bash scripts/prepare-nunito.sh
       - name: Compile, lint and test PR without private signing credentials

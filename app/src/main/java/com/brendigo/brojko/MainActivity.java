@@ -294,7 +294,6 @@ public final class MainActivity extends ComponentActivity {
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
     }
-    String compactDate(){return new SimpleDateFormat("dd.MM.yyyy.",new Locale("hr","HR")).format(new Date());}
     String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
     String historyDate(){return new SimpleDateFormat("d. MMM yyyy.",new Locale("hr","HR")).format(new Date());}
     String dailyLongDate(){
@@ -564,6 +563,10 @@ public final class MainActivity extends ComponentActivity {
         JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
         if(!BACKUP_FORMAT.equals(root.optString("format")))
             throw new IllegalArgumentException("Nepodržani oblik sigurnosne kopije.");
+        // Match the package identity already written to every exported
+        // backup. Never import unrelated or tampered app state.
+        if(!getPackageName().equals(root.optString("package","")))
+            throw new IllegalArgumentException("Sigurnosna kopija nije za Brojko.");
         JSONObject data=root.getJSONObject("data");
         if(data.has("session")){
             TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));

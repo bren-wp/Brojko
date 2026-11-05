@@ -1,95 +1,99 @@
 <div align="center">
 
+<img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-icon.png" width="136" alt="Brojko — šarena ikona s brojevima 2, 4, 8 i 16" />
+
 # 🎮 Brojko
 ### Spajaj brojeve. Ruši rekorde.
 
-**Šarena Android igra spajanja brojeva — by [Brendigo](https://brendigo.com)**
+**Zabavna, šarena i potpuno offline logička igra za Android.**
 
-![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)
-![Offline](https://img.shields.io/badge/Igra-bez%20interneta-2EC4B6)
-![Tri teme](https://img.shields.io/badge/Teme-3-FF7A5B)
-![Bez oglasa](https://img.shields.io/badge/Oglasi-bez%20oglasa-1E2A44)
+Jedan potez. Dva jednaka broja. Stotine prilika da nadmašiš sebe.
 
-**Povuci. Spoji. Ostvari 2048. Nadmaši vlastiti rekord!**
+**🧩 2048 i više** · **🏆 Rekordi** · **🌟 Dnevni izazovi** · **🎨 Tri teme** · **🔒 Bez oglasa i računa**
 
 <a href="https://play.google.com/store/apps/details?id=com.brendigo.brojko" aria-label="Preuzmi Brojko na Google Play">
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/hr_badge_web_generic.png"
        alt="Preuzmite na Google Play" height="72">
 </a>
 
-[📲 Preuzmi Brojko](https://github.com/bren-wp/Brojko/releases) · [🔐 Pravila privatnosti](PRIVACY.md) · [🌐 Brendigo](https://brendigo.com)
+[📲 Preuzmi Brojko za Android](https://github.com/bren-wp/Brojko/releases/latest) · [🌐 Brendigo](https://brendigo.com) · [🔐 Privatnost](PRIVACY.md)
 
 </div>
 
 ---
 
-## 🧩 Mali brojevi. Veliki izazovi.
+## ✨ Otkrij Brojko
 
-Brojko je živopisna logička igra u kojoj jednakim pločicama daješ novu vrijednost. Pomakni brojeve u jednom od četiri smjera, spoji parove, planiraj sljedeći potez i pokušaj dosegnuti legendarnih **2048** — ili još više.
+<div align="center">
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-splash.png" width="220" alt="Brojko — početni animirani brendirani zaslon s 3D brojevima" />
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-home.png" width="220" alt="Brojko — početni izbornik s rekordima i načinima igranja" />
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-victory.png" width="220" alt="Brojko — zaslon Bravo nakon osvajanja pločice 2048" />
+</div>
 
-Pravila su jednostavna, ali svaki novi rekord traži dobru strategiju. Igraj nekoliko minuta ili se posveti svom najboljem rezultatu.
+**Malo pravila, mnogo mogućnosti.** Povuci pločice u jednom od četiri smjera. Kada se dva jednaka broja susretnu, spajaju se u veći. Pametno isplaniraj prostor, niz spajanja i sljedeći potez. Cilj je dosegnuti **2048**, a zatim rušiti vlastite rekorde.
 
-## 🎲 Tri načina igranja
+## 🎲 Odaberi svoj način igranja
 
-| 🟠 Klasično 4×4 | 🟢 Opušteno 5×5 | 🌟 Dnevni izazov |
-|---|---|---|
-| Izvorni 2048 doživljaj na ploči od 16 polja. | Više prostora za spajanje i mirniju strategiju. | Novi zadatak svakog dana, s istim početnim rasporedom za taj dan. |
-| Spoji, razmišljaj unaprijed i obori rekord. | Eksperimentiraj s potezima i pronađi svoj ritam. | Dosegni 256, prikupi 3.000 bodova i ostani unutar 80 poteza. |
+| 🟠 Klasično 4 × 4 | 🟢 Opušteno 5 × 5 | 🌟 Dnevni izazov |
+|:--:|:--:|:--:|
+| <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic.png" width="230" alt="Prava snimka klasične igre Brojko 4 puta 4" /> | <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-relaxed.png" width="230" alt="Prava snimka opuštene igre Brojko 5 puta 5" /> | <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily.png" width="230" alt="Prava snimka Brojko dnevnog izazova" /> |
+| Originalni izazov od 16 polja. Svaki potez je bitan. | Više mjesta, opušteniji tempo i nove kombinacije. | Svaki dan novi cilj, ograničeni potezi i zvjezdice. |
 
-## 🏆 Svaki potez vodi dalje
+## 🏆 Nagrade za upornost
 
-- **Rekordi i statistika** — prati svoj najbolji rezultat, najveću pločicu, broj odigranih partija i prethodne rezultate.
-- **Misije i postignuća** — osvajaj zvjezdice ispunjavanjem dnevnih, tjednih i trajnih ciljeva.
-- **Dnevne nagrade** — osvoji 250 zvjezdica za prvo uspješno rješenje dnevnog izazova.
-- **Poništi potez** — imaš mogućnost vratiti posljednji valjani potez.
-- **Nastavi gdje si stao** — partije i rezultati ostaju spremljeni na uređaju.
-- **Podijeli rezultat** — pohvali se svojim rekordom prijateljima.
+<table>
+<tr>
+<td width="50%" valign="top">
+<h3>🎯 Misije i postignuća</h3>
+Osvajaj zvjezdice, izvršavaj dnevne, tjedne i trajne zadatke te prati koliko si napredovao.
+</td>
+<td width="50%" valign="top">
+<h3>📈 Statistika i rekordi</h3>
+Tvoj najbolji rezultat, najveća pločica, povijest partija i osobni napredak na jednom mjestu.
+</td>
+</tr>
+<tr>
+<td align="center"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-missions.png" width="300" alt="Stvarni Brojko zaslon misija i postignuća" /></td>
+<td align="center"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-statistics.png" width="300" alt="Stvarni Brojko zaslon statistike i rekorda" /></td>
+</tr>
+</table>
 
-## 🎨 Tvoja igra, tvoj stil
+Poništi posljednji potez kad je dostupan, nastavi spremljenu partiju, podijeli svoj rezultat ili odmah započni novu igru. Pobjeda i kraj partije temelje se na **tvojoj stvarnoj igri**, a ne na unaprijed zadanim rezultatima.
 
-<blockquote>
-Topla svijetla tema, elegantna tamna ili razigrana živopisna — Brojko izgleda onako kako ti odgovara.
-</blockquote>
+## 🎨 Izgled koji je baš tvoj
 
-Odaberi **Svijetlu, Tamnu ili Živopisnu** temu i prilagodi izgled pločica kroz **Zaobljeni, Ravni ili Staklasti** stil. Podesi zvukove, vibraciju i intenzitet animacija, uz jednostavne i pregledne kontrole.
+<div align="center">
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-themes.png" width="240" alt="Stvarni zaslon Brojko tema i stilova pločica" />
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-settings.png" width="240" alt="Stvarni zaslon postavki Brojko igre" />
+  <img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-game-over.png" width="240" alt="Stvarni Brojko zaslon nakon završetka partije" />
+</div>
 
-Koraljna, tirkizna, plava, žuta i ljubičasta daju svakoj spojenoj pločici poseban karakter.
+**☀️ Svijetla · 🌙 Tamna · 🌈 Živopisna.** Biraj između tri vizualne teme i stilova pločica — zaobljeni, ravni i staklasti. Prilagodi zvukove, vibraciju i animacije svojem tempu.
 
-## 📱 Upoznaj Brojko
+## 🔒 Igra ostaje na tvom uređaju
 
-Igra uključuje brendirani početni zaslon, ploče 4×4 i 5×5, dnevne izazove, misije, statistiku, pregled tema, postavke i zaslon pobjede.
+**Bez registracije, reklama i obvezne internetske veze.** Rezultati, trenutačna igra i postavke čuvaju se lokalno. Po želji ručno izvezi ili uvezi sigurnosnu kopiju, uključi dnevni podsjetnik i odluči želiš li podijeliti svoj rezultat.
 
-[🖼️ Pogledaj stvarne prikaze zaslona](https://github.com/bren-wp/Brojko/actions/runs/40261783510) · [📦 Sva izdanja](https://github.com/bren-wp/Brojko/releases)
+[Pročitaj pravila privatnosti](PRIVACY.md).
 
-*Prikaz igara i vrijednosti u aplikaciji ovisi o stvarnom napretku.*
+## 📲 Vrijeme je za novu partiju!
 
-## 🔒 Tvoja privatnost je važna
-
-**Brojko radi bez prijave, oglasa i stalne internetske veze.** Partije, postavke i rezultati spremaju se lokalno na uređaju. Napredak možeš ručno izvesti u sigurnosnu kopiju i ponovno uvesti kada je potrebno.
-
-Ne postoji automatska sinkronizacija u oblaku. Po želji uključi lokalni podsjetnik za novi dnevni izazov.
-
-## 📲 Spreman za novu partiju?
-
-Brojko podržava **Android 7.0 i novije verzije**.
-
-**Preuzmi aplikaciju na Google Playu:**
+**Za Android 7.0 i novije verzije.**
 
 [![Preuzmite na Google Play](https://play.google.com/intl/en_us/badges/static/images/badges/hr_badge_web_generic.png)](https://play.google.com/store/apps/details?id=com.brendigo.brojko)
 
-Alternativno: [**Preuzmi najnovije izdanje Brojko za Android**](https://github.com/bren-wp/Brojko/releases)
+**[📦 Pogledaj najnovije izdanje i preuzmi Brojko](https://github.com/bren-wp/Brojko/releases/latest)**
 
-*GitHub izdanja mogu sadržavati testni APK i Android App Bundle. Dostupnost na Google Playu ovisi o državi, uređaju i statusu objave.*
+*GitHub izdanja mogu uključivati probni APK i nepotpisani Android App Bundle. Za Google Play potreban je službeno potpisani paket; dostupnost u trgovini ovisi o statusu objave.*
 
 ---
 
 <div align="center">
 
-### Brojko by Brendigo
-**Spajaj brojeve. Ruši rekorde.**
+**BROJKO by [BRENDIGO](https://brendigo.com)**
 
-[Brendigo](https://brendigo.com) · [Privatnost](PRIVACY.md) · [Preuzimanje](https://github.com/bren-wp/Brojko/releases)
+*Spajaj brojeve. Ruši rekorde.*
 
-© Brendigo
+© Brendigo · [Privatnost](PRIVACY.md) · [Izdanja](https://github.com/bren-wp/Brojko/releases)
 
 </div>
