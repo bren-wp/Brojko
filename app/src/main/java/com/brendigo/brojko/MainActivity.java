@@ -564,6 +564,10 @@ public final class MainActivity extends ComponentActivity {
         JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
         if(!BACKUP_FORMAT.equals(root.optString("format")))
             throw new IllegalArgumentException("Nepodržani oblik sigurnosne kopije.");
+        // Match the package identity already written to every exported
+        // backup. Never import unrelated or tampered app state.
+        if(!getPackageName().equals(root.optString("package","")))
+            throw new IllegalArgumentException("Sigurnosna kopija nije za Brojko.");
         JSONObject data=root.getJSONObject("data");
         if(data.has("session")){
             TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));
