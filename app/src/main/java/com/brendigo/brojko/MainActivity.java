@@ -2260,8 +2260,7 @@ public final class MainActivity extends ComponentActivity {
                 // stretch only its drawn glyphs, not the text hit regions or
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
-                c.scale(theme==0&&"game".equals(page)?1.022f:1f,
-                    1.40f,105f,60f);
+                c.scale(1f,1.40f,105f,60f);
                 // Source's rounded Classic heading has more navy ink
                 // within almost identical outer bounds. The general
                 // typography and other modes retain their normal fitted().
@@ -2273,7 +2272,7 @@ public final class MainActivity extends ComponentActivity {
                     p.setTextSize(headingSize);
                 }
                 if(theme==0&&"game".equals(page))
-                    classicGameplayHeading(105f,91.8f,headingSize);
+                    classicGameplayHeading(105f,89f,headingSize);
                 else
                     raisedWordmarkLetters("Klasično",105,89,
                         headingSize,ink);
@@ -2395,7 +2394,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTextSize(fontSize);p.setColor(ink);
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
-            p.setStrokeWidth(1.65f);
+            p.setStrokeWidth(2.9f);
             p.setShader(new LinearGradient(0f,baseline-fontSize,
                 0f,baseline,0xff293959,0xff1b2947,
                 Shader.TileMode.CLAMP));
@@ -2466,10 +2465,10 @@ public final class MainActivity extends ComponentActivity {
             // this highlight; keep the extra light only in the top fifth.
             p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
             p.setShader(new LinearGradient(x,y,x,y+h*.20f,
-                0x46ffffff,0x00ffffff,Shader.TileMode.CLAMP));
+                0x30ffffff,0x00ffffff,Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.85f);p.setColor(0x78ffffff);
+            p.setStrokeWidth(.75f);p.setColor(0x50ffffff);
             c.drawRoundRect(x+1.6f,y+1.5f,x+w-1.6f,
                 y+h-4.5f,radius-1.4f,radius-1.4f,p);
             p.setStyle(Paint.Style.FILL);
@@ -2565,9 +2564,14 @@ public final class MainActivity extends ComponentActivity {
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
             float left=gridX-(tallFour?2.5f:0f);
+            // Source Classic has a slightly lighter cream tray. Limit the
+            // adjustment to active, light, rounded 4×4 gameplay.
+            boolean sourceClassicFrame=tallFour&&"game".equals(page)&&
+                "classic".equals(game.mode)&&theme==0&&tileStyle==0;
             card(left-4,gridY-4,gridSize+8,
                 gridSize+(victoryBoard?14:(tallFour?34:8)),23,
-                theme==1?0xff354661:0xfff2e5d3);
+                theme==1?0xff354661:
+                    sourceClassicFrame?0xfff6e9d6:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
             float tile=(gridSize-gap*(n+1))/n;
             float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
