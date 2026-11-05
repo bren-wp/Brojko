@@ -2853,11 +2853,14 @@ public class ScreensSmokeTest {
             String previousPage=activity.page;
             int oldTheme=activity.theme,oldBest=activity.best;
             int oldLast=activity.lastScore;
+            TileGame previousGame=activity.game;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             try{
                 activity.page="home";activity.theme=0;
                 // Use the real score properties, not screenshot text assets.
                 activity.best=12560;activity.lastScore=3864;
+                // Force the exact new-game source label in this fixture.
+                activity.game=null;
                 view.measure(View.MeasureSpec.makeMeasureSpec(941,
                         View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(1672,
@@ -2927,6 +2930,7 @@ public class ScreensSmokeTest {
             }finally{
                 activity.page=previousPage;activity.theme=oldTheme;
                 activity.best=oldBest;activity.lastScore=oldLast;
+                activity.game=previousGame;
                 activity.updateBars();activity.screen.invalidate();
             }
         });
