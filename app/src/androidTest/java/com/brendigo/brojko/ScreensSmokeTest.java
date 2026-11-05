@@ -2870,6 +2870,37 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     view.draw(new Canvas(bitmap));
+                    // The owner B is a source-derived native 3D vector,
+                    // rather than a stretched flat font or screenshot.
+                    int bPixels=0,bLeft=941,bRight=0,bTop=1672,bBottom=0;
+                    for(int y=210;y<402;y++)
+                        for(int x=165;x<320;x++){
+                            int pixel=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<105&&green<135&&blue<180&&blue>red+12){
+                                bPixels++;
+                                bLeft=Math.min(bLeft,x);
+                                bRight=Math.max(bRight,x);
+                                bTop=Math.min(bTop,y);
+                                bBottom=Math.max(bBottom,y);
+                            }
+                        }
+                    assertTrue("Home B source fill count: "+bPixels,
+                        bPixels>=19500&&bPixels<=21800);
+                    assertTrue("Owner Home B left edge: "+bLeft,
+                        bLeft>=167&&bLeft<=174);
+                    assertTrue("Owner Home B right edge: "+bRight,
+                        bRight>=314&&bRight<=320);
+                    assertTrue("Owner Home B top and bottom: "+bTop+".."+bBottom,
+                        bTop>=211&&bTop<=221&&bBottom>=392&&bBottom<=401);
+                    int counterTop=bitmap.getPixel(235,272);
+                    int counterBottom=bitmap.getPixel(242,335);
+                    assertTrue("Upper B counter must stay transparent",
+                        android.graphics.Color.red(counterTop)>200);
+                    assertTrue("Lower B counter must stay transparent",
+                        android.graphics.Color.red(counterBottom)>200);
                     // The supplied Home's first navy score starts at
                     // native y≈568; PR43 was ~582. The crown and card
                     // hit regions must remain untouched by this fix.
