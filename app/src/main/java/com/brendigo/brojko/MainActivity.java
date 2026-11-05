@@ -294,7 +294,6 @@ public final class MainActivity extends ComponentActivity {
         Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
     }
-    String compactDate(){return new SimpleDateFormat("dd.MM.yyyy.",new Locale("hr","HR")).format(new Date());}
     String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
     String historyDate(){return new SimpleDateFormat("d. MMM yyyy.",new Locale("hr","HR")).format(new Date());}
     String dailyLongDate(){
