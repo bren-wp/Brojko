@@ -1918,8 +1918,17 @@ public final class MainActivity extends ComponentActivity {
             // x≈83,y≈105 and x≈855,y≈109. Translate ONLY their
             // decorative Canvas transforms; interactive cards stay put.
             c.save();c.translate(4f,-1.4f);c.rotate(-16,35,76);
+            if(portrait&&theme==0)c.scale(1.035f,1f,35f,76f);
             homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
-            c.save();c.translate(-18f,-7f);c.rotate(15,365,56);
+            // Owner top teal bounds: native x685..920, y0..209.
+            // Previous emulator: x716..933, y0..200. Widen locally
+            // and shift the decorative tile left, without affecting
+            // any real puzzle cells or touch targets.
+            c.save();c.translate(portrait&&theme==0?-27f:-18f,
+                portrait&&theme==0?-5f:-7f);
+            c.rotate(15,365,56);
+            if(portrait&&theme==0)
+                c.scale(1.08f,1.06f,365f,56f);
             homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
             homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
