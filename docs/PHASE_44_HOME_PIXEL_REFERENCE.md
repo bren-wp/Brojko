@@ -23,7 +23,7 @@ These are **baseline values**, not the post-PR results. They cannot prove pixel-
 
 ## Exact correction plan
 
-- **Logo, B glyph:** owner's actual navy B bounding rectangle approximately x170..318, y215..398. PR43 emulator B x183..306, y217..391. The first experiment widened a Nunito B to the correct bounds but slightly worsened the logo ROI (27.69→28.03): its rectangular glyph shape still disagreed with the owner's painted, irregular silhouette. The corrected solution extracts the source B's 32-point outer contour plus two transparent counters, stores three compact coordinate arrays, and renders a **native cached Android Canvas Path** with a top/bottom navy gradient. Local silhouette threshold IoU ≈ **0.985** versus ≈ **0.805** from stretched font B. Splash remains on its previous renderer and the real Home r/jko glyphs stay functional.
+- **Full navy Brojko wordmark:** owner's painted B bounding rectangle is x170..318, y215..398; the old emulator B was x183..306, y217..391. Stretching Nunito B to the same rectangle still worsened the logo ROI (27.69→28.03) because the shape was incorrect. The revised implementation now stores **nine compact native contours** for B, r, j, k, o, i-dot and three transparent counters; the cached Android Canvas `Path` has the original cream cutouts and a warm navy vertical gradient. Local source-vs-vector dark-mask IoU is approximately **0.985** (compared with ~0.805 for the font). This is not a raster screenshot: the entire logo is redrawn natively and responds to different viewport sizes. Coral 2 and rays remain original live Canvas shapes. Splash, gameplay and dark theme are unchanged.
 - **Score cards:** first score starts near native y568 in reference vs ~y582 in emulator. Move both live score strings up 6 design units (~14 native pixels), both titles up 5 units (~12px), mini-statogram up 5 units and right statistics icon up 4 units. The cards and all tappable bounds remain unchanged.
 - **Primary `Nova igra`:** source play shape x224..293; previous emulator x243..314. Recenter the rounded native triangle about 8–9 design units left. The source white label occupies x349..729 with top y748; the old emulator occupies x335..716 with top y755. Move the caption centre 14 native px right and stretch only its height by 14% around its existing baseline. Preserve label width, button bounds and live action.
 - **Dnevni izazov:** reference calendar starts around native y960 and reaches y1125; old emblem began ~y1007. Enlarge light Home calendar from 69 to 88 design units and move its center from y+68 to y+56. Do not touch the game mode, label, other theme calendars or the entire card's input region.
@@ -40,7 +40,7 @@ From successful first PR44 emulator screenshot run [42091554149](https://github.
 | Score cards | 24.72 | **20.61** |
 | Main CTA | 19.46 | **17.48** |
 | Three modes | 21.76 | **20.27** |
-| Logo | 27.69 | **28.03**, regression corrected next with source B vector |
+| Logo | 27.69 | **28.03**, regression addressed next by native source-contour vector wordmark |
 
 These numbers are from a **prior commit**, not latest-head verification; local shape IoU is not a full Android screenshot test. Final MAE must still be measured.
 
