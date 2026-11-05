@@ -27,7 +27,7 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.6.0'
+          gradle-version: '9.8.2'
       - name: Block known non-monotonic Google Play version codes
         env:
           RELEASE_NUMBER: ${{ github.run_number }}
