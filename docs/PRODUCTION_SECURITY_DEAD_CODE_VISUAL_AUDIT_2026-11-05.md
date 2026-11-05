@@ -5,7 +5,7 @@ Datum: 5. studenoga 2026. — autor proizvoda: Brendigo
 
 ## 1. Inventura i funkcionalna površina
 
-Android Java projekt, jedna aplikacija `com.brendigo.brojko`, bez internetske dozvole, minSdk 24, targetSdk 36, compileSdk 37 i Java 17. `TileGame.java` je zaseban deterministički 2048 engine, `MainActivity.java` obuhvaća više od 4.800 linija Canvas renderera i navigacije; `ScreensSmokeTest.java` provodi velike instrumentacijske setove na emulatoru. Izmjene ne uvode vanjske usluge ni podatkovnu bazu.
+Android Java projekt, jedna aplikacija `com.brendigo.brojko`, bez internetske dozvole, minSdk 24, targetSdk/compileSdk 36 i Java 17. `TileGame.java` je zaseban deterministički 2048 engine, `MainActivity.java` obuhvaća više od 4.800 linija Canvas renderera i navigacije; `ScreensSmokeTest.java` provodi velike instrumentacijske setove na emulatoru. Izmjene ne uvode vanjske usluge ni podatkovnu bazu.
 
 Funkcionalna područja: Splash, Home, Klasično 4×4, Opušteno 5×5, Dnevni izazov, stvarni Gameplay, Pause, Undo, Victory/Bravo, Game Over, Daily Win/Fail, Misije, Statistika/Povijest, Teme, Postavke, Jezik, Uvoz/izvoz napretka, Privatnost, Pomoć, O aplikaciji te adaptivne ikone.
 
@@ -15,7 +15,7 @@ Funkcionalna područja: Splash, Home, Klasično 4×4, Opušteno 5×5, Dnevni iza
 |---|---|---|
 | P0 | Gradle 9.6.0 zaostao za sigurnosnim popravcima 9.8.2 | **Ažurirano** u sva četiri GitHub Actions workflowa; provjeriti stvarne buildove na PR-u |
 | P0 | GitHub Actions koriste zastarjeli Node 20 lanac (checkout v4, setup-java v4, release v2 itd.) | **Ažurirani** održavani Node 24 tagovi; odvojeno pravo pisanja samo izdavačkom poslu |
-| P1 | AndroidX Core/Activity/instrumentacijski testovi i JVM JSON test modul zaostaju | **Ažurirano** na službene stabilne verzije; Core 1.19.1 zahtijeva compileSdk ≥37, zato je compileSdk podignut na 37 bez promjene targetSdk 36 |
+| P1 | AndroidX Core/Activity/instrumentacijski testovi i JVM JSON test modul zaostaju | **Activity i instrumentacijski testovi ažurirani**; Core 1.19.1 zahtijeva compileSdk ≥37, no stabilni Google SDK Manager na CI-ju ne nudi android-37. Zato je kompatibilni AndroidX Core 1.17.0 zadržan uz compile/targetSdk 36, umjesto uvođenja neizgradivog projekta |
 | P1 | Uvoz JSON kopije provjerava format/tip/podatke, ali ne provjerava identitet paketa iako se upisuje u izvoz | **Ispravljeno**: odbiti kopiju bez `com.brendigo.brojko` identiteta prije promjene SharedPreferences; novi instrumentacijski regresijski test |
 | P1 | README prikazuje poveznice na zastarjeli workflow umjesto trajnih, stvarnih screenshotova | **Preuređen** marketinški README; 12 stvarnih emulator PNG-ova stavlja se u Release assets nakon zelenog UI QA |
 | P1 | `MainActivity.java` (više tisuća linija) nosi navigaciju, backup, touch, stilove, crtanje i mrežu | Preporuka: odvojiti `GameScreenRenderer`, `HomeRenderer`, `BackupRepository` i `NavigationController` tek uz očuvanje 1:1 i regresijskih testova |
@@ -73,7 +73,7 @@ Spajanje u `main` pokreće zasebno, numerirano izdanje `v1.12.<run_number>`. Za 
 
 ## 7. Izvori za nadograđene biblioteke
 
-Službene stranice: Gradle 9.8.2 release notes; Android Gradle Plugin 9.5.0 release notes; AndroidX Core 1.19.1; Activity 1.13.0; AndroidX Test 1.7.0 / ext JUnit 1.3.0; Maven Central `org.json:json:20260814`; Node24 GitHub Actions repozitoriji. Preferiraju se stabilne verzije, ne alpha/pre-release.
+Službene stranice: Gradle 9.8.2 release notes; Android Gradle Plugin 9.5.0 release notes; AndroidX Core 1.17.0 (SDK 36 kompatibilnost; 1.19.1 traži SDK 37 koji nije dostupan u stabilnom CI-u); Activity 1.13.0; AndroidX Test 1.7.0 / ext JUnit 1.3.0; Maven Central `org.json:json:20260814`; Node24 GitHub Actions repozitoriji. Preferiraju se stabilne verzije, ne alpha/pre-release.
 
 ## 8. Kriterij zatvaranja audita
 
