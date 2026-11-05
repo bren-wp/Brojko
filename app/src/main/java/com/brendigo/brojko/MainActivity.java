@@ -2271,7 +2271,11 @@ public final class MainActivity extends ComponentActivity {
                     headingSize=Math.max(10f,headingSize-1f);
                     p.setTextSize(headingSize);
                 }
-                classicGameplayHeading(105f,89f,headingSize);
+                if(theme==0&&"game".equals(page))
+                    classicGameplayHeading(105f,89f,headingSize);
+                else
+                    raisedWordmarkLetters("Klasično",105,89,
+                        headingSize,ink);
                 c.restore();
                 // Thick coral rays in the owner reference are distinct
                 // strokes, not the tiny dots of the generic rays() helper.
