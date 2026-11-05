@@ -39,6 +39,7 @@ Funkcionalna područja: Splash, Home, Klasično 4×4, Opušteno 5×5, Dnevni iza
 
 - Četiri ručno održavana workflowa ponavljaju Java/SDK/Gradle pripremu; opravdano dijele razne emulator matrice, ali bi mogli koristiti reusable workflow bez gubitka izolacije dozvola.
 - `MainActivity.BoardScreen` kombinira crtanje, hitboxove, fontove, gesture input i accessibility; povezanost otežava potpunu provjeru neiskorištenih grana i kontrola.
+- **Dokazano neiskorišteno i uklonjeno:** `MainActivity.compactDate()` imao je isključivo vlastitu definiciju; nema poziva u produkcijskom Java kodu, Android instrumentacijskim ni JVM testovima. Uklonjena je metoda bez promjene formata datuma koje koriste ostali zasloni.
 - Trenutačno se mrtvi kod **ne briše na temelju naziva**, jer su brojna stanja otvorena indirektno kroz string `navigate()`, `Tap.action`, primatelje broadcasta ili testne fixturee. Potrebno je mapiranje svih navigacijskih ulaza, zatim provjera pokrivenosti iz emulator testa prije svakog uklanjanja.
 - `testImplementation org.json` koristi se samo u JVM testovima i nije produkcijska mrežna ovisnost; zadržano odvojeno.
 - Zastarjele/deprecated Android API uporabe (npr. `startActivityForResult`) trebaju postupnu migraciju na Activity Result API uz regresiju nakon rekreacije procesa. Nisu uklonjene napamet jer je čuvanje korisničkog napretka važnije od kozmetičke zamjene.
