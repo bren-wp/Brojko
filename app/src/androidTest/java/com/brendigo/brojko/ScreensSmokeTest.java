@@ -2521,6 +2521,64 @@ public class ScreensSmokeTest {
         });
     }
 
+
+    @Test public void relaxedLargeValueTilesKeepLegibleDigits(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            int oldAnimation=activity.animation;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("relaxed","",20261105L);
+                activity.game.cells=new int[25];
+                activity.game.cells[0]=1048576;
+                activity.game.cells[1]=16777216;
+                activity.game.cells[2]=134217728;
+                activity.game.peak=134217728;
+                activity.page="game";activity.theme=0;
+                activity.tileStyle=0;activity.animation=0;
+                int[] before=activity.game.cells.clone();
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    assertTrue("Rendering cannot modify large tile values",
+                        java.util.Arrays.equals(before,activity.game.cells));
+                    float cell=(view.gridSize-6f*6f)/5f;
+                    for(int col=0;col<3;col++){
+                        int centerX=Math.round(view.offX+view.scale*
+                            (view.gridX+6f+(cell+6f)*col+cell/2f));
+                        int centerY=Math.round(view.offY+view.scale*
+                            (view.gridY+6f+cell*.66f));
+                        int white=0;
+                        for(int y=centerY-65;y<centerY+12;y++)
+                            for(int x=centerX-50;x<centerX+50;x++){
+                                int pixel=bitmap.getPixel(x,y);
+                                if(android.graphics.Color.red(pixel)>235&&
+                                   android.graphics.Color.green(pixel)>235&&
+                                   android.graphics.Color.blue(pixel)>235)
+                                    white++;
+                            }
+                        assertTrue("Large 5x5 tile "+col+
+                            " must retain visible white digits: "+white,white>60);
+                    }
+                    captureReference(activity,view,
+                        "relaxed-large-values-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.animation=oldAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicFourByFourReferenceUsesSourceTopLightingAndRealControls(){
         rule.getScenario().onActivity(activity->{
             final TileGame previousGame=activity.game;
@@ -2579,9 +2637,8 @@ public class ScreensSmokeTest {
                         }
                     // Owner Classic heading ROI has 17,176 navy pixels;
                     // earlier real emulator had only 13,731.
-                    assertTrue("Source-like Classic 4x4 heading coverage: "+
-                        navyHeadingPixels,navyHeadingPixels>=14500&&
-                        navyHeadingPixels<=23000);
+                    assertTrue("Classic heading ink must remain close to owner 17,176-pixel mask: "+
+                        navyHeadingPixels,Math.abs(navyHeadingPixels-17176)<=2200);
                     int controls=0;
                     for(MainActivity.BoardScreen.Tap tap:board.taps)
                         if("Novo".equals(tap.label)||
