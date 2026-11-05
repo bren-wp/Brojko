@@ -2260,7 +2260,7 @@ public final class MainActivity extends ComponentActivity {
                 // stretch only its drawn glyphs, not the text hit regions or
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
-                c.scale(1f,1.40f,105f,60f);
+                c.scale(1.022f,1.40f,105f,60f);
                 // Source's rounded Classic heading has more navy ink
                 // within almost identical outer bounds. The general
                 // typography and other modes retain their normal fitted().
@@ -2272,7 +2272,7 @@ public final class MainActivity extends ComponentActivity {
                     p.setTextSize(headingSize);
                 }
                 if(theme==0&&"game".equals(page))
-                    classicGameplayHeading(105f,89f,headingSize);
+                    classicGameplayHeading(105f,91.8f,headingSize);
                 else
                     raisedWordmarkLetters("Klasično",105,89,
                         headingSize,ink);
@@ -2394,7 +2394,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTextSize(fontSize);p.setColor(ink);
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
-            p.setStrokeWidth(2.9f);
+            p.setStrokeWidth(1.65f);
             p.setShader(new LinearGradient(0f,baseline-fontSize,
                 0f,baseline,0xff293959,0xff1b2947,
                 Shader.TileMode.CLAMP));
@@ -2612,8 +2612,8 @@ public final class MainActivity extends ComponentActivity {
                     int digits=str.length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
-                        relaxedSource? (digits>=3?31.5f:34f)-
-                            (digits>3?(digits-3)*6f:0f):
+                        relaxedSource?Math.max(11f,(digits>=3?31.5f:34f)-
+                            (digits>3?(digits-3)*6f:0f)):
                         (n==5?33:44)-(digits>3?(digits-3)*7:0);
                     // 2048 numeral baseline in the user's active Classic
                     // artwork is ~17-18px lower than the old Canvas result.
