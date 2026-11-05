@@ -5767,6 +5767,72 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void ownerBravo941VectorInkAndRealModalActions(){
+        rule.getScenario().onActivity(activity->{
+            String savedPage=activity.page;
+            int savedTheme=activity.theme,savedBest=activity.best;
+            TileGame savedGame=activity.game;
+            MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+            try{
+                activity.page="win";activity.theme=0;activity.best=12560;
+                activity.game=new TileGame("classic","",2048L);
+                activity.game.cells=new int[]{
+                    2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024
+                };
+                activity.game.score=2048;activity.game.peak=2048;
+                activity.game.reached2048=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(image));
+                    int count=0,left=941,right=0,top=1672,bottom=0;
+                    for(int y=520;y<713;y++)
+                        for(int x=245;x<710;x++){
+                            int color=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red<92&&green<112&&blue<153&&blue>red+12){
+                                count++;left=Math.min(left,x);
+                                right=Math.max(right,x);
+                                top=Math.min(top,y);
+                                bottom=Math.max(bottom,y);
+                            }
+                        }
+                    // Original source mask: x260..688, y534..697,
+                    // 31,479 solid navy pixels including the exclamation.
+                    assertTrue("Owner Bravo ink volume "+count,
+                        count>=29500&&count<=33500);
+                    assertTrue("Owner Bravo X bounds "+left+".."+right,
+                        left>=257&&left<=263&&right>=684&&right<=691);
+                    assertTrue("Owner Bravo Y bounds "+top+".."+bottom,
+                        top>=531&&top<=539&&bottom>=692&&bottom<=701);
+                    for(int[] xy:new int[][]{{320,647},{469,637},{610,613}}){
+                        int color=image.getPixel(xy[0],xy[1]);
+                        assertTrue("Counter remains ivory "+xy[0]+","+xy[1],
+                            android.graphics.Color.red(color)>175);
+                    }
+                    assertEquals("No background action leaks through modal",
+                        3,board.taps.size());
+                    assertEquals("Nastavi igrati",board.taps.get(0).label);
+                    assertEquals("Nova igra",board.taps.get(1).label);
+                    assertEquals("Podijeli rezultat",board.taps.get(2).label);
+                    captureReference(activity,board,
+                        "owner-bravo-vector-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=savedPage;activity.theme=savedTheme;
+                activity.best=savedBest;activity.game=savedGame;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void ownerBravoCrownRetainsSourceVerticalGoldSilhouette(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
