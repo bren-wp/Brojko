@@ -27,7 +27,7 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.6.0'
+          gradle-version: '9.8.2'
       - name: Prepare bundled font
         run: bash scripts/prepare-nunito.sh
       - name: Enable hardware acceleration
