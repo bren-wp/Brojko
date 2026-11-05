@@ -2848,6 +2848,142 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void ownerHomePhase44PositionsAndActionsMatch941x1672Reference(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int oldTheme=activity.theme,oldBest=activity.best;
+            int oldLast=activity.lastScore;
+            TileGame previousGame=activity.game;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";activity.theme=0;
+                // Use the real score properties, not screenshot text assets.
+                activity.best=12560;activity.lastScore=3864;
+                // Force the exact new-game source label in this fixture.
+                activity.game=null;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // The owner B is a source-derived native 3D vector,
+                    // rather than a stretched flat font or screenshot.
+                    int bPixels=0,bLeft=941,bRight=0,bTop=1672,bBottom=0;
+                    for(int y=210;y<402;y++)
+                        for(int x=165;x<320;x++){
+                            int pixel=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<105&&green<135&&blue<180&&blue>red+12){
+                                bPixels++;
+                                bLeft=Math.min(bLeft,x);
+                                bRight=Math.max(bRight,x);
+                                bTop=Math.min(bTop,y);
+                                bBottom=Math.max(bBottom,y);
+                            }
+                        }
+                    assertTrue("Home B source fill count: "+bPixels,
+                        bPixels>=19500&&bPixels<=21800);
+                    assertTrue("Owner Home B left edge: "+bLeft,
+                        bLeft>=167&&bLeft<=174);
+                    assertTrue("Owner Home B right edge: "+bRight,
+                        bRight>=314&&bRight<=320);
+                    assertTrue("Owner Home B top and bottom: "+bTop+".."+bBottom,
+                        bTop>=211&&bTop<=221&&bBottom>=392&&bBottom<=401);
+                    int counterTop=bitmap.getPixel(235,272);
+                    int counterBottom=bitmap.getPixel(242,335);
+                    assertTrue("Upper B counter must stay transparent",
+                        android.graphics.Color.red(counterTop)>200);
+                    assertTrue("Lower B counter must stay transparent",
+                        android.graphics.Color.red(counterBottom)>200);
+                    // The whole painted source wordmark has ~54,444 navy
+                    // pixels at the supplied 941px viewport. Include the
+                    // dot, r, j, k, o and B; do not count gray byline.
+                    int fullNavyInk=0;
+                    for(int y=210;y<426;y++)
+                        for(int x=165;x<785;x++){
+                            int pixel=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<105&&green<135&&blue<180&&blue>red+12)
+                                fullNavyInk++;
+                        }
+                    assertTrue("Native Home source wordmark ink: "+fullNavyInk,
+                        fullNavyInk>=52000&&fullNavyInk<=58500);
+                    assertTrue("The o counter stays fully open",
+                        android.graphics.Color.red(bitmap.getPixel(709,317))>185);
+                    // The supplied Home's first navy score starts at
+                    // native y≈568; PR43 was ~582. The crown and card
+                    // hit regions must remain untouched by this fix.
+                    int firstScoreY=1672, scorePixels=0;
+                    for(int y=554;y<=615;y++)
+                        for(int x=180;x<=360;x++){
+                            int pixel=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<100&&green<125&&blue<180&&blue>red+15){
+                                firstScoreY=Math.min(firstScoreY,y);
+                                scorePixels++;
+                            }
+                        }
+                    assertTrue("A real best-score label must be drawn",
+                        scorePixels>1200);
+                    assertTrue("Score baseline too low: "+firstScoreY,
+                        firstScoreY<=575);
+                    // The reference calendar starts far higher than PR43's
+                    // y≈1007. Verify its visible orange/red top region.
+                    int upperCalendarPixels=0;
+                    for(int y=961;y<1000;y++)
+                        for(int x=678;x<853;x++){
+                            int rgb=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(rgb);
+                            int green=android.graphics.Color.green(rgb);
+                            int blue=android.graphics.Color.blue(rgb);
+                            if(red>205&&red>green+40&&blue<145)
+                                upperCalendarPixels++;
+                        }
+                    assertTrue("Daily calendar must extend into the source's "+
+                        "upper band: "+upperCalendarPixels,
+                        upperCalendarPixels>80);
+                    int scoreActions=0,modeActions=0,shortcuts=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        assertNotNull("Home action must remain functional",
+                            tap.action);
+                        if("Najbolji rezultat".equals(tap.label)||
+                           "Zadnji rezultat".equals(tap.label))scoreActions++;
+                        if(tap.label.startsWith("Klasično ")||
+                           tap.label.startsWith("Opušteno ")||
+                           tap.label.startsWith("Dnevni izazov "))modeActions++;
+                        if("Misije".equals(tap.label)||
+                           "Statistika".equals(tap.label)||
+                           "Teme".equals(tap.label)||
+                           "Postavke".equals(tap.label))shortcuts++;
+                    }
+                    assertEquals("Both score cards navigate to statistics",
+                        2,scoreActions);
+                    assertEquals("All three game mode cards remain active",
+                        3,modeActions);
+                    assertEquals("All four bottom Home shortcuts remain active",
+                        4,shortcuts);
+                    captureReference(activity,view,
+                        "owner-home-phase44-12560-3864-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=oldTheme;
+                activity.best=oldBest;activity.lastScore=oldLast;
+                activity.game=previousGame;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void homeSourceCornerCentersAndHeroLip(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;

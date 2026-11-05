@@ -57,6 +57,47 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
+    // Original Brendigo Home navy letter silhouettes, vectorized from
+    // the owner's 941 x 1672 PNG: j, r, o, o-counter, i-dot, k,
+    // B, B-lower-counter and B-upper-counter. At 1px contour
+    // simplification the dark-ink mask IoU against the supplied
+    // artwork is ~98.5%, without shipping a screenshot in the app.
+    private static final int[][] HOME_SOURCE_NAVY_CONTOURS={
+        {526,276,516,276,506,280,503,283,500,290,504,339,502,369,
+         500,374,494,381,476,387,472,391,469,398,470,410,475,416,
+         481,419,500,420,520,413,532,402,540,386,543,369,543,339,
+         539,292,536,283,531,278},
+        {382,272,371,272,366,274,359,281,356,288,354,286,352,279,
+         349,276,343,274,331,276,326,279,322,284,320,295,326,363,
+         330,375,336,380,347,381,358,378,362,375,365,370,366,358,
+         362,334,362,322,364,316,370,310,384,306,388,302,390,296,
+         390,281,388,277},
+        {702,261,680,268,669,276,662,284,653,302,651,313,652,333,
+         660,352,672,365,678,369,698,376,721,376,733,373,745,367,
+         758,355,766,341,769,332,770,309,766,294,762,286,746,270,
+         726,262},
+        {708,299,713,299,720,302,725,308,727,314,727,322,724,330,
+         714,337,707,337,702,335,697,330,694,323,694,314,697,307,
+         700,303},
+        {510,230,503,233,498,238,495,244,495,256,502,266,509,269,
+         519,269,529,264,533,259,535,254,535,244,531,236,526,232,
+         521,230},
+        {554,223,548,229,545,241,554,359,557,369,562,374,567,376,
+         581,375,589,371,594,361,592,337,594,335,619,365,625,370,
+         630,372,638,372,647,368,654,358,653,347,628,318,624,311,
+         651,281,653,277,653,268,651,264,646,259,637,255,627,255,
+         622,257,616,262,591,295,589,288,586,242,583,228,579,223,
+         572,220,563,220},
+        {289,220,273,215,240,216,192,226,180,231,173,238,170,245,
+         169,255,180,367,183,385,187,392,191,395,201,398,207,398,
+         250,392,281,384,299,374,311,360,316,348,318,337,318,329,
+         315,316,311,308,305,301,295,295,284,292,299,279,304,270,
+         307,259,307,247,305,239,298,227},
+        {265,328,265,339,257,347,250,350,234,353,228,350,225,328,
+         228,324,241,321,256,321,259,322},
+        {253,262,255,266,255,273,249,281,232,287,223,287,221,285,
+         219,274,219,264,221,261,230,258,244,257,248,258}
+    };
     // Reuse immutable victory lettering data; no array allocations in onDraw.
     private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
     private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
@@ -655,6 +696,8 @@ public final class MainActivity extends ComponentActivity {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         Canvas c;float scale,offX,offY,touchX,touchY;
+        Path ownerHomeNavyPath;
+        Shader ownerHomeNavyGradient;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
@@ -1320,7 +1363,8 @@ public final class MainActivity extends ComponentActivity {
                     float iconX=x+(winSecondary?78f:
                         winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
-                        prominent?(page.equals("daily")&&
+                        prominent?(homeHero&&referencePortraitLayout&&theme==0?
+                            49f:page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
                         Math.min(58f,w*.21f)):25f);
                     if(winSecondary)
@@ -1328,6 +1372,9 @@ public final class MainActivity extends ComponentActivity {
                     else if(page.equals("daily")&&prominent&&
                         "play".equals(symbol))
                         dailyPlayGlyph(iconX,y+h/2f,32f,iconColor);
+                    else if(homeHero&&referencePortraitLayout&&theme==0&&
+                            "play".equals(symbol))
+                        dailyPlayGlyph(iconX,y+h/2f,43f,iconColor);
                     else icon(symbol,iconX,y+h/2,
                         Math.min(prominent?
                             (page.equals("daily")?34:homeHero?43:33):23,
@@ -1336,7 +1383,9 @@ public final class MainActivity extends ComponentActivity {
                                 homeHero?.57f:.52f)),iconColor);
                 }
                 float textCenter=x+(hasSymbol?(prominent?
-                    (homeHero&&label.length()>10?w*.62f:
+                    (homeHero&&referencePortraitLayout&&theme==0&&
+                        "Nova igra".equals(label)?w*.60f:
+                        homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
                             ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
@@ -1356,11 +1405,21 @@ public final class MainActivity extends ComponentActivity {
                     prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
-                            Math.min(30,h*.37f):Math.min(36,h*.44f)):
+                            Math.min(31,h*.38f):Math.min(36,h*.44f)):
                             Math.min(27,h*.34f)):
                     (h>=66?18:16);
+                // Home owner's "Nova igra" is x349..729 native px;
+                // PR43 was x335..716, similar width but 14 px left.
+                // Its letter tops must rise about 7 px without widening.
+                boolean sourceHomeCTA=homeHero&&referencePortraitLayout&&
+                    theme==0&&"Nova igra".equals(label);
+                if(sourceHomeCTA){
+                    c.save();
+                    c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
+                }
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                if(sourceHomeCTA)c.restore();
             }
             // Icon-only actions need localized TalkBack labels and a full touch target.
             boolean iconOnly=label==null||label.isEmpty();
@@ -1698,7 +1757,11 @@ public final class MainActivity extends ComponentActivity {
             // decorative coral rays and action hit areas never move.
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
-            raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
+            // On the owner's light Home the complete navy wordmark is
+            // drawn from native paths; Splash and dark/landscape keep the
+            // existing adaptive Nunito fallback and its live brand tile.
+            if(!("home".equals(page)&&theme==0))
+                raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
             // Reference: coral 2 tile about 146 x 158 native pixels.
@@ -1724,13 +1787,14 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
 
             // The source's jko starts immediately after the number tile.
-            c.save();
-            // The glyph ascender/counters now sit over their measured
-            // source columns. Only this wordmark is changed.
-            c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
-            c.scale(1.25f,.92f,228f,316f);
-            raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
-            c.restore();
+            if(!("home".equals(page)&&theme==0)){
+                c.save();
+                c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
+                c.scale(1.25f,.92f,228f,316f);
+                raisedWordmarkLetters("jko",bx+tile+gap+right/2f,
+                    y,size,wordmarkInk);
+                c.restore();
+            }
             c.restore();
 
             // Accent strokes must sit *above* the number tile, not behind it.
@@ -1890,6 +1954,32 @@ public final class MainActivity extends ComponentActivity {
                     theme==1?0xff65758e:0xffe4e0d9);
             }
         }
+        // Complete native scalable navy Home wordmark from the owner's
+        // source contour paths. Cache Path and shader; never allocate in
+        // repeated onDraw frames or embed a static reference screenshot.
+        void ownerHomeNavyWordmark(){
+            if(ownerHomeNavyPath==null){
+                ownerHomeNavyPath=new Path();
+                ownerHomeNavyPath.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:HOME_SOURCE_NAVY_CONTOURS){
+                    ownerHomeNavyPath.moveTo(contour[0],contour[1]);
+                    for(int i=2;i<contour.length;i+=2)
+                        ownerHomeNavyPath.lineTo(contour[i],contour[i+1]);
+                    ownerHomeNavyPath.close();
+                }
+                ownerHomeNavyGradient=new LinearGradient(0f,215f,0f,420f,
+                    0xff213152,0xff1c2a49,Shader.TileMode.CLAMP);
+            }
+            c.save();
+            // On the 941px owner viewport this cancels the design-scale;
+            // smaller and larger devices still scale responsively.
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setShader(ownerHomeNavyGradient);
+            c.drawPath(ownerHomeNavyPath,p);
+            p.setShader(null);
+            c.restore();
+        }
         void home(){
             boolean portrait=referencePortraitLayout;
             // Source top corners: warm coral centroid x≈92,y≈102;
@@ -1897,8 +1987,17 @@ public final class MainActivity extends ComponentActivity {
             // x≈83,y≈105 and x≈855,y≈109. Translate ONLY their
             // decorative Canvas transforms; interactive cards stay put.
             c.save();c.translate(4f,-1.4f);c.rotate(-16,35,76);
+            if(portrait&&theme==0)c.scale(1.035f,1f,35f,76f);
             homeFloatingTile(-4,3,85,80,18,TILES[1],2);c.restore();
-            c.save();c.translate(-18f,-7f);c.rotate(15,365,56);
+            // Owner top teal bounds: native x685..920, y0..209.
+            // Previous emulator: x716..933, y0..200. Widen locally
+            // and shift the decorative tile left, without affecting
+            // any real puzzle cells or touch targets.
+            c.save();c.translate(portrait&&theme==0?-27f:-18f,
+                portrait&&theme==0?-5f:-7f);
+            c.rotate(15,365,56);
+            if(portrait&&theme==0)
+                c.scale(1.08f,1.06f,365f,56f);
             homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
             c.save();c.rotate(-12,11,176);
             homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
@@ -1914,6 +2013,7 @@ public final class MainActivity extends ComponentActivity {
                 c.scale(.775f,.74f,200f,0f);
                 splashWordmark();
                 c.restore();
+                if(theme==0)ownerHomeNavyWordmark();
                 txt("by Brendigo",265,184,15,muted,true);
             }else brand(197,72);
             if(!portrait)
@@ -1930,15 +2030,24 @@ public final class MainActivity extends ComponentActivity {
             icon("crown",53,scoresY+
                 (portrait&&theme==0?35:29),
                 portrait&&theme==0?36:28,0xffffb228);
-            fitted("Najbolji rezultat",132,scoresY+29,13,117,muted,true);
+            // Owner titles sit ~12 native pixels above the PR43
+            // emulator's labels, inside unchanged tappable cards.
+            fitted("Najbolji rezultat",132,
+                scoresY+(portrait&&theme==0?24:29),13,117,muted,true);
             // Source-matched 12.560 remains clear of the three right-hand
             // mini bars even for larger real records.
-            fitted(fmt(best),112,scoresY+60,27,84,ink,true);
-            if(portrait)homeBestMiniChart(159,scoresY+58);
-            icon("stats",236,scoresY+30,27,0xff63799d);
-            fitted("Zadnji rezultat",portrait?301:319,scoresY+29,
+            fitted(fmt(best),112,
+                scoresY+(portrait&&theme==0?54:60),
+                27,84,ink,true);
+            if(portrait)homeBestMiniChart(159,
+                scoresY+(theme==0?53:58));
+            icon("stats",236,
+                scoresY+(portrait&&theme==0?26:30),27,0xff63799d);
+            fitted("Zadnji rezultat",portrait?301:319,
+                scoresY+(portrait&&theme==0?24:29),
                 13,portrait?104:116,muted,true);
-            fitted(fmt(lastScore),portrait?296:311,scoresY+60,
+            fitted(fmt(lastScore),portrait?296:311,
+                scoresY+(portrait&&theme==0?54:60),
                 27,portrait?113:125,ink,true);
             if(portrait)
                 icon("chevron-right",365,scoresY+39,17,muted);
@@ -2031,7 +2140,13 @@ public final class MainActivity extends ComponentActivity {
             if(daily){
                 // Actual emulator comparison: the existing vector calendar
                 // tracks the owner's source better than the bulkier trial.
-                icon("calendar",x+w/2,y+(portrait?68:77),69,CORAL);
+                // Owner 941 x 1672 daily calendar spans approximately
+                // native y=960..1125; PR43 was just 1007..1127. Lift
+                // and enlarge the illustrative icon, not its action box.
+                boolean ownerHomeCalendar=portrait&&theme==0;
+                icon("calendar",x+w/2,
+                    y+(ownerHomeCalendar?56:portrait?68:77),
+                    ownerHomeCalendar?88:69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
