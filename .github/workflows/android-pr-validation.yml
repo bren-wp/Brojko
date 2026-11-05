@@ -2,6 +2,12 @@ name: Android pull request validation
 on:
   pull_request:
     branches: [main]
+
+concurrency:
+  # Cancel obsolete commits of the same PR, never cancel release QA jobs.
+  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 jobs:
