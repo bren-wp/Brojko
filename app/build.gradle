@@ -1,7 +1,7 @@
 plugins { id 'com.android.application' }
 android {
  namespace 'com.brendigo.brojko'
- compileSdk 37
+ compileSdk 36
  defaultConfig {
   applicationId 'com.brendigo.brojko'
   // Google Play automatic protection requires API 24 or higher.
@@ -35,7 +35,7 @@ android {
  testOptions { unitTests.returnDefaultValues=true }
 }
 dependencies {
- implementation 'androidx.core:core:1.19.1'
+ implementation 'androidx.core:core:1.17.0'
  implementation 'androidx.activity:activity:1.13.0'
  testImplementation 'junit:junit:4.13.2'
  testImplementation 'org.json:json:20260814'
