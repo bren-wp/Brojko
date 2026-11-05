@@ -2663,8 +2663,15 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(WHITE);
             c.drawPath(crown,p);
             p.setStyle(Paint.Style.FILL);
+            // The shortened source-height crown needs its original
+            // deep-gold face, not the former pale (235G/124B) upper
+            // gradient that delayed its first golden pixel to y394.
+            // Owner sample: y385 ~RGB(254,210,84), y450 ~RGB(254,200,70).
+            boolean ownerGold=theme==0&&referencePortraitLayout&&
+                "win".equals(page);
             p.setShader(new LinearGradient(0,3,0,19,
-                0xffffeb7c,0xffffb324,Shader.TileMode.CLAMP));
+                ownerGold?0xffffd657:0xffffeb7c,
+                ownerGold?0xffffbe37:0xffffb324,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
             p.setColor(0xffff8f16);
