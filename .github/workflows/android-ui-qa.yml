@@ -138,5 +138,39 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
         run: |
+          set -euo pipefail
+          shopt -s nullglob
+          screenshots=(marketing-screenshots/*.png)
+          if (( ${#screenshots[@]} != 12 )); then
+            echo "::error::Expected 12 real Android gallery files, found ${#screenshots[@]}"
+            exit 1
+          fi
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
-          gh release upload "$RELEASE_TAG" marketing-screenshots/*.png --repo "$GITHUB_REPOSITORY" --clobber
+          # GitHub upload endpoints occasionally return transient HTTP 500.
+          # Retry each individual *real* image without masking persistent errors.
+          for screenshot in "${screenshots[@]}"; do
+            uploaded=false
+            for attempt in 1 2 3 4; do
+              if gh release upload "$RELEASE_TAG" "$screenshot" \
+                  --repo "$GITHUB_REPOSITORY" --clobber; then
+                uploaded=true
+                break
+              fi
+              if (( attempt < 4 )); then
+                echo "::warning::Retrying $(basename "$screenshot") (attempt $((attempt+1))/4)"
+                sleep $((attempt * attempt * 3))
+              fi
+            done
+            if [[ "$uploaded" != true ]]; then
+              echo "::error::Cannot publish $(basename "$screenshot") after four attempts"
+              exit 1
+            fi
+          done
+          published="$(gh release view "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          for screenshot in "${screenshots[@]}"; do
+            if ! grep -Fxq "$(basename "$screenshot")" <<< "$published"; then
+              echo "::error::Missing release screenshot $(basename "$screenshot")"
+              exit 1
+            fi
+          done
