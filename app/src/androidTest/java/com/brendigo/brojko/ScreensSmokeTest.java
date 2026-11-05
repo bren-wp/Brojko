@@ -2901,6 +2901,23 @@ public class ScreensSmokeTest {
                         android.graphics.Color.red(counterTop)>200);
                     assertTrue("Lower B counter must stay transparent",
                         android.graphics.Color.red(counterBottom)>200);
+                    // The whole painted source wordmark has ~54,444 navy
+                    // pixels at the supplied 941px viewport. Include the
+                    // dot, r, j, k, o and B; do not count gray byline.
+                    int fullNavyInk=0;
+                    for(int y=210;y<426;y++)
+                        for(int x=165;x<785;x++){
+                            int pixel=bitmap.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<105&&green<135&&blue<180&&blue>red+12)
+                                fullNavyInk++;
+                        }
+                    assertTrue("Native Home source wordmark ink: "+fullNavyInk,
+                        fullNavyInk>=52000&&fullNavyInk<=58500);
+                    assertTrue("The o counter stays fully open",
+                        android.graphics.Color.red(bitmap.getPixel(709,317))>185);
                     // The supplied Home's first navy score starts at
                     // native y≈568; PR43 was ~582. The crown and card
                     // hit regions must remain untouched by this fix.
