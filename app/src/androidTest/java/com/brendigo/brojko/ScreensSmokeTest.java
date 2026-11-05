@@ -4542,6 +4542,21 @@ public class ScreensSmokeTest {
                     assertTrue("Reward star must be saturated gold",
                         android.graphics.Color.red(reward)>
                             android.graphics.Color.blue(reward)+65);
+                    // The illustrated royal crown has a distinct red
+                    // jewel, not the old flat yellow generic trophy icon.
+                    // Source jewel is near x146,y1576 in native 941x1672.
+                    int royalGemPixels=0;
+                    for(int y=1560;y<1592;y++)
+                        for(int x=130;x<164;x++){
+                            int color=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(red>195&&green<155&&blue<150&&
+                                    red>green+65)royalGemPixels++;
+                        }
+                    assertTrue("Mission crown needs a visible coral jewel: "+
+                        royalGemPixels,royalGemPixels>=65);
                     assertEquals("Do not invent earned achievements",
                         0,view.completedAchievements());
                     assertTrue("All six mission rows remain visible",
