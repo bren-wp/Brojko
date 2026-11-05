@@ -8,6 +8,12 @@ on:
       - 'scripts/verify-edge-to-edge*.sh'
       - '.github/workflows/android-edge-to-edge-qa.yml'
   workflow_dispatch:
+
+concurrency:
+  # Cancel obsolete commits of the same PR, never cancel release QA jobs.
+  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 jobs:
