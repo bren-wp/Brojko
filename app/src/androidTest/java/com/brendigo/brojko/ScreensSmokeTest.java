@@ -2575,6 +2575,37 @@ public class ScreensSmokeTest {
     }
 
 
+    @Test public void foreignPackageBackupIsRejectedWithoutLosingProgress(){
+        rule.getScenario().onActivity(activity->{
+            activity.persist();
+            java.util.Map<String,?> previous=new java.util.HashMap<>(
+                activity.prefs.getAll());
+            try{
+                org.json.JSONObject data=new org.json.JSONObject(new String(
+                    activity.getBackupBytes(),
+                    java.nio.charset.StandardCharsets.UTF_8));
+                data.put("package","com.example.unrelated");
+                boolean rejected=false;
+                try{
+                    activity.readBackupBytes(data.toString().getBytes(
+                        java.nio.charset.StandardCharsets.UTF_8));
+                }catch(IllegalArgumentException expected){rejected=true;}
+                assertTrue("Import must reject a foreign app package",rejected);
+                assertEquals("Rejected backup must never clear game progress",
+                    previous,activity.prefs.getAll());
+                data.remove("package");
+                rejected=false;
+                try{
+                    activity.readBackupBytes(data.toString().getBytes(
+                        java.nio.charset.StandardCharsets.UTF_8));
+                }catch(IllegalArgumentException expected){rejected=true;}
+                assertTrue("Import must reject missing package identity",rejected);
+                assertEquals("Missing package identity preserves all data",
+                    previous,activity.prefs.getAll());
+            }catch(Exception ex){throw new AssertionError("Backup QA failed",ex);}
+        });
+    }
+
     @Test public void malformedBackupTypesNeverOverwriteSavedUserData(){
         rule.getScenario().onActivity(activity->{
             // Capture the real local preference map before any import.
