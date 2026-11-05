@@ -2260,7 +2260,8 @@ public final class MainActivity extends ComponentActivity {
                 // stretch only its drawn glyphs, not the text hit regions or
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
-                c.scale(1.022f,1.40f,105f,60f);
+                c.scale(theme==0&&"game".equals(page)?1.022f:1f,
+                    1.40f,105f,60f);
                 // Source's rounded Classic heading has more navy ink
                 // within almost identical outer bounds. The general
                 // typography and other modes retain their normal fitted().
