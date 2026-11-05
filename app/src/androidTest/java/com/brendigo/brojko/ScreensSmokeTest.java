@@ -54,24 +54,35 @@ public class ScreensSmokeTest {
         finally{bitmap.recycle();}
     }
 
-    // Renders the same production BoardScreen on an independent, non-attached
-    // Android View. The Activity window cannot resize the golden viewport.
-    private void captureReference(MainActivity activity,
-                                  MainActivity.BoardScreen view,String name){
-        assertEquals(941,view.getWidth());
-        assertEquals(1672,view.getHeight());
-        Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+    // Renders the production BoardScreen independently of the Activity window
+    // at an exact requested viewport. It never scales/relabels a 941x1672
+    // reference screenshot to pretend it came from a tall device.
+    private void captureSizedViewport(MainActivity activity,
+                                      MainActivity.BoardScreen view,String name,
+                                      int width,int height){
+        assertEquals("Screenshot width for "+name,width,view.getWidth());
+        assertEquals("Screenshot height for "+name,height,view.getHeight());
+        Bitmap bitmap=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
         try{
             view.draw(new Canvas(bitmap));
-            File directory=new File(activity.getExternalFilesDir(null),"screenshots");
+            File root=activity.getExternalFilesDir(null);
+            assertNotNull("External test screenshot directory",root);
+            File directory=new File(root,"screenshots");
             assertTrue(directory.isDirectory()||directory.mkdirs());
             try(FileOutputStream output=new FileOutputStream(
                     new File(directory,name+".png"))){
                 assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
             }catch(java.io.IOException failure){
-                throw new AssertionError("Cannot save reference capture "+name,failure);
+                throw new AssertionError("Cannot save viewport capture "+name,failure);
             }
         }finally{bitmap.recycle();}
+    }
+
+    // 941x1672 is the fixed owner golden-reference contract. Other viewports
+    // use captureSizedViewport and must not silently bypass these assertions.
+    private void captureReference(MainActivity activity,
+                                  MainActivity.BoardScreen view,String name){
+        captureSizedViewport(activity,view,name,941,1672);
     }
 
     // Sample a complete decorative region, not one antialiased pixel.
@@ -2498,8 +2509,8 @@ public class ScreensSmokeTest {
                         4,actions);
                     assertEquals("Never change actual score while drawing",
                         3864,activity.game.score);
-                    captureReference(activity,view,
-                        "relaxed-raised-gameplay-tall-1080x2400");
+                    captureSizedViewport(activity,view,
+                        "relaxed-raised-gameplay-tall-1080x2400",1080,2400);
                 }finally{bitmap.recycle();}
             }finally{
                 activity.game=previousGame;activity.page=previousPage;
