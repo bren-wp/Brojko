@@ -1086,7 +1086,7 @@ public final class MainActivity extends ComponentActivity {
                     theme==0&&referencePortraitLayout;
                 int rim=victoryGold?0xffe88b10:
                     golden?0xffe48408:darken(color,.28f);
-                int top=victoryGold?0xffffdc65:
+                int top=victoryGold?0xfffff47f:
                     dailyGoalGold?0xffffd252:
                     golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
                     lighten(color,.43f);
@@ -2828,8 +2828,11 @@ public final class MainActivity extends ComponentActivity {
             // #F8EAD9 with a thick white bevel.
             p.clearShadowLayer();p.setShader(null);
             shape(x+.5f,y+1.6f,width-1f,height,19,0x30c9a98c);
+            boolean sourceWin=theme==0&&referencePortraitLayout&&
+                "win".equals(page);
             gradient(x,y,width,height-1.8f,19,
-                0xfffdf3e6,0xfff9f1e4);
+                sourceWin?0xfffff8eb:0xfffdf3e6,
+                sourceWin?0xfffcf6e9:0xfff9f1e4);
         }
         void compactVictoryCard(){
             // Match the 941x1672 portrait illustration while retaining all
@@ -2840,7 +2843,7 @@ public final class MainActivity extends ComponentActivity {
             // Keep the real vector crown, lower its tips, preserve rim.
             c.save();
             c.translate(1.1f,-1.2f);
-            c.scale(1.03f,.969f,198f,220f);
+            c.scale(1.03f,.942f,198f,220f);
             victoryCrown(198,192,90);
             c.restore();
             victoryHeadingRays();
@@ -2854,13 +2857,28 @@ public final class MainActivity extends ComponentActivity {
             // the generic nearly-white card was RGB(255,253,250).
             victorySummaryCard(76,337,120,69);
             victorySummaryCard(204,337,120,69);
-            txt("Tvoj rezultat",136,356,12,muted,false);
-            fitted(fmt(game.score),136,392,35,113,ink,true);
-            txt("Osvojene zvjezdice",264,356,11,muted,false);
+            if(theme==0&&referencePortraitLayout){
+                // Owner score labels occupy native y828..850; old emulator
+                // was y817..841, too wide and 10px too high.
+                txt("Tvoj rezultat",138f,360f,10.5f,muted,false);
+                txt("Osvojene zvjezdice",265f,360f,10f,muted,false);
+                // Owner 2.048 ink x217..433/y870..935; the old emulator
+                // was x213..427/y863..922. Scale about the text baseline,
+                // then move down/right without changing the game score.
+                c.save();c.translate(2.2f,5.5f);
+                c.scale(1f,1.1f,136f,392f);
+                fitted(fmt(game.score),136,392,35,113,ink,true);
+                c.restore();
+            }else{
+                txt("Tvoj rezultat",136,356,12,muted,false);
+                fitted(fmt(game.score),136,392,35,113,ink,true);
+                txt("Osvojene zvjezdice",264,356,11,muted,false);
+            }
             // Real reference star mask ~66×66 px; old 32-unit stars
             // rasterized to only ~58×60 px at the 941×1672 viewport.
             for(int i=0;i<3;i++)
-                icon("star",233f+i*32.3f,384f,36f,0xffffb526);
+                icon("star",233f+i*32.3f,384f,36f,
+                    theme==0&&referencePortraitLayout?0xffffc844:0xffffb526);
             // The owner's 941x1672 overlay has three almost touching
             // action bands: coral y~994..1120, cream y~1122..1267,
             // blue y~1269..1377. Old native buttons floated too high,
