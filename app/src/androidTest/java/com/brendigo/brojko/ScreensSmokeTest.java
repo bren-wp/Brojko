@@ -5817,6 +5817,36 @@ public class ScreensSmokeTest {
                         assertTrue("Counter remains ivory "+xy[0]+","+xy[1],
                             android.graphics.Color.red(color)>175);
                     }
+                    // Owner's real 2.048 ink region is y870..935.
+                    // This must remain the actual score, not a painted PNG.
+                    int scoreTop=1672,scoreBottom=0,scoreInk=0;
+                    for(int y=858;y<941;y++)
+                        for(int x=207;x<443;x++){
+                            int rgb=image.getPixel(x,y);
+                            int red=android.graphics.Color.red(rgb);
+                            int green=android.graphics.Color.green(rgb);
+                            int blue=android.graphics.Color.blue(rgb);
+                            if(red<100&&green<125&&blue<175&&blue>red+12){
+                                scoreInk++;
+                                scoreTop=Math.min(scoreTop,y);
+                                scoreBottom=Math.max(scoreBottom,y);
+                            }
+                        }
+                    assertTrue("Actual source score must remain visible",
+                        scoreInk>6000);
+                    assertTrue("Source score top "+scoreTop,
+                        scoreTop>=867&&scoreTop<=876);
+                    assertTrue("Source score bottom "+scoreBottom,
+                        scoreBottom>=930&&scoreBottom<=940);
+                    int summary=image.getPixel(220,830);
+                    assertTrue("The owner's result cards are warm ivory",
+                        android.graphics.Color.red(summary)>=249&&
+                        android.graphics.Color.green(summary)>=239&&
+                        android.graphics.Color.blue(summary)>=226);
+                    int star=image.getPixel(530,893);
+                    assertTrue("Owner reward stars keep luminous gold",
+                        android.graphics.Color.green(star)>=215&&
+                        android.graphics.Color.blue(star)>=91);
                     assertEquals("No background action leaks through modal",
                         3,board.taps.size());
                     assertEquals("Nastavi igrati",board.taps.get(0).label);
