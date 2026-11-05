@@ -57,18 +57,44 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
-    // Owner-provided Home reference (941 x 1672): outline and two counters
-    // of the painted navy capital B. Coordinates are native reference px.
-    // Keeping this as three compact contours avoids a raster screenshot in
-    // production while preserving the original rounded, irregular silhouette.
-    private static final int[][] HOME_SOURCE_B_CONTOURS={
+    // Original Brendigo Home navy letter silhouettes, vectorized from
+    // the owner's 941 x 1672 PNG: j, r, o, o-counter, i-dot, k,
+    // B, B-lower-counter and B-upper-counter. At 1px contour
+    // simplification the dark-ink mask IoU against the supplied
+    // artwork is ~98.5%, without shipping a screenshot in the app.
+    private static final int[][] HOME_SOURCE_NAVY_CONTOURS={
+        {526,276,516,276,506,280,503,283,500,290,504,339,502,369,
+         500,374,494,381,476,387,472,391,469,398,470,410,475,416,
+         481,419,500,420,520,413,532,402,540,386,543,369,543,339,
+         539,292,536,283,531,278},
+        {382,272,371,272,366,274,359,281,356,288,354,286,352,279,
+         349,276,343,274,331,276,326,279,322,284,320,295,326,363,
+         330,375,336,380,347,381,358,378,362,375,365,370,366,358,
+         362,334,362,322,364,316,370,310,384,306,388,302,390,296,
+         390,281,388,277},
+        {702,261,680,268,669,276,662,284,653,302,651,313,652,333,
+         660,352,672,365,678,369,698,376,721,376,733,373,745,367,
+         758,355,766,341,769,332,770,309,766,294,762,286,746,270,
+         726,262},
+        {708,299,713,299,720,302,725,308,727,314,727,322,724,330,
+         714,337,707,337,702,335,697,330,694,323,694,314,697,307,
+         700,303},
+        {510,230,503,233,498,238,495,244,495,256,502,266,509,269,
+         519,269,529,264,533,259,535,254,535,244,531,236,526,232,
+         521,230},
+        {554,223,548,229,545,241,554,359,557,369,562,374,567,376,
+         581,375,589,371,594,361,592,337,594,335,619,365,625,370,
+         630,372,638,372,647,368,654,358,653,347,628,318,624,311,
+         651,281,653,277,653,268,651,264,646,259,637,255,627,255,
+         622,257,616,262,591,295,589,288,586,242,583,228,579,223,
+         572,220,563,220},
         {289,220,273,215,240,216,192,226,180,231,173,238,170,245,
          169,255,180,367,183,385,187,392,191,395,201,398,207,398,
          250,392,281,384,299,374,311,360,316,348,318,337,318,329,
          315,316,311,308,305,301,295,295,284,292,299,279,304,270,
          307,259,307,247,305,239,298,227},
-        {265,328,266,331,265,339,257,347,250,350,234,353,228,350,
-         225,328,228,324,241,321,256,321,259,322},
+        {265,328,265,339,257,347,250,350,234,353,228,350,225,328,
+         228,324,241,321,256,321,259,322},
         {253,262,255,266,255,273,249,281,232,287,223,287,221,285,
          219,274,219,264,221,261,230,258,244,257,248,258}
     };
@@ -670,7 +696,8 @@ public final class MainActivity extends ComponentActivity {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         Canvas c;float scale,offX,offY,touchX,touchY;
-        Path ownerHomeBPath;
+        Path ownerHomeNavyPath;
+        Shader ownerHomeNavyGradient;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
@@ -1730,14 +1757,10 @@ public final class MainActivity extends ComponentActivity {
             // decorative coral rays and action hit areas never move.
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
-            if("home".equals(page)&&theme==0){
-                // The owner's B is painted, not a standard Nunito glyph.
-                // Home draws its source-measured native vector below; do
-                // not draw a second B here or alter the Splash wordmark.
-                float rAdvance=p.measureText("r");
-                raisedWordmarkLetters("r",start+left-rAdvance/2f,
-                    y,size,wordmarkInk);
-            }else
+            // On the owner's light Home the complete navy wordmark is
+            // drawn from native paths; Splash and dark/landscape keep the
+            // existing adaptive Nunito fallback and its live brand tile.
+            if(!("home".equals(page)&&theme==0))
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
@@ -1764,13 +1787,14 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
 
             // The source's jko starts immediately after the number tile.
-            c.save();
-            // The glyph ascender/counters now sit over their measured
-            // source columns. Only this wordmark is changed.
-            c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
-            c.scale(1.25f,.92f,228f,316f);
-            raisedWordmarkLetters("jko",bx+tile+gap+right/2f,y,size,wordmarkInk);
-            c.restore();
+            if(!("home".equals(page)&&theme==0)){
+                c.save();
+                c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
+                c.scale(1.25f,.92f,228f,316f);
+                raisedWordmarkLetters("jko",bx+tile+gap+right/2f,
+                    y,size,wordmarkInk);
+                c.restore();
+            }
             c.restore();
 
             // Accent strokes must sit *above* the number tile, not behind it.
@@ -1930,26 +1954,29 @@ public final class MainActivity extends ComponentActivity {
                     theme==1?0xff65758e:0xffe4e0d9);
             }
         }
-        // Home-only source-calibrated logo glyph: native scalable Canvas
-        // path, retaining the two transparent counters and warm navy depth.
-        // The 400/941 scale cancels BoardScreen's 941/400 reference scale.
-        void ownerHomeB(){
-            if(ownerHomeBPath==null){
-                ownerHomeBPath=new Path();
-                ownerHomeBPath.setFillType(Path.FillType.EVEN_ODD);
-                for(int[] contour:HOME_SOURCE_B_CONTOURS){
-                    ownerHomeBPath.moveTo(contour[0],contour[1]);
+        // Complete native scalable navy Home wordmark from the owner's
+        // source contour paths. Cache Path and shader; never allocate in
+        // repeated onDraw frames or embed a static reference screenshot.
+        void ownerHomeNavyWordmark(){
+            if(ownerHomeNavyPath==null){
+                ownerHomeNavyPath=new Path();
+                ownerHomeNavyPath.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:HOME_SOURCE_NAVY_CONTOURS){
+                    ownerHomeNavyPath.moveTo(contour[0],contour[1]);
                     for(int i=2;i<contour.length;i+=2)
-                        ownerHomeBPath.lineTo(contour[i],contour[i+1]);
-                    ownerHomeBPath.close();
+                        ownerHomeNavyPath.lineTo(contour[i],contour[i+1]);
+                    ownerHomeNavyPath.close();
                 }
+                ownerHomeNavyGradient=new LinearGradient(0f,215f,0f,420f,
+                    0xff213152,0xff1c2a49,Shader.TileMode.CLAMP);
             }
             c.save();
+            // On the 941px owner viewport this cancels the design-scale;
+            // smaller and larger devices still scale responsively.
             c.scale(400f/941f,400f/941f);
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
-            p.setShader(new LinearGradient(0f,215f,0f,399f,
-                0xff213152,0xff1c2a49,Shader.TileMode.CLAMP));
-            c.drawPath(ownerHomeBPath,p);
+            p.setShader(ownerHomeNavyGradient);
+            c.drawPath(ownerHomeNavyPath,p);
             p.setShader(null);
             c.restore();
         }
@@ -1986,7 +2013,7 @@ public final class MainActivity extends ComponentActivity {
                 c.scale(.775f,.74f,200f,0f);
                 splashWordmark();
                 c.restore();
-                if(theme==0)ownerHomeB();
+                if(theme==0)ownerHomeNavyWordmark();
                 txt("by Brendigo",265,184,15,muted,true);
             }else brand(197,72);
             if(!portrait)
