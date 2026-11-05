@@ -1340,7 +1340,9 @@ public final class MainActivity extends ComponentActivity {
                                 homeHero?.57f:.52f)),iconColor);
                 }
                 float textCenter=x+(hasSymbol?(prominent?
-                    (homeHero&&label.length()>10?w*.62f:
+                    (homeHero&&referencePortraitLayout&&theme==0&&
+                        "Nova igra".equals(label)?w*.60f:
+                        homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
                             ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
@@ -1362,11 +1364,21 @@ public final class MainActivity extends ComponentActivity {
                         homeHero?(label.length()>10?
                             Math.min(31,h*.38f):
                             (referencePortraitLayout&&theme==0?
-                                Math.min(39,h*.48f):Math.min(36,h*.44f))):
+                                Math.min(36,h*.44f):Math.min(36,h*.44f))):
                             Math.min(27,h*.34f)):
                     (h>=66?18:16);
+                // Home owner's "Nova igra" is x349..729 native px;
+                // PR43 was x335..716, similar width but 14 px left.
+                // Its letter tops must rise about 7 px without widening.
+                boolean sourceHomeCTA=homeHero&&referencePortraitLayout&&
+                    theme==0&&"Nova igra".equals(label);
+                if(sourceHomeCTA){
+                    c.save();
+                    c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
+                }
                 fitted(label,textCenter,y+h/2+font*.35f,font,
                     hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                if(sourceHomeCTA)c.restore();
             }
             // Icon-only actions need localized TalkBack labels and a full touch target.
             boolean iconOnly=label==null||label.isEmpty();
