@@ -98,6 +98,47 @@ public final class MainActivity extends ComponentActivity {
         {253,262,255,266,255,273,249,281,232,287,223,287,221,285,
          219,274,219,264,221,261,230,258,244,257,248,258}
     };
+    // Owner's 941x1672 "Bravo!" illustration: seven filled navy
+    // components and four open counters. Native vector paths, never
+    // a static screenshot or a fake gameplay-state image.
+    private static final int[][] OWNER_BRAVO_CONTOURS={
+        {666,622,660,625,657,628,654,635,654,643,657,649,663,654,
+         675,655,680,653,685,648,688,641,687,632,684,627,679,623},
+        {427,592,421,592,417,594,413,598,412,602,410,604,407,598,
+         401,595,396,595,390,597,384,604,384,615,385,616,387,638,
+         389,645,390,659,393,667,398,671,405,672,413,670,419,663,
+         420,657,418,648,417,631,421,623,431,617,434,609,432,596},
+        {445,591,439,599,439,607,442,611,452,612,461,607,470,606,
+         476,611,476,615,475,616,472,615,454,616,447,619,440,625,
+         437,630,435,640,437,649,441,656,446,660,455,663,468,662,
+         473,660,479,655,485,661,495,661,501,658,505,652,506,644,
+         505,643,505,632,504,631,502,608,500,601,496,594,490,588,
+         477,583,460,584},
+        {478,634,477,639,471,644,464,644,461,641,460,638,461,635,
+         464,632,469,630,475,631},
+        {512,583,506,588,505,597,520,637,529,653,537,657,546,656,
+         553,650,556,644,568,600,569,588,563,582,555,582,551,584,
+         547,590,542,610,539,615,536,609,531,591,528,586,521,582},
+        {604,572,597,574,587,580,578,591,574,600,572,609,572,623,
+         576,637,585,649,598,656,615,657,630,651,637,645,642,638,
+         647,625,648,607,644,593,639,585,633,579,618,572},
+        {607,601,615,602,620,607,621,610,620,621,617,625,612,628,
+         605,627,600,622,599,619,600,607},
+        {359,560,353,557,344,555,326,555,325,556,313,557,279,567,
+         269,572,262,580,260,586,260,598,261,599,261,605,262,606,
+         262,612,263,613,263,619,264,620,264,626,265,627,265,633,
+         267,640,272,678,276,691,282,696,286,697,303,696,319,693,
+         344,686,363,677,376,664,381,652,381,635,379,628,374,620,
+         369,616,362,613,352,611,364,599,369,588,369,573,366,567},
+        {340,639,341,642,340,646,333,653,320,658,314,658,312,656,
+         310,648,310,640,312,638,321,635,331,634,337,636},
+        {328,592,327,599,318,607,311,610,305,610,303,608,302,597,
+         306,593,316,589,324,589},
+        {665,534,659,536,653,542,651,546,650,565,651,566,651,576,
+         652,577,653,589,657,603,663,611,670,613,674,612,678,609,
+         683,598,685,588,685,581,686,580,686,572,687,571,687,547,
+         685,542,679,536,674,534}
+    };
     // Reuse immutable victory lettering data; no array allocations in onDraw.
     private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
     private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
@@ -701,6 +742,8 @@ public final class MainActivity extends ComponentActivity {
         Canvas c;float scale,offX,offY,touchX,touchY;
         Path ownerHomeNavyPath;
         Shader ownerHomeNavyGradient;
+        Path ownerBravoVectorPath;
+        Shader ownerBravoInkGradient;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
@@ -2645,7 +2688,44 @@ public final class MainActivity extends ComponentActivity {
                 }
             }
         }
-        void victoryHeading(){
+        // This 941-pixel owner lettering is intrinsically vector-based.
+        // The paired canvas scale keeps it responsive at every phone DPI.
+        void ownerBravoVectorHeading(){
+            if(ownerBravoVectorPath==null){
+                ownerBravoVectorPath=new Path();
+                ownerBravoVectorPath.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:OWNER_BRAVO_CONTOURS){
+                    ownerBravoVectorPath.moveTo(contour[0],contour[1]);
+                    for(int i=2;i<contour.length;i+=2)
+                        ownerBravoVectorPath.lineTo(contour[i],contour[i+1]);
+                    ownerBravoVectorPath.close();
+                }
+                ownerBravoInkGradient=new LinearGradient(0f,530f,0f,705f,
+                    0xff233b63,0xff12213f,Shader.TileMode.CLAMP);
+            }
+            c.save();
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            // Soft ivory extrusion under the irregular source glyphs.
+            c.save();c.translate(0f,2f);
+            p.setColor(0xb5ffffff);
+            c.drawPath(ownerBravoVectorPath,p);
+            c.restore();
+            p.setColor(ink);
+            p.setShader(ownerBravoInkGradient);
+            c.drawPath(ownerBravoVectorPath,p);
+            p.setShader(null);
+            c.restore();
+        }
+        void victoryHeading(){ 
+            // Source lettering only on the supplied light portrait modal.
+            // All other responsive themes retain the existing Nunito path.
+            if(theme==0&&referencePortraitLayout){
+                ownerBravoVectorHeading();
+                return;
+            }
+
             // The reference logo is a bouncing, hand-lettered Nunito word,
             // not a single rigid baseline. Build it as individual glyphs
             // so the weight, overlap and subtle rotations work at any DPI.
@@ -2748,14 +2828,12 @@ public final class MainActivity extends ComponentActivity {
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
-            // Emulator gold mask x376–570/y350–515 versus reference
-            // x379–561/y376–517: shrink slightly and place lower.
-            // Source gold crown begins around native y=377. The earlier
-            // emulator began at y=399 and ended close to the correct
-            // y=518 rim; stretch only vertically around that lower edge.
+            // Owner's gold crown is x379..562/y375..517; latest
+            // emulator was x379..557/y348..518, 27 px too tall.
+            // Keep the real vector crown, lower its tips, preserve rim.
             c.save();
-            c.translate(0f,-1.5f);
-            c.scale(1f,1.15f,198f,220f);
+            c.translate(1.1f,-1.2f);
+            c.scale(1.03f,.969f,198f,220f);
             victoryCrown(198,192,90);
             c.restore();
             victoryHeadingRays();
