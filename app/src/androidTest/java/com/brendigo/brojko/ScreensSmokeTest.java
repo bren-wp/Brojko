@@ -1840,9 +1840,10 @@ public class ScreensSmokeTest {
             String previousPage=activity.page;
             String previousHistory=activity.prefs.getString("history","[]");
             int previousMetric=activity.chartMetric;
+            int previousTheme=activity.theme;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             try{
-                activity.page="stats";
+                activity.page="stats";activity.theme=0;
                 final String zeroRows=
                     "[{\"score\":800,\"peak\":256,\"day\":\"25.10.2026.\"},"+
                     "{\"score\":0,\"peak\":0,\"day\":\"24.10.2026.\"}]";
@@ -1863,12 +1864,26 @@ public class ScreensSmokeTest {
                             activity.prefs.edit().putString("history",zeroRows)
                                 .commit();
                             view.draw(new Canvas(image));
-                            float baseline= size[0]==941?461f:579f;
-                            int zeroX=Math.round(view.offX+49f*view.scale);
-                            int gapX=Math.round(view.offX+70f*view.scale);
-                            int y=Math.round(view.offY+baseline*view.scale);
-                            assertEquals("Zero history value must be empty, not a bar",
-                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                            // Check real column centers, not historic magic
+                            // pixels: source-light 941 has 347 logical units
+                            // across 10 columns; tall UI uses 315.
+                            boolean source=size[0]==941;
+                            float slot=(source?347f:315f)/10f;
+                            float start=source?29f:44f;
+                            int zeroX=Math.round(view.offX+
+                                (start+(slot-6f)/2f)*view.scale);
+                            int secondX=Math.round(view.offX+
+                                (start+slot+(slot-6f)/2f)*view.scale);
+                            int gapX=Math.round(view.offX+
+                                (start+slot-3f)*view.scale);
+                            int y=Math.round(view.offY+
+                                (source?451f:573f)*view.scale);
+                            int emptyZero=image.getPixel(zeroX,y);
+                            int background=image.getPixel(gapX,y);
+                            assertEquals("Zero history entry must leave empty chart",
+                                background,emptyZero);
+                            assertNotEquals("Positive second entry must still draw",
+                                background,image.getPixel(secondX,y));
                             if(size[0]==941&&metric==0)
                                 captureReference(activity,view,
                                     "stats-zero-history-bars-941x1672");
@@ -1886,7 +1901,9 @@ public class ScreensSmokeTest {
                                 .commit();
                             view.draw(new Canvas(image));
                             assertNotEquals("Real positive history must draw a bar",
-                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                                emptyZero,image.getPixel(zeroX,y));
+                            assertEquals("Chart gutter remains clear after update",
+                                background,image.getPixel(gapX,y));
                         }
                     }finally{image.recycle();}
                 }
@@ -1894,6 +1911,7 @@ public class ScreensSmokeTest {
                 activity.prefs.edit().putString("history",previousHistory)
                     .commit();
                 activity.chartMetric=previousMetric;
+                activity.theme=previousTheme;
                 activity.page=previousPage;
                 activity.screen.invalidate();
             }
