@@ -4168,7 +4168,7 @@ public final class MainActivity extends ComponentActivity {
             float[] x=new float[10],y=new float[10];
             for(int i=0;i<10;i++){
                 double angle=-Math.PI/2+i*Math.PI/5;
-                float r=i%2==0?11.3f:5.65f;
+                float r=i%2==0?11.3f:8.15f;
                 x[i]=(float)Math.cos(angle)*r;
                 y[i]=(float)Math.sin(angle)*r;
             }
@@ -4220,7 +4220,7 @@ public final class MainActivity extends ComponentActivity {
             if(referenceStats&&"Prosjek bodova".equals(caption)){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
-                statisticsSourceBlueStar(x+33f,y+31f,43f);
+                statisticsSourceBlueStar(x+38f,y+39f,43f);
             }else{
                 icon(symbol,x+(width<=118?27:38),
                     y+(referenceStats?(width<=118?38:43):29),
