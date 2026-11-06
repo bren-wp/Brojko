@@ -6170,6 +6170,14 @@ public class ScreensSmokeTest {
                         if(size[0]==941){
                             assertTrue("Coral left accent rays are visible",
                                 countCoralPixels(bitmap,view,32,61,63,105)>8);
+                            int ownerTealGlow=bitmap.getPixel(289,1081);
+                            assertTrue("Splash distant teal glow follows source height",
+                                android.graphics.Color.red(ownerTealGlow)<220&&
+                                android.graphics.Color.green(ownerTealGlow)>
+                                    android.graphics.Color.red(ownerTealGlow)+20);
+                            int belowGlow=bitmap.getPixel(289,1195);
+                            assertTrue("Glow must not cover lower slogan area",
+                                android.graphics.Color.red(belowGlow)>215);
                             int px=Math.round(view.offX+350f*view.scale);
                             int py=Math.round(view.offY+675f*view.scale);
                             int blue=bitmap.getPixel(px,py);
