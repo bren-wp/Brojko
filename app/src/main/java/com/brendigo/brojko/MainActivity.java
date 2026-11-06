@@ -3732,10 +3732,75 @@ public final class MainActivity extends ComponentActivity {
                     missionRaisedNumber(40+(i%2)*23,y+10+(i/2)*23,
                         22,TILES[i+1],Integer.toString(MISSION_TILE_VALUES[i]),0);
             }else if(name.startsWith("Kralj")){
-                icon("crown",cx,cy+2,48,0xffffaf25);
+                if(theme==0)missionRoyalCrown(cx,cy+2);
+                else icon("crown",cx,cy+2,48,0xffffaf25);
             }else{
                 icon("star",cx,cy,38,accent);
             }
+        }
+        // The Kralj rezultata emblem is an illustrated, raised gold crown
+        // with a red central gem. Draw it as native Canvas paths: never use
+        // a baked screenshot or substitute it for the user's actual progress.
+        // Only the light portrait Missions row uses this silhouette.
+        void missionRoyalCrown(float cx,float cy){
+            c.save();c.translate(cx-3.4f,cy+5.5f);
+            // Measured owner gold crown bounds are x79..200,y1523..1627.
+            // The first real Android trial was too high and slightly narrow.
+            // Scale the body about its lower rim so its baseline remains fixed.
+            c.scale(1.08f,.92f,0f,23f);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            Path crown=new Path();
+            crown.moveTo(-20f,-8f);
+            crown.cubicTo(-23.5f,-15.5f,-16.5f,-19.5f,-12.7f,-13f);
+            crown.lineTo(-8f,-4f);
+            crown.quadTo(-5.7f,0f,-3.5f,-6f);
+            crown.lineTo(-1f,-19f);
+            crown.cubicTo(.3f,-26f,5.5f,-26f,7f,-18f);
+            crown.lineTo(11f,-5f);
+            crown.quadTo(13.1f,.2f,16f,-5.8f);
+            crown.lineTo(19.5f,-12.5f);
+            crown.cubicTo(23.5f,-19f,28f,-13f,24f,-5.5f);
+            crown.lineTo(20f,17f);
+            crown.quadTo(19.1f,22.2f,14f,22.8f);
+            crown.lineTo(-14.8f,22.8f);
+            crown.quadTo(-20.7f,22f,-21f,16f);
+            crown.close();
+
+            p.setColor(0xffc86c11);
+            p.setShadowLayer(3.5f,0f,3.5f,0x4d977249);
+            c.drawPath(crown,p);
+            p.clearShadowLayer();
+            p.setShader(new LinearGradient(0,-19,0,23,
+                0xfffff384,0xffffb32a,Shader.TileMode.CLAMP));
+            c.drawPath(crown,p);p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.3f);p.setStrokeJoin(Paint.Join.ROUND);
+            p.setColor(0xffee8f12);c.drawPath(crown,p);
+            p.setStrokeWidth(.85f);p.setColor(0xaaffffce);
+            c.save();c.translate(0,-1.1f);c.scale(.945f,.94f);
+            c.drawPath(crown,p);c.restore();
+            p.setStyle(Paint.Style.FILL);
+
+            // Soft orange opening gives the gold silhouette real depth.
+            p.setColor(0xffe68113);
+            c.drawOval(-14.4f,16.2f,14.4f,23f,p);
+            p.setShader(new LinearGradient(0,17,0,22.8f,
+                0xffffb933,0xffb95b0d,Shader.TileMode.CLAMP));
+            c.drawOval(-12.6f,17f,12.6f,22.4f,p);p.setShader(null);
+
+            c.restore();
+            // Keep the jewel separate from the silhouette's vertical fit.
+            // Owner jewel centroid is near x144,y1577; resizing the body
+            // must not push that distinct red highlight down.
+            c.save();c.translate(cx-1f,cy-3.2f);
+            // The owner reference has a rounded coral jewel, absent from
+            // the former flat three-point icon.
+            p.setColor(0x4a8a4928);c.drawOval(-4.6f,3.8f,5.4f,14.1f,p);
+            p.setShader(new LinearGradient(0,4,0,13,
+                0xffff8972,0xffed4233,Shader.TileMode.CLAMP));
+            c.drawOval(-4.4f,3.2f,4.4f,12.6f,p);p.setShader(null);
+            p.setColor(0x83ffffff);c.drawOval(-2.8f,4.2f,-.4f,7.7f,p);
+            c.restore();
         }
         void missionWeeklyHeaderIcon(float cx,float cy){
             // Blue outlined weekly planner, rather than a red daily calendar.
