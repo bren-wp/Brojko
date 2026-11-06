@@ -4026,6 +4026,51 @@ public final class MainActivity extends ComponentActivity {
             c.drawText(title,63f,baseline,p);
             p.setTextAlign(Paint.Align.CENTER);
         }
+        // Measure the *actual* Nunito Black glyph advances before splitting
+        // the two-colour headline. Independent fitted() boxes could overlap
+        // the "i" and "p" on some devices/fonts, or visually squeeze one half.
+        // Keep both runs on the same baseline with one optical gap.
+        void missionHeadlineRun(String label,float left,float baseline,
+                float fontSize,int color){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(.85f);
+            p.setTypeface(displayFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(fontSize);
+            p.setTextAlign(Paint.Align.LEFT);p.setColor(color);
+            if(theme==0){
+                p.setShadowLayer(1.0f,0f,1.2f,0x229b745b);
+                p.setShader(new LinearGradient(left,baseline-fontSize,
+                    left,baseline,lighten(color,.08f),darken(color,.045f),
+                    Shader.TileMode.CLAMP));
+            }
+            recordTextInk(label,left,baseline);
+            c.drawText(label,left,baseline,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
+            p.setTextAlign(Paint.Align.CENTER);
+        }
+        void missionMeasuredHeadline(boolean portrait){
+            final String navy="Misije i",coral="postignuća";
+            float size=portrait?36f:33f;
+            float gap=portrait?10f:11f;
+            // Leave the owner's orange rays outside the heading ink.
+            float maxWidth=portrait?312f:338f;
+            p.setTypeface(displayFont);p.setTextScaleX(1f);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            float initialWidth=p.measureText(navy)+p.measureText(coral);
+            if(initialWidth+gap>maxWidth)
+                size*=Math.max(.7f,(maxWidth-gap)/initialWidth);
+            p.setTextSize(size);
+            float navyWidth=p.measureText(navy);
+            float coralWidth=p.measureText(coral);
+            float left=(400f-navyWidth-gap-coralWidth)/2f;
+            float baseline=portrait?105f:128f;
+            missionHeadlineRun(navy,left,baseline,size,ink);
+            missionHeadlineRun(coral,left+navyWidth+gap,
+                baseline,size,CORAL);
+        }
         void missions() {
             boolean portrait=referencePortraitLayout;
             // This reference places Back at y≈40 native px, not at the
@@ -4036,10 +4081,7 @@ public final class MainActivity extends ComponentActivity {
             brand(portrait?45:67,39);
             // The owner's title leaves space for orange rays on both sides.
             if(portrait&&theme==0)missionHeaderRays();
-            fitted("Misije i",portrait?116:125,portrait?105:128,
-                portrait?36:33,142,ink,true);
-            fitted("postignuća",portrait?265:274,portrait?105:128,
-                portrait?36:33,portrait?187:203,CORAL,true);
+            missionMeasuredHeadline(portrait);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
             int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
