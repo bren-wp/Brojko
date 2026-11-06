@@ -1935,6 +1935,7 @@ public class ScreensSmokeTest {
             };
             int[][] viewports={{941,1672},{360,600},{320,480},{800,360}};
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.auditTextLayout=true;
             try{
                 activity.game=new TileGame("classic","",987654L);
                 for(int[] size:viewports){
@@ -1951,6 +1952,45 @@ public class ScreensSmokeTest {
                             for(String screen:pages){
                                 activity.page=screen;
                                 view.draw(new Canvas(image));
+                                // Compare tight, transformed glyph-ink bounds,
+                                // not just click rectangles. Intentional
+                                // modal overlays cover dimmed gameplay text,
+                                // so test nonmodal pages for text collisions.
+                                if(!("pause".equals(screen)||
+                                     "win".equals(screen)||
+                                     "over".equals(screen)||
+                                     "confirm".equals(screen)||
+                                     "confirmEnd".equals(screen)||
+                                     "dailyWin".equals(screen)||
+                                     "dailyFail".equals(screen))){
+                                    for(int t=0;t<view.textRegions.size();t++){
+                                        MainActivity.BoardScreen.TextRegion first=
+                                            view.textRegions.get(t);
+                                        android.graphics.RectF a=first.bounds;
+                                        if(a.right<=0||a.bottom<=0||
+                                           a.left>=size[0]||a.top>=size[1])
+                                            continue;
+                                        for(int k=t+1;k<view.textRegions.size();k++){
+                                            MainActivity.BoardScreen.TextRegion second=
+                                                view.textRegions.get(k);
+                                            android.graphics.RectF b=second.bounds;
+                                            float overlapX=Math.min(a.right,b.right)-
+                                                Math.max(a.left,b.left);
+                                            float overlapY=Math.min(a.bottom,b.bottom)-
+                                                Math.max(a.top,b.top);
+                                            if(overlapX<2f||overlapY<2f)continue;
+                                            float minArea=Math.min(a.width()*a.height(),
+                                                b.width()*b.height());
+                                            if(minArea<1f)continue;
+                                            float ratio=overlapX*overlapY/minArea;
+                                            assertTrue("Text overlap "+screen+
+                                                " ("+size[0]+"x"+size[1]+
+                                                "), skin "+skin+": '"+first.text+
+                                                "' vs '"+second.text+
+                                                "' ink="+ratio,ratio<.16f);
+                                        }
+                                    }
+                                }
                                 java.util.ArrayList<MainActivity.BoardScreen.Tap>
                                     actions=new java.util.ArrayList<>(view.taps);
                                 for(int i=0;i<actions.size();i++){
@@ -1995,6 +2035,7 @@ public class ScreensSmokeTest {
                 activity.page=priorPage;
                 activity.theme=priorTheme;
                 activity.game=priorGame;
+                view.auditTextLayout=false;
                 activity.screen.invalidate();
             }
         });
