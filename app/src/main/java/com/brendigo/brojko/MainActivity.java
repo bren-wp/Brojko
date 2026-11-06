@@ -4603,8 +4603,11 @@ public final class MainActivity extends ComponentActivity {
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
                             lighten(barColor,.17f),barColor);
+                        // Values must fit fully inside their own column.
+                        // Earlier +4 width could put equal-height labels
+                        // into adjacent columns on compact screens.
                         fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
-                            barSlot+4,ink,true);
+                            Math.max(8f,barSlot-8f),ink,true);
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
@@ -4635,7 +4638,10 @@ public final class MainActivity extends ComponentActivity {
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())
                     leftFitted(completedAt,117,y+21,11.3f,46,muted,false);
-                fitted(fmt(score),205,y+22,17,87,record?CORAL:TEAL,true);
+                // Reserve a minimum 5-unit gap after date/time and
+                // before the crown badge even for long localized scores.
+                fitted(fmt(score),208,y+22,17,79,
+                    record?CORAL:TEAL,true);
                 if(record)icon("crown",265,y+15,17,0xffff9e23);
                 int peak=row.optInt("peak",0);
                 if(peak>0){
