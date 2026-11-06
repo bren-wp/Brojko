@@ -2252,6 +2252,83 @@ public final class MainActivity extends ComponentActivity {
                 radius-1f,radius-1f,p);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
+
+        // The 5x5 Home thumbnail is decorative reference art, not live
+        // gameplay. Its owner-supplied cells are pastel and almost flat;
+        // glossyTile() previously oversaturated them and added double rims.
+        // Keep these measured face colours exclusive to light portrait Home.
+        void homeRelaxedPreviewTile(float x,float y,float side,int face){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffd6d4ca);
+            p.setShadowLayer(1.8f,0f,1.4f,0x25856e5c);
+            c.drawRoundRect(x+.35f,y+1.4f,x+side+.35f,
+                y+side+.8f,3.6f,3.6f,p);
+            p.clearShadowLayer();
+            gradient(x,y,side,side-.6f,3.5f,
+                lighten(face,.075f),darken(face,.045f));
+            p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.38f);p.setColor(0x4dffffff);
+            c.drawRoundRect(x+.6f,y+.55f,x+side-.6f,
+                y+side-1.1f,3f,3f,p);
+            p.setStyle(Paint.Style.FILL);
+        }
+        // Owner's Dnevni izazov Home icon is a puffy physical calendar:
+        // two raised dark binder pins, rounded coral header, warm paper body
+        // and a beveled golden star. Draw it natively to any Android density.
+        void homeDailyCalendar(float cx,float cy){
+            c.save();
+            c.translate(cx-44f,cy-42f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffe4d4be);
+            p.setShadowLayer(5f,0f,4.2f,0x3d896b45);
+            c.drawRoundRect(13,21,75,80,12,12,p);
+            p.clearShadowLayer();
+            gradient(13,20,62,59,12,
+                0xfffffefb,0xfff4ecdb);
+            // Rounded red top with glossy surface and a subtle bottom rim.
+            gradient(13,19,62,25,10,
+                0xffff9274,0xffff593f);
+            p.setColor(0x36ffffff);
+            c.drawRoundRect(17,21,71,25,3,3,p);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.65f);p.setColor(0x45ffffff);
+            c.drawRoundRect(14f,20f,74f,76f,11f,11f,p);
+            p.setStyle(Paint.Style.FILL);
+            for(float pinX:new float[]{28f,60f}){
+                p.setColor(0x340b1530);
+                c.drawRoundRect(pinX-3,10,pinX+4,32,3.5f,3.5f,p);
+                p.setShader(new LinearGradient(pinX-2,8,pinX+4,8,
+                    0xff182b4a,0xff59647b,Shader.TileMode.CLAMP));
+                c.drawRoundRect(pinX-3f,7f,pinX+3f,29f,3f,3f,p);
+                p.setShader(null);
+            }
+            Path star=new Path();
+            for(int i=0;i<10;i++){
+                double angle=-Math.PI/2+i*Math.PI/5;
+                float rr=(i%2==0?19.7f:9.9f);
+                float sx=44f+(float)Math.cos(angle)*rr;
+                float sy=55f+(float)Math.sin(angle)*rr;
+                if(i==0)star.moveTo(sx,sy);
+                else star.lineTo(sx,sy);
+            }
+            star.close();
+            c.save();c.translate(0f,1.5f);
+            p.setColor(0xffdd8106);c.drawPath(star,p);
+            c.restore();
+            p.setShader(new LinearGradient(26,37,63,73,
+                0xffffe96a,0xffffa812,Shader.TileMode.CLAMP));
+            c.drawPath(star,p);p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(1.15f);p.setColor(0xffffd05c);
+            c.drawPath(star,p);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0x3bffffff);c.drawOval(32,40,55,47,p);
+            c.restore();
+        }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
             boolean portrait=referencePortraitLayout;
@@ -2263,9 +2340,11 @@ public final class MainActivity extends ComponentActivity {
                 // native y=960..1125; PR43 was just 1007..1127. Lift
                 // and enlarge the illustrative icon, not its action box.
                 boolean ownerHomeCalendar=portrait&&theme==0;
-                icon("calendar",x+w/2,
-                    y+(ownerHomeCalendar?56:portrait?68:77),
-                    ownerHomeCalendar?88:69,CORAL);
+                if(ownerHomeCalendar)
+                    homeDailyCalendar(x+w/2,y+55f);
+                else
+                    icon("calendar",x+w/2,
+                        y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
@@ -2285,12 +2364,15 @@ public final class MainActivity extends ComponentActivity {
                 // formula produced purple in row 2 and coral in the
                 // fifth slot of row 1, unlike the supplied 5x5 artwork.
                 // Keep runtime game spawn and tileColor unchanged.
+                // Cell-centre colours measured directly from the owner's
+                // 941x1672 Home artwork at (379+45*column,964+45*row).
+                // No live tile data or scoring depends on these 25 pixels.
                 int[] relaxedPreview={
-                    TILES[1],TILES[2],TILES[3],TILES[4],0xfff1e3b1,
-                    TILES[2],TILES[3],TILES[4],TILES[1],TILES[6],
-                    TILES[3],TILES[4],TILES[1],TILES[6],TILES[7],
-                    TILES[6],0xffff6193,TILES[7],TILES[3],TILES[10],
-                    TILES[7],TILES[8],TILES[3],TILES[10],TILES[10]
+                    0xfff3b0a0,0xff7ee9dd,0xff79b6f0,0xfff8d37c,0xfff1edc9,
+                    0xff83ece2,0xff90c2f8,0xfff8d88d,0xfff9ad7c,0xfff792ac,
+                    0xff99ccfa,0xfff4dc9b,0xfff8b68b,0xfff99db8,0xffc69af0,
+                    0xfff1bcce,0xfff59eb6,0xffc39bf4,0xff79b8fb,0xff8be8d3,
+                    0xffcca9f9,0xffb699f9,0xff84c1f9,0xff6ee6c9,0xff64e0c1
                 };
                 for(int i=0;i<cols*cols;i++){
                     float px=left+(i%cols)*(side+space);
@@ -2299,6 +2381,8 @@ public final class MainActivity extends ComponentActivity {
                     int col=cols==5?relaxedPreview[i]:tileColor(v);
                     if(sourceClassic)
                         homeClassicPreviewTile(px,py,side,col);
+                    else if(portrait&&theme==0&&cols==5)
+                        homeRelaxedPreviewTile(px,py,side,col);
                     else glossyTile(px,py,side,side,4,col);
                     if(cols==4)fitted(""+v,px+side/2,py+side*.67f,
                         v>99?8.4f:12,side-2,WHITE,true);
