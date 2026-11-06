@@ -2478,6 +2478,11 @@ public final class MainActivity extends ComponentActivity {
                 // stretch only its drawn glyphs, not the text hit regions or
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
+                // The title's lowest navy stroke overlapped the top lip of
+                // the coral 4x4 badge on the real 941x1672 render. Raise only
+                // the painted title by four design units; preserve the
+                // badge, HUD, board and their interactive hit regions.
+                c.translate(0f,-4f);
                 c.scale(1f,1.40f,105f,60f);
                 // Source's rounded Classic heading has more navy ink
                 // within almost identical outer bounds. The general
