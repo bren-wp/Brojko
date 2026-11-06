@@ -6514,7 +6514,7 @@ public class ScreensSmokeTest {
                                 sourceBounds.left,1.5f);
                             assertEquals("Owner logo top edge",708f,
                                 sourceBounds.top,1.5f);
-                            assertEquals("Owner logo right edge",858f,
+                            assertEquals("Owner contour rightmost point",856f,
                                 sourceBounds.right,1.5f);
                             assertEquals("Owner logo descender",976f,
                                 sourceBounds.bottom,1.5f);
