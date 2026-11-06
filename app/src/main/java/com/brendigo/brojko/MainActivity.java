@@ -739,6 +739,30 @@ public final class MainActivity extends ComponentActivity {
     final class BoardScreen extends View {
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
+        // Optional instrumentation-only ink bounds: no production text
+        // measurements or screenshots are recorded when disabled.
+        boolean auditTextLayout;
+        final ArrayList<TextRegion> textRegions=new ArrayList<>();
+        final class TextRegion {
+            final String text;final RectF bounds;
+            TextRegion(String value,RectF ink){text=value;bounds=ink;}
+        }
+        void recordTextInk(String content,float x,float baseline){
+            if(!auditTextLayout||content==null||content.trim().isEmpty())return;
+            android.graphics.Rect ink=new android.graphics.Rect();
+            p.getTextBounds(content,0,content.length(),ink);
+            if(ink.isEmpty())return;
+            float advance=p.measureText(content);
+            float alignX=p.getTextAlign()==Paint.Align.CENTER?
+                x-advance/2f:p.getTextAlign()==Paint.Align.RIGHT?
+                x-advance:x;
+            RectF bounds=new RectF(alignX+ink.left,baseline+ink.top,
+                alignX+ink.right,baseline+ink.bottom);
+            android.graphics.Matrix transform=new android.graphics.Matrix();
+            c.getMatrix(transform);
+            transform.mapRect(bounds);
+            textRegions.add(new TextRegion(content,bounds));
+        }
         Canvas c;float scale,offX,offY,touchX,touchY;
         Path ownerHomeNavyPath;
         Shader ownerHomeNavyGradient;
@@ -912,6 +936,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
+            recordTextInk(content,x,baseline);
             c.drawText(content,x,baseline,p);
             p.clearShadowLayer();p.setFakeBoldText(false);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
@@ -972,8 +997,12 @@ public final class MainActivity extends ComponentActivity {
             float drawnWidth=p.measureText(content);
             if(drawnWidth>maxWidth){
                 c.save();c.translate(left,baseline);c.scale(maxWidth/drawnWidth,1f);
+                recordTextInk(content,0,0);
                 c.drawText(content,0,0,p);c.restore();
-            }else c.drawText(content,left,baseline,p);
+            }else{
+                recordTextInk(content,left,baseline);
+                c.drawText(content,left,baseline,p);
+            }
             p.setTextAlign(Paint.Align.CENTER);
         }
         void polishedIcon(String type,float cx,float cy,float width,int color){
@@ -1513,6 +1542,7 @@ public final class MainActivity extends ComponentActivity {
         }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);c=canvas;palette();
+            if(auditTextLayout)textRegions.clear();
             float usableWidth=Math.max(1,getWidth()-getPaddingLeft()-getPaddingRight());
             float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
             boolean inGame=page.equals("game")||page.equals("pause")||
@@ -1906,7 +1936,12 @@ public final class MainActivity extends ComponentActivity {
                 txt("64",25,523,46,WHITE,true);c.restore();
                 splashEdgeGlowTile();
                 splashWordmark();
-                txt("by Brendigo",284,417,19,muted,true);
+                // Dark and vivid use live Nunito for the full "jko".
+                // Its descender reaches lower than the owner's light
+                // vector artwork; keep the byline clear instead of
+                // covering the letters. Light reference is unchanged.
+                txt("by Brendigo",284,theme==0?417:456,
+                    19,muted,true);
                 // Native 941x1672 reference: cream slogan pill and both
                 // phrases sit about 10 design units higher than before.
                 // Keep the source's compact gap between coral and teal.
@@ -2055,12 +2090,16 @@ public final class MainActivity extends ComponentActivity {
             // with screen 1 without modifying any other page.
             if(portrait){
                 c.save();
-                c.translate(0f,-129f);
+                c.translate(0f,theme==0?-129f:-137f);
                 c.scale(.775f,.74f,200f,0f);
                 splashWordmark();
                 c.restore();
                 if(theme==0)ownerHomeNavyWordmark();
-                txt("by Brendigo",265,184,15,muted,true);
+                // On dark/vivid the live "jko" extends into the old
+                // byline. Separate both without changing source-light
+                // Home title, stats cards or clickable navigation.
+                txt("by Brendigo",265,theme==0?184:201,
+                    15,muted,true);
             }else brand(197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
@@ -4576,23 +4615,38 @@ public final class MainActivity extends ComponentActivity {
                 txt(chartMetric==0?"Nema zabilježenih bodova.":
                     "Nema zabilježenih pločica.",200,429,15,muted,false);
             }else{
-                float barSlot=315f/Math.max(10,count);
+                // Reference 941px chart bars start near x69 and end
+                // near x871. The previous 315-wide band was over-inset:
+                // first x99, last x825, leaving uneven side gutters.
+                // Render exactly 10 equal slots across the source bounds;
+                // use real saved history values and the same zero filter.
+                boolean sourceLightChart=referencePortraitLayout&&theme==0&&
+                    "stats".equals(page);
+                float barSlot=(sourceLightChart?347f:315f)/
+                    Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float x=40+i*barSlot+2;
+                    float x=(sourceLightChart?27f:40f)+i*barSlot+2f;
                     // A zero-value history row is not an earned bar. The
                     // former minimum 4-unit pillar falsely visualized 0.
                     if(val>0){
-                        float barHeight=Math.max(4f,78f*val/ceiling);
-                        float y=463-barHeight;
+                        // Owner's bar baseline is about y1079px at
+                        // 941x1672; it was y1089px. Use a 75-unit top
+                        // range to preserve source max-height proportion.
+                        float barHeight=Math.max(4f,
+                            (sourceLightChart?75f:78f)*val/ceiling);
+                        float y=(sourceLightChart?459f:463f)-barHeight;
                         int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
                             lighten(barColor,.17f),barColor);
+                        // Values must fit fully inside their own column.
+                        // Earlier +4 width could put equal-height labels
+                        // into adjacent columns on compact screens.
                         fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
-                            barSlot+4,ink,true);
+                            Math.max(8f,barSlot-8f),ink,true);
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
@@ -4623,7 +4677,10 @@ public final class MainActivity extends ComponentActivity {
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())
                     leftFitted(completedAt,117,y+21,11.3f,46,muted,false);
-                fitted(fmt(score),205,y+22,17,87,record?CORAL:TEAL,true);
+                // Reserve a minimum 5-unit gap after date/time and
+                // before the crown badge even for long localized scores.
+                fitted(fmt(score),208,y+22,17,79,
+                    record?CORAL:TEAL,true);
                 if(record)icon("crown",265,y+15,17,0xffff9e23);
                 int peak=row.optInt("peak",0);
                 if(peak>0){

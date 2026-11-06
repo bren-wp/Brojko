@@ -1840,9 +1840,10 @@ public class ScreensSmokeTest {
             String previousPage=activity.page;
             String previousHistory=activity.prefs.getString("history","[]");
             int previousMetric=activity.chartMetric;
+            int previousTheme=activity.theme;
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             try{
-                activity.page="stats";
+                activity.page="stats";activity.theme=0;
                 final String zeroRows=
                     "[{\"score\":800,\"peak\":256,\"day\":\"25.10.2026.\"},"+
                     "{\"score\":0,\"peak\":0,\"day\":\"24.10.2026.\"}]";
@@ -1863,12 +1864,26 @@ public class ScreensSmokeTest {
                             activity.prefs.edit().putString("history",zeroRows)
                                 .commit();
                             view.draw(new Canvas(image));
-                            float baseline= size[0]==941?461f:579f;
-                            int zeroX=Math.round(view.offX+49f*view.scale);
-                            int gapX=Math.round(view.offX+70f*view.scale);
-                            int y=Math.round(view.offY+baseline*view.scale);
-                            assertEquals("Zero history value must be empty, not a bar",
-                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                            // Check real column centers, not historic magic
+                            // pixels: source-light 941 has 347 logical units
+                            // across 10 columns; tall UI uses 315.
+                            boolean source=size[0]==941;
+                            float slot=(source?347f:315f)/10f;
+                            float start=source?29f:44f;
+                            int zeroX=Math.round(view.offX+
+                                (start+(slot-6f)/2f)*view.scale);
+                            int secondX=Math.round(view.offX+
+                                (start+slot+(slot-6f)/2f)*view.scale);
+                            int gapX=Math.round(view.offX+
+                                (start+slot-3f)*view.scale);
+                            int y=Math.round(view.offY+
+                                (source?451f:573f)*view.scale);
+                            int emptyZero=image.getPixel(zeroX,y);
+                            int background=image.getPixel(gapX,y);
+                            assertEquals("Zero history entry must leave empty chart",
+                                background,emptyZero);
+                            assertNotEquals("Positive second entry must still draw",
+                                background,image.getPixel(secondX,y));
                             if(size[0]==941&&metric==0)
                                 captureReference(activity,view,
                                     "stats-zero-history-bars-941x1672");
@@ -1886,7 +1901,9 @@ public class ScreensSmokeTest {
                                 .commit();
                             view.draw(new Canvas(image));
                             assertNotEquals("Real positive history must draw a bar",
-                                image.getPixel(gapX,y),image.getPixel(zeroX,y));
+                                emptyZero,image.getPixel(zeroX,y));
+                            assertEquals("Chart gutter remains clear after update",
+                                background,image.getPixel(gapX,y));
                         }
                     }finally{image.recycle();}
                 }
@@ -1894,7 +1911,238 @@ public class ScreensSmokeTest {
                 activity.prefs.edit().putString("history",previousHistory)
                     .commit();
                 activity.chartMetric=previousMetric;
+                activity.theme=previousTheme;
                 activity.page=previousPage;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void allScreensKeepInteractiveRegionsDistinctAcrossViewports(){
+        rule.getScenario().onActivity(activity->{
+            // Exercise every navigable screen and modal, in each theme,
+            // against the reference, a small portrait, and landscape.
+            // The rendered bitmap (rather than static mock art) drives
+            // the clickable UI geometry being verified.
+            String priorPage=activity.page;
+            int priorTheme=activity.theme;
+            TileGame priorGame=activity.game;
+            String[] pages={
+                "splash","home","game","daily","missions","stats",
+                "themes","settings","historyDetail","language",
+                "backup","help","privacy","about","pause","win",
+                "over","confirm","confirmEnd","dailyWin","dailyFail"
+            };
+            int[][] viewports={{941,1672},{360,600},{320,480},{800,360}};
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            view.auditTextLayout=true;
+            StringBuilder overlapFindings=new StringBuilder();
+            try{
+                activity.game=new TileGame("classic","",987654L);
+                for(int[] size:viewports){
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,size[0],size[1]);
+                        for(int skin=0;skin<3;skin++){
+                            activity.theme=skin;
+                            for(String screen:pages){
+                                activity.page=screen;
+                                view.draw(new Canvas(image));
+                                // Compare tight, transformed glyph-ink bounds,
+                                // not just click rectangles. Intentional
+                                // modal overlays cover dimmed gameplay text,
+                                // so test nonmodal pages for text collisions.
+                                if(!("pause".equals(screen)||
+                                     "win".equals(screen)||
+                                     "over".equals(screen)||
+                                     "confirm".equals(screen)||
+                                     "confirmEnd".equals(screen)||
+                                     "dailyWin".equals(screen)||
+                                     "dailyFail".equals(screen))){
+                                    for(int t=0;t<view.textRegions.size();t++){
+                                        MainActivity.BoardScreen.TextRegion first=
+                                            view.textRegions.get(t);
+                                        android.graphics.RectF a=first.bounds;
+                                        if(a.bottom<=0||a.top>=size[1])
+                                            continue;
+                                        boolean exceedsHorizontalBounds=
+                                            a.left< -3f||a.right>size[0]+3f;
+                                        // The owner intentionally crops
+                                        // floating, NONINTERACTIVE number
+                                        // tiles at the edges of Splash/Home.
+                                        // Their source-matched decoration
+                                        // cannot be treated as clipped UI
+                                        // content or a text-layout defect.
+                                        boolean edgeArtwork=
+                                            ("splash".equals(screen)||
+                                             "home".equals(screen))&&
+                                            ("2".equals(first.text)||
+                                             "4".equals(first.text)||
+                                             "8".equals(first.text)||
+                                             "16".equals(first.text)||
+                                             "32".equals(first.text)||
+                                             "64".equals(first.text)||
+                                             "256".equals(first.text));
+                                        if(exceedsHorizontalBounds&&edgeArtwork)
+                                            continue;
+                                        if(exceedsHorizontalBounds&&
+                                            overlapFindings.length()<12000)
+                                            overlapFindings.append("CLIPPED ")
+                                                .append(screen).append(' ')
+                                                .append(size[0]).append('x')
+                                                .append(size[1]).append(" skin ")
+                                                .append(skin).append(": '")
+                                                .append(first.text).append("' ")
+                                                .append(a.left).append("..")
+                                                .append(a.right).append(System.lineSeparator());
+                                        for(int k=t+1;k<view.textRegions.size();k++){
+                                            MainActivity.BoardScreen.TextRegion second=
+                                                view.textRegions.get(k);
+                                            android.graphics.RectF b=second.bounds;
+                                            float overlapX=Math.min(a.right,b.right)-
+                                                Math.max(a.left,b.left);
+                                            float overlapY=Math.min(a.bottom,b.bottom)-
+                                                Math.max(a.top,b.top);
+                                            if(overlapX<2f||overlapY<2f)continue;
+                                            float minArea=Math.min(a.width()*a.height(),
+                                                b.width()*b.height());
+                                            if(minArea<1f)continue;
+                                            float ratio=overlapX*overlapY/minArea;
+                                            if(ratio>=.16f&&
+                                                overlapFindings.length()<12000)
+                                                overlapFindings.append("TEXT OVERLAP ")
+                                                    .append(screen).append(' ')
+                                                    .append(size[0]).append('x')
+                                                    .append(size[1]).append(" skin ")
+                                                    .append(skin).append(": '")
+                                                    .append(first.text).append("' vs '")
+                                                    .append(second.text).append("' ")
+                                                    .append(ratio).append(System.lineSeparator());
+                                        }
+                                    }
+                                }
+                                java.util.ArrayList<MainActivity.BoardScreen.Tap>
+                                    actions=new java.util.ArrayList<>(view.taps);
+                                for(int i=0;i<actions.size();i++){
+                                    MainActivity.BoardScreen.Tap first=actions.get(i);
+                                    if(!(first.left<first.right&&
+                                         first.top<first.bottom)&&
+                                         overlapFindings.length()<12000)
+                                        overlapFindings.append("INVALID TARGET ")
+                                            .append(screen).append(' ')
+                                            .append(first.label).append(System.lineSeparator());
+                                    for(int j=i+1;j<actions.size();j++){
+                                        MainActivity.BoardScreen.Tap second=
+                                            actions.get(j);
+                                        if(first.label.equals(second.label))continue;
+                                        float overlapWidth=Math.min(first.right,
+                                            second.right)-Math.max(first.left,
+                                            second.left);
+                                        float overlapHeight=Math.min(first.bottom,
+                                            second.bottom)-Math.max(first.top,
+                                            second.top);
+                                        if(overlapWidth<=0||overlapHeight<=0)
+                                            continue;
+                                        // Small neighboring touch slop may
+                                        // overlap, but two controls must not
+                                        // materially occupy the same target.
+                                        float firstArea=(first.right-first.left)*
+                                            (first.bottom-first.top);
+                                        float secondArea=(second.right-second.left)*
+                                            (second.bottom-second.top);
+                                        float ratio=overlapWidth*overlapHeight/
+                                            Math.min(firstArea,secondArea);
+                                        if(ratio>=.22f&&
+                                            overlapFindings.length()<12000)
+                                            overlapFindings.append("TARGET OVERLAP ")
+                                                .append(screen).append(' ')
+                                                .append(size[0]).append('x')
+                                                .append(size[1]).append(" skin ")
+                                                .append(skin).append(": ")
+                                                .append(first.label).append(" vs ")
+                                                .append(second.label).append(" ")
+                                                .append(ratio).append(System.lineSeparator());
+                                    }
+                                }
+                            }
+                        }
+                    }finally{image.recycle();}
+                }
+                assertTrue("Cross-screen content / text collision audit:"+
+                    System.lineSeparator()+
+                    overlapFindings,overlapFindings.length()==0);
+            }finally{
+                activity.page=priorPage;
+                activity.theme=priorTheme;
+                activity.game=priorGame;
+                view.auditTextLayout=false;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void statisticsChartColumnsRespectOwnerSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            String previousHistory=activity.prefs.getString("history","[]");
+            int previousTheme=activity.theme;
+            int previousMetric=activity.chartMetric;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                // Isolated UI fixture with TEN equal, real saved records.
+                // This tests bar positions only; never fabricate results in
+                // production user data or replace the user's history.
+                org.json.JSONArray records=new org.json.JSONArray();
+                for(int i=0;i<10;i++){
+                    org.json.JSONObject row=new org.json.JSONObject();
+                    try{
+                        row.put("score",5000);row.put("peak",64);
+                        row.put("day","12. tra 2024.");
+                    }catch(org.json.JSONException ex){throw new AssertionError(ex);}
+                    records.put(row);
+                }
+                activity.prefs.edit().putString("history",
+                    records.toString()).commit();
+                activity.page="stats";activity.theme=0;
+                activity.chartMetric=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int left=bitmap.getPixel(83,1035);
+                    int right=bitmap.getPixel(823,1035);
+                    int outside=bitmap.getPixel(54,1035);
+                    assertTrue("First source bar must start near x69",
+                        android.graphics.Color.red(left)>185&&
+                        android.graphics.Color.red(left)>
+                            android.graphics.Color.green(left)+25);
+                    assertTrue("Tenth source bar must extend near x871",
+                        android.graphics.Color.red(right)>185&&
+                        android.graphics.Color.red(right)>
+                            android.graphics.Color.green(right)+25);
+                    assertTrue("Chart must leave a real left gutter",
+                        android.graphics.Color.red(outside)-
+                            android.graphics.Color.green(outside)<35);
+                    assertEquals("No progress or history state mutation",
+                        10,view.history().length());
+                    captureReference(activity,view,
+                        "stats-chart-source-spacing-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.prefs.edit().putString("history",
+                    previousHistory).commit();
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.chartMetric=previousMetric;
                 activity.screen.invalidate();
             }
         });
