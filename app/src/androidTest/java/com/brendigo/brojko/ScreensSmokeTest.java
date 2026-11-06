@@ -2446,6 +2446,79 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void tallPortraitSplashAndHomeReuseOwnerIllustratedIdentity(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.theme=0;
+                for(String page:new String[]{"splash","home"}){
+                    activity.page=page;
+                    for(int[] viewport:new int[][]{{941,1672},{360,800},{320,720}}){
+                        MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                        view.auditTextLayout=true;
+                        view.measure(View.MeasureSpec.makeMeasureSpec(viewport[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(viewport[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,viewport[0],viewport[1]);
+                        Bitmap image=Bitmap.createBitmap(viewport[0],viewport[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{view.draw(new Canvas(image));}
+                        finally{image.recycle();}
+                        assertNotNull("Native Splash logo path on "+page+" "+
+                            viewport[0]+"x"+viewport[1],
+                            "splash".equals(page)?view.ownerSplashNavyPath:
+                                view.ownerHomeNavyPath);
+                        boolean foundByline=false,foundScoreLabel=false;
+                        android.graphics.RectF byline=null,score=null;
+                        for(MainActivity.BoardScreen.TextRegion region:view.textRegions){
+                            if("by Brendigo".equals(region.text)){
+                                foundByline=true;byline=region.bounds;
+                            }
+                            if("Najbolji rezultat".equals(region.text)){
+                                foundScoreLabel=true;score=region.bounds;
+                            }
+                            if("home".equals(page)&&
+                                !view.referencePortraitLayout){
+                                assertFalse("Do not insert an extra slogan before "+
+                                    "Home cards on tall portrait devices",
+                                    "Spajaj brojeve. Ruši rekorde.".equals(region.text));
+                            }
+                        }
+                        assertTrue("All portrait brands must keep the byline",
+                            foundByline);
+                        assertNotNull("Byline ink bounds must be recorded",byline);
+                        assertTrue("Byline stays on-screen",byline.left>0f&&
+                            byline.right<viewport[0]&&byline.bottom<viewport[1]);
+                        if("home".equals(page)){
+                            assertTrue("Home score heading renders",foundScoreLabel);
+                            assertTrue("Home brand must not overlap score card",
+                                byline.bottom+4f<score.top);
+                            boolean hasPrimary=false,hasModes=false;
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                if("Nova igra".equals(tap.label)||
+                                    "Nastavi igru".equals(tap.label))
+                                    hasPrimary=true;
+                                if(tap.label.startsWith("Klasično"))
+                                    hasModes=true;
+                            }
+                            assertTrue("Primary button must remain interactive",hasPrimary);
+                            assertTrue("Mode selector must remain interactive",hasModes);
+                        }
+                        if(viewport[0]==360)
+                            captureSizedViewport(activity,view,
+                                "owner-brand-"+page+"-tall-360x800",
+                                viewport[0],viewport[1]);
+                    }
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void brandedSplashFitsCompletelyOnShortAndReferencePhones(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
