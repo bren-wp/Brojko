@@ -1920,7 +1920,9 @@ public final class MainActivity extends ComponentActivity {
                 // All information stays inside the 400x~667 compact viewport.
                 splashAmbient(161,24,40,43,-18,0x1fffbd94);
                 splashAmbient(167,198,35,38,14,0x12eabb93);
-                splashAmbient(84,475,71,67,-17,0x252ec4b6);
+                // Source teal haze native centroid (289,1081), radius ~80px.
+                // Former (286,1195) decoration was 114px too low.
+                splashAmbient(90,427,64,64,-17,0x342ec4b6);
                 splashAmbient(321,444,79,78,20,0x36ff7a5b);
                 // Pixel audit: yellow lower-left accent was incorrectly
                 // painted below centre; teal also sat ~70 pixels too far right.
