@@ -1918,6 +1918,88 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void allScreensKeepInteractiveRegionsDistinctAcrossViewports(){
+        rule.getScenario().onActivity(activity->{
+            // Exercise every navigable screen and modal, in each theme,
+            // against the reference, a small portrait, and landscape.
+            // The rendered bitmap (rather than static mock art) drives
+            // the clickable UI geometry being verified.
+            String priorPage=activity.page;
+            int priorTheme=activity.theme;
+            TileGame priorGame=activity.game;
+            String[] pages={
+                "splash","home","game","daily","missions","stats",
+                "themes","settings","historyDetail","language",
+                "backup","help","privacy","about","pause","win",
+                "over","confirm","confirmEnd","dailyWin","dailyFail"
+            };
+            int[][] viewports={{941,1672},{360,600},{320,480},{800,360}};
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.game=new TileGame("classic","",987654L);
+                for(int[] size:viewports){
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,size[0],size[1]);
+                        for(int skin=0;skin<3;skin++){
+                            activity.theme=skin;
+                            for(String screen:pages){
+                                activity.page=screen;
+                                view.draw(new Canvas(image));
+                                java.util.ArrayList<MainActivity.BoardScreen.Tap>
+                                    actions=new java.util.ArrayList<>(view.taps);
+                                for(int i=0;i<actions.size();i++){
+                                    MainActivity.BoardScreen.Tap first=actions.get(i);
+                                    assertTrue("Invalid hit rectangle "+screen+
+                                            " "+first.label,
+                                        first.left<first.right&&
+                                        first.top<first.bottom);
+                                    for(int j=i+1;j<actions.size();j++){
+                                        MainActivity.BoardScreen.Tap second=
+                                            actions.get(j);
+                                        if(first.label.equals(second.label))continue;
+                                        float overlapWidth=Math.min(first.right,
+                                            second.right)-Math.max(first.left,
+                                            second.left);
+                                        float overlapHeight=Math.min(first.bottom,
+                                            second.bottom)-Math.max(first.top,
+                                            second.top);
+                                        if(overlapWidth<=0||overlapHeight<=0)
+                                            continue;
+                                        // Small neighboring touch slop may
+                                        // overlap, but two controls must not
+                                        // materially occupy the same target.
+                                        float firstArea=(first.right-first.left)*
+                                            (first.bottom-first.top);
+                                        float secondArea=(second.right-second.left)*
+                                            (second.bottom-second.top);
+                                        float ratio=overlapWidth*overlapHeight/
+                                            Math.min(firstArea,secondArea);
+                                        assertTrue("Overlapping actions "+screen+
+                                            " ("+size[0]+"x"+size[1]+
+                                            "), skin "+skin+": "+first.label+
+                                            " vs "+second.label+" area="+ratio,
+                                            ratio<.22f);
+                                    }
+                                }
+                            }
+                        }
+                    }finally{image.recycle();}
+                }
+            }finally{
+                activity.page=priorPage;
+                activity.theme=priorTheme;
+                activity.game=priorGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statisticsChartColumnsRespectOwnerSourceBounds(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
