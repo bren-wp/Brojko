@@ -21,6 +21,7 @@ To su pravi renderi produkcijskog `BoardScreen` unutar emulatora (ponekad s dete
 - **Home, svijetla tema:** visoki portret rabi izvorni `ownerHomeNavyWordmark` i 3D embleme s umjerenom skalom, a nepotrebni dupli slogan iznad kartica više se ne prikazuje. Izvorni raspored kartica, akcija i brojčanih rezultata nije pomaknut.
 - **Vektorski reljef:** izvorne navy konture dobile su vrlo tanak zaobljeni obrub i meku sjenu, sa zadržanim postojećim gradijentima; kratki 941×1672 portret ne dobiva izmijenjenu geometriju.
 - **Klasično 4×4:** nakon pregleda stvarne emulatorske snimke, naslov je lokalno pomaknut za 4 dizajnerske jedinice prema gore, kako donji navy potezi ne bi dodirivali gornji rub koraljne 4×4 značke. Ploča, iznos bodova, status ikone, veličina gumba i touch zone nisu dirnuti.
+- **Opušteno 5×5:** naslov dobiva mjerenu širinu izvornog Nunito Black fonta, blagi 3D gradijent, zaobljenu konturu i sjenu samo u aktivnoj svijetloj igri; pločice, ostale teme, statistika i geste ostaju netaknuti. Dodatni test na 941×1672 i 1080×2400 provjerava razdvajanje naslova, HUD-a i koraljne 5×5 značke.
 
 ## Regresijski kriteriji
 
@@ -31,5 +32,5 @@ Instrumentacija dodatno crta `941×1672`, `360×800` i `320×720`, provjerava up
 ## Sljedeće po prioritetu
 
 1. Izolirani ROI audit osvjetljenja, zaobljenosti i vertikalnog položaja Splash/Home na 941×1672 i 360×800, bez lažiranja rezultata.
-2. **Opušteno 5×5**: tipografija `Opušteno`, 3D pločice, pozicija rezultata, akcijske ikone i čitljivost 512/1024/2048 na malim zaslonima.
+2. **Opušteno 5×5**: nastavak provjere 3D pločica, pozicije rezultata, akcijskih ikona i čitljivosti 512/1024/2048 na malim zaslonima; izmjere novu tipografiju prema punoj vlasnikovoj referenci ako je dostupna.
 3. Dnevni izazov → Misije i postignuća → Statistika → Teme → Postavke → Pause / Bravo / kraj partije, svaki zaslon pojedinačno, s testom.
