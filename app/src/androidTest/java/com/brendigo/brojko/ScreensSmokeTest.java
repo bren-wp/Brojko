@@ -4181,6 +4181,59 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void statisticsAverageStarMatchesSourceBlueMass(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldBest=activity.best;
+            int oldPlays=activity.plays,oldTotal=activity.total;
+            int oldRecord=activity.recordTile;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="stats";activity.theme=0;
+                activity.best=12560;activity.plays=248;
+                activity.total=958272;activity.recordTile=1024;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int count=0;long sumX=0,sumY=0;
+                    for(int y=565;y<725;y++)for(int x=75;x<205;x++){
+                        int pixel=bitmap.getPixel(x,y);
+                        int red=android.graphics.Color.red(pixel);
+                        int green=android.graphics.Color.green(pixel);
+                        int blue=android.graphics.Color.blue(pixel);
+                        if(red<190&&blue>160&&blue>red+50&&
+                                blue>green+15){
+                            count++;sumX+=x;sumY+=y;
+                        }
+                    }
+                    assertTrue("Solid blue source star must retain substantial ink: "+
+                        count,count>3500);
+                    assertEquals("Blue-star source X centroid",
+                        138f,sumX/(float)count,17f);
+                    assertEquals("Blue-star source Y centroid",
+                        640f,sumY/(float)count,17f);
+                    assertEquals("Star rendering must not alter real scores",
+                        12560,activity.best);
+                    assertEquals("Star rendering must not alter game count",
+                        248,activity.plays);
+                    captureReference(activity,view,
+                        "stats-blue-star-source-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.best=oldBest;activity.plays=oldPlays;
+                activity.total=oldTotal;activity.recordTile=oldRecord;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statisticsStreakFlameUsesOpaqueSourcePurple(){
         rule.getScenario().onActivity(activity->{
             String previousPage=activity.page;
