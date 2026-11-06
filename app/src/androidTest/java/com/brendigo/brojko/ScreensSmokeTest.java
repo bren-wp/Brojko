@@ -2446,6 +2446,175 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void relaxedFiveByFiveHeadingKeepsClearScoreAndBadgeSpacing(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            TileGame oldGame=activity.game;
+            try{
+                activity.page="game";activity.theme=0;
+                activity.game=new TileGame("relaxed","",309L);
+                for(int[] size:new int[][]{{941,1672},{1080,2400}}){
+                    MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                    view.auditTextLayout=true;
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(image));}
+                    finally{image.recycle();}
+                    android.graphics.RectF heading=null,best=null,badge=null;
+                    for(MainActivity.BoardScreen.TextRegion ink:view.textRegions){
+                        if("Opušteno".equals(ink.text))heading=ink.bounds;
+                        if("Najbolji".equals(ink.text))best=ink.bounds;
+                        if("5×5".equals(ink.text))badge=ink.bounds;
+                    }
+                    assertNotNull("Native raised 5x5 heading",heading);
+                    assertNotNull("Live best-score label",best);
+                    assertNotNull("Live 5x5 badge",badge);
+                    assertTrue("5x5 title must not overlap the score column",
+                        heading.right+2f<best.left);
+                    assertTrue("5x5 badge must remain lower than heading",
+                        badge.top>heading.bottom);
+                    assertEquals("Relaxed gameplay remains a 25-cell board",
+                        25,activity.game.cells.length);
+                    if(size[0]==941)
+                        captureReference(activity,view,
+                            "relaxed-3d-heading-clearance-941x1672");
+                    else
+                        captureSizedViewport(activity,view,
+                            "relaxed-3d-heading-tall-1080x2400",
+                            size[0],size[1]);
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void classicNavyLetteringClearsCoralFourByFourBadge(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            TileGame oldGame=activity.game;
+            try{
+                activity.page="game";activity.theme=0;
+                activity.game=new TileGame("classic","",74L);
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                android.graphics.RectF title=null;
+                for(MainActivity.BoardScreen.TextRegion label:view.textRegions)
+                    if("Klasično".equals(label.text))title=label.bounds;
+                assertNotNull("Native Classic 4x4 title must be measured",title);
+                float badgeTop=view.offY+100f*view.scale;
+                assertTrue("Rounded navy title must clear the raised 4x4 badge: "+
+                    title.bottom+" vs "+badgeTop,
+                    title.bottom+1.5f<badgeTop);
+                boolean hasPause=false,hasUndo=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Pauziraj igru".equals(tap.label))hasPause=true;
+                    if("Poništi potez".equals(tap.label))hasUndo=true;
+                }
+                assertTrue("Classic still has Pause",hasPause);
+                // Undo only appears if at least one real undo is available.
+                assertFalse("New session cannot have a phantom Undo",
+                    activity.game.canUndo()&&!hasUndo);
+                captureReference(activity,view,
+                    "classic-title-badge-clearance-941x1672");
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void tallPortraitSplashAndHomeReuseOwnerIllustratedIdentity(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.theme=0;
+                for(String page:new String[]{"splash","home"}){
+                    activity.page=page;
+                    for(int[] viewport:new int[][]{{941,1672},{360,800},{320,720}}){
+                        MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                        view.auditTextLayout=true;
+                        view.measure(View.MeasureSpec.makeMeasureSpec(viewport[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(viewport[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,viewport[0],viewport[1]);
+                        Bitmap image=Bitmap.createBitmap(viewport[0],viewport[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{view.draw(new Canvas(image));}
+                        finally{image.recycle();}
+                        assertNotNull("Native Splash logo path on "+page+" "+
+                            viewport[0]+"x"+viewport[1],
+                            "splash".equals(page)?view.ownerSplashNavyPath:
+                                view.ownerHomeNavyPath);
+                        boolean foundByline=false,foundScoreLabel=false;
+                        android.graphics.RectF byline=null,score=null;
+                        for(MainActivity.BoardScreen.TextRegion region:view.textRegions){
+                            if("by Brendigo".equals(region.text)){
+                                foundByline=true;byline=region.bounds;
+                            }
+                            if("Najbolji rezultat".equals(region.text)){
+                                foundScoreLabel=true;score=region.bounds;
+                            }
+                            if("home".equals(page)&&
+                                !view.referencePortraitLayout){
+                                assertFalse("Do not insert an extra slogan before "+
+                                    "Home cards on tall portrait devices",
+                                    "Spajaj brojeve. Ruši rekorde.".equals(region.text));
+                            }
+                        }
+                        assertTrue("All portrait brands must keep the byline",
+                            foundByline);
+                        assertNotNull("Byline ink bounds must be recorded",byline);
+                        assertTrue("Byline stays on-screen",byline.left>0f&&
+                            byline.right<viewport[0]&&byline.bottom<viewport[1]);
+                        if("home".equals(page)){
+                            assertTrue("Home score heading renders",foundScoreLabel);
+                            assertTrue("Home brand must not overlap score card",
+                                byline.bottom+4f<score.top);
+                            boolean hasPrimary=false,hasModes=false;
+                            for(MainActivity.BoardScreen.Tap tap:view.taps){
+                                if("Nova igra".equals(tap.label)||
+                                    "Nastavi igru".equals(tap.label))
+                                    hasPrimary=true;
+                                if(tap.label.startsWith("Klasično"))
+                                    hasModes=true;
+                            }
+                            assertTrue("Primary button must remain interactive",hasPrimary);
+                            assertTrue("Mode selector must remain interactive",hasModes);
+                        }
+                        if(viewport[0]==360)
+                            captureSizedViewport(activity,view,
+                                "owner-brand-"+page+"-tall-360x800",
+                                viewport[0],viewport[1]);
+                    }
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void brandedSplashFitsCompletelyOnShortAndReferencePhones(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;

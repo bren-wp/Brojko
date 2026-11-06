@@ -1839,7 +1839,7 @@ public final class MainActivity extends ComponentActivity {
             // drawn from native paths; Splash and dark/landscape keep the
             // existing adaptive Nunito fallback and its live brand tile.
             if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0&&referencePortraitLayout))
+                !("splash".equals(page)&&theme==0))
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
@@ -1867,7 +1867,7 @@ public final class MainActivity extends ComponentActivity {
 
             // The source's jko starts immediately after the number tile.
             if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0&&referencePortraitLayout)){
+                !("splash".equals(page)&&theme==0)){
                 c.save();
                 c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
                 c.scale(1.25f,.92f,228f,316f);
@@ -1909,9 +1909,13 @@ public final class MainActivity extends ComponentActivity {
             c.save();
             c.scale(400f/941f,400f/941f);
             p.clearShadowLayer();p.setShader(ownerSplashNavyGradient);
-            p.setStyle(Paint.Style.FILL);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(1.1f);
+            p.setShadowLayer(1.2f,0f,0.8f,0x2417223b);
             c.drawPath(ownerSplashNavyPath,p);
-            p.setShader(null);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
             c.restore();
         }
         void splashPage(){
@@ -2014,7 +2018,18 @@ public final class MainActivity extends ComponentActivity {
             c.save();c.rotate(-15,374,713);
             styledTile(327,666,118,111,23,TILES[8],0);
             txt("256",386,734,38,WHITE,true);c.restore();
-            brand(487,108);
+            // Tall phones use the same owner-derived rounded native glyphs
+            // as the 941x1672 light portrait, not an unrelated fallback font.
+            // Only the decorative logo is relocated; the 880-unit page,
+            // illustrated edge tiles and slogan remain responsive.
+            if(theme==0){
+                c.save();
+                c.translate(0f,94f);
+                splashWordmark();
+                ownerSplashNavyWordmark();
+                c.restore();
+                txt("by Brendigo",284f,533f,19f,muted,true);
+            }else brand(487,108);
             card(26,704,348,77,32,theme==1?card:0xfffff0db);
             fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
             fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
@@ -2089,10 +2104,35 @@ public final class MainActivity extends ComponentActivity {
             // On the 941px owner viewport this cancels the design-scale;
             // smaller and larger devices still scale responsively.
             c.scale(400f/941f,400f/941f);
-            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.clearShadowLayer();
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(1.1f);
+            p.setShadowLayer(1.2f,0f,0.8f,0x2417223b);
             p.setShader(ownerHomeNavyGradient);
             c.drawPath(ownerHomeNavyPath,p);
-            p.setShader(null);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
+        // The owner's dark-navy wordmark contours, coral raised 2 and
+        // decorative rays must remain one illustrated identity on tall as
+        // well as reference-ratio portrait Android phones. Every Canvas
+        // transform is local: touch targets, cards and scores are unaffected.
+        void homeIllustratedBrand(boolean tallPortrait){
+            c.save();
+            if(tallPortrait){
+                c.translate(0f,42f);
+                c.scale(1.10f,1.10f,200f,160f);
+            }
+            c.save();
+            c.translate(0f,theme==0?-129f:-137f);
+            c.scale(.775f,.74f,200f,0f);
+            splashWordmark();
+            c.restore();
+            if(theme==0)ownerHomeNavyWordmark();
+            txt("by Brendigo",265,theme==0?184:201,
+                15,muted,true);
             c.restore();
         }
         void home(){
@@ -2122,20 +2162,15 @@ public final class MainActivity extends ComponentActivity {
             // scaled to the Home source artwork's native bounds. This keeps
             // the navy rounded silhouette, raised "2", and coral rays in sync
             // with screen 1 without modifying any other page.
-            if(portrait){
-                c.save();
-                c.translate(0f,theme==0?-129f:-137f);
-                c.scale(.775f,.74f,200f,0f);
-                splashWordmark();
-                c.restore();
-                if(theme==0)ownerHomeNavyWordmark();
-                // On dark/vivid the live "jko" extends into the old
-                // byline. Separate both without changing source-light
-                // Home title, stats cards or clickable navigation.
-                txt("by Brendigo",265,theme==0?184:201,
-                    15,muted,true);
-            }else brand(197,72);
-            if(!portrait)
+            // Tall portrait devices (e.g. 360x800, 20:9) used to replace
+            // the reference-shaped logo with brand() and insert an extra
+            // slogan immediately above the score cards. Keep landscape's
+            // separate compact layout; unify only portrait light branding.
+            boolean tallPortrait=!portrait&&getHeight()>getWidth();
+            if(portrait||(tallPortrait&&theme==0))
+                homeIllustratedBrand(tallPortrait&&theme==0);
+            else brand(197,72);
+            if(!portrait&&!tallPortrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
@@ -2443,6 +2478,11 @@ public final class MainActivity extends ComponentActivity {
                 // stretch only its drawn glyphs, not the text hit regions or
                 // neighboring score columns. Keep the 4x4 tag independent.
                 c.save();
+                // The title's lowest navy stroke overlapped the top lip of
+                // the coral 4x4 badge on the real 941x1672 render. Raise only
+                // the painted title by four design units; preserve the
+                // badge, HUD, board and their interactive hit regions.
+                c.translate(0f,-4f);
                 c.scale(1f,1.40f,105f,60f);
                 // Source's rounded Classic heading has more navy ink
                 // within almost identical outer bounds. The general
@@ -2465,8 +2505,11 @@ public final class MainActivity extends ComponentActivity {
                 if(theme==0)classicGameAccentRays(false);
                 else rays(110,67,35,CORAL);
             }else{
-                fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
-                    105,89,daily?32:43,201,ink,true);
+                if(relaxed&&theme==0&&"game".equals(page))
+                    relaxedGameplayHeading();
+                else
+                    fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
+                        105,89,daily?32:43,201,ink,true);
             }
             if(!daily) {
                 if(narrow&&!relaxed){
@@ -2563,6 +2606,32 @@ public final class MainActivity extends ComponentActivity {
                 button("Podijeli","share",207,757,171,64,card,false,()->share());
                 bottomBrand();
             }
+        }
+        // Active light Relaxed mode shares the same rounded navy material
+        // language as Classic, without stretching or overlapping the crown.
+        // Keep one measured baseline on short and tall phones.
+        void relaxedGameplayHeading(){
+            final String label="Opušteno";
+            float size=43f;
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(size);
+            while(p.measureText(label)>199f&&size>28f){
+                size-=.5f;p.setTextSize(size);
+            }
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setColor(ink); // Restore full alpha before the gradient shader.
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeWidth(.85f);
+            p.setShadowLayer(1.4f,0f,1.1f,0x2b16243b);
+            p.setShader(new LinearGradient(0f,89f-size,0f,89f,
+                new int[]{0xff344563,0xff263758,0xff1b2947},
+                new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
+            recordTextInk(label,105f,89f);
+            c.drawText(label,105f,89f,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
         // All following art is scoped to the light-theme 4x4 gameplay
         // view. Do not change achievements, tile values, scoring, gameplay
