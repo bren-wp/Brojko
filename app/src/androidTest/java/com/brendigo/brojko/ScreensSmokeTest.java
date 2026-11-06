@@ -1936,6 +1936,7 @@ public class ScreensSmokeTest {
             int[][] viewports={{941,1672},{360,600},{320,480},{800,360}};
             MainActivity.BoardScreen view=activity.new BoardScreen(activity);
             view.auditTextLayout=true;
+            StringBuilder overlapFindings=new StringBuilder();
             try{
                 activity.game=new TileGame("classic","",987654L);
                 for(int[] size:viewports){
@@ -1989,11 +1990,16 @@ public class ScreensSmokeTest {
                                              "256".equals(first.text));
                                         if(exceedsHorizontalBounds&&edgeArtwork)
                                             continue;
-                                        assertTrue("Text clipped horizontally on "+
-                                            screen+" ("+size[0]+"x"+size[1]+
-                                            "), skin "+skin+": '"+first.text+
-                                            "' at "+a.left+".."+a.right,
-                                            !exceedsHorizontalBounds);
+                                        if(exceedsHorizontalBounds&&
+                                            overlapFindings.length()<12000)
+                                            overlapFindings.append("CLIPPED ")
+                                                .append(screen).append(' ')
+                                                .append(size[0]).append('x')
+                                                .append(size[1]).append(" skin ")
+                                                .append(skin).append(": '")
+                                                .append(first.text).append("' ")
+                                                .append(a.left).append("..")
+                                                .append(a.right).append('\\n');
                                         for(int k=t+1;k<view.textRegions.size();k++){
                                             MainActivity.BoardScreen.TextRegion second=
                                                 view.textRegions.get(k);
@@ -2007,11 +2013,16 @@ public class ScreensSmokeTest {
                                                 b.width()*b.height());
                                             if(minArea<1f)continue;
                                             float ratio=overlapX*overlapY/minArea;
-                                            assertTrue("Text overlap "+screen+
-                                                " ("+size[0]+"x"+size[1]+
-                                                "), skin "+skin+": '"+first.text+
-                                                "' vs '"+second.text+
-                                                "' ink="+ratio,ratio<.16f);
+                                            if(ratio>=.16f&&
+                                                overlapFindings.length()<12000)
+                                                overlapFindings.append("TEXT OVERLAP ")
+                                                    .append(screen).append(' ')
+                                                    .append(size[0]).append('x')
+                                                    .append(size[1]).append(" skin ")
+                                                    .append(skin).append(": '")
+                                                    .append(first.text).append("' vs '")
+                                                    .append(second.text).append("' ")
+                                                    .append(ratio).append('\\n');
                                         }
                                     }
                                 }
@@ -2019,10 +2030,12 @@ public class ScreensSmokeTest {
                                     actions=new java.util.ArrayList<>(view.taps);
                                 for(int i=0;i<actions.size();i++){
                                     MainActivity.BoardScreen.Tap first=actions.get(i);
-                                    assertTrue("Invalid hit rectangle "+screen+
-                                            " "+first.label,
-                                        first.left<first.right&&
-                                        first.top<first.bottom);
+                                    if(!(first.left<first.right&&
+                                         first.top<first.bottom)&&
+                                         overlapFindings.length()<12000)
+                                        overlapFindings.append("INVALID TARGET ")
+                                            .append(screen).append(' ')
+                                            .append(first.label).append('\\n');
                                     for(int j=i+1;j<actions.size();j++){
                                         MainActivity.BoardScreen.Tap second=
                                             actions.get(j);
@@ -2044,17 +2057,24 @@ public class ScreensSmokeTest {
                                             (second.bottom-second.top);
                                         float ratio=overlapWidth*overlapHeight/
                                             Math.min(firstArea,secondArea);
-                                        assertTrue("Overlapping actions "+screen+
-                                            " ("+size[0]+"x"+size[1]+
-                                            "), skin "+skin+": "+first.label+
-                                            " vs "+second.label+" area="+ratio,
-                                            ratio<.22f);
+                                        if(ratio>=.22f&&
+                                            overlapFindings.length()<12000)
+                                            overlapFindings.append("TARGET OVERLAP ")
+                                                .append(screen).append(' ')
+                                                .append(size[0]).append('x')
+                                                .append(size[1]).append(" skin ")
+                                                .append(skin).append(": ")
+                                                .append(first.label).append(" vs ")
+                                                .append(second.label).append(" ")
+                                                .append(ratio).append('\\n');
                                     }
                                 }
                             }
                         }
                     }finally{image.recycle();}
                 }
+                assertTrue("Cross-screen content / text collision audit:\\n"+
+                    overlapFindings,overlapFindings.length()==0);
             }finally{
                 activity.page=priorPage;
                 activity.theme=priorTheme;
