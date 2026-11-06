@@ -4168,7 +4168,7 @@ public final class MainActivity extends ComponentActivity {
             float[] x=new float[10],y=new float[10];
             for(int i=0;i<10;i++){
                 double angle=-Math.PI/2+i*Math.PI/5;
-                float r=i%2==0?11.3f:8.15f;
+                float r=i%2==0?11.3f:7.1f;
                 x[i]=(float)Math.cos(angle)*r;
                 y[i]=(float)Math.sin(angle)*r;
             }
@@ -4217,10 +4217,10 @@ public final class MainActivity extends ComponentActivity {
             // matches the owner reference better than enlarging everything.
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
-            if(referenceStats&&"Prosjek bodova".equals(caption)){
+            if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
-                statisticsSourceBlueStar(x+38f,y+39f,43f);
+                statisticsSourceBlueStar(x+38f,y+36f,45f);
             }else{
                 icon(symbol,x+(width<=118?27:38),
                     y+(referenceStats?(width<=118?38:43):29),
@@ -4242,7 +4242,13 @@ public final class MainActivity extends ComponentActivity {
                 fitted(bottom,labelX,y+(dense?41:48),
                     width<=118?13:16,labelWidth,ink,true);
             }
-            fitted(value,x+width/2,y+h-(dense?11:14),
+            // Keep the average score to the right of its icon, as in
+            // the owner's 941px KPI card. Other values retain their
+            // original centered positions.
+            float valueX=referenceStats&&theme==0&&
+                "Prosjek bodova".equals(caption)?
+                x+width/2f+28f:x+width/2f;
+            fitted(value,valueX,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
                 width-10,accent,true);
         }
