@@ -1999,7 +1999,7 @@ public class ScreensSmokeTest {
                                                 .append(skin).append(": '")
                                                 .append(first.text).append("' ")
                                                 .append(a.left).append("..")
-                                                .append(a.right).append('\\n');
+                                                .append(a.right).append(System.lineSeparator());
                                         for(int k=t+1;k<view.textRegions.size();k++){
                                             MainActivity.BoardScreen.TextRegion second=
                                                 view.textRegions.get(k);
@@ -2022,7 +2022,7 @@ public class ScreensSmokeTest {
                                                     .append(skin).append(": '")
                                                     .append(first.text).append("' vs '")
                                                     .append(second.text).append("' ")
-                                                    .append(ratio).append('\\n');
+                                                    .append(ratio).append(System.lineSeparator());
                                         }
                                     }
                                 }
@@ -2035,7 +2035,7 @@ public class ScreensSmokeTest {
                                          overlapFindings.length()<12000)
                                         overlapFindings.append("INVALID TARGET ")
                                             .append(screen).append(' ')
-                                            .append(first.label).append('\\n');
+                                            .append(first.label).append(System.lineSeparator());
                                     for(int j=i+1;j<actions.size();j++){
                                         MainActivity.BoardScreen.Tap second=
                                             actions.get(j);
@@ -2066,14 +2066,15 @@ public class ScreensSmokeTest {
                                                 .append(skin).append(": ")
                                                 .append(first.label).append(" vs ")
                                                 .append(second.label).append(" ")
-                                                .append(ratio).append('\\n');
+                                                .append(ratio).append(System.lineSeparator());
                                     }
                                 }
                             }
                         }
                     }finally{image.recycle();}
                 }
-                assertTrue("Cross-screen content / text collision audit:\\n"+
+                assertTrue("Cross-screen content / text collision audit:"+
+                    System.lineSeparator()+
                     overlapFindings,overlapFindings.length()==0);
             }finally{
                 activity.page=priorPage;
