@@ -1900,6 +1900,68 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void statisticsChartColumnsRespectOwnerSourceBounds(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            String previousHistory=activity.prefs.getString("history","[]");
+            int previousTheme=activity.theme;
+            int previousMetric=activity.chartMetric;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                // Isolated UI fixture with TEN equal, real saved records.
+                // This tests bar positions only; never fabricate results in
+                // production user data or replace the user's history.
+                org.json.JSONArray records=new org.json.JSONArray();
+                for(int i=0;i<10;i++){
+                    org.json.JSONObject row=new org.json.JSONObject();
+                    try{
+                        row.put("score",5000);row.put("peak",64);
+                        row.put("day","12. tra 2024.");
+                    }catch(org.json.JSONException ex){throw new AssertionError(ex);}
+                    records.put(row);
+                }
+                activity.prefs.edit().putString("history",
+                    records.toString()).commit();
+                activity.page="stats";activity.theme=0;
+                activity.chartMetric=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                    View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int left=bitmap.getPixel(83,1035);
+                    int right=bitmap.getPixel(823,1035);
+                    int outside=bitmap.getPixel(54,1035);
+                    assertTrue("First source bar must start near x69",
+                        android.graphics.Color.red(left)>185&&
+                        android.graphics.Color.red(left)>
+                            android.graphics.Color.green(left)+25);
+                    assertTrue("Tenth source bar must extend near x871",
+                        android.graphics.Color.red(right)>185&&
+                        android.graphics.Color.red(right)>
+                            android.graphics.Color.green(right)+25);
+                    assertTrue("Chart must leave a real left gutter",
+                        android.graphics.Color.red(outside)-
+                            android.graphics.Color.green(outside)<35);
+                    assertEquals("No progress or history state mutation",
+                        10,view.history().length());
+                    captureReference(activity,view,
+                        "stats-chart-source-spacing-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.prefs.edit().putString("history",
+                    previousHistory).commit();
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.chartMetric=previousMetric;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statisticsSourceLayoutRetainsRealChartAndHistoryActions(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
