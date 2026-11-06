@@ -2300,6 +2300,10 @@ public final class MainActivity extends ComponentActivity {
             for(float pinX:new float[]{28f,60f}){
                 p.setColor(0x340b1530);
                 c.drawRoundRect(pinX-3,10,pinX+4,32,3.5f,3.5f,p);
+                // Shader opacity is multiplied by Paint alpha. The
+                // preceding soft shadow uses 0x34 alpha, so restore full
+                // opacity before painting the actual navy binder.
+                p.setColor(WHITE);
                 p.setShader(new LinearGradient(pinX-2,8,pinX+4,8,
                     0xff182b4a,0xff59647b,Shader.TileMode.CLAMP));
                 c.drawRoundRect(pinX-3f,7f,pinX+3f,29f,3f,3f,p);
