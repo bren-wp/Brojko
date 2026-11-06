@@ -4337,6 +4337,56 @@ public class ScreensSmokeTest {
             }
         });
     }
+    @Test public void missionsHeadlineRunsNeverTouchOrOverlapAcrossPortraits(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            try{
+                activity.page="missions";
+                for(int theme:new int[]{0,1}){
+                    activity.theme=theme;
+                    for(int[] size:new int[][]{{941,1672},{360,640},{320,480}}){
+                        MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                        view.auditTextLayout=true;
+                        view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(size[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,size[0],size[1]);
+                        Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{view.draw(new Canvas(bitmap));}
+                        finally{bitmap.recycle();}
+                        android.graphics.RectF navy=null,coral=null;
+                        for(MainActivity.BoardScreen.TextRegion region:view.textRegions){
+                            if("Misije i".equals(region.text))navy=region.bounds;
+                            if("postignuća".equals(region.text))coral=region.bounds;
+                        }
+                        assertNotNull("Missions navy headline must render",navy);
+                        assertNotNull("Missions coral headline must render",coral);
+                        assertTrue("Missions headline ink must have a gap on "+
+                            size[0]+"x"+size[1]+" theme "+theme,
+                            navy.right+Math.max(2f,view.scale*3f)<coral.left);
+                        assertTrue("Missions headline starts inside the viewport",
+                            navy.left>0f);
+                        assertTrue("Missions headline ends inside the viewport",
+                            coral.right<size[0]);
+                        assertTrue("Missions two runs belong on the same line",
+                            Math.abs(navy.centerY()-coral.centerY())<
+                                view.scale*12f);
+                        boolean hasBack=false;
+                        for(MainActivity.BoardScreen.Tap tap:view.taps)
+                            if("Natrag".equals(tap.label))hasBack=true;
+                        assertTrue("The Back button remains functional",hasBack);
+                    }
+                }
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionReferenceProgressUsesRealUnderlyingGameState(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
