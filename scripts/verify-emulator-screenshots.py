@@ -43,6 +43,7 @@ CAPTURES = (
     "missions-illustrated-six-941x1672.png",
     "missions-phase16-binary-unlock-941x1672.png",
     "golden-state-stats-941x1672.png",
+    "stats-blue-star-source-941x1672.png",
     "stats-source-layout-941x1672.png",
     "stats-zero-history-bars-941x1672.png",
     "stats-zero-only-scores-941x1672.png",
