@@ -2280,13 +2280,14 @@ public final class MainActivity extends ComponentActivity {
         void homeDailyCalendar(float cx,float cy){
             c.save();
             c.translate(cx-44f,cy-42f);
+            c.scale(1.17f,1f,44f,44f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);
             p.setColor(0xffe4d4be);
             p.setShadowLayer(5f,0f,4.2f,0x3d896b45);
-            c.drawRoundRect(13,21,75,80,12,12,p);
+            c.drawRoundRect(13,21,75,92,12,12,p);
             p.clearShadowLayer();
-            gradient(13,20,62,59,12,
+            gradient(13,20,62,71,12,
                 0xfffffefb,0xfff4ecdb);
             // Rounded red top with glossy surface and a subtle bottom rim.
             gradient(13,19,62,25,10,
@@ -2295,20 +2296,25 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(17,21,71,25,3,3,p);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.65f);p.setColor(0x45ffffff);
-            c.drawRoundRect(14f,20f,74f,76f,11f,11f,p);
+            c.drawRoundRect(14f,20f,74f,89f,11f,11f,p);
             p.setStyle(Paint.Style.FILL);
             for(float pinX:new float[]{28f,60f}){
                 p.setColor(0x340b1530);
-                c.drawRoundRect(pinX-3,10,pinX+4,32,3.5f,3.5f,p);
+                c.drawRoundRect(pinX-3,17,pinX+4,34,3.5f,3.5f,p);
                 // Shader opacity is multiplied by Paint alpha. The
                 // preceding soft shadow uses 0x34 alpha, so restore full
                 // opacity before painting the actual navy binder.
                 p.setColor(WHITE);
                 p.setShader(new LinearGradient(pinX-2,8,pinX+4,8,
                     0xff182b4a,0xff59647b,Shader.TileMode.CLAMP));
-                c.drawRoundRect(pinX-3f,7f,pinX+3f,29f,3f,3f,p);
+                c.drawRoundRect(pinX-3f,14f,pinX+3f,31f,3f,3f,p);
                 p.setShader(null);
             }
+            c.save();
+            // The gold star on the owner is taller but narrower than
+            // the source's surrounding calendar sheet.
+            c.translate(0f,6f);
+            c.scale(.75f,1.20f,44f,55f);
             Path star=new Path();
             for(int i=0;i<10;i++){
                 double angle=-Math.PI/2+i*Math.PI/5;
@@ -2331,7 +2337,8 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(star,p);
             p.setStyle(Paint.Style.FILL);
             p.setColor(0x3bffffff);c.drawOval(32,40,55,47,p);
-            c.restore();
+            c.restore(); // star local aspect ratio
+            c.restore(); // complete Home calendar
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
                       boolean daily,Runnable tap){
@@ -2344,9 +2351,21 @@ public final class MainActivity extends ComponentActivity {
                 // native y=960..1125; PR43 was just 1007..1127. Lift
                 // and enlarge the illustrative icon, not its action box.
                 boolean ownerHomeCalendar=portrait&&theme==0;
-                if(ownerHomeCalendar)
-                    homeDailyCalendar(x+w/2,y+55f);
-                else
+                if(ownerHomeCalendar){
+                    homeDailyCalendar(x+w/2,y+49.5f);
+                    // Two small coral bursts outside the 3D calendar,
+                    // at the exact Home source margins.
+                    p.clearShadowLayer();p.setShader(null);
+                    p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeCap(Paint.Cap.ROUND);
+                    p.setStrokeWidth(3.5f);
+                    c.drawLine(x+7f,y+63f,x+13f,y+69f,p);
+                    c.drawLine(x+5f,y+76f,x+13f,y+75f,p);
+                    c.drawLine(x+w-7f,y+63f,x+w-14f,y+70f,p);
+                    c.drawLine(x+w-5f,y+76f,x+w-13f,y+75f,p);
+                    p.setStrokeCap(Paint.Cap.BUTT);
+                    p.setStyle(Paint.Style.FILL);
+                }else
                     icon("calendar",x+w/2,
                         y+(portrait?68:77),69,CORAL);
             }else{
@@ -2358,9 +2377,11 @@ public final class MainActivity extends ComponentActivity {
                 // right/down; keep 5x5 and other themes untouched.
                 float side=cols==5?17.0f:sourceClassic?22.8f:21.5f;
                 float left=x+(w-(side+space)*cols+space)/2+
-                    (sourceClassic?4f:0f);
+                    (sourceClassic?4f:
+                        (portrait&&theme==0&&cols==5?8.5f:0f));
                 float top=y+(portrait?14:(cols==5?20:19))+
-                    (sourceClassic?3f:0f);
+                    (sourceClassic?3f:
+                        (portrait&&theme==0&&cols==5?2f:0f));
                 // Decorative Home preview only; the actual 5x5 engine is
                 // unchanged. Allocate the palette once per thumbnail.
                 // The relaxed thumbnail is a fixed, *decorative*
@@ -2368,15 +2389,16 @@ public final class MainActivity extends ComponentActivity {
                 // formula produced purple in row 2 and coral in the
                 // fifth slot of row 1, unlike the supplied 5x5 artwork.
                 // Keep runtime game spawn and tileColor unchanged.
-                // Cell-centre colours measured directly from the owner's
-                // 941x1672 Home artwork at (379+45*column,964+45*row).
-                // No live tile data or scoring depends on these 25 pixels.
+                // Owner tile centres are actually at native x=399+45*c
+                // and y=969+45*r, NOT on their left/top bevel. The old
+                // 379/964 sample was a mixture of tiles and cream gaps.
+                // The decorative grid is also aligned +20px right/+5px down.
                 int[] relaxedPreview={
-                    0xfff3b0a0,0xff7ee9dd,0xff79b6f0,0xfff8d37c,0xfff1edc9,
-                    0xff83ece2,0xff90c2f8,0xfff8d88d,0xfff9ad7c,0xfff792ac,
-                    0xff99ccfa,0xfff4dc9b,0xfff8b68b,0xfff99db8,0xffc69af0,
-                    0xfff1bcce,0xfff59eb6,0xffc39bf4,0xff79b8fb,0xff8be8d3,
-                    0xffcca9f9,0xffb699f9,0xff84c1f9,0xff6ee6c9,0xff64e0c1
+                    0xfffd6a4e,0xff33d9ca,0xff3d94ec,0xfffdbc48,0xfff0e9bb,
+                    0xff34dacb,0xff4899f9,0xfffec151,0xfffd9055,0xfffd779a,
+                    0xff57a4fb,0xfffdc35d,0xfffe9057,0xfffb84a8,0xffb77eed,
+                    0xfffc81a6,0xfff86290,0xffa971f5,0xff52a0fb,0xff60e0c1,
+                    0xffba70f4,0xff9161fa,0xff53a7fb,0xff3bd7b2,0xff33d2ab
                 };
                 for(int i=0;i<cols*cols;i++){
                     float px=left+(i%cols)*(side+space);
