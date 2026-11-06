@@ -2446,6 +2446,52 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void classicNavyLetteringClearsCoralFourByFourBadge(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            TileGame oldGame=activity.game;
+            try{
+                activity.page="game";activity.theme=0;
+                activity.game=new TileGame("classic","",74L);
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                android.graphics.RectF title=null;
+                for(MainActivity.BoardScreen.TextRegion label:view.textRegions)
+                    if("Klasično".equals(label.text))title=label.bounds;
+                assertNotNull("Native Classic 4x4 title must be measured",title);
+                float badgeTop=view.offY+100f*view.scale;
+                assertTrue("Rounded navy title must clear the raised 4x4 badge: "+
+                    title.bottom+" vs "+badgeTop,
+                    title.bottom+1.5f<badgeTop);
+                boolean hasPause=false,hasUndo=false;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Pauziraj igru".equals(tap.label))hasPause=true;
+                    if("Poništi potez".equals(tap.label))hasUndo=true;
+                }
+                assertTrue("Classic still has Pause",hasPause);
+                // Undo only appears if at least one real undo is available.
+                assertFalse("New session cannot have a phantom Undo",
+                    activity.game.canUndo()&&!hasUndo);
+                captureReference(activity,view,
+                    "classic-title-badge-clearance-941x1672");
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void tallPortraitSplashAndHomeReuseOwnerIllustratedIdentity(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
