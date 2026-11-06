@@ -6170,6 +6170,14 @@ public class ScreensSmokeTest {
                         if(size[0]==941){
                             assertTrue("Coral left accent rays are visible",
                                 countCoralPixels(bitmap,view,32,61,63,105)>8);
+                            int ownerTealGlow=bitmap.getPixel(289,1081);
+                            assertTrue("Splash distant teal glow follows source height",
+                                android.graphics.Color.red(ownerTealGlow)<220&&
+                                android.graphics.Color.green(ownerTealGlow)>
+                                    android.graphics.Color.red(ownerTealGlow)+20);
+                            int belowGlow=bitmap.getPixel(289,1195);
+                            assertTrue("Glow must not cover lower slogan area",
+                                android.graphics.Color.red(belowGlow)>215);
                             int px=Math.round(view.offX+350f*view.scale);
                             int py=Math.round(view.offY+675f*view.scale);
                             int blue=bitmap.getPixel(px,py);
@@ -6496,6 +6504,24 @@ public class ScreensSmokeTest {
                         // filled navy pixels in these exact native ROIs.
                         // Older emulator: 81,114 / 46,102. Require a real
                         // improvement without allowing extreme overfilling.
+                        if("splash".equals(current)){
+                            assertNotNull("Native Splash logo path is present",
+                                board.ownerSplashNavyPath);
+                            android.graphics.RectF sourceBounds=
+                                new android.graphics.RectF();
+                            board.ownerSplashNavyPath.computeBounds(sourceBounds,true);
+                            assertEquals("Owner logo left edge",81f,
+                                sourceBounds.left,1.5f);
+                            assertEquals("Owner logo top edge",708f,
+                                sourceBounds.top,1.5f);
+                            assertEquals("Owner contour rightmost point",856f,
+                                sourceBounds.right,1.5f);
+                            assertEquals("Owner logo descender",976f,
+                                sourceBounds.bottom,1.5f);
+                            assertTrue("Owner navy logo coverage must be near "+
+                                "92,082 actual reference pixels: "+navy,
+                                Math.abs(navy-92082)<5000);
+                        }
                         int minimum="splash".equals(current)?83000:48000;
                         int maximum="splash".equals(current)?107000:66000;
                         assertTrue("Source wordmark navy coverage: "+current+
