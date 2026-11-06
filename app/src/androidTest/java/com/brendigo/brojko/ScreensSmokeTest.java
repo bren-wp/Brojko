@@ -6052,6 +6052,74 @@ public class ScreensSmokeTest {
     }
 
 
+
+    @Test public void homeSourcePastelGridAndEmbossedCalendarStayNative(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            try{
+                activity.page="home";
+                activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Source's 25 actual centre RGB values are measured at
+                    // native (379+45*col,964+45*row), not synthesised
+                    // from the app's active game board.
+                    int[] source={
+                        0xfff3b0a0,0xff7ee9dd,0xff79b6f0,
+                        0xfff8d37c,0xfff1edc9,
+                        0xff83ece2,0xff90c2f8,0xfff8d88d,
+                        0xfff9ad7c,0xfff792ac,
+                        0xff99ccfa,0xfff4dc9b,0xfff8b68b,
+                        0xfff99db8,0xffc69af0,
+                        0xfff1bcce,0xfff59eb6,0xffc39bf4,
+                        0xff79b8fb,0xff8be8d3,
+                        0xffcca9f9,0xffb699f9,0xff84c1f9,
+                        0xff6ee6c9,0xff64e0c1
+                    };
+                    int diff=0;
+                    for(int row=0;row<5;row++)
+                        for(int col=0;col<5;col++){
+                            int actual=bitmap.getPixel(379+45*col,
+                                964+45*row);
+                            int expected=source[row*5+col];
+                            diff+=Math.abs(android.graphics.Color.red(actual)-
+                                android.graphics.Color.red(expected));
+                            diff+=Math.abs(android.graphics.Color.green(actual)-
+                                android.graphics.Color.green(expected));
+                            diff+=Math.abs(android.graphics.Color.blue(actual)-
+                                android.graphics.Color.blue(expected));
+                        }
+                    assertTrue("Pastel 5x5 miniature should match owner pixel "+
+                        "centres, average RGB error="+(diff/75f),diff<1600);
+                    int star=bitmap.getPixel(766,1066);
+                    assertTrue("Home Daily calendar retains gold 3D reward",
+                        android.graphics.Color.red(star)>200&&
+                        android.graphics.Color.green(star)>125&&
+                        android.graphics.Color.blue(star)<150);
+                    int binder=bitmap.getPixel(728,977);
+                    assertTrue("Home calendar must have dark raised binder",
+                        android.graphics.Color.red(binder)<150&&
+                        android.graphics.Color.blue(binder)<180);
+                    captureReference(activity,view,
+                        "home-pastel-calendar-source-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void homeControlledGoldenMatchesSourceDataWithoutFakingPlayerStats(){
         rule.getScenario().onActivity(activity->{
             // Source art uses 12,560 / 3,864 and a 'Nova igra' CTA. These
