@@ -7059,6 +7059,21 @@ public class ScreensSmokeTest {
                     assertEquals(3,styles);
                     assertEquals(4,tabs);
                     assertNotNull(dark);
+                    // The provided Themes artwork shows a solid home tab,
+                    // not the generic outline. Validate ink coverage on
+                    // the real 941x1672 Canvas output, without replacing
+                    // the user's functional Home navigation action.
+                    int sourceHomeInk=0;
+                    for(int py=1530;py<1595;py++)
+                        for(int px=107;px<172;px++){
+                            int pixel=bitmap.getPixel(px,py);
+                            if(android.graphics.Color.red(pixel)<180&&
+                               android.graphics.Color.green(pixel)<190&&
+                               android.graphics.Color.blue(pixel)<212)
+                                sourceHomeInk++;
+                        }
+                    assertTrue("Themes Home icon must be filled: "+sourceHomeInk,
+                        sourceHomeInk>=1250);
                     // The first sample hit the rounded top-left corner
                     // (x=158,y=188), where the cream backing shows through.
                     // Sample the dark material between the corner and tiles.
