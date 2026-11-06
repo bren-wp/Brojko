@@ -4157,6 +4157,46 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
             gradient(x,y,width,height,radius,lighten(color,theme==1?.08f:.11f),color);
         }
+        // The average-score KPI in the source has a solid, saturated,
+        // softly elevated blue star. Reusing the generic reward-star glyph
+        // drew a pale white top and double outline at the wrong position.
+        // Keep this drawing local to the Stats light portrait screen.
+        void statisticsSourceBlueStar(float cx,float cy,float size){
+            c.save();c.translate(cx,cy);
+            c.scale(size/24f,size/24f);
+            Path star=new Path();
+            float[] x=new float[10],y=new float[10];
+            for(int i=0;i<10;i++){
+                double angle=-Math.PI/2+i*Math.PI/5;
+                float r=i%2==0?11.3f:5.65f;
+                x[i]=(float)Math.cos(angle)*r;
+                y[i]=(float)Math.sin(angle)*r;
+            }
+            for(int i=0;i<10;i++){
+                int previous=(i+9)%10,next=(i+1)%10;
+                float corner=.76f;
+                float startX=x[i]*corner+x[previous]*(1f-corner);
+                float startY=y[i]*corner+y[previous]*(1f-corner);
+                float endX=x[i]*corner+x[next]*(1f-corner);
+                float endY=y[i]*corner+y[next]*(1f-corner);
+                if(i==0)star.moveTo(startX,startY);
+                else star.lineTo(startX,startY);
+                star.quadTo(x[i],y[i],endX,endY);
+            }
+            star.close();
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);p.setShader(null);
+            c.save();c.translate(0f,1.6f);
+            p.setColor(0x335180bc);c.drawPath(star,p);c.restore();
+            p.setColor(WHITE);
+            p.setShader(new LinearGradient(-7f,-11f,7f,11f,
+                0xff48a9ff,0xff1174ed,Shader.TileMode.CLAMP));
+            c.drawPath(star,p);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.64f);p.setColor(0x85c0e8ff);
+            c.drawPath(star,p);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             statsSoftCard(x,y,width,h,21,bg);
@@ -4177,11 +4217,17 @@ public final class MainActivity extends ComponentActivity {
             // matches the owner reference better than enlarging everything.
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
-            icon(symbol,x+(width<=118?27:38),
-                y+(referenceStats?(width<=118?38:43):29),
-                referenceStats?(width<=118?34:43):
-                    (width<=118?24:29),
-                "gamepad".equals(symbol)?ink:accent);
+            if(referenceStats&&"Prosjek bodova".equals(caption)){
+                // Native 941px reference star: blue mass centroid
+                // approximately x138,y640, with no light interior void.
+                statisticsSourceBlueStar(x+33f,y+31f,43f);
+            }else{
+                icon(symbol,x+(width<=118?27:38),
+                    y+(referenceStats?(width<=118?38:43):29),
+                    referenceStats?(width<=118?34:43):
+                        (width<=118?24:29),
+                    "gamepad".equals(symbol)?ink:accent);
+            }
             float labelX=x+(width<=118?77:98);
             float labelWidth=width<=118?68:123;
             boolean dense=h<90;
