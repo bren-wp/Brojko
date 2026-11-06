@@ -4581,20 +4581,24 @@ public final class MainActivity extends ComponentActivity {
                 // first x99, last x825, leaving uneven side gutters.
                 // Render exactly 10 equal slots across the source bounds;
                 // use real saved history values and the same zero filter.
-                float barSlot=347f/Math.max(10,count);
+                boolean sourceLightChart=referencePortraitLayout&&theme==0&&
+                    "stats".equals(page);
+                float barSlot=(sourceLightChart?347f:315f)/
+                    Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float x=27f+i*barSlot+2f;
+                    float x=(sourceLightChart?27f:40f)+i*barSlot+2f;
                     // A zero-value history row is not an earned bar. The
                     // former minimum 4-unit pillar falsely visualized 0.
                     if(val>0){
                         // Owner's bar baseline is about y1079px at
                         // 941x1672; it was y1089px. Use a 75-unit top
                         // range to preserve source max-height proportion.
-                        float barHeight=Math.max(4f,75f*val/ceiling);
-                        float y=459f-barHeight;
+                        float barHeight=Math.max(4f,
+                            (sourceLightChart?75f:78f)*val/ceiling);
+                        float y=(sourceLightChart?459f:463f)-barHeight;
                         int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
