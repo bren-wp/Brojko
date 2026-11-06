@@ -2505,8 +2505,11 @@ public final class MainActivity extends ComponentActivity {
                 if(theme==0)classicGameAccentRays(false);
                 else rays(110,67,35,CORAL);
             }else{
-                fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
-                    105,89,daily?32:43,201,ink,true);
+                if(relaxed&&theme==0&&"game".equals(page))
+                    relaxedGameplayHeading();
+                else
+                    fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
+                        105,89,daily?32:43,201,ink,true);
             }
             if(!daily) {
                 if(narrow&&!relaxed){
@@ -2603,6 +2606,31 @@ public final class MainActivity extends ComponentActivity {
                 button("Podijeli","share",207,757,171,64,card,false,()->share());
                 bottomBrand();
             }
+        }
+        // Active light Relaxed mode shares the same rounded navy material
+        // language as Classic, without stretching or overlapping the crown.
+        // Keep one measured baseline on short and tall phones.
+        void relaxedGameplayHeading(){
+            final String label="Opušteno";
+            float size=43f;
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(size);
+            while(p.measureText(label)>199f&&size>28f){
+                size-=.5f;p.setTextSize(size);
+            }
+            p.setTextAlign(Paint.Align.CENTER);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStyle(Paint.Style.FILL_AND_STROKE);
+            p.setStrokeWidth(.85f);
+            p.setShadowLayer(1.4f,0f,1.1f,0x2b16243b);
+            p.setShader(new LinearGradient(0f,89f-size,0f,89f,
+                new int[]{0xff344563,0xff263758,0xff1b2947},
+                new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
+            recordTextInk(label,105f,89f);
+            c.drawText(label,105f,89f,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
         // All following art is scoped to the light-theme 4x4 gameplay
         // view. Do not change achievements, tile values, scoring, gameplay
