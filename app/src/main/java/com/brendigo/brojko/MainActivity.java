@@ -2620,6 +2620,7 @@ public final class MainActivity extends ComponentActivity {
                 size-=.5f;p.setTextSize(size);
             }
             p.setTextAlign(Paint.Align.CENTER);
+            p.setColor(ink); // Restore full alpha before the gradient shader.
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
             p.setStrokeWidth(.85f);
