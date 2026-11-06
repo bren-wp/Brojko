@@ -766,6 +766,8 @@ public final class MainActivity extends ComponentActivity {
         Canvas c;float scale,offX,offY,touchX,touchY;
         Path ownerHomeNavyPath;
         Shader ownerHomeNavyGradient;
+        Path ownerSplashNavyPath;
+        Shader ownerSplashNavyGradient;
         Path ownerBravoVectorPath;
         Shader ownerBravoInkGradient;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
@@ -1836,7 +1838,8 @@ public final class MainActivity extends ComponentActivity {
             // On the owner's light Home the complete navy wordmark is
             // drawn from native paths; Splash and dark/landscape keep the
             // existing adaptive Nunito fallback and its live brand tile.
-            if(!("home".equals(page)&&theme==0))
+            if(!("home".equals(page)&&theme==0)&&
+                !("splash".equals(page)&&theme==0&&referencePortraitLayout))
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
@@ -1863,7 +1866,8 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
 
             // The source's jko starts immediately after the number tile.
-            if(!("home".equals(page)&&theme==0)){
+            if(!("home".equals(page)&&theme==0)&&
+                !("splash".equals(page)&&theme==0&&referencePortraitLayout)){
                 c.save();
                 c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
                 c.scale(1.25f,.92f,228f,316f);
@@ -1882,6 +1886,33 @@ public final class MainActivity extends ComponentActivity {
             c.drawLine(195,282,184,307,p);
             p.setStrokeCap(Paint.Cap.BUTT);
             p.setStyle(Paint.Style.FILL);
+        }
+        // Reference-faithful navy glyphs for the owner's light 941x1672
+        // Splash. The contour geometry is scalable native Canvas artwork,
+        // not a screenshot. Home, the other themes and landscape retain the
+        // separately responsive wordmark implementations.
+        void ownerSplashNavyWordmark(){
+            if(ownerSplashNavyPath==null){
+                Path path=new Path();
+                path.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:SplashBrandContours.NAVY){
+                    path.moveTo(contour[0],contour[1]);
+                    for(int i=2;i<contour.length;i+=2)
+                        path.lineTo(contour[i],contour[i+1]);
+                    path.close();
+                }
+                ownerSplashNavyPath=path;
+                ownerSplashNavyGradient=new LinearGradient(
+                    0f,708f,0f,934f,
+                    0xff233151,0xff1d2947,Shader.TileMode.CLAMP);
+            }
+            c.save();
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setShader(ownerSplashNavyGradient);
+            p.setStyle(Paint.Style.FILL);
+            c.drawPath(ownerSplashNavyPath,p);
+            p.setShader(null);
+            c.restore();
         }
         void splashPage(){
             if(referencePortraitLayout){
@@ -1936,6 +1967,7 @@ public final class MainActivity extends ComponentActivity {
                 txt("64",25,523,46,WHITE,true);c.restore();
                 splashEdgeGlowTile();
                 splashWordmark();
+                if(theme==0)ownerSplashNavyWordmark();
                 // Dark and vivid use live Nunito for the full "jko".
                 // Its descender reaches lower than the owner's light
                 // vector artwork; keep the byline clear instead of
