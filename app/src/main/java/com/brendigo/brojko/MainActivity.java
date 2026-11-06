@@ -4576,17 +4576,25 @@ public final class MainActivity extends ComponentActivity {
                 txt(chartMetric==0?"Nema zabilježenih bodova.":
                     "Nema zabilježenih pločica.",200,429,15,muted,false);
             }else{
-                float barSlot=315f/Math.max(10,count);
+                // Reference 941px chart bars start near x69 and end
+                // near x871. The previous 315-wide band was over-inset:
+                // first x99, last x825, leaving uneven side gutters.
+                // Render exactly 10 equal slots across the source bounds;
+                // use real saved history values and the same zero filter.
+                float barSlot=347f/Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
                         row.optInt("score"):row.optInt("peak"));
-                    float x=40+i*barSlot+2;
+                    float x=27f+i*barSlot+2f;
                     // A zero-value history row is not an earned bar. The
                     // former minimum 4-unit pillar falsely visualized 0.
                     if(val>0){
-                        float barHeight=Math.max(4f,78f*val/ceiling);
-                        float y=463-barHeight;
+                        // Owner's bar baseline is about y1079px at
+                        // 941x1672; it was y1089px. Use a 75-unit top
+                        // range to preserve source max-height proportion.
+                        float barHeight=Math.max(4f,75f*val/ceiling);
+                        float y=459f-barHeight;
                         int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
