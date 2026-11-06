@@ -1967,9 +1967,13 @@ public class ScreensSmokeTest {
                                         MainActivity.BoardScreen.TextRegion first=
                                             view.textRegions.get(t);
                                         android.graphics.RectF a=first.bounds;
-                                        if(a.right<=0||a.bottom<=0||
-                                           a.left>=size[0]||a.top>=size[1])
+                                        if(a.bottom<=0||a.top>=size[1])
                                             continue;
+                                        assertTrue("Text clipped horizontally on "+
+                                            screen+" ("+size[0]+"x"+size[1]+
+                                            "), skin "+skin+": '"+first.text+
+                                            "' at "+a.left+".."+a.right,
+                                            a.left>=-3f&&a.right<=size[0]+3f);
                                         for(int k=t+1;k<view.textRegions.size();k++){
                                             MainActivity.BoardScreen.TextRegion second=
                                                 view.textRegions.get(k);
