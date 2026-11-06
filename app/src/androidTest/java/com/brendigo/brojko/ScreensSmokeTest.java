@@ -2446,6 +2446,56 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void relaxedFiveByFiveHeadingKeepsClearScoreAndBadgeSpacing(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            TileGame oldGame=activity.game;
+            try{
+                activity.page="game";activity.theme=0;
+                activity.game=new TileGame("relaxed","",309L);
+                for(int[] size:new int[][]{{941,1672},{1080,2400}}){
+                    MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                    view.auditTextLayout=true;
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap image=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(image));}
+                    finally{image.recycle();}
+                    android.graphics.RectF heading=null,best=null,badge=null;
+                    for(MainActivity.BoardScreen.TextRegion ink:view.textRegions){
+                        if("Opušteno".equals(ink.text))heading=ink.bounds;
+                        if("Najbolji".equals(ink.text))best=ink.bounds;
+                        if("5×5".equals(ink.text))badge=ink.bounds;
+                    }
+                    assertNotNull("Native raised 5x5 heading",heading);
+                    assertNotNull("Live best-score label",best);
+                    assertNotNull("Live 5x5 badge",badge);
+                    assertTrue("5x5 title must not overlap the score column",
+                        heading.right+2f<best.left);
+                    assertTrue("5x5 badge must remain lower than heading",
+                        badge.top>heading.bottom);
+                    assertEquals("Relaxed gameplay remains a 25-cell board",
+                        25,activity.game.cells.length);
+                    if(size[0]==941)
+                        captureReference(activity,view,
+                            "relaxed-3d-heading-clearance-941x1672");
+                    else
+                        captureSizedViewport(activity,view,
+                            "relaxed-3d-heading-tall-1080x2400",
+                            size[0],size[1]);
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.game=oldGame;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicNavyLetteringClearsCoralFourByFourBadge(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
