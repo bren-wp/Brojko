@@ -6070,26 +6070,26 @@ public class ScreensSmokeTest {
                     Bitmap.Config.ARGB_8888);
                 try{
                     view.draw(new Canvas(bitmap));
-                    // Source's 25 actual centre RGB values are measured at
-                    // native (379+45*col,964+45*row), not synthesised
-                    // from the app's active game board.
+                    // Reference RGB values from the actual interior of
+                    // the owner 5x5 cells (centered 7x7 source patches).
+                    // Old 379/964 sampled left bevels and cream gaps.
                     int[] source={
-                        0xfff3b0a0,0xff7ee9dd,0xff79b6f0,
-                        0xfff8d37c,0xfff1edc9,
-                        0xff83ece2,0xff90c2f8,0xfff8d88d,
-                        0xfff9ad7c,0xfff792ac,
-                        0xff99ccfa,0xfff4dc9b,0xfff8b68b,
-                        0xfff99db8,0xffc69af0,
-                        0xfff1bcce,0xfff59eb6,0xffc39bf4,
-                        0xff79b8fb,0xff8be8d3,
-                        0xffcca9f9,0xffb699f9,0xff84c1f9,
-                        0xff6ee6c9,0xff64e0c1
+                        0xfffd6a4e,0xff33d9ca,0xff3d94ec,
+                        0xfffdbc48,0xfff0e9bb,
+                        0xff34dacb,0xff4899f9,0xfffec151,
+                        0xfffd9055,0xfffd779a,
+                        0xff57a4fb,0xfffdc35d,0xfffe9057,
+                        0xfffb84a8,0xffb77eed,
+                        0xfffc81a6,0xfff86290,0xffa971f5,
+                        0xff52a0fb,0xff60e0c1,
+                        0xffba70f4,0xff9161fa,0xff53a7fb,
+                        0xff3bd7b2,0xff33d2ab
                     };
                     int diff=0;
                     for(int row=0;row<5;row++)
                         for(int col=0;col<5;col++){
-                            int actual=bitmap.getPixel(379+45*col,
-                                964+45*row);
+                            int actual=bitmap.getPixel(399+45*col,
+                                969+45*row);
                             int expected=source[row*5+col];
                             diff+=Math.abs(android.graphics.Color.red(actual)-
                                 android.graphics.Color.red(expected));
