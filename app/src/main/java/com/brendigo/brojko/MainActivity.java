@@ -1936,7 +1936,12 @@ public final class MainActivity extends ComponentActivity {
                 txt("64",25,523,46,WHITE,true);c.restore();
                 splashEdgeGlowTile();
                 splashWordmark();
-                txt("by Brendigo",284,417,19,muted,true);
+                // Dark and vivid use live Nunito for the full "jko".
+                // Its descender reaches lower than the owner's light
+                // vector artwork; keep the byline clear instead of
+                // covering the letters. Light reference is unchanged.
+                txt("by Brendigo",284,theme==0?417:456,
+                    19,muted,true);
                 // Native 941x1672 reference: cream slogan pill and both
                 // phrases sit about 10 design units higher than before.
                 // Keep the source's compact gap between coral and teal.
@@ -2085,12 +2090,16 @@ public final class MainActivity extends ComponentActivity {
             // with screen 1 without modifying any other page.
             if(portrait){
                 c.save();
-                c.translate(0f,-129f);
+                c.translate(0f,theme==0?-129f:-137f);
                 c.scale(.775f,.74f,200f,0f);
                 splashWordmark();
                 c.restore();
                 if(theme==0)ownerHomeNavyWordmark();
-                txt("by Brendigo",265,184,15,muted,true);
+                // On dark/vivid the live "jko" extends into the old
+                // byline. Separate both without changing source-light
+                // Home title, stats cards or clickable navigation.
+                txt("by Brendigo",265,theme==0?184:201,
+                    15,muted,true);
             }else brand(197,72);
             if(!portrait)
                 fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
