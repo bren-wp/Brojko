@@ -2578,11 +2578,17 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeJoin(Paint.Join.ROUND);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
             p.setStrokeWidth(2.9f);
+            // Keep the owner-matched navy contour; give its upper face a
+            // restrained highlight and its lower edge a shallow 3D lift.
+            // The heading is already 40% taller in its own Canvas transform.
+            p.setShadowLayer(1.6f,0f,1.4f,0x29535b73);
             p.setShader(new LinearGradient(0f,baseline-fontSize,
-                0f,baseline,0xff293959,0xff1b2947,
-                Shader.TileMode.CLAMP));
+                0f,baseline,
+                new int[]{0xff354666,0xff293a59,0xff1b2947},
+                new float[]{0f,.31f,1f},Shader.TileMode.CLAMP));
+            recordTextInk("Klasično",x,baseline);
             c.drawText("Klasično",x,baseline,p);
-            p.setShader(null);p.setStrokeWidth(0f);
+            p.clearShadowLayer();p.setShader(null);p.setStrokeWidth(0f);
             p.setStyle(Paint.Style.FILL);
         }
         void classicBadge(float x,float y,float width,float height){
