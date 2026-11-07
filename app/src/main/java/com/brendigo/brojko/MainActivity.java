@@ -5197,7 +5197,13 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void statisticsCompact(){
-            back();
+            // Owner's Stats back control is a soft ivory square around
+            // native x31..130,y28..130. The shared detail-page back()
+            // started at y~101px, substantially below this reference.
+            // Use only this screen's native Canvas card and live Tap.
+            card(13,12,42,42,17,card);
+            icon("back",34,33,23,ink);
+            taps.add(new Tap(7,7,61,61,"Natrag",()->navigate("home")));
             brand(40,35);
             // Owner's dark-navy Stats title raster is x238..714,
             // y184..285 at 941x1672. Preserve horizontal/vertical
