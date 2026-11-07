@@ -2862,6 +2862,56 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void relaxedFourDigitValuesFitAllRaisedTilesWithoutClipping(){
+        rule.getScenario().onActivity(activity->{
+            TileGame oldGame=activity.game;String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            try{
+                activity.game=new TileGame("relaxed","",20261107L);
+                activity.game.cells=new int[25];
+                activity.game.cells[0]=1024;activity.game.cells[24]=2048;
+                activity.game.score=3072;activity.game.peak=2048;
+                activity.page="game";activity.theme=0;activity.tileStyle=0;
+                for(int[] size:new int[][]{{941,1672},{1080,2400},{360,800}}){
+                    MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                    view.auditTextLayout=true;
+                    view.measure(View.MeasureSpec.makeMeasureSpec(size[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(size[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,size[0],size[1]);
+                    Bitmap img=Bitmap.createBitmap(size[0],size[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(img));}
+                    finally{img.recycle();}
+                    float gap=6f,tile=(view.gridSize-gap*6f)/5f;
+                    for(String value:new String[]{"1024","2048"}){
+                        int col="1024".equals(value)?0:4;
+                        android.graphics.RectF ink=null;
+                        for(MainActivity.BoardScreen.TextRegion r:view.textRegions)
+                            if(value.equals(r.text)){ink=r.bounds;break;}
+                        assertNotNull("Live "+value+" must render",ink);
+                        float worldLeft=view.gridX+gap+
+                            col*(tile+gap);
+                        float left=view.offX+worldLeft*view.scale;
+                        float right=view.offX+(worldLeft+tile)*view.scale;
+                        assertTrue(value+" must fit the 5x5 cell horizontally: "+
+                            ink.left+".."+ink.right+" vs "+left+".."+right,
+                            ink.left>=left+1f&&ink.right<=right-1f);
+                    }
+                    assertEquals("Render must not change the game score",
+                        3072,activity.game.score);
+                    assertEquals("Render keeps all 25 numeric cells",
+                        25,activity.game.cells.length);
+                }
+            }finally{
+                activity.game=oldGame;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void relaxedFiveByFiveHasBrandedRaisedTilesAndRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame oldGame=activity.game;
