@@ -4815,6 +4815,15 @@ public final class MainActivity extends ComponentActivity {
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             statsSoftCard(x,y,width,h,21,bg);
+            // The owner card SURFACES extend farther than the old render,
+            // but the crown, blue star and text remain optically centered
+            // at the original native inner coordinates. Move only their
+            // content, not the frame or the real numeric values below.
+            boolean sourceInset=(theme==0&&referencePortraitLayout&&
+                "stats".equals(page)&&
+                ("Najbolji rezultat".equals(caption)||
+                 "Prosjek bodova".equals(caption)));
+            if(sourceInset){c.save();c.translate(6f,0f);}
             String symbol=caption.contains("Najbolji")?"crown":
                 caption.contains("partija")?"gamepad":
                 caption.contains("pločica")?"grid":
@@ -4861,6 +4870,7 @@ public final class MainActivity extends ComponentActivity {
                 fitted(bottom,labelX,y+(dense?41:48),
                     width<=125?13:16,labelWidth,ink,true);
             }
+            if(sourceInset)c.restore();
             // Keep the average score to the right of its icon, as in
             // the owner's 941px KPI card. Other values retain their
             // original centered positions.
