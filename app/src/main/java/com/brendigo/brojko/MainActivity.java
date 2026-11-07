@@ -1556,7 +1556,38 @@ public final class MainActivity extends ComponentActivity {
         void brand(float y,float size) {
             brand(y,size,true);
         }
+        // Derived from the owner's original scalable Home logo contours.
+        // Tiny detail-page logos must not fall back to the plain Nunito
+        // letters: those lose almost one third of the original navy ink.
+        // Keep the coral tile, accent rays and byline native and independent.
+        boolean ownerMiniBrandPass=false;
+        void ownerMiniBrand(){
+            boolean mission="missions".equals(page);
+            c.save();
+            c.translate(mission?116f:111f,mission?-14f:-19f);
+            c.scale(mission?.403f:.390f,mission?.440f:.430f);
+            boolean wasOwnerMiniBrand=ownerMiniBrandPass;
+            ownerMiniBrandPass=true;
+            try{
+                c.save();
+                c.translate(0f,-129f);
+                c.scale(.775f,.74f,200f,0f);
+                splashWordmark();
+                c.restore();
+                ownerHomeNavyWordmark();
+                txt("by Brendigo",265f,184f,15f,muted,true);
+            }finally{
+                ownerMiniBrandPass=wasOwnerMiniBrand;
+                c.restore();
+            }
+        }
         void brand(float y,float size,boolean includeByline) {
+            if(includeByline&&theme==0&&referencePortraitLayout&&
+                ("missions".equals(page)||"themes".equals(page)||
+                 "stats".equals(page))){
+                ownerMiniBrand();
+                return;
+            }
             p.setTypeface(displayFont);
             p.setTextSize(size);
             float left=p.measureText("Br"),right=p.measureText("jko");
@@ -1866,11 +1897,13 @@ public final class MainActivity extends ComponentActivity {
             // decorative coral rays and action hit areas never move.
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
-            // On the owner's light Home the complete navy wordmark is
-            // drawn from native paths; Splash and dark/landscape keep the
-            // existing adaptive Nunito fallback and its live brand tile.
-            if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0))
+            // The original letter contours take precedence on light Home,
+            // Splash, and reference-ratio detail pages. Other palettes keep
+            // their responsive Nunito fallback, without double-drawing.
+            boolean ownerNavyActive=theme==0&&
+                ("home".equals(page)||"splash".equals(page)||
+                ownerMiniBrandPass);
+            if(!ownerNavyActive)
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
@@ -1897,8 +1930,7 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
 
             // The source's jko starts immediately after the number tile.
-            if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0)){
+            if(!ownerNavyActive){
                 c.save();
                 c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
                 c.scale(1.25f,.92f,228f,316f);
