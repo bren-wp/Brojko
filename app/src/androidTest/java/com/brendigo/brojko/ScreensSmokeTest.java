@@ -2779,6 +2779,89 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void relaxedBadgeRaysAndTwoUndoControlsUseLiveRaisedArtwork(){
+        rule.getScenario().onActivity(activity->{
+            TileGame previousGame=activity.game;
+            String previousPage=activity.page;
+            int previousTheme=activity.theme,previousStyle=activity.tileStyle;
+            int previousAnimation=activity.animation;
+            try{
+                activity.page="game";activity.theme=0;
+                activity.tileStyle=0;activity.animation=0;
+                for(int[] viewport:new int[][]{{941,1672},{1080,2400},{360,800}}){
+                    activity.game=new TileGame("relaxed","",607L);
+                    activity.game.cells=new int[25];
+                    MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                    view.measure(View.MeasureSpec.makeMeasureSpec(viewport[0],
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(viewport[1],
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,viewport[0],viewport[1]);
+                    Bitmap image=Bitmap.createBitmap(viewport[0],viewport[1],
+                        Bitmap.Config.ARGB_8888);
+                    try{
+                        view.draw(new Canvas(image));
+                        int rayX=Math.round(view.offX+26f*view.scale);
+                        int rayY=Math.round(view.offY+134f*view.scale);
+                        int ray=image.getPixel(rayX,rayY);
+                        assertTrue("5x5 badge needs true coral brush rays at "+
+                            viewport[0]+"x"+viewport[1],
+                            android.graphics.Color.red(ray)>210 &&
+                            android.graphics.Color.red(ray)>
+                                android.graphics.Color.green(ray)+60);
+                        int badge=image.getPixel(
+                            Math.round(view.offX+110f*view.scale),
+                            Math.round(view.offY+123f*view.scale));
+                        assertTrue("5x5 badge must have an opaque coral face",
+                            android.graphics.Color.red(badge)>220 &&
+                            android.graphics.Color.green(badge)<190);
+                        int pause=0,undo=0;
+                        for(MainActivity.BoardScreen.Tap tap:view.taps){
+                            if("Pauziraj igru".equals(tap.label))pause++;
+                            if("Poništi".equals(tap.label)||
+                                "Poništi potez".equals(tap.label))undo++;
+                        }
+                        assertEquals("One reachable Pause icon",1,pause);
+                        assertEquals("Disabled Undo must not accept taps",0,undo);
+                        assertEquals("Rendering cannot alter 25-cell board",
+                            25,activity.game.cells.length);
+                    }finally{image.recycle();}
+                    // A genuine merge enables two Undo entry points
+                    // (header icon + the matching raised bottom card).
+                    activity.game.cells[0]=2;activity.game.cells[1]=2;
+                    assertTrue("Real merge must enable Undo",
+                        activity.game.move(TileGame.LEFT).changed);
+                    Bitmap enabledImage=Bitmap.createBitmap(viewport[0],
+                        viewport[1],Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(enabledImage));}
+                    finally{enabledImage.recycle();}
+                    int activeUndo=0,activePause=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps){
+                        if("Poništi".equals(tap.label)||
+                            "Poništi potez".equals(tap.label))activeUndo++;
+                        if("Pauziraj igru".equals(tap.label))activePause++;
+                    }
+                    assertEquals("Header and bottom Undo must be available",2,
+                        activeUndo);
+                    assertEquals("Pause still available after merge",1,
+                        activePause);
+                    if(viewport[0]==941)
+                        captureReference(activity,view,
+                            "relaxed-raised-badge-controls-941x1672");
+                    if(viewport[0]==1080)
+                        captureSizedViewport(activity,view,
+                            "relaxed-raised-badge-controls-1080x2400",
+                            viewport[0],viewport[1]);
+                }
+            }finally{
+                activity.game=previousGame;activity.page=previousPage;
+                activity.theme=previousTheme;activity.tileStyle=previousStyle;
+                activity.animation=previousAnimation;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void relaxedFiveByFiveHasBrandedRaisedTilesAndRealActions(){
         rule.getScenario().onActivity(activity->{
             TileGame oldGame=activity.game;
