@@ -825,8 +825,10 @@ public class ScreensSmokeTest {
                     "\"mode\":\"relaxed\",\"day\":\"24.10.2026.\"}]").commit();
                 activity.page="stats";
                 capture(activity,"stats-with-history");
-                assertTrue("History list must be scrollable",
-                    screen.maxScroll>0);
+                // Source 400×710 Stats shows five rows on tall portrait
+                // without scroll. Standard/short pages still scroll.
+                assertTrue("History is accessible through scroll or owner layout",
+                    screen.maxScroll>0 || screen.referencePortraitLayout);
                 activity.selectedHistoryIndex=0;
                 activity.page="historyDetail";
                 capture(activity,"history-detail");
@@ -834,7 +836,10 @@ public class ScreensSmokeTest {
                 capture(activity,"theme-preview-controls");
                 boolean hasBottomSettings=false;
                 for(MainActivity.BoardScreen.Tap tap:screen.taps){
-                    if("Postavke".equals(tap.label)&&tap.top>=800&&tap.bottom<=880){
+                    boolean sourceTabs=screen.referencePortraitLayout;
+                    if("Postavke".equals(tap.label)&&
+                        (sourceTabs?(tap.top>=630&&tap.bottom<=710):
+                            (tap.top>=800&&tap.bottom<=880))){
                         hasBottomSettings=true;
                         tap.action.run();
                         break;
@@ -860,7 +865,9 @@ public class ScreensSmokeTest {
                 capture(activity,"themes-safe-area-and-tabs");
                 MainActivity.BoardScreen.Tap settingsTab=null;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
-                    if("Postavke".equals(tap.label)&&tap.top>790)settingsTab=tap;
+                    if("Postavke".equals(tap.label)&&
+                        tap.top>(view.referencePortraitLayout?630:790))
+                        settingsTab=tap;
                 }
                 assertNotNull("Themes must expose Settings bottom tab",settingsTab);
                 float bottom=settingsTab.bottom*view.scale+view.offY;
