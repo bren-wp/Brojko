@@ -4954,9 +4954,28 @@ public final class MainActivity extends ComponentActivity {
             }
             float w1=p.measureText(navy),w2=p.measureText(coral);
             float start=(400f-w1-w2-gap)*.5f;
-            illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
-            illustratedTitle(coral,start+w1+gap+w2/2f,baseline,size,
-                w2+1f,CORAL);
+            if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
+                // The owner's 941x1672 heading ink is materially taller
+                // than the baseline Nunito raster. Its navy portion is
+                // x202..490,y223..306; coral x511..746,y223..319.
+                // Keep the original text glyphs and measured word gap;
+                // stretch locally without changing any other screen.
+                c.save();
+                c.scale(1.10f,1.32f,86f,baseline+5f);
+                illustratedTitle(navy,start+w1/2f,baseline+5f,
+                    size,w1+1f,ink);
+                c.restore();
+                c.save();
+                c.translate(8f,0f);
+                c.scale(.975f,1.22f,209f,baseline+3f);
+                illustratedTitle(coral,start+w1+gap+w2/2f,
+                    baseline+3f,size,w2+1f,CORAL);
+                c.restore();
+            }else{
+                illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
+                illustratedTitle(coral,start+w1+gap+w2/2f,baseline,size,
+                    w2+1f,CORAL);
+            }
         }
         void themesTitlePill(float y,float h){
             p.setShader(null);p.setColor(WHITE);
@@ -5176,7 +5195,16 @@ public final class MainActivity extends ComponentActivity {
         void statisticsCompact(){
             back();
             brand(40,35);
-            illustratedTitle("Statistika",200,116,43,325,ink);
+            // Owner's dark-navy Stats title raster is x238..714,
+            // y184..285 at 941x1672. Preserve horizontal/vertical
+            // position of the original word while restoring its tall
+            // softly rounded lettering; other themes keep the fallback.
+            if(theme==0){
+                c.save();
+                c.scale(1.025f,1.27f,101f,120f);
+                illustratedTitle("Statistika",200,120,43,325,ink);
+                c.restore();
+            }else illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
             statsHeaderBurst(354,104,true);
             // Owner 941x1672 KPI surfaces: three edge-aligned pastel
