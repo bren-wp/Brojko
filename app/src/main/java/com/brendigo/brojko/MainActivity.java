@@ -4879,9 +4879,23 @@ public final class MainActivity extends ComponentActivity {
             float valueX=referenceStats&&theme==0&&
                 "Prosjek bodova".equals(caption)?
                 x+width/2f+28f:x+width/2f;
+            // Source typography uses stronger pigment than the pastel
+            // card surfaces. Never reuse the saturated label color for
+            // the background, and never recolor actual gameplay tiles.
+            int valuePigment=accent;
+            if(referenceStats&&theme==0){
+                switch(caption){
+                    case "Najbolji rezultat":valuePigment=0xfffc4930;break;
+                    case "Ukupno partija":valuePigment=0xff04a2b2;break;
+                    case "Najveća pločica":valuePigment=0xffed7514;break;
+                    case "Prosjek bodova":valuePigment=0xff0c66e5;break;
+                    case "Niz pobjeda":valuePigment=0xff862ad1;break;
+                    default:break;
+                }
+            }
             fitted(value,valueX,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
-                width-10,accent,true);
+                width-10,valuePigment,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -4978,14 +4992,16 @@ public final class MainActivity extends ComponentActivity {
                 // stretch locally without changing any other screen.
                 c.save();
                 c.scale(1.10f,1.32f,86f,baseline+5f);
+                // Owner ink is deeper navy than the default app text.
+                // Local to the source Themes heading, never gameplay.
                 illustratedTitle(navy,start+w1/2f,baseline+5f,
-                    size,w1+1f,ink);
+                    size,w1+1f,0xff0c1f44);
                 c.restore();
                 c.save();
                 c.translate(8f,0f);
                 c.scale(.975f,1.22f,209f,baseline+3f);
                 illustratedTitle(coral,start+w1+gap+w2/2f,
-                    baseline+3f,size,w2+1f,CORAL);
+                    baseline+3f,size,w2+1f,0xfffb5b3c);
                 c.restore();
             }else{
                 illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
@@ -5224,7 +5240,7 @@ public final class MainActivity extends ComponentActivity {
             if(theme==0){
                 c.save();
                 c.scale(1.025f,1.27f,101f,120f);
-                illustratedTitle("Statistika",200,120,43,325,ink);
+                illustratedTitle("Statistika",200,120,43,325,0xff15243f);
                 c.restore();
             }else illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
