@@ -2893,10 +2893,10 @@ public class ScreensSmokeTest {
                 assertTrue("Footer renders actual build version",version);
                 int rows=0;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
-                    if("Zvuk".equals(tap.label)||
-                       "Vibracija".equals(tap.label)||
+                    if(tap.label.startsWith("Zvuk ")||
+                       tap.label.startsWith("Vibracija ")||
                        "Jezik".equals(tap.label)||
-                       "Obavijesti".equals(tap.label)||
+                       tap.label.startsWith("Obavijesti ")||
                        tap.label.startsWith("Sinkronizacija napretka")||
                        "Pravila privatnosti".equals(tap.label)||
                        "O aplikaciji".equals(tap.label)){
