@@ -2865,6 +2865,71 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void dailyPreviewUsesOwnerColorFacesButNeverChangesLiveGameTiles(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            TileGame previous=activity.game;
+            try{
+                activity.page="daily";activity.theme=0;activity.tileStyle=0;
+                MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+                int[] values={2,4,8,16,64,128,256,512,1024};
+                int[] expected={
+                    0xfffd8c5d,0xff34e1d3,0xff4dacef,0xfffdcc5a,
+                    0xfffc94ac,0xffca81fc,0xffa271fd,0xff559efe,
+                    0xff66ecd0
+                };
+                for(int i=0;i<values.length;i++){
+                    int base=screen.dailyPreviewColor(values[i]);
+                    int red=android.graphics.Color.red(base);
+                    int green=android.graphics.Color.green(base);
+                    int blue=android.graphics.Color.blue(base);
+                    int blended=android.graphics.Color.rgb(
+                        (int)(red+(255-red)*.13f),
+                        (int)(green+(255-green)*.13f),
+                        (int)(blue+(255-blue)*.13f));
+                    int target=expected[i];
+                    int distance=Math.abs(
+                        android.graphics.Color.red(blended)-
+                        android.graphics.Color.red(target))+
+                        Math.abs(android.graphics.Color.green(blended)-
+                        android.graphics.Color.green(target))+
+                        Math.abs(android.graphics.Color.blue(blended)-
+                        android.graphics.Color.blue(target));
+                    assertTrue("Preview "+values[i]+
+                        " keeps owner sampled hue: Δrgb="+distance,
+                        distance<38);
+                }
+                assertEquals("Actual classic 2 remains original gameplay hue",
+                    MainActivity.TILES[1],screen.tileColor(2));
+                assertEquals("Actual classic 4 remains original gameplay hue",
+                    MainActivity.TILES[2],screen.tileColor(4));
+                screen.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                screen.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{screen.draw(new Canvas(image));}
+                finally{image.recycle();}
+                boolean hasBack=false,hasStart=false;
+                for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                    if("Natrag".equals(tap.label))hasBack=true;
+                    if(tap.label.startsWith("Započni izazov"))hasStart=true;
+                }
+                assertTrue("Owner daily still has functional Back",hasBack);
+                assertTrue("Owner daily still has functional Start",hasStart);
+                captureReference(activity,screen,
+                    "phase51-owner-daily-3d-colors-941x1672");
+            }finally{
+                activity.game=previous;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicNavyLetteringClearsCoralFourByFourBadge(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
@@ -2888,10 +2953,22 @@ public class ScreensSmokeTest {
                 for(MainActivity.BoardScreen.TextRegion label:view.textRegions)
                     if("Klasično".equals(label.text))title=label.bounds;
                 assertNotNull("Native Classic 4x4 title must be measured",title);
+                // Owner illustration intentionally layers the coral 4x4
+                // badge across the *bottom* of the hand-drawn navy word.
+                // Requiring zero overlap rejected the real source geometry.
                 float badgeTop=view.offY+100f*view.scale;
-                assertTrue("Rounded navy title must clear the raised 4x4 badge: "+
-                    title.bottom+" vs "+badgeTop,
-                    title.bottom+1.5f<badgeTop);
+                assertNotNull("Owner Classic source contour is rendered",
+                    view.ownerClassicVectorPath);
+                assertTrue("Navy source must occupy original x≈39..459",
+                    title.left>view.offX+30f*view.scale&&
+                    title.right<view.offX+205f*view.scale);
+                assertTrue("Navy source must occupy original y≈136..247",
+                    title.top>view.offY+52f*view.scale&&
+                    title.bottom<view.offY+112f*view.scale);
+                assertTrue("Source navy/title and coral badge should touch "+
+                    "as layered, not separate components",
+                    title.bottom>=badgeTop&&title.bottom<
+                        badgeTop+18f*view.scale);
                 boolean hasPause=false,hasUndo=false;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Pauziraj igru".equals(tap.label))hasPause=true;
