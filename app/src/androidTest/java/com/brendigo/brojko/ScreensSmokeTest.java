@@ -432,7 +432,11 @@ public class ScreensSmokeTest {
             if("navy".equals(material)){
                 if(r<100&&g<115&&b<160)count++;
             }else if("orange".equals(material)){
-                if(r>205&&r>g+40&&g<180&&b<130)count++;
+                // Stats "Najveća pločica" uses opaque #FFB431:
+                // its green channel is exactly 180. The previous strict
+                // g<180 rejected *every* correct orange icon pixel.
+                // Allow its measured lit bevel while excluding cream cards.
+                if(r>205&&r>g+40&&g<=195&&b<150)count++;
             }else if("gold".equals(material)){
                 if(r>225&&g>125&&g<215&&b<110)count++;
             }
@@ -4687,7 +4691,21 @@ public class ScreensSmokeTest {
                 try{
                     view.draw(new Canvas(image));
                     int left=image.getPixel(650,650);
-                    int right=image.getPixel(860,635);
+                    // The owner-matched 2x2 swatches were lowered by
+                    // five design units (~12px). The old x860/y635 probe
+                    // landed on the rounded *bottom rim* of the purple
+                    // tile, not its fill. Sample an inset patch above
+                    // the "16" numeral and away from edge antialiasing.
+                    int purpleSamples=0;
+                    for(int y=563;y<=579;y+=2)
+                        for(int x=832;x<=850;x+=2){
+                            int pixel=image.getPixel(x,y);
+                            if(android.graphics.Color.red(pixel)>86 &&
+                               android.graphics.Color.blue(pixel)>214 &&
+                               android.graphics.Color.blue(pixel)>
+                                   android.graphics.Color.green(pixel)+65)
+                                purpleSamples++;
+                        }
                     // Original swatch: cyan left RGB(9,162,253),
                     // purple right RGB(161,76,253).
                     // Old Android gradient: left RGB(31,121,234),
@@ -4695,9 +4713,9 @@ public class ScreensSmokeTest {
                     assertTrue("Vivid preview left must be cyan-blue",
                         android.graphics.Color.green(left)>139&&
                         android.graphics.Color.blue(left)>231);
-                    assertTrue("Vivid preview right must be purple",
-                        android.graphics.Color.red(right)>86&&
-                        android.graphics.Color.blue(right)>214);
+                    assertTrue("Vivid preview right must be purple, "+
+                        "not a sampled rounded corner: "+purpleSamples,
+                        purpleSamples>=25);
                     int choices=0;
                     for(MainActivity.BoardScreen.Tap tap:view.taps)
                         if("Svijetla".equals(tap.label)||
