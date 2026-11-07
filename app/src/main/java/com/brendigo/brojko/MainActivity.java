@@ -1006,7 +1006,10 @@ public final class MainActivity extends ComponentActivity {
             if(theme==0){
                 p.setStrokeJoin(Paint.Join.ROUND);
                 p.setStyle(Paint.Style.FILL_AND_STROKE);
-                p.setStrokeWidth(.7f);
+                // The Daily reference has more full-bodied headline ink.
+                // Keep all other screen typography unchanged.
+                p.setStrokeWidth("daily".equals(page)&&
+                    referencePortraitLayout?1.55f:.7f);
                 p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
                 p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
                     lighten(color,.075f),darken(color,.045f),
@@ -2949,7 +2952,14 @@ public final class MainActivity extends ComponentActivity {
             p.setShadowLayer(6.5f,0f,3.5f,0x27977a52);
             c.drawRoundRect(x,y+1.4f,x+w,y+h+1.4f,r,r,p);
             p.clearShadowLayer();
-            gradient(x,y,w,h,r,0xfffffdf7,0xfff8efdf);
+            // Only the light Classic 4x4 reference uses this warmer
+            // ivory surface; all other uses of this shared card are unchanged.
+            boolean sourceClassicButtons=theme==0&&referencePortraitLayout&&
+                "game".equals(page)&&game!=null&&
+                "classic".equals(game.mode);
+            gradient(x,y,w,h,r,
+                sourceClassicButtons?0xfffffbf4:0xfffffdf7,
+                sourceClassicButtons?0xfff8ebd9:0xfff8efdf);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.7f);p.setColor(0x93ffffff);
             c.drawRoundRect(x+1.2f,y+1.2f,x+w-1.2f,y+h-1.2f,
@@ -3061,7 +3071,9 @@ public final class MainActivity extends ComponentActivity {
                 float height,Runnable action){
             float radius=22f;
             shape(x,y+3,width,height,radius,0xffdf5941);
-            gradient(x,y,width,height-3,radius,0xffff9a71,0xffff6341);
+            // The owner's Classic finish face has less blue in its
+            // coral pigment; keep its existing real action and hitbox.
+            gradient(x,y,width,height-3,radius,0xffff9a69,0xffff6339);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
             p.setColor(0x70ffffff);
@@ -3871,12 +3883,14 @@ public final class MainActivity extends ComponentActivity {
                 c.save();
                 c.translate(2f,8f);
                 c.scale(1f,1.07f,196f,54f);
-                illustratedTitle("Dnevni",196,54,51,240,ink);
+                // Source navy median RGB ~25/43/79.
+                illustratedTitle("Dnevni",196,54,51,240,0xff16284e);
                 c.restore();
                 c.save();
                 c.translate(0f,-5f);
                 c.scale(.95f,.93f,205f,99f);
-                illustratedTitle("izazov",205,99,49,234,CORAL);
+                // Source coral median RGB ~253/101/59.
+                illustratedTitle("izazov",205,99,49,234,0xffff663d);
                 c.restore();
             }else{
                 illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
@@ -4457,7 +4471,7 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL_AND_STROKE);
             p.setStrokeJoin(Paint.Join.ROUND);
-            p.setStrokeWidth(.85f);
+            p.setStrokeWidth(theme==0&&referencePortraitLayout?1.55f:.85f);
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(fontSize);
             p.setTextAlign(Paint.Align.LEFT);p.setColor(color);
@@ -4497,14 +4511,18 @@ public final class MainActivity extends ComponentActivity {
                 c.save();
                 c.translate(6.5f,5f);
                 c.scale(1.02f,1.11f,left+navyWidth/2f,baseline);
-                missionHeadlineRun(navy,left,baseline,size,ink);
+                // Source navy median RGB ~25/40/73.
+                missionHeadlineRun(navy,left,baseline,size,0xff162548);
                 c.restore();
                 c.save();
-                c.translate(-4f,4f);
-                c.scale(.92f,1.01f,
+                // Android coral x418..849/y190..272 was wider and
+                // paler than source x425..823/y189..277. Adjust only
+                // this decorative title, never row labels.
+                c.translate(-8f,5f);
+                c.scale(.85f,1.08f,
                     left+navyWidth+gap+coralWidth/2f,baseline);
                 missionHeadlineRun(coral,left+navyWidth+gap,
-                    baseline,size,CORAL);
+                    baseline,size,0xffff5935);
                 c.restore();
             }else{
                 missionHeadlineRun(navy,left,baseline,size,ink);
@@ -4525,7 +4543,9 @@ public final class MainActivity extends ComponentActivity {
             missionMeasuredHeadline(portrait);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
-            int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
+            // Source weekly panel RGB is around 229/245/253 versus
+            // previous Android 237/247/255; deepen just this surface.
+            int weeklyTint=theme==1?0xff253b4f:0xffddf2fd;
             int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
