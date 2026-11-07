@@ -1577,10 +1577,23 @@ public final class MainActivity extends ComponentActivity {
         // Keep the coral tile, accent rays and byline native and independent.
         boolean ownerMiniBrandPass=false;
         void ownerMiniBrand(){
-            boolean mission="missions".equals(page);
+            // Reference RGB-ink bounds in owner 941x1672 PNGs:
+            // Missions (342..620,53..144), Stats (330..599,47..134),
+            // Themes (288..652,50..169). Original scalable Home navy
+            // contours span (169..770,215..420) native source pixels.
+            // Map those bounds per screen, not one universal mini-size:
+            // the owner Themes logo is materially larger than Stats.
+            float sx,sy,dx,dy;
+            if("missions".equals(page)){
+                sx=.463f;sy=.444f;dx=112.1f;dy=-18.1f;
+            }else if("themes".equals(page)){
+                sx=.606f;sy=.580f;dx=79f;dy=-31.8f;
+            }else{
+                sx=.448f;sy=.424f;dx=108.1f;dy=-18.8f;
+            }
             c.save();
-            c.translate(mission?116f:111f,mission?-14f:-19f);
-            c.scale(mission?.403f:.390f,mission?.440f:.430f);
+            c.translate(dx,dy);
+            c.scale(sx,sy);
             boolean wasOwnerMiniBrand=ownerMiniBrandPass;
             ownerMiniBrandPass=true;
             try{
@@ -1590,7 +1603,7 @@ public final class MainActivity extends ComponentActivity {
                 splashWordmark();
                 c.restore();
                 ownerHomeNavyWordmark();
-                txt("by Brendigo",265f,184f,15f,muted,true);
+                txt("by Brendigo",285f,184f,15f,muted,true);
             }finally{
                 ownerMiniBrandPass=wasOwnerMiniBrand;
                 c.restore();
