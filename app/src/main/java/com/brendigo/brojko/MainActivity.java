@@ -5171,14 +5171,23 @@ public final class MainActivity extends ComponentActivity {
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    themePreviewTile(x+15+xx*43,y+21+yy*41,40,40,colors[j],0);
+                    // Owner 941x1672 source colour spans begin 12px
+                    // below the earlier 2x2 previews on all three themes.
+                    // Shift illustrations only: theme-card hitboxes stay put.
+                    themePreviewTile(x+15+xx*43,y+26+yy*41,40,40,colors[j],0);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*43,y+50+yy*41,19,WHITE,true);
+                        x+35+xx*43,y+55+yy*41,19,WHITE,true);
                 }
-                fitted(names[i],x+58,y+157,16,108,ink,true);
-                // Original design: selector beneath the four numbered tiles.
-                shape(x+47,y+114,22,22,11,theme==i?CORAL:0xffe4e3e0);
-                if(theme==i)icon("check",x+58,y+125,13,WHITE);
+                // Original swatch captions have equal vertical ink height
+                // but approximately 18% less horizontal ink than fallback
+                // Nunito. Keep height, optically narrow just these labels.
+                c.save();c.scale(.84f,1f,x+58,y+162);
+                fitted(names[i],x+58,y+162,16,108,ink,true);
+                c.restore();
+                // Selector and caption must follow the same +5-unit
+                // alignment as the tiles; remain inside the live card.
+                shape(x+47,y+119,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,y+130,13,WHITE);
                 taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
