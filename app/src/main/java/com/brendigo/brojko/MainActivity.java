@@ -3072,8 +3072,13 @@ public final class MainActivity extends ComponentActivity {
             float radius=22f;
             shape(x,y+3,width,height,radius,0xffdf5941);
             // The owner's Classic finish face has less blue in its
-            // coral pigment; keep its existing real action and hitbox.
-            gradient(x,y,width,height-3,radius,0xffff9a69,0xffff6339);
+            // coral pigment. Daily gameplay also calls this routine:
+            // do not recolor that unsupplied gameplay variation.
+            boolean sourceClassicFinish=theme==0&&"game".equals(page)&&
+                game!=null&&"classic".equals(game.mode);
+            gradient(x,y,width,height-3,radius,
+                sourceClassicFinish?0xffff9a69:0xffff9a71,
+                sourceClassicFinish?0xffff6339:0xffff6341);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
             p.setColor(0x70ffffff);
@@ -4545,7 +4550,8 @@ public final class MainActivity extends ComponentActivity {
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
             // Source weekly panel RGB is around 229/245/253 versus
             // previous Android 237/247/255; deepen just this surface.
-            int weeklyTint=theme==1?0xff253b4f:0xffddf2fd;
+            int weeklyTint=theme==1?0xff253b4f:
+                (theme==0?0xffddf2fd:0xffe9f5ff);
             int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
