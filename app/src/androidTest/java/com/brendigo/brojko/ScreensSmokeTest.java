@@ -418,6 +418,188 @@ public class ScreensSmokeTest {
         });
     }
 
+    // Pixel-area checks intentionally use broad ROI ranges instead of single
+    // antialiased pixels. Their source calibration is documented in phase 50.
+    private static int sourceLikeKpiPixels(Bitmap image,
+                                           int x0,int y0,int x1,int y1,
+                                           String material){
+        int count=0;
+        for(int y=y0;y<y1;y+=2)for(int x=x0;x<x1;x+=2){
+            int c=image.getPixel(x,y);
+            int r=android.graphics.Color.red(c);
+            int g=android.graphics.Color.green(c);
+            int b=android.graphics.Color.blue(c);
+            if("navy".equals(material)){
+                if(r<100&&g<115&&b<160)count++;
+            }else if("orange".equals(material)){
+                // Stats "Najveća pločica" uses opaque #FFB431:
+                // its green channel is exactly 180. The previous strict
+                // g<180 rejected *every* correct orange icon pixel.
+                // Allow its measured lit bevel while excluding cream cards.
+                if(r>205&&r>g+40&&g<=195&&b<150)count++;
+            }else if("gold".equals(material)){
+                if(r>225&&g>125&&g<215&&b<110)count++;
+            }
+        }
+        return count;
+    }
+
+    @Test public void sourceNavyLogoUsesNativeContoursOnThreeWorstScreens(){
+        rule.getScenario().onActivity(activity->{
+            int oldTheme=activity.theme;
+            String oldPage=activity.page;
+            try{
+                activity.theme=0;
+                for(String page:new String[]{"missions","stats","themes"}){
+                    activity.page=page;
+                    MainActivity.BoardScreen view=
+                        activity.new BoardScreen(activity);
+                    view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                            View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(1672,
+                            View.MeasureSpec.EXACTLY));
+                    view.layout(0,0,941,1672);
+                    Bitmap image=Bitmap.createBitmap(941,1672,
+                        Bitmap.Config.ARGB_8888);
+                    try{view.draw(new Canvas(image));}
+                    finally{image.recycle();}
+                    assertNotNull("Owner native source contour required on "+
+                        page,view.ownerHomeNavyPath);
+                    assertTrue("Source logo must be drawn at its intended "+
+                        "top portrait position on "+page,
+                        view.referencePortraitLayout);
+                    captureReference(activity,view,
+                        "phase50-owner-logo-"+page+"-941x1672");
+                }
+            }finally{
+                activity.theme=oldTheme;activity.page=oldPage;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void themesPortraitSwatchesMatchSourceRowOffsets(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            try{
+                activity.page="themes";activity.theme=0;
+                activity.tileStyle=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int first=image.getPixel(110,535);
+                    int second=image.getPixel(110,555);
+                    assertTrue("Owner first row remains coral near its foot",
+                        android.graphics.Color.red(first)>
+                            android.graphics.Color.green(first)+65);
+                    assertTrue("Second row starts blue below a true gap",
+                        android.graphics.Color.blue(second)>
+                            android.graphics.Color.red(second)+55);
+                    android.graphics.RectF caption=screenInk(view,"Svijetla");
+                    assertNotNull("Theme caption is native accessible ink",caption);
+                    assertTrue("Caption must follow source lower y baseline: "+
+                        caption.top,caption.top>730f&&caption.bottom<795f);
+                    int choices=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label))choices++;
+                    assertEquals("Theme-selection hitboxes remain functional",3,
+                        choices);
+                    captureReference(activity,view,
+                        "phase50-theme-source-row-offsets-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void statisticsKpiIconsAreOpaqueLikeOwnerSource(){
+        rule.getScenario().onActivity(activity->{
+            int oldTheme=activity.theme;
+            String oldPage=activity.page;
+            try{
+                activity.theme=0;activity.page="stats";
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap screenshot=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(screenshot));
+                    // A translucent shadow previously leaked into a shader,
+                    // leaving 0 bright orange grid pixels and a grey pad.
+                    int pad=sourceLikeKpiPixels(screenshot,
+                        372,352,498,471,"navy");
+                    int grid=sourceLikeKpiPixels(screenshot,
+                        665,340,778,474,"orange");
+                    int crown=sourceLikeKpiPixels(screenshot,
+                        60,342,197,476,"orange");
+                    assertTrue("Opaque navy gamepad has measurable ink: "+pad,
+                        pad>300);
+                    assertTrue("Orange four-square source has visible mass: "+
+                        grid,grid>150);
+                    assertTrue("Warm crown stays saturated: "+crown,
+                        crown>600);
+                    captureReference(activity,view,
+                        "phase50-opaque-kpi-icons-941x1672");
+                }finally{screenshot.recycle();}
+            }finally{
+                activity.theme=oldTheme;activity.page=oldPage;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void missionsDailySunHasEightSolidGoldenRays(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            try{
+                activity.page="missions";activity.theme=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    int gold=sourceLikeKpiPixels(bitmap,
+                        55,306,135,380,"gold");
+                    assertTrue("Source daily section sun must be visibly "+
+                        "golden rather than a few generic dots: "+gold,
+                        gold>220);
+                    boolean hasBack=false;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Natrag".equals(tap.label))hasBack=true;
+                    assertTrue("Sun rays must not block Back action",hasBack);
+                    captureReference(activity,view,
+                        "phase50-missions-sun-rays-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void illustratedHeadingsRemainDistinctOnEveryDetailScreen(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;int oldTheme=activity.theme;
@@ -4509,7 +4691,21 @@ public class ScreensSmokeTest {
                 try{
                     view.draw(new Canvas(image));
                     int left=image.getPixel(650,650);
-                    int right=image.getPixel(860,635);
+                    // The owner-matched 2x2 swatches were lowered by
+                    // five design units (~12px). The old x860/y635 probe
+                    // landed on the rounded *bottom rim* of the purple
+                    // tile, not its fill. Sample an inset patch above
+                    // the "16" numeral and away from edge antialiasing.
+                    int purpleSamples=0;
+                    for(int y=563;y<=579;y+=2)
+                        for(int x=832;x<=850;x+=2){
+                            int pixel=image.getPixel(x,y);
+                            if(android.graphics.Color.red(pixel)>86 &&
+                               android.graphics.Color.blue(pixel)>214 &&
+                               android.graphics.Color.blue(pixel)>
+                                   android.graphics.Color.green(pixel)+65)
+                                purpleSamples++;
+                        }
                     // Original swatch: cyan left RGB(9,162,253),
                     // purple right RGB(161,76,253).
                     // Old Android gradient: left RGB(31,121,234),
@@ -4517,9 +4713,9 @@ public class ScreensSmokeTest {
                     assertTrue("Vivid preview left must be cyan-blue",
                         android.graphics.Color.green(left)>139&&
                         android.graphics.Color.blue(left)>231);
-                    assertTrue("Vivid preview right must be purple",
-                        android.graphics.Color.red(right)>86&&
-                        android.graphics.Color.blue(right)>214);
+                    assertTrue("Vivid preview right must be purple, "+
+                        "not a sampled rounded corner: "+purpleSamples,
+                        purpleSamples>=25);
                     int choices=0;
                     for(MainActivity.BoardScreen.Tap tap:view.taps)
                         if("Svijetla".equals(tap.label)||

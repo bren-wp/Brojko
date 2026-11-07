@@ -1047,14 +1047,22 @@ public final class MainActivity extends ComponentActivity {
                 crown.lineTo(4,20);crown.close();
                 c.save();c.translate(0,1.6f);p.setColor(0xffd77e08);c.drawPath(crown,p);
                 c.restore();
-                p.setShader(new LinearGradient(0,3,0,20,0xffffe36a,
-                    color==WHITE?0xfff5c036:color,Shader.TileMode.CLAMP));
+                boolean sourceStatsCrown="stats".equals(page)&&
+                    theme==0&&referencePortraitLayout;
+                p.setColor(WHITE); // Keep the crown face fully opaque.
+                p.setShader(new LinearGradient(0,3,0,20,
+                    sourceStatsCrown?0xffffad50:0xffffe36a,
+                    sourceStatsCrown?0xffff6534:
+                        (color==WHITE?0xfff5c036:color),
+                    Shader.TileMode.CLAMP));
                 c.drawPath(crown,p);p.setShader(null);
-                p.setColor(0xffffe584);
-                c.drawCircle(1.5f,7.7f,2.1f,p);
-                c.drawCircle(12,3.3f,2.1f,p);
-                c.drawCircle(22.5f,7.7f,2.1f,p);
-                p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+                if(!sourceStatsCrown){
+                    p.setColor(0xffffe584);
+                    c.drawCircle(1.5f,7.7f,2.1f,p);
+                    c.drawCircle(12,3.3f,2.1f,p);
+                    c.drawCircle(22.5f,7.7f,2.1f,p);
+                    p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+                }
             }else if("gift".equals(type)){
                 // Original-style purple reward box with gold bow.
                 p.setShader(new LinearGradient(3,9,21,24,
@@ -1087,6 +1095,10 @@ public final class MainActivity extends ComponentActivity {
                 // Small raised navy controller, as on the reference KPI.
                 c.save();c.translate(0,1.15f);
                 p.setColor(0x35081327);c.drawPath(pad,p);c.restore();
+                // Gradient shaders do not reset the previously translucent
+                // Paint alpha. The gamepad was only 21% opaque and looked
+                // grey against the source's solid dark-navy icon.
+                p.setColor(WHITE);
                 p.setShader(new LinearGradient(0,4,0,22,
                     lighten(color,.20f),darken(color,.11f),
                     Shader.TileMode.CLAMP));
@@ -1101,6 +1113,9 @@ public final class MainActivity extends ComponentActivity {
                         p.setColor(0x26a05d18);
                         c.drawRoundRect(gx,gy+1.15f,gx+9,gy+10.15f,
                             2.5f,2.5f,p);
+                        // Avoid carrying the 0x26 shadow alpha into the
+                        // actual bright orange four-square KPI symbol.
+                        p.setColor(WHITE);
                         p.setShader(new LinearGradient(gx,gy,gx,gy+9,
                             lighten(color,.25f),color,Shader.TileMode.CLAMP));
                         c.drawRoundRect(gx,gy,gx+9,gy+9,2.5f,2.5f,p);
@@ -1556,7 +1571,51 @@ public final class MainActivity extends ComponentActivity {
         void brand(float y,float size) {
             brand(y,size,true);
         }
+        // Derived from the owner's original scalable Home logo contours.
+        // Tiny detail-page logos must not fall back to the plain Nunito
+        // letters: those lose almost one third of the original navy ink.
+        // Keep the coral tile, accent rays and byline native and independent.
+        boolean ownerMiniBrandPass=false;
+        void ownerMiniBrand(){
+            // Reference RGB-ink bounds in owner 941x1672 PNGs:
+            // Missions (342..620,53..144), Stats (330..599,47..134),
+            // Themes (288..652,50..169). Original scalable Home navy
+            // contours span (169..770,215..420) native source pixels.
+            // Map those bounds per screen, not one universal mini-size:
+            // the owner Themes logo is materially larger than Stats.
+            float sx,sy,dx,dy;
+            if("missions".equals(page)){
+                sx=.463f;sy=.444f;dx=112.1f;dy=-18.1f;
+            }else if("themes".equals(page)){
+                sx=.606f;sy=.580f;dx=79f;dy=-31.8f;
+            }else{
+                sx=.448f;sy=.424f;dx=108.1f;dy=-18.8f;
+            }
+            c.save();
+            c.translate(dx,dy);
+            c.scale(sx,sy);
+            boolean wasOwnerMiniBrand=ownerMiniBrandPass;
+            ownerMiniBrandPass=true;
+            try{
+                c.save();
+                c.translate(0f,-129f);
+                c.scale(.775f,.74f,200f,0f);
+                splashWordmark();
+                c.restore();
+                ownerHomeNavyWordmark();
+                txt("by Brendigo",285f,184f,15f,muted,true);
+            }finally{
+                ownerMiniBrandPass=wasOwnerMiniBrand;
+                c.restore();
+            }
+        }
         void brand(float y,float size,boolean includeByline) {
+            if(includeByline&&theme==0&&referencePortraitLayout&&
+                ("missions".equals(page)||"themes".equals(page)||
+                 "stats".equals(page))){
+                ownerMiniBrand();
+                return;
+            }
             p.setTypeface(displayFont);
             p.setTextSize(size);
             float left=p.measureText("Br"),right=p.measureText("jko");
@@ -1866,11 +1925,13 @@ public final class MainActivity extends ComponentActivity {
             // decorative coral rays and action hit areas never move.
             c.translate(-10.6f+(page.equals("home")?11f:6.9f),0f);
             c.scale(1.185f,1f,3.6f,y);
-            // On the owner's light Home the complete navy wordmark is
-            // drawn from native paths; Splash and dark/landscape keep the
-            // existing adaptive Nunito fallback and its live brand tile.
-            if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0))
+            // The original letter contours take precedence on light Home,
+            // Splash, and reference-ratio detail pages. Other palettes keep
+            // their responsive Nunito fallback, without double-drawing.
+            boolean ownerNavyActive=theme==0&&
+                ("home".equals(page)||"splash".equals(page)||
+                ownerMiniBrandPass);
+            if(!ownerNavyActive)
                 raisedWordmarkLetters("Br",start+left/2f,y,size,wordmarkInk);
             c.restore();
 
@@ -1897,8 +1958,7 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
 
             // The source's jko starts immediately after the number tile.
-            if(!("home".equals(page)&&theme==0)&&
-                !("splash".equals(page)&&theme==0)){
+            if(!ownerNavyActive){
                 c.save();
                 c.translate(-36.2f+(page.equals("home")?5f:.5f),0);
                 c.scale(1.25f,.92f,228f,316f);
@@ -4162,6 +4222,29 @@ public final class MainActivity extends ComponentActivity {
             if((rewardFlags&16)!=0)result++;
             return result;
         }
+        // Eight true rounded sun rays and a glowing, opaque centre:
+        // the previous generic rays() helper produced only small dots.
+        // This affects exclusively the reference-light Missions section.
+        void missionSectionSun(float cx,float cy){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(3.7f);
+            for(int i=0;i<8;i++){
+                double angle=i*Math.PI/4d;
+                float dx=(float)Math.cos(angle),dy=(float)Math.sin(angle);
+                p.setColor(i%2==0?0xffffaa25:0xffffc13d);
+                c.drawLine(cx+dx*11f,cy+dy*11f,
+                    cx+dx*16.7f,cy+dy*16.7f,p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            p.setShadowLayer(1.1f,0f,1f,0x3397772d);
+            p.setShader(new LinearGradient(cx-8,cy-8,cx+8,cy+8,
+                0xffffce47,0xffff9b21,Shader.TileMode.CLAMP));
+            c.drawCircle(cx,cy,7.3f,p);
+            p.clearShadowLayer();p.setShader(null);
+        }
+
         // Six warm orange rays are present beside the title in the owner's
         // 941x1672 mission reference. Keep them outside the text and back hitbox.
         void missionHeaderRays(){
@@ -4260,9 +4343,12 @@ public final class MainActivity extends ComponentActivity {
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
             missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
             float sunY=portrait?148:204;
-            rays(43,sunY,19,0xffffb431);
-            p.setShader(null);p.setColor(0xffffb431);
-            p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
+            if(portrait&&theme==0)missionSectionSun(43,sunY);
+            else {
+                rays(43,sunY,19,0xffffb431);
+                p.setShader(null);p.setColor(0xffffb431);
+                p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
+            }
             if(portrait&&theme==0)missionSectionTitle("Dnevne",155f,20.5f);
             else txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
@@ -5098,14 +5184,23 @@ public final class MainActivity extends ComponentActivity {
                     new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
-                    themePreviewTile(x+15+xx*43,y+21+yy*41,40,40,colors[j],0);
+                    // Owner 941x1672 source colour spans begin 12px
+                    // below the earlier 2x2 previews on all three themes.
+                    // Shift illustrations only: theme-card hitboxes stay put.
+                    themePreviewTile(x+15+xx*43,y+26+yy*41,40,40,colors[j],0);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*43,y+50+yy*41,19,WHITE,true);
+                        x+35+xx*43,y+55+yy*41,19,WHITE,true);
                 }
-                fitted(names[i],x+58,y+157,16,108,ink,true);
-                // Original design: selector beneath the four numbered tiles.
-                shape(x+47,y+114,22,22,11,theme==i?CORAL:0xffe4e3e0);
-                if(theme==i)icon("check",x+58,y+125,13,WHITE);
+                // Original swatch captions have equal vertical ink height
+                // but approximately 18% less horizontal ink than fallback
+                // Nunito. Keep height, optically narrow just these labels.
+                c.save();c.scale(.84f,1f,x+58,y+162);
+                fitted(names[i],x+58,y+162,16,108,ink,true);
+                c.restore();
+                // Selector and caption must follow the same +5-unit
+                // alignment as the tiles; remain inside the live card.
+                shape(x+47,y+119,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,y+130,13,WHITE);
                 taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
