@@ -31,6 +31,8 @@ Za sve izračune korištene su dvije slike u izvornom omjeru 941 × 1672, uz aps
 2. **Home score cards**: svijetla boja kartice pomaknuta je iz `#FCF5E9` u `#FEF8EE` radi približavanja referentnom toplom ivory rasteru. Brojke su stvarni lokalno spremljeni rezultati.
 3. **Splash slogan**: pozadina svijetle pilule promijenjena je iz `#FFF0DB` u `#FFF5E6`. Tekst ostaje nativni, a ne dio ugrađene referentne slike.
 
+4. **Home naslovi rezultata**: u referenci su nativni rasteri naslova približno **171×17 px** (Najbolji rezultat) i **155×17 px** (Zadnji rezultat), nasuprot dosadašnjem Android renderu od oko **225×28 px** i **205×28 px**. U svijetlom referentnom Homeu koriste se lokalno smanjena, tanja slova i izvorniku bliži horizontalni centri. Brojke, pohrana i akcijske kartice ostaju nepromijenjene. Dodan je test stvarnih Android text-ink granica za oba naslova.
+
 Tamna tema, landscape, gameplay, score storage, tile generation i ostale stranice nisu namjerno mijenjani. Dodana su dva instrumentacijska testa boje uz provjeru stvarnih dodirnih kartica.
 
 ## Obvezni prihvatni kriteriji
