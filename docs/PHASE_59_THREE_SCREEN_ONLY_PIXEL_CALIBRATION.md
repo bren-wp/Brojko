@@ -61,3 +61,32 @@ Prethodna faza 58 već je uskladila ova tri izvora na portretnim 941×1672, 360�
 - [ ] Vratiti svaku lokalnu korekciju koja povećava pogrešku ili uzrokuje regresiju.
 
 **Napomena o sadržaju:** referentna misija prikazuje proizvoljni preostali broj sati, rezultat 12/20 i 4/20 postignuća; dnevni izazov sadrži datum 14. ožujka 2025. Produkcija namjerno prikazuje stvarni lokalni datum i stvarno izračunate podatke. Usporedba njihovih piksela stoga ima neizbježni podatkovni doprinos pogrešci.
+
+
+## Potvrđeno na stvarnom emulatoru, prvi QA prolaz faze 59
+
+Na SHA `9af686e8f863977d4c232366990f81f8cf557585` **prošli su build/lint/unit, Android 16 i stvarni UI smoke/screenshot QA**. [UI run 42425510821](https://github.com/bren-wp/Brojko/actions/runs/42425510821), artefakt `13595257814` (`Brojko-real-device-UI`).
+
+Uspoređeni su identični 941×1672 PNG-ovi `phase58-missions/daily/game-941x1672.png`, iz stvarnog Canvas renderera, s tri dostavljene reference. Nema resampliranja, prebacivanja gamma profila niti zamjene stvarnih vrijednosti fiksnim brojevima.
+
+| Regija | Prije | Prvi QA |
+|---|---:|---:|
+| Misije cijeli ekran | 21,336 | **21,306** |
+| Misije zaglavlje | 15,354 | **14,819** |
+| Misije naslov x100–845/y155–300 | 25,823 | **24,426** |
+| Misije tjedne kartice | **25,035** | 25,270 — regresija |
+| Dnevni cijeli ekran | 14,772 | **14,618** |
+| Dnevni zaglavlje | 15,586 | **14,905** |
+| Dnevni naslov | 29,250 | **26,628** |
+| Klasično cijeli ekran | **14,664** | 14,688* |
+| Klasično kontrole | 20,185 | **20,019** |
+| Klasično Završi ROI x600–920/y1380–1590 | 25,142 | **24,833** |
+| Klasično krem kontrole ROI x20–600/y1320–1630 | 19,791 | **19,549** |
+
+*Klasično: testni fixture sada nakon **stvarnog poteza** ima aktivan Undo poput izvornika, dok je prethodni imao deaktiviran. Zbog različitog stanja gumbâ ukupni MAE nije strogo kontrolirana jednakost samo rasterizacije, ali izvedena aktivacija Undo ostaje stvarna i nije lažirana u produkciji.*
+
+### Lokalna regresija i korekcija
+
+Novi tjedni plavi pigment približio je boju pojedinih čistih plavih piksela izvorniku, ali je ukupni MAE cijele regije rastao (25,035 → 25,270). Interpolacijska analiza 0–100 % promjene pokazala je da je ukupni ROI najbliži staroj boji. Zato je na idućem SHA `236f4a4ea7103114b71a08e54ca3dab5143fc791` **vratena isključivo tjedna pozadina** na `#E9F5FF`. Poboljšanja naslovâ, svjetlijih krem kontrola i koraljnog `Završi` ostaju.
+
+**Rezultat nakon te lokalne reverzije još nije ponovno snimljen; novi QA i ROI treba potvrditi na posljednjem SHA-u.** 0 % odstupanja nije postignuto niti je takva tvrdnja opravdana s aktualnim emulatorom i vremenski promjenjivim podacima.
