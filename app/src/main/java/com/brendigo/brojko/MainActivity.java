@@ -851,6 +851,18 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(new LinearGradient(x,y,x,y+h,top,bottom,Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);p.setShader(null);
         }
+        // The owner's Home CTA is not a top-to-bottom flat gradient:
+        // along its unscaled 941x1672 face both the vertical and rightward
+        // direction darken. Reproduce the measured two-axis coral falloff
+        // only for the light portrait Home hero; all other buttons retain
+        // their original drawing and hit rectangles.
+        void ownerHomeHeroGradient(float x,float y,float w,float h,float radius){
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x+36f,y+200f,
+                0xfffe8c50,0xfffd1118,Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
+            p.setShader(null);
+        }
         int lighten(int color,float amount) {
             int r=Color.red(color),g=Color.green(color),b=Color.blue(color);
             return Color.rgb(Math.min(255,(int)(r+(255-r)*amount)),
@@ -1435,15 +1447,19 @@ public final class MainActivity extends ComponentActivity {
                     victoryPrimary?0xffd8432f:
                     victoryShare?0xff2467c9:
                     homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
-                gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
-                    flatDaily?0xffff8a60:
-                    victoryPrimary?0xffff8054:
-                    victoryShare?0xff66b0fc:
-                    homeHero?0xfffe9058:lighten(color,flatDaily?.10f:.18f),
-                    flatDaily?0xffff593a:
-                    victoryPrimary?0xffff5134:
-                    victoryShare?0xff2f83ec:
-                    homeHero?0xfffe653b:color);
+                if(homeHero&&theme==0&&referencePortraitLayout){
+                    ownerHomeHeroGradient(x,y,w,h-3f,radius);
+                }else{
+                    gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
+                        flatDaily?0xffff8a60:
+                        victoryPrimary?0xffff8054:
+                        victoryShare?0xff66b0fc:
+                        homeHero?0xfffe9058:lighten(color,flatDaily?.10f:.18f),
+                        flatDaily?0xffff593a:
+                        victoryPrimary?0xffff5134:
+                        victoryShare?0xff2f83ec:
+                        homeHero?0xfffe653b:color);
+                }
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
@@ -2076,7 +2092,9 @@ public final class MainActivity extends ComponentActivity {
                 // Native 941x1672 reference: cream slogan pill and both
                 // phrases sit about 10 design units higher than before.
                 // Keep the source's compact gap between coral and teal.
-                card(17,552,366,58,30,theme==1?card:0xfffff0db);
+                // The reference slogan pill is pale ivory, not deep yellow.
+                // Keep the exact dimensions, shadow and independent text.
+                card(17,552,366,58,30,theme==1?card:0xfffff5e6);
                 // Source reference uses a stronger coral (#FD5A3E)
                 // and taller strokes than the previous flat Nunito text.
                 // Limit the adjustment to the owner's light Splash.
@@ -2268,9 +2286,9 @@ public final class MainActivity extends ComponentActivity {
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
             homeSoftCard(21,scoresY,171,scoresH,19,
-                theme==1?card:0xfffcf5e9);
+                theme==1?card:0xfffef8ee);
             homeSoftCard(207,scoresY,171,scoresH,19,
-                theme==1?card:0xfffcf5e9);
+                theme==1?card:0xfffef8ee);
             // Source Home best-score gold crown is 76 x 58 native px,
             // where the prior emulator is 59 x 45. Keep the change
             // confined to the light portrait Home illustration.
