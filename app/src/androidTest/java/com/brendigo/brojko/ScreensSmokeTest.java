@@ -3013,9 +3013,13 @@ public class ScreensSmokeTest {
                 float badgeTop=view.offY+100f*view.scale;
                 assertNotNull("Owner Classic source contour is rendered",
                     view.ownerClassicVectorPath);
-                assertTrue("Navy source must occupy original x≈39..459",
-                    title.left>view.offX+30f*view.scale&&
-                    title.right<view.offX+205f*view.scale);
+                // RectF is already transformed to physical 941px space.
+                // Do not scale the expected physical pixel measurements a
+                // second time (30*2.352 previously rejected x≈39).
+                assertTrue("Owner navy ink left edge stays near x=39: "+
+                    title.left,title.left>30f&&title.left<60f);
+                assertTrue("Owner navy ink right edge stays near x=459: "+
+                    title.right,title.right>440f&&title.right<480f);
                 assertTrue("Navy source must occupy original y≈136..247",
                     title.top>view.offY+52f*view.scale&&
                     title.bottom<view.offY+112f*view.scale);
