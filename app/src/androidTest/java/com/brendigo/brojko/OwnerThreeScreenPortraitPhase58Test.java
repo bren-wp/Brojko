@@ -83,8 +83,7 @@ public final class OwnerThreeScreenPortraitPhase58Test {
                 hasAction(board,"Novo"));
             assertTrue("Classic Finish remains functional",
                 hasAction(board,"Završi"));
-            assertTrue("Classic Undo is live after a genuine move",
-                hasAction(board,"Poništi"));
+
             assertTrue("Classic Pause remains functional",
                 hasAction(board,"Pauziraj igru"));
         }
@@ -145,6 +144,10 @@ public final class OwnerThreeScreenPortraitPhase58Test {
                         assertTrue("The full owner source scene fits",
                             view.offY+last*view.scale<=h+1f);
                         assertPrimaryActions(page,view);
+                        if("game".equals(page)){
+                            assertTrue("After a genuine merge Undo is an active action",
+                                hasAction(view,"Poništi"));
+                        }
                         for(MainActivity.BoardScreen.Tap tap:view.taps){
                             assertTrue("Action not clipped vertically: "+page+
                                 " / "+tap.label,
