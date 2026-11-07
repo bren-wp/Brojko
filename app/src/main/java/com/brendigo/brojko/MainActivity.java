@@ -1753,6 +1753,13 @@ public final class MainActivity extends ComponentActivity {
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
                     referencePortraitLayout?710f:880f)))));
+            // The owner Classic 4x4 artwork ends at y~671 of its
+            // 710-unit reference scene. The inherited 880-unit content
+            // height caused a phantom 169-unit scroll on 941x1672,
+            // despite all gameplay actions already fitting. Keep real
+            // overflow scroll on genuinely short screens.
+            if(ownerClassicGame&&referencePortraitLayout)
+                contentHeight=710f;
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
