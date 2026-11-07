@@ -45,8 +45,9 @@ public final class SplashHomePortraitSourceResponsiveTest {
                             +w+"x"+h,screen.referencePortraitLayout);
                         assertEquals("Never nonuniformly stretch the source geometry",
                             w/400f,screen.scale,.001f);
-                        assertEquals("Centered source, not cropped vertically",
-                            Math.max(0f,(h-710f*screen.scale)/2f),
+                        assertEquals("Source reference stays fixed; tall screens center",
+                            h/(float)w<1.85f?0f:
+                                Math.max(0f,(h-710f*screen.scale)/2f),
                             screen.offY,.05f);
                         assertEquals("Source 400-unit plane fills viewport width",
                             0f,screen.offX,.05f);
