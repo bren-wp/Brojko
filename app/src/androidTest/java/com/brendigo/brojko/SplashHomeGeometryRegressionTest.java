@@ -62,8 +62,8 @@ public final class SplashHomeGeometryRegressionTest {
                     Color.green(upperCoralOutside) > 208);
                 assertTrue("Teal 4 must not overshoot its right source edge",
                     Color.green(tealRightOutside) > 225);
-                int coralInside = image.getPixel(285, 265);
-                int tealInside = image.getPixel(705, 300);
+                int coralInside = image.getPixel(200, 270);
+                int tealInside = image.getPixel(600, 280);
                 assertTrue("Raised coral 2 stays visible",
                     Color.red(coralInside) > Color.green(coralInside) + 45);
                 assertTrue("Raised turquoise 4 stays visible",
