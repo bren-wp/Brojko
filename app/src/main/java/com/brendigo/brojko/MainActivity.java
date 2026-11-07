@@ -770,6 +770,8 @@ public final class MainActivity extends ComponentActivity {
         Shader ownerSplashNavyGradient;
         Path ownerBravoVectorPath;
         Shader ownerBravoInkGradient;
+        Path ownerClassicVectorPath;
+        Shader ownerClassicNavyGradient;
         float scrollOffset,maxScroll,lastFingerY,initialFingerY;
         String renderedPage="";
         boolean pointerBoard,draggingScroll;
@@ -2569,32 +2571,24 @@ public final class MainActivity extends ComponentActivity {
             boolean relaxedArtwork=relaxed&&"game".equals(page)&&
                 theme==0&&tileStyle==0&&getHeight()>=getWidth();
             if(narrow&&!daily&&!relaxed){
-                // The source's classic portrait heading is deliberately tall:
-                // stretch only its drawn glyphs, not the text hit regions or
-                // neighboring score columns. Keep the 4x4 tag independent.
-                c.save();
-                // The title's lowest navy stroke overlapped the top lip of
-                // the coral 4x4 badge on the real 941x1672 render. Raise only
-                // the painted title by four design units; preserve the
-                // badge, HUD, board and their interactive hit regions.
-                c.translate(0f,-4f);
-                c.scale(1f,1.40f,105f,60f);
-                // Source's rounded Classic heading has more navy ink
-                // within almost identical outer bounds. The general
-                // typography and other modes retain their normal fitted().
-                float headingSize=43f;
-                p.setTextScaleX(1f);p.setTypeface(displayFont);
-                p.setTextSize(headingSize);
-                while(p.measureText("Klasično")>201f&&headingSize>10f){
-                    headingSize=Math.max(10f,headingSize-1f);
+                if(theme==0&&"game".equals(page)&&referencePortraitLayout)
+                    ownerClassicVectorHeading();
+                else {
+                    // Preserve the existing adaptive font title on dark,
+                    // vivid and non-reference layouts.
+                    c.save();
+                    c.translate(0f,-4f);
+                    c.scale(1f,1.40f,105f,60f);
+                    float headingSize=43f;
+                    p.setTextScaleX(1f);p.setTypeface(displayFont);
                     p.setTextSize(headingSize);
+                    while(p.measureText("Klasično")>201f&&headingSize>10f){
+                        headingSize=Math.max(10f,headingSize-1f);
+                        p.setTextSize(headingSize);
+                    }
+                    raisedWordmarkLetters("Klasično",105,89,headingSize,ink);
+                    c.restore();
                 }
-                if(theme==0&&"game".equals(page))
-                    classicGameplayHeading(105f,89f,headingSize);
-                else
-                    raisedWordmarkLetters("Klasično",105,89,
-                        headingSize,ink);
-                c.restore();
                 // Thick coral rays in the owner reference are distinct
                 // strokes, not the tiny dots of the generic rays() helper.
                 if(theme==0)classicGameAccentRays(false);
@@ -2742,6 +2736,42 @@ public final class MainActivity extends ComponentActivity {
         // All following art is scoped to the light-theme 4x4 gameplay
         // view. Do not change achievements, tile values, scoring, gameplay
         // physics, other themes, 5x5, or any modal/backdrop rendering.
+        // Pixel-derived 941x1672 owner title. Maintain the visible
+        // "Klasično" ink bounds for QA using the *real vector path*, not
+        // separate font glyphs placed over the illustration.
+        void ownerClassicVectorHeading(){
+            if(ownerClassicVectorPath==null){
+                ownerClassicVectorPath=new Path();
+                ownerClassicVectorPath.setFillType(Path.FillType.EVEN_ODD);
+                for(int[] contour:ClassicBrandContours.NAVY){
+                    ownerClassicVectorPath.moveTo(contour[0],contour[1]);
+                    for(int i=2;i<contour.length;i+=2)
+                        ownerClassicVectorPath.lineTo(contour[i],contour[i+1]);
+                    ownerClassicVectorPath.close();
+                }
+                ownerClassicNavyGradient=new LinearGradient(
+                    0f,136f,0f,247f,0xff293b60,0xff152440,
+                    Shader.TileMode.CLAMP);
+            }
+            c.save();
+            c.scale(400f/941f,400f/941f);
+            if(auditTextLayout){
+                RectF realInk=new RectF();
+                ownerClassicVectorPath.computeBounds(realInk,true);
+                android.graphics.Matrix transform=new android.graphics.Matrix();
+                c.getMatrix(transform);transform.mapRect(realInk);
+                textRegions.add(new TextRegion("Klasično",realInk));
+            }
+            p.setStyle(Paint.Style.FILL);
+            p.clearShadowLayer();p.setShader(null);p.setColor(ink);
+            // The native owner mark's softly lifted navy ink has no
+            // text-size-dependent stretching or overlapping font outlines.
+            p.setShadowLayer(.95f,0f,1.1f,0x29111d35);
+            p.setShader(ownerClassicNavyGradient);
+            c.drawPath(ownerClassicVectorPath,p);
+            p.clearShadowLayer();p.setShader(null);
+            c.restore();
+        }
         // Source-calibrated 4×4 heading: the owner's thick, navy, rounded
         // letterforms must not inherit the thinner generic caption stroke.
         // This is drawn only for active Classic portrait gameplay.
