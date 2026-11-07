@@ -4548,10 +4548,10 @@ public final class MainActivity extends ComponentActivity {
             missionMeasuredHeadline(portrait);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
-            // Source weekly panel RGB is around 229/245/253 versus
-            // previous Android 237/247/255; deepen just this surface.
-            int weeklyTint=theme==1?0xff253b4f:
-                (theme==0?0xffddf2fd:0xffe9f5ff);
+            // The darker blue improved select clean pixels but increased
+            // complete weekly-region RGB MAE 25.035→25.270. Preserve
+            // the previous, fully tested weekly panel pigment.
+            int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
             int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
