@@ -2061,18 +2061,37 @@ public final class MainActivity extends ComponentActivity {
                 splashAccentStroke(349,100,336,104,TEAL);
                 // Owner artwork: coral tile top edge descends to the right.
                 // The old negative rotation inverted its 3D perspective.
-                c.save();c.rotate(SPLASH_CORAL_TILT_DEG,115,111);
+                c.save();
+                // Source face footprint x141..402 / y139..400 at 941x1672.
+                // The previous native face was x134..406 / y130..402.
+                // Correct only the decorative light Splash 2, not game cells.
+                if(theme==0){
+                    c.translate(0f,1.7f);
+                    c.rotate(SPLASH_CORAL_TILT_DEG,115,111);
+                    c.scale(.96f,.96f,115f,111f);
+                }else c.rotate(SPLASH_CORAL_TILT_DEG,115,111);
                 splashFloatingTile(63,62,104,101,24,TILES[1]);
                 txt("2",115,134,57,WHITE,true);c.restore();
                 // Owner artwork: turquoise top edge ascends to the right.
-                c.save();c.rotate(-17,289,123);
+                c.save();
+                // Source turquoise face x560..802 / y174..425.
+                // The prior Android footprint x551..827 / y164..432
+                // was too broad; preserve the user's 3D tile and number.
+                if(theme==0){
+                    c.translate(-3.4f,.8f);
+                    c.rotate(-17f,289f,123f);
+                    c.scale(.87f,.97f,289f,123f);
+                }else c.rotate(-17f,289f,123f);
                 splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
                 c.save();c.rotate(-17,42,236);
                 splashFloatingTile(-12,187,106,100,22,TILES[3]);
                 txt("8",42,256,56,WHITE,true);c.restore();
                 // Owner artwork: yellow tile leans counterclockwise.
-                c.save();c.rotate(-18,374,234);
+                c.save();
+                // Yellow 16 begins a few pixels too far right/high.
+                if(theme==0)c.translate(-2f,2f);
+                c.rotate(-18,374,234);
                 splashFloatingTile(323,182,104,104,24,TILES[4]);
                 txt("16",375,255,46,WHITE,true);c.restore();
                 splashAccentStroke(92,499,102,507,CORAL);
@@ -2524,16 +2543,18 @@ public final class MainActivity extends ComponentActivity {
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
                 int cols="Opušteno".equals(name)?5:4;
-                float space=cols==5?2.1f:2.2f;
                 boolean sourceClassic=portrait&&theme==0&&cols==4;
+                // Match the reference's ~57px grid pitch instead of 59px;
+                // don't change 5x5, active gameplay, or other themes.
+                float space=cols==5?2.1f:sourceClassic?1.3f:2.2f;
                 // Reference miniature has a slightly larger grid, shifted
                 // right/down; keep 5x5 and other themes untouched.
                 float side=cols==5?17.0f:sourceClassic?22.8f:21.5f;
                 float left=x+(w-(side+space)*cols+space)/2+
-                    (sourceClassic?4f:
+                    (sourceClassic?4.5f:
                         (portrait&&theme==0&&cols==5?8.5f:0f));
                 float top=y+(portrait?14:(cols==5?20:19))+
-                    (sourceClassic?3f:
+                    (sourceClassic?2.5f:
                         (portrait&&theme==0&&cols==5?2f:0f));
                 // Decorative Home preview only; the actual 5x5 engine is
                 // unchanged. Allocate the palette once per thumbnail.
