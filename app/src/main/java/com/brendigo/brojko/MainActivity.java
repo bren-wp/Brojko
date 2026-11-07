@@ -5448,6 +5448,29 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(10.3f,8.2f,13.7f,16.6f,1.7f,1.7f,p);
             c.restore();
         }
+        // Settings footer uses the same owner-supplied native navy logo
+        // contours as Home; its cropped source bounds differ, so place
+        // the illustration with a local transform instead of replacing
+        // a functional menu row or loading a bitmap screenshot.
+        void ownerSettingsFooterBrand(){
+            c.save();
+            c.translate(44.1f,516.5f);
+            c.scale(.775f,.70f);
+            ownerHomeNavyWordmark();
+            c.restore();
+            // Original reference has a small glossy coral 2 and three
+            // orange strokes, distinct from gameplay tile hit regions.
+            splashFloatingTile(170f,588f,37f,43f,9f,CORAL);
+            txt("2",188.5f,618f,25f,WHITE,true);
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(4.5f);
+            c.drawLine(165f,585f,159f,580f,p);
+            c.drawLine(177f,581f,173f,571f,p);
+            c.drawLine(190f,582f,193f,571f,p);
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setStyle(Paint.Style.FILL);
+        }
         void settingsHeaderAccent(){
             // The source has two broad coral rays per side, not
             // three thin marks. Keep them outside the title glyphs.
@@ -5509,10 +5532,9 @@ public final class MainActivity extends ComponentActivity {
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
                 theme==1?card:0xfffff3e6);
-            if(compact){
-                // Owner's footer wordmark is taller and slightly wider than
-                // the current native font glyphs. Scale only the settings
-                // wordmark, keeping the real version and byline legible.
+            if(compact&&theme==0)
+                ownerSettingsFooterBrand();
+            else if(compact){
                 c.save();
                 c.scale(1.05f,1.32f,200,630);
                 brand(639,54,false);
