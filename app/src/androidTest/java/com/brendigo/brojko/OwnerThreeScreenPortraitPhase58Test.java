@@ -83,6 +83,7 @@ public final class OwnerThreeScreenPortraitPhase58Test {
                 hasAction(board,"Novo"));
             assertTrue("Classic Finish remains functional",
                 hasAction(board,"Završi"));
+
             assertTrue("Classic Pause remains functional",
                 hasAction(board,"Pauziraj igru"));
         }
@@ -99,6 +100,16 @@ public final class OwnerThreeScreenPortraitPhase58Test {
             TileGame oldGame=activity.game;
             try{
                 activity.game=new TileGame("classic","",2124L);
+                // Source has an ACTIVE Undo tile. First perform a
+                // genuine merge to enter the live undo-enabled state,
+                // then load the source's illustrative visible board.
+                // Never force an enabled button in production code.
+                activity.game.cells=new int[]{2,2,4,8,8,16,2,4,
+                    32,64,8,2,128,16,32,256};
+                assertTrue("Real move enables Undo",
+                    activity.game.move(TileGame.LEFT).changed);
+                assertTrue("Undo snapshot exists",
+                    activity.game.canUndo());
                 activity.game.cells=new int[]{2,4,8,16,8,16,2,4,
                     32,64,8,2,128,16,32,256};
                 activity.game.score=1316;
@@ -133,6 +144,10 @@ public final class OwnerThreeScreenPortraitPhase58Test {
                         assertTrue("The full owner source scene fits",
                             view.offY+last*view.scale<=h+1f);
                         assertPrimaryActions(page,view);
+                        if("game".equals(page)){
+                            assertTrue("After a genuine merge Undo is an active action",
+                                hasAction(view,"Poništi"));
+                        }
                         for(MainActivity.BoardScreen.Tap tap:view.taps){
                             assertTrue("Action not clipped vertically: "+page+
                                 " / "+tap.label,
