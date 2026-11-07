@@ -2473,6 +2473,10 @@ public final class MainActivity extends ComponentActivity {
             boolean relaxed="relaxed".equals(game.mode);
             boolean daily="daily".equals(game.mode);
             boolean narrow=compactBoardLayout;
+            // Only active, light, rounded 5x5 gameplay receives the shared
+            // raised material. Other themes, overlays and Daily are unchanged.
+            boolean relaxedArtwork=relaxed&&"game".equals(page)&&
+                theme==0&&tileStyle==0&&getHeight()>=getWidth();
             if(narrow&&!daily&&!relaxed){
                 // The source's classic portrait heading is deliberately tall:
                 // stretch only its drawn glyphs, not the text hit regions or
@@ -2519,9 +2523,12 @@ public final class MainActivity extends ComponentActivity {
                     if(theme==0)classicGameAccentRays(true);
                     else {rays(49,120,16,CORAL);rays(165,120,16,CORAL);}
                 }else{
-                    card(39,108,141,50,19,CORAL);
-                    txt(relaxed?"5×5":"4×4",110,144,35,WHITE,true);
-                    rays(34,134,16,CORAL);rays(190,134,16,CORAL);
+                    if(relaxedArtwork)relaxedGameBadge();
+                    else {
+                        card(39,108,141,50,19,CORAL);
+                        txt(relaxed?"5×5":"4×4",110,144,35,WHITE,true);
+                        rays(34,134,16,CORAL);rays(190,134,16,CORAL);
+                    }
                 }
             }else{
                 fitted("izazov",103,135,36,195,CORAL,true);
@@ -2539,7 +2546,7 @@ public final class MainActivity extends ComponentActivity {
             if(narrow){
                 // Reference 941x1672: action buttons live beside the heading,
                 // while the large numbered board and primary controls remain visible.
-                if(!relaxed&&!daily&&theme==0){
+                if(!daily&&theme==0&&(!relaxed||relaxedArtwork)){
                     classicHeaderControl("pause",335,32,43,49,
                         ()->navigate("pause"));
                     classicHeaderControl("undo",335,98,43,49,
@@ -2549,8 +2556,15 @@ public final class MainActivity extends ComponentActivity {
                     headerUndo(335,98,43,49);
                 }
             }else{
-                button("","pause",327,153,48,49,card,false,()->navigate("pause"));
-                headerUndo(265,153,50,49);
+                if(relaxedArtwork){
+                    classicHeaderControl("pause",327,153,48,49,
+                        ()->navigate("pause"));
+                    classicHeaderControl("undo",265,153,50,49,
+                        ()->undo());
+                }else{
+                    button("","pause",327,153,48,49,card,false,()->navigate("pause"));
+                    headerUndo(265,153,50,49);
+                }
             }
             drawGrid();
             if(daily){
@@ -2570,8 +2584,6 @@ public final class MainActivity extends ComponentActivity {
             // Modern 20:9/21:9 phones must retain the same 5×5 raised
             // tile and controls as the 941×1672 source portrait. Never
             // apply these specialised shadows to landscape/modal pages.
-            boolean relaxedArtwork="game".equals(page)&&relaxed&&
-                theme==0&&tileStyle==0&&getHeight()>=getWidth();
             // Keep standard (already measured) Novo/Poništi rendering.
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
@@ -2589,8 +2601,11 @@ public final class MainActivity extends ComponentActivity {
                     button("Poništi","undo",undoX,actionsY,112,actionsH,
                         card,false,()->undo());
             }else{
-                card(undoX,actionsY,112,actionsH,20,
-                    theme==1?0xff29364a:0xffeae5de);
+                if(relaxedArtwork)
+                    classicSoftCard(undoX,actionsY,112,actionsH,20f,card);
+                else
+                    card(undoX,actionsY,112,actionsH,20,
+                        theme==1?0xff29364a:0xffeae5de);
                 icon("undo",undoX+56,actionsY+27,25,muted);
                 txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
             }
@@ -2659,6 +2674,43 @@ public final class MainActivity extends ComponentActivity {
             c.drawText("Klasično",x,baseline,p);
             p.clearShadowLayer();p.setShader(null);p.setStrokeWidth(0f);
             p.setStyle(Paint.Style.FILL);
+        }
+        // A separate 5x5 badge keeps the same warm raised material as
+        // Classic, while preserving the original 141x50 box and its score
+        // column. Its six coral rays are rounded brush strokes, not dots.
+        void relaxedGameBadge(){
+            final float x=39f,y=108f,w=141f,h=50f,r=19f;
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffe7bc9e);
+            p.setShadowLayer(3.2f,0f,2.2f,0x389d7057);
+            c.drawRoundRect(x,y+3f,x+w,y+h+3f,r,r,p);
+            p.clearShadowLayer();
+            shape(x,y+3f,w,h-1f,r,0xffd7523c);
+            gradient(x,y,w,h-3f,r,0xffff9274,0xffff654b);
+            // Narrow top specular band makes the tile read as raised 3D,
+            // without the thick white outline of a generic card().
+            p.setShader(new LinearGradient(x,y,x,y+h*.23f,
+                0x32ffffff,0x00ffffff,Shader.TileMode.CLAMP));
+            c.drawRoundRect(x+2f,y+1f,x+w-2f,y+h-6f,r-2f,r-2f,p);
+            p.setShader(null);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(.8f);p.setColor(0x82ffffff);
+            c.drawRoundRect(x+1.6f,y+1.3f,x+w-1.6f,y+h-5f,
+                r-1.5f,r-1.5f,p);
+            p.setStyle(Paint.Style.FILL);
+            txt("5×5",110f,144f,35f,WHITE,true);
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(4.4f);
+            float[][] rays={
+                {33f,120f,25f,115f},{31f,134f,22f,134f},
+                {33f,147f,25f,152f},{187f,120f,195f,115f},
+                {189f,134f,198f,134f},{187f,147f,195f,152f}
+            };
+            for(float[] endpoints:rays)
+                c.drawLine(endpoints[0],endpoints[1],
+                    endpoints[2],endpoints[3],p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
         void classicBadge(float x,float y,float width,float height){
             shape(x,y+2.2f,width,height,17.5f,0xffdf5740);
