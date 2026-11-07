@@ -965,6 +965,35 @@ public final class MainActivity extends ComponentActivity {
                 c.restore();
             }else txt(content,x,baseline,size,color,bold);
         }
+        // Small, consistent raised Nunito-Black face for illustrated
+        // headings. Measure the actual glyph advance; never stretch one word
+        // independently or substitute a screenshot for a native text run.
+        // Only the light palette gets the extra specular face / soft depth.
+        void illustratedTitle(String label,float x,float baseline,float size,
+                              float maxWidth,int color){
+            if(label==null||label.isEmpty()||maxWidth<=0f)return;
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextScaleX(1f);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            while(p.measureText(label)>maxWidth&&size>10f){
+                size=Math.max(10f,size-.5f);p.setTextSize(size);
+            }
+            p.setTextAlign(Paint.Align.CENTER);p.setColor(color);
+            p.setStyle(Paint.Style.FILL);
+            if(theme==0){
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStyle(Paint.Style.FILL_AND_STROKE);
+                p.setStrokeWidth(.7f);
+                p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
+                p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
+                    lighten(color,.075f),darken(color,.045f),
+                    Shader.TileMode.CLAMP));
+            }
+            recordTextInk(label,x,baseline);
+            c.drawText(label,x,baseline,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
+        }
         // Home shortcut captions must never run into neighboring cards.
         // Preserve their intended font size: only compress the horizontal
         // glyph advance when a long localized caption exceeds its card.
@@ -1515,7 +1544,9 @@ public final class MainActivity extends ComponentActivity {
         void title(String name) {
             back();
             brand(64,38);
-            fitted(name,200,127,name.length()>18?28:34,356,ink,true);
+            if("Statistika".equals(name))
+                illustratedTitle(name,200,127,34f,356f,ink);
+            else fitted(name,200,127,name.length()>18?28:34,356,ink,true);
         }
         void back(){button("","back",19,43,48,48,card,false,
                 ()->navigate("historyDetail".equals(page)?"stats":
@@ -2965,7 +2996,7 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
             icon("pause",200,286,29,WHITE);
-            fitted("Igra je pauzirana",200,364,30,321,ink,true);
+            illustratedTitle("Igra je pauzirana",200,364,30,321,ink);
             fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
             card(62,406,276,55,17,
                 theme==1?card:0xfffff8ef);
@@ -3282,7 +3313,7 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
             icon("target",200,224,31,WHITE);
-            fitted("Kraj igre",200,308,39,294,ink,true);
+            illustratedTitle("Kraj igre",200,308,39,294,ink);
             fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
             // Warm, raised status panels are not fake reward counters.
             victorySummaryCard(59,358,135,107);
@@ -3335,7 +3366,7 @@ public final class MainActivity extends ComponentActivity {
                     23,245,CORAL,true);
             }else{
                 icon("target",200,narrow?211:205,68,CORAL);
-                txt("Kraj igre",200,narrow?276:291,42,ink,true);
+                illustratedTitle("Kraj igre",200,narrow?276:291,42,330,ink);
                 fitted("Nema više mogućih poteza.",200,narrow?316:335,
                     18,310,muted,false);
             }
@@ -3372,8 +3403,8 @@ public final class MainActivity extends ComponentActivity {
             int accent=success?TEAL:CORAL;
             gradient(173,208,54,52,17,lighten(accent,.16f),accent);
             icon(success?"star":"target",200,234,31,WHITE);
-            fitted(success?"Dnevni izazov riješen!":"Izazov nije uspio",
-                200,315,success?28:30,321,ink,true);
+            illustratedTitle(success?"Dnevni izazov riješen!":
+                "Izazov nije uspio",200,315,success?28:30,321,ink);
             fitted(success?"Sva 3 zadatka su ostvarena!":
                 (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
                 "Nema više mogućih poteza."),200,345,16,319,muted,false);
@@ -3414,8 +3445,8 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
-            txt(success?"Dnevni izazov riješen!":"Izazov nije uspio",200,329,
-                success?28:31,ink,true);
+            illustratedTitle(success?"Dnevni izazov riješen!":
+                "Izazov nije uspio",200,329,success?28:31,332,ink);
             fitted(success?"Sva 3 zadatka su ostvarena!":
                 (game.moves>=80?"Potrošeno je 80 dopuštenih poteza.":
                 "Nema više mogućih poteza."),200,369,17,316,muted,false);
@@ -3453,7 +3484,7 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(226,421);
             confirmModalBadge("check",TEAL);
-            fitted("Završiti partiju?",200,362,29,316,ink,true);
+            illustratedTitle("Završiti partiju?",200,362,29,316,ink);
             fitted("Rezultat se sprema u povijest partija.",
                 200,393,15.5f,317,muted,false);
             confirmSessionSummary(411);
@@ -3466,7 +3497,7 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(226,421);
             confirmModalBadge("refresh",CORAL);
-            fitted("Nova partija?",200,362,30,318,ink,true);
+            illustratedTitle("Nova partija?",200,362,30,318,ink);
             fitted("Trenutačni napredak sprema se u povijest.",
                 200,393,15.1f,316,muted,false);
             confirmSessionSummary(411);
@@ -3621,10 +3652,10 @@ public final class MainActivity extends ComponentActivity {
                 button("","back",14,16,48,48,card,false,()->navigate("home"));
             else back();
             // Reference: dominant two-line title with compact line spacing.
-            fitted("Dnevni",portrait?196:184,portrait?54:90,
-                portrait?51:48,portrait?240:223,ink,true);
-            fitted("izazov",portrait?205:199,portrait?99:141,
-                portrait?49:48,234,CORAL,true);
+            illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
+                portrait?51:48,portrait?240:223,ink);
+            illustratedTitle("izazov",portrait?205:199,portrait?99:141,
+                portrait?49:48,234,CORAL);
             dailyHeaderAccents(154,portrait?16:39);
             float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
@@ -4150,7 +4181,19 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(displayFont);p.setTextSize(textSize);
             p.setStrokeWidth(0f);p.setColor(ink);
             p.setTextAlign(Paint.Align.LEFT);
+            if(theme==0){
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(.5f);
+                p.setStyle(Paint.Style.FILL_AND_STROKE);
+                p.setShadowLayer(.65f,0f,.8f,0x241c2a3e);
+                p.setShader(new LinearGradient(0f,baseline-textSize,
+                    0f,baseline,lighten(ink,.06f),ink,
+                    Shader.TileMode.CLAMP));
+            }
+            recordTextInk(title,63f,baseline);
             c.drawText(title,63f,baseline,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
             p.setTextAlign(Paint.Align.CENTER);
         }
         // Measure the *actual* Nunito Black glyph advances before splitting
@@ -4677,6 +4720,24 @@ public final class MainActivity extends ComponentActivity {
             }
             c.restore();
         }
+        // Both colours in the theme heading are one measured wordmark.
+        // Previous separate fitted() boxes could touch at the "i/iz" seam
+        // on narrow fonts or distort just one segment.
+        void themesMeasuredHeading(float baseline,float proposedSize){
+            final String navy="Teme i",coral="izgled";
+            float size=proposedSize,gap=8f,maxWidth=308f;
+            p.setTypeface(displayFont);p.setFakeBoldText(false);
+            p.setTextScaleX(1f);p.setTextSize(size);
+            while(p.measureText(navy)+p.measureText(coral)+gap>maxWidth
+                    &&size>10f){
+                size=Math.max(10f,size-.5f);p.setTextSize(size);
+            }
+            float w1=p.measureText(navy),w2=p.measureText(coral);
+            float start=(400f-w1-w2-gap)*.5f;
+            illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
+            illustratedTitle(coral,start+w1+gap+w2/2f,baseline,size,
+                w2+1f,CORAL);
+        }
         void themesTitlePill(float y,float h){
             p.setShader(null);p.setColor(WHITE);
             gradient(53,y,294,h,h/2,theme==1?0xff30394b:0xfffff1dc,
@@ -4754,8 +4815,7 @@ public final class MainActivity extends ComponentActivity {
             if(referencePortraitLayout){themesCompact();return;}
             brand(61,38);
             themesTitlePill(99,53);
-            fitted("Teme i",158,126,35,165,ink,true);
-            fitted("izgled",276,126,35,166,CORAL,true);
+            themesMeasuredHeading(126,35f);
             fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             for(int i=0;i<3;i++){
@@ -4896,7 +4956,7 @@ public final class MainActivity extends ComponentActivity {
         void statisticsCompact(){
             back();
             brand(40,35);
-            fitted("Statistika",200,116,43,325,ink,true);
+            illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
             statsHeaderBurst(354,104,true);
             statCell("Najbolji rezultat",fmt(best),20,132,114,94,CORAL);
@@ -5015,8 +5075,7 @@ public final class MainActivity extends ComponentActivity {
             // Measured against original supplied 941x1672 screen.
             brand(52,42);
             themesTitlePill(85,53);
-            fitted("Teme i",158,125,36,165,ink,true);
-            fitted("izgled",276,125,36,166,CORAL,true);
+            themesMeasuredHeading(125,36f);
             fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
             String[] names={"Svijetla","Tamna","Živopisna"};
             for(int i=0;i<3;i++){
@@ -5274,7 +5333,8 @@ public final class MainActivity extends ComponentActivity {
             int[] rowY=compact?
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
-            txt("Postavke",200,compact?75:108,compact?45:47,ink,true);
+            illustratedTitle("Postavke",200,compact?75:108,
+                compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
             else {
                 rays(74,97,29,CORAL);
