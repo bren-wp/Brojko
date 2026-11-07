@@ -4209,6 +4209,29 @@ public final class MainActivity extends ComponentActivity {
             if((rewardFlags&16)!=0)result++;
             return result;
         }
+        // Eight true rounded sun rays and a glowing, opaque centre:
+        // the previous generic rays() helper produced only small dots.
+        // This affects exclusively the reference-light Missions section.
+        void missionSectionSun(float cx,float cy){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(3.7f);
+            for(int i=0;i<8;i++){
+                double angle=i*Math.PI/4d;
+                float dx=(float)Math.cos(angle),dy=(float)Math.sin(angle);
+                p.setColor(i%2==0?0xffffaa25:0xffffc13d);
+                c.drawLine(cx+dx*11f,cy+dy*11f,
+                    cx+dx*16.7f,cy+dy*16.7f,p);
+            }
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+            p.setShadowLayer(1.1f,0f,1f,0x3397772d);
+            p.setShader(new LinearGradient(cx-8,cy-8,cx+8,cy+8,
+                0xffffce47,0xffff9b21,Shader.TileMode.CLAMP));
+            c.drawCircle(cx,cy,7.3f,p);
+            p.clearShadowLayer();p.setShader(null);
+        }
+
         // Six warm orange rays are present beside the title in the owner's
         // 941x1672 mission reference. Keep them outside the text and back hitbox.
         void missionHeaderRays(){
@@ -4307,9 +4330,12 @@ public final class MainActivity extends ComponentActivity {
             missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
             missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
             float sunY=portrait?148:204;
-            rays(43,sunY,19,0xffffb431);
-            p.setShader(null);p.setColor(0xffffb431);
-            p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
+            if(portrait&&theme==0)missionSectionSun(43,sunY);
+            else {
+                rays(43,sunY,19,0xffffb431);
+                p.setShader(null);p.setColor(0xffffb431);
+                p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
+            }
             if(portrait&&theme==0)missionSectionTitle("Dnevne",155f,20.5f);
             else txt("Dnevne",110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
