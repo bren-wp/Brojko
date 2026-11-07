@@ -2996,7 +2996,7 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
             icon("pause",200,286,29,WHITE);
-            fitted("Igra je pauzirana",200,364,30,321,ink,true);
+            illustratedTitle("Igra je pauzirana",200,364,30,321,ink);
             fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
             card(62,406,276,55,17,
                 theme==1?card:0xfffff8ef);
@@ -3313,7 +3313,7 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
             icon("target",200,224,31,WHITE);
-            fitted("Kraj igre",200,308,39,294,ink,true);
+            illustratedTitle("Kraj igre",200,308,39,294,ink);
             fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
             // Warm, raised status panels are not fake reward counters.
             victorySummaryCard(59,358,135,107);
@@ -3366,7 +3366,7 @@ public final class MainActivity extends ComponentActivity {
                     23,245,CORAL,true);
             }else{
                 icon("target",200,narrow?211:205,68,CORAL);
-                txt("Kraj igre",200,narrow?276:291,42,ink,true);
+                illustratedTitle("Kraj igre",200,narrow?276:291,42,330,ink);
                 fitted("Nema više mogućih poteza.",200,narrow?316:335,
                     18,310,muted,false);
             }
@@ -3403,8 +3403,8 @@ public final class MainActivity extends ComponentActivity {
             int accent=success?TEAL:CORAL;
             gradient(173,208,54,52,17,lighten(accent,.16f),accent);
             icon(success?"star":"target",200,234,31,WHITE);
-            fitted(success?"Dnevni izazov riješen!":"Izazov nije uspio",
-                200,315,success?28:30,321,ink,true);
+            illustratedTitle(success?"Dnevni izazov riješen!":
+                "Izazov nije uspio",200,315,success?28:30,321,ink);
             fitted(success?"Sva 3 zadatka su ostvarena!":
                 (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
                 "Nema više mogućih poteza."),200,345,16,319,muted,false);
@@ -3445,8 +3445,8 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
-            txt(success?"Dnevni izazov riješen!":"Izazov nije uspio",200,329,
-                success?28:31,ink,true);
+            illustratedTitle(success?"Dnevni izazov riješen!":
+                "Izazov nije uspio",200,329,success?28:31,332,ink);
             fitted(success?"Sva 3 zadatka su ostvarena!":
                 (game.moves>=80?"Potrošeno je 80 dopuštenih poteza.":
                 "Nema više mogućih poteza."),200,369,17,316,muted,false);
@@ -3484,7 +3484,7 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(226,421);
             confirmModalBadge("check",TEAL);
-            fitted("Završiti partiju?",200,362,29,316,ink,true);
+            illustratedTitle("Završiti partiju?",200,362,29,316,ink);
             fitted("Rezultat se sprema u povijest partija.",
                 200,393,15.5f,317,muted,false);
             confirmSessionSummary(411);
@@ -3497,7 +3497,7 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(226,421);
             confirmModalBadge("refresh",CORAL);
-            fitted("Nova partija?",200,362,30,318,ink,true);
+            illustratedTitle("Nova partija?",200,362,30,318,ink);
             fitted("Trenutačni napredak sprema se u povijest.",
                 200,393,15.1f,316,muted,false);
             confirmSessionSummary(411);
