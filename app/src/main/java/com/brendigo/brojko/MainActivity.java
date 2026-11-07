@@ -1047,14 +1047,22 @@ public final class MainActivity extends ComponentActivity {
                 crown.lineTo(4,20);crown.close();
                 c.save();c.translate(0,1.6f);p.setColor(0xffd77e08);c.drawPath(crown,p);
                 c.restore();
-                p.setShader(new LinearGradient(0,3,0,20,0xffffe36a,
-                    color==WHITE?0xfff5c036:color,Shader.TileMode.CLAMP));
+                boolean sourceStatsCrown="stats".equals(page)&&
+                    theme==0&&referencePortraitLayout;
+                p.setColor(WHITE); // Keep the crown face fully opaque.
+                p.setShader(new LinearGradient(0,3,0,20,
+                    sourceStatsCrown?0xffffad50:0xffffe36a,
+                    sourceStatsCrown?0xffff6534:
+                        (color==WHITE?0xfff5c036:color),
+                    Shader.TileMode.CLAMP));
                 c.drawPath(crown,p);p.setShader(null);
-                p.setColor(0xffffe584);
-                c.drawCircle(1.5f,7.7f,2.1f,p);
-                c.drawCircle(12,3.3f,2.1f,p);
-                c.drawCircle(22.5f,7.7f,2.1f,p);
-                p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+                if(!sourceStatsCrown){
+                    p.setColor(0xffffe584);
+                    c.drawCircle(1.5f,7.7f,2.1f,p);
+                    c.drawCircle(12,3.3f,2.1f,p);
+                    c.drawCircle(22.5f,7.7f,2.1f,p);
+                    p.setColor(0xffffa91f);c.drawCircle(12,15.5f,2,p);
+                }
             }else if("gift".equals(type)){
                 // Original-style purple reward box with gold bow.
                 p.setShader(new LinearGradient(3,9,21,24,
@@ -1087,6 +1095,10 @@ public final class MainActivity extends ComponentActivity {
                 // Small raised navy controller, as on the reference KPI.
                 c.save();c.translate(0,1.15f);
                 p.setColor(0x35081327);c.drawPath(pad,p);c.restore();
+                // Gradient shaders do not reset the previously translucent
+                // Paint alpha. The gamepad was only 21% opaque and looked
+                // grey against the source's solid dark-navy icon.
+                p.setColor(WHITE);
                 p.setShader(new LinearGradient(0,4,0,22,
                     lighten(color,.20f),darken(color,.11f),
                     Shader.TileMode.CLAMP));
@@ -1101,6 +1113,9 @@ public final class MainActivity extends ComponentActivity {
                         p.setColor(0x26a05d18);
                         c.drawRoundRect(gx,gy+1.15f,gx+9,gy+10.15f,
                             2.5f,2.5f,p);
+                        // Avoid carrying the 0x26 shadow alpha into the
+                        // actual bright orange four-square KPI symbol.
+                        p.setColor(WHITE);
                         p.setShader(new LinearGradient(gx,gy,gx,gy+9,
                             lighten(color,.25f),color,Shader.TileMode.CLAMP));
                         c.drawRoundRect(gx,gy,gx+9,gy+9,2.5f,2.5f,p);
