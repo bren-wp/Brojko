@@ -85,6 +85,14 @@ public class ScreensSmokeTest {
         captureSizedViewport(activity,view,name,941,1672);
     }
 
+    // On-device measured glyph bounds after the production Canvas transform.
+    private static android.graphics.RectF screenInk(
+            MainActivity.BoardScreen view,String label){
+        for(MainActivity.BoardScreen.TextRegion region:view.textRegions)
+            if(label.equals(region.text))return region.bounds;
+        return null;
+    }
+
     // Sample a complete decorative region, not one antialiased pixel.
     // Stroke edges differ between Android GPU/CPU rasterizers and densities.
     private static int countCoralPixels(Bitmap bitmap,MainActivity.BoardScreen view,
@@ -407,6 +415,185 @@ public class ScreensSmokeTest {
                 assertTrue("User must be able to reach lower cards",view.scrollOffset>10);
                 assertEquals("missions",activity.page);
             }finally{bitmap.recycle();}
+        });
+    }
+
+    @Test public void illustratedHeadingsRemainDistinctOnEveryDetailScreen(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            int oldScore=activity.game==null?0:activity.game.score;
+            String[] pages={"daily","missions","stats","themes","settings"};
+            String[] primary={"Dnevni","Misije i","Statistika",
+                "Teme i","Postavke"};
+            String[] secondary={"izazov","postignuća",null,"izgled",null};
+            try{
+                for(int theme:new int[]{0,1}){
+                    activity.theme=theme;
+                    for(int[] viewport:new int[][]{{941,1672},{360,800}}){
+                        for(int index=0;index<pages.length;index++){
+                            activity.page=pages[index];
+                            MainActivity.BoardScreen board=
+                                activity.new BoardScreen(activity);
+                            board.auditTextLayout=true;
+                            board.measure(View.MeasureSpec.makeMeasureSpec(
+                                    viewport[0],View.MeasureSpec.EXACTLY),
+                                View.MeasureSpec.makeMeasureSpec(
+                                    viewport[1],View.MeasureSpec.EXACTLY));
+                            board.layout(0,0,viewport[0],viewport[1]);
+                            Bitmap image=Bitmap.createBitmap(
+                                viewport[0],viewport[1],Bitmap.Config.ARGB_8888);
+                            try{board.draw(new Canvas(image));}
+                            finally{image.recycle();}
+                            android.graphics.RectF first=
+                                screenInk(board,primary[index]);
+                            assertNotNull("Primary screen title "+pages[index],
+                                first);
+                            assertTrue("Title must not clip horizontally "+
+                                pages[index]+" "+viewport[0],
+                                first.left>=-1f&&first.right<=viewport[0]+1f);
+                            assertTrue("Title visible vertically "+pages[index],
+                                first.top>=-1f&&first.bottom<viewport[1]);
+                            if(secondary[index]!=null){
+                                android.graphics.RectF next=
+                                    screenInk(board,secondary[index]);
+                                assertNotNull("Secondary title "+pages[index],next);
+                                assertTrue("Secondary title horizontally visible",
+                                    next.left>=-1f&&next.right<=viewport[0]+1f);
+                                if("themes".equals(pages[index])){
+                                    assertTrue("Themes title words must never touch",
+                                        first.right+board.scale*3f<next.left);
+                                    assertTrue("The two themes colours share a line",
+                                        Math.abs(first.centerY()-next.centerY())<
+                                            board.scale*10f);
+                                }else if("daily".equals(pages[index])){
+                                    assertTrue("Daily title keeps its two lines",
+                                        first.centerY()<next.centerY());
+                                }else{
+                                    assertTrue("Mission heading runs do not touch",
+                                        first.right+board.scale*3f<next.left);
+                                }
+                            }
+                            boolean back=false;
+                            for(MainActivity.BoardScreen.Tap tap:board.taps)
+                                if("Natrag".equals(tap.label))back=true;
+                            if(!"themes".equals(pages[index]))
+                                assertTrue("Back navigation must remain available "+
+                                    pages[index],back);
+                            if(viewport[0]==941&&theme==0)
+                                captureReference(activity,board,
+                                    "phase49-"+pages[index]+"-941x1672");
+                        }
+                    }
+                }
+                if(activity.game!=null)
+                    assertEquals("Drawing all pages does not alter live score",
+                        oldScore,activity.game.score);
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void missionSectionTitleInkKeepsSeparateCardHeadings(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            try{
+                activity.page="missions";activity.theme=0;
+                MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+                board.auditTextLayout=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{board.draw(new Canvas(bitmap));}
+                finally{bitmap.recycle();}
+                android.graphics.RectF daily=screenInk(board,"Dnevne");
+                android.graphics.RectF weekly=screenInk(board,"Tjedne");
+                android.graphics.RectF achievements=
+                    screenInk(board,"Postignuća");
+                assertNotNull("Daily heading",daily);
+                assertNotNull("Weekly heading",weekly);
+                assertNotNull("Achievements heading",achievements);
+                assertTrue("Daily, weekly, achievements vertically ordered",
+                    daily.bottom<weekly.top&&weekly.bottom<achievements.top);
+                assertTrue("All three headings preserve the left anchor",
+                    Math.abs(daily.left-weekly.left)<board.scale*8f&&
+                    Math.abs(daily.left-achievements.left)<board.scale*8f);
+                assertTrue("Achievement heading clears its counter",
+                    achievements.right<board.offX+299f*board.scale);
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void allResultAndConfirmationModalTitlesKeepOnlyLiveControls(){
+        rule.getScenario().onActivity(activity->{
+            TileGame prior=activity.game;
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            String[] pages={"pause","confirm","confirmEnd","win","over",
+                "dailyWin","dailyFail"};
+            String[] labels={"Igra je pauzirana","Nova partija?",
+                "Završiti partiju?",null,"Kraj igre",
+                "Dnevni izazov riješen!","Izazov nije uspio"};
+            int[] actionCounts={2,2,2,3,3,2,2};
+            try{
+                activity.theme=0;
+                for(int[] size:new int[][]{{941,1672},{360,800}}){
+                    for(int i=0;i<pages.length;i++){
+                        activity.game=new TileGame(
+                            pages[i].startsWith("daily")?"daily":"classic",
+                            "",2948L);
+                        activity.game.score=3874;
+                        activity.game.moves=16;
+                        activity.page=pages[i];
+                        MainActivity.BoardScreen board=
+                            activity.new BoardScreen(activity);
+                        board.auditTextLayout=true;
+                        board.measure(View.MeasureSpec.makeMeasureSpec(
+                                size[0],View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(
+                                size[1],View.MeasureSpec.EXACTLY));
+                        board.layout(0,0,size[0],size[1]);
+                        Bitmap bitmap=Bitmap.createBitmap(size[0],size[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{board.draw(new Canvas(bitmap));}
+                        finally{bitmap.recycle();}
+                        assertEquals("Modal actions not leaked from board "+
+                            pages[i],actionCounts[i],board.taps.size());
+                        if(labels[i]!=null){
+                            android.graphics.RectF ink=
+                                screenInk(board,labels[i]);
+                            assertNotNull("Native modal title "+pages[i],ink);
+                            assertTrue("Modal headline must fit screen "+
+                                pages[i],ink.left>=0f&&ink.right<=size[0]);
+                            assertTrue("Modal headline stays visible",
+                                ink.top>=0f&&ink.bottom<size[1]);
+                        }
+                        for(MainActivity.BoardScreen.Tap tap:board.taps){
+                            assertTrue("Modal taps have nonempty labels",
+                                tap.label!=null&&!tap.label.isEmpty());
+                            assertTrue("Modal control has real height",
+                                tap.bottom-tap.top>=48f);
+                        }
+                        assertEquals("Modal renderer never mutates score",
+                            3874,activity.game.score);
+                        if(size[0]==941)
+                            captureReference(activity,board,
+                                "phase49-modal-"+pages[i]+"-941x1672");
+                    }
+                }
+            }finally{
+                activity.game=prior;activity.page=oldPage;
+                activity.theme=oldTheme;activity.updateBars();
+                activity.screen.invalidate();
+            }
         });
     }
 
