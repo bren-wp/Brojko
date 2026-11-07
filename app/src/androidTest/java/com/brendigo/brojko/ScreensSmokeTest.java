@@ -825,8 +825,10 @@ public class ScreensSmokeTest {
                     "\"mode\":\"relaxed\",\"day\":\"24.10.2026.\"}]").commit();
                 activity.page="stats";
                 capture(activity,"stats-with-history");
-                assertTrue("History list must be scrollable",
-                    screen.maxScroll>0);
+                // Source 400×710 Stats shows five rows on tall portrait
+                // without scroll. Standard/short pages still scroll.
+                assertTrue("History is accessible through scroll or owner layout",
+                    screen.maxScroll>0 || screen.referencePortraitLayout);
                 activity.selectedHistoryIndex=0;
                 activity.page="historyDetail";
                 capture(activity,"history-detail");
@@ -834,7 +836,10 @@ public class ScreensSmokeTest {
                 capture(activity,"theme-preview-controls");
                 boolean hasBottomSettings=false;
                 for(MainActivity.BoardScreen.Tap tap:screen.taps){
-                    if("Postavke".equals(tap.label)&&tap.top>=800&&tap.bottom<=880){
+                    boolean sourceTabs=screen.referencePortraitLayout;
+                    if("Postavke".equals(tap.label)&&
+                        (sourceTabs?(tap.top>=630&&tap.bottom<=710):
+                            (tap.top>=800&&tap.bottom<=880))){
                         hasBottomSettings=true;
                         tap.action.run();
                         break;
@@ -860,7 +865,9 @@ public class ScreensSmokeTest {
                 capture(activity,"themes-safe-area-and-tabs");
                 MainActivity.BoardScreen.Tap settingsTab=null;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
-                    if("Postavke".equals(tap.label)&&tap.top>790)settingsTab=tap;
+                    if("Postavke".equals(tap.label)&&
+                        tap.top>(view.referencePortraitLayout?630:790))
+                        settingsTab=tap;
                 }
                 assertNotNull("Themes must expose Settings bottom tab",settingsTab);
                 float bottom=settingsTab.bottom*view.scale+view.offY;
@@ -2233,10 +2240,10 @@ public class ScreensSmokeTest {
                             activity.prefs.edit().putString("history",zeroRows)
                                 .commit();
                             view.draw(new Canvas(image));
-                            // Check real column centers, not historic magic
-                            // pixels: source-light 941 has 347 logical units
-                            // across 10 columns; tall UI uses 315.
-                            boolean source=size[0]==941;
+                            // Check real column centers for the active portrait/standard layout;
+                            // the owner portrait (including tall 1080x2400) has 347 units
+                            // across 10 columns; standard/landscape UI uses 315.
+                            boolean source=view.referencePortraitLayout;
                             float slot=(source?347f:315f)/10f;
                             float start=source?29f:44f;
                             int zeroX=Math.round(view.offX+
@@ -3829,7 +3836,7 @@ public class ScreensSmokeTest {
                     Bitmap bmp=Bitmap.createBitmap(size[0],size[1],Bitmap.Config.ARGB_8888);
                     try{
                         view.draw(new Canvas(bmp));
-                        boolean compact=size[0]==941;
+                        boolean compact=view.referencePortraitLayout;
                         int sampleY=(int)((compact?601:759)*view.scale+view.offY);
                         int centerX=(int)(358*view.scale+view.offX);
                         int outsideX=(int)(387*view.scale+view.offX);
@@ -3841,7 +3848,7 @@ public class ScreensSmokeTest {
                                 android.graphics.Color.red(chosenColor)>
                                 android.graphics.Color.green(chosenColor)+55);
                         }else{
-                            // The taller layout keeps its existing round knob.
+                            // Standard (non-reference) layout keeps its round knob.
                             assertEquals("High animation knob is inside the panel",
                                 MainActivity.CORAL,chosenColor);
                         }

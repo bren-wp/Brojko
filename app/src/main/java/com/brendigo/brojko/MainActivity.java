@@ -1670,14 +1670,16 @@ public final class MainActivity extends ComponentActivity {
             // Themes has a compact bottom navigation within the 880-unit design.
             // Fit it to the available window INCLUDING system bar insets; only
             // genuinely taller content (statistics/history) must always scroll.
-            // Splash/Home are one owner-supplied composition at 941x1672.
-            // A tall portrait phone must not switch to a different 880-unit
-            // drawing with missing blur, smaller icons and a different logo.
-            // Reuse the same native 710-unit artwork and give taller windows
-            // symmetric breathing room. All other screens keep their
-            // established responsive breakpoints and gameplay coordinates.
+            // These four screens have supplied, distinct owner reference
+            // compositions at 941x1672 (400x710 design units). Tall portrait
+            // phones must not switch to the unrelated 880-unit arrangement:
+            // it substantially changes the Stats chart/history geometry and
+            // Themes cards. Preserve the source Canvas composition and
+            // center it on the available viewport, without stretching.
+            // All other pages retain their own existing breakpoints.
             boolean tallOwnerPortrait=(page.equals("splash")||
-                page.equals("home"))&&usableHeight>usableWidth&&
+                page.equals("home")||page.equals("themes")||
+                page.equals("stats"))&&usableHeight>usableWidth&&
                 usableHeight/usableWidth>=1.85f;
             referencePortraitLayout=
                 usableHeight/usableWidth<1.85f||tallOwnerPortrait;
@@ -1754,9 +1756,9 @@ public final class MainActivity extends ComponentActivity {
                 getPaddingTop()-scrollOffset*scale:
                 getPaddingTop()+(usableHeight-880*scale)/2f;
             // Reference 941x1672 is unchanged (tallOwnerPortrait=false).
-            // For e.g. 360x800 or 1080x2400, keep the full source drawing
-            // at width-based scale, vertically centered without stretching.
-            // If the canvas is too short, keep zero inset and Home scrolling.
+            // On taller portrait phones, center the full 710-unit source
+            // scene when it fits. Compact split-screen and short windows
+            // continue to scroll instead of clipping interactive controls.
             if(tallOwnerPortrait&&maxScroll==0f)
                 offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
@@ -4877,9 +4879,23 @@ public final class MainActivity extends ComponentActivity {
             float valueX=referenceStats&&theme==0&&
                 "Prosjek bodova".equals(caption)?
                 x+width/2f+28f:x+width/2f;
+            // Source typography uses stronger pigment than the pastel
+            // card surfaces. Never reuse the saturated label color for
+            // the background, and never recolor actual gameplay tiles.
+            int valuePigment=accent;
+            if(referenceStats&&theme==0){
+                switch(caption){
+                    case "Najbolji rezultat":valuePigment=0xfffc4930;break;
+                    case "Ukupno partija":valuePigment=0xff04a2b2;break;
+                    case "Najveća pločica":valuePigment=0xffed7514;break;
+                    case "Prosjek bodova":valuePigment=0xff0c66e5;break;
+                    case "Niz pobjeda":valuePigment=0xff862ad1;break;
+                    default:break;
+                }
+            }
             fitted(value,valueX,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
-                width-10,accent,true);
+                width-10,valuePigment,true);
         }
         void historyDetail(){
             title("Detalji partije");
@@ -4976,14 +4992,16 @@ public final class MainActivity extends ComponentActivity {
                 // stretch locally without changing any other screen.
                 c.save();
                 c.scale(1.10f,1.32f,86f,baseline+5f);
+                // Owner ink is deeper navy than the default app text.
+                // Local to the source Themes heading, never gameplay.
                 illustratedTitle(navy,start+w1/2f,baseline+5f,
-                    size,w1+1f,ink);
+                    size,w1+1f,0xff0c1f44);
                 c.restore();
                 c.save();
                 c.translate(8f,0f);
                 c.scale(.975f,1.22f,209f,baseline+3f);
                 illustratedTitle(coral,start+w1+gap+w2/2f,
-                    baseline+3f,size,w2+1f,CORAL);
+                    baseline+3f,size,w2+1f,0xfffb5b3c);
                 c.restore();
             }else{
                 illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
@@ -5222,7 +5240,7 @@ public final class MainActivity extends ComponentActivity {
             if(theme==0){
                 c.save();
                 c.scale(1.025f,1.27f,101f,120f);
-                illustratedTitle("Statistika",200,120,43,325,ink);
+                illustratedTitle("Statistika",200,120,43,325,0xff15243f);
                 c.restore();
             }else illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
