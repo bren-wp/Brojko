@@ -2865,6 +2865,125 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void settingsNativeFooterPreservesLocalActionsAndVersion(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="settings";activity.theme=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(image));}
+                finally{image.recycle();}
+                assertNotNull("Original Br2jko footer uses native navy paths",
+                    view.ownerHomeNavyPath);
+                assertNotNull("Live footer keeps the author byline",
+                    screenInk(view,"by Brendigo"));
+                boolean version=false;
+                for(MainActivity.BoardScreen.TextRegion region:view.textRegions)
+                    if(region.text.startsWith("v1."))
+                        version=true;
+                assertTrue("Footer renders actual build version",version);
+                int rows=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if(tap.label.startsWith("Zvuk ")||
+                       tap.label.startsWith("Vibracija ")||
+                       "Jezik".equals(tap.label)||
+                       tap.label.startsWith("Obavijesti ")||
+                       tap.label.startsWith("Sinkronizacija napretka")||
+                       "Pravila privatnosti".equals(tap.label)||
+                       "O aplikaciji".equals(tap.label)){
+                        rows++;
+                        assertTrue("Settings controls keep meaningful hitboxes",
+                            tap.right-tap.left>=45f&&
+                            tap.bottom-tap.top>=45f);
+                    }
+                }
+                assertEquals("All seven Settings rows are still interactive",
+                    7,rows);
+                captureReference(activity,view,
+                    "phase51-settings-native-footer-941x1672");
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void dailyPreviewUsesOwnerColorFacesButNeverChangesLiveGameTiles(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            TileGame previous=activity.game;
+            try{
+                activity.page="daily";activity.theme=0;activity.tileStyle=0;
+                MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+                int[] values={2,4,8,16,64,128,256,512,1024};
+                int[] expected={
+                    0xfffd8c5d,0xff34e1d3,0xff4dacef,0xfffdcc5a,
+                    0xfffc94ac,0xffca81fc,0xffa271fd,0xff559efe,
+                    0xff66ecd0
+                };
+                for(int i=0;i<values.length;i++){
+                    int base=screen.dailyPreviewColor(values[i]);
+                    int red=android.graphics.Color.red(base);
+                    int green=android.graphics.Color.green(base);
+                    int blue=android.graphics.Color.blue(base);
+                    int blended=android.graphics.Color.rgb(
+                        (int)(red+(255-red)*.13f),
+                        (int)(green+(255-green)*.13f),
+                        (int)(blue+(255-blue)*.13f));
+                    int target=expected[i];
+                    int distance=Math.abs(
+                        android.graphics.Color.red(blended)-
+                        android.graphics.Color.red(target))+
+                        Math.abs(android.graphics.Color.green(blended)-
+                        android.graphics.Color.green(target))+
+                        Math.abs(android.graphics.Color.blue(blended)-
+                        android.graphics.Color.blue(target));
+                    assertTrue("Preview "+values[i]+
+                        " keeps owner sampled hue: Δrgb="+distance,
+                        distance<38);
+                }
+                assertEquals("Actual classic 2 remains original gameplay hue",
+                    MainActivity.TILES[1],screen.tileColor(2));
+                assertEquals("Actual classic 4 remains original gameplay hue",
+                    MainActivity.TILES[2],screen.tileColor(4));
+                screen.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                screen.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{screen.draw(new Canvas(image));}
+                finally{image.recycle();}
+                boolean hasBack=false,hasStart=false;
+                for(MainActivity.BoardScreen.Tap tap:screen.taps){
+                    if("Natrag".equals(tap.label))hasBack=true;
+                    if(tap.label.startsWith("Započni izazov")||
+                       tap.label.startsWith("Nastavi izazov")||
+                       tap.label.startsWith("Igraj ponovno"))hasStart=true;
+                }
+                assertTrue("Owner daily still has functional Back",hasBack);
+                assertTrue("Owner daily still has functional Start",hasStart);
+                captureReference(activity,screen,
+                    "phase51-owner-daily-3d-colors-941x1672");
+            }finally{
+                activity.game=previous;activity.page=oldPage;
+                activity.theme=oldTheme;activity.tileStyle=oldStyle;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void classicNavyLetteringClearsCoralFourByFourBadge(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
@@ -2888,10 +3007,26 @@ public class ScreensSmokeTest {
                 for(MainActivity.BoardScreen.TextRegion label:view.textRegions)
                     if("Klasično".equals(label.text))title=label.bounds;
                 assertNotNull("Native Classic 4x4 title must be measured",title);
+                // Owner illustration intentionally layers the coral 4x4
+                // badge across the *bottom* of the hand-drawn navy word.
+                // Requiring zero overlap rejected the real source geometry.
                 float badgeTop=view.offY+100f*view.scale;
-                assertTrue("Rounded navy title must clear the raised 4x4 badge: "+
-                    title.bottom+" vs "+badgeTop,
-                    title.bottom+1.5f<badgeTop);
+                assertNotNull("Owner Classic source contour is rendered",
+                    view.ownerClassicVectorPath);
+                // RectF is already transformed to physical 941px space.
+                // Do not scale the expected physical pixel measurements a
+                // second time (30*2.352 previously rejected x≈39).
+                assertTrue("Owner navy ink left edge stays near x=39: "+
+                    title.left,title.left>30f&&title.left<60f);
+                assertTrue("Owner navy ink right edge stays near x=459: "+
+                    title.right,title.right>440f&&title.right<480f);
+                assertTrue("Navy source must occupy original y≈136..247",
+                    title.top>view.offY+52f*view.scale&&
+                    title.bottom<view.offY+112f*view.scale);
+                assertTrue("Source navy/title and coral badge should touch "+
+                    "as layered, not separate components",
+                    title.bottom>=badgeTop&&title.bottom<
+                        badgeTop+18f*view.scale);
                 boolean hasPause=false,hasUndo=false;
                 for(MainActivity.BoardScreen.Tap tap:view.taps){
                     if("Pauziraj igru".equals(tap.label))hasPause=true;
