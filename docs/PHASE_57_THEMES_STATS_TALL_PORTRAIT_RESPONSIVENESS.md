@@ -49,3 +49,16 @@ Izmjena je isključivo na opsegu `page=="themes"` ili `page=="stats"`, kada je z
 - [ ] Pregledati **nove** 941×1672 PNG-ove radi potvrde da nema regresije prema dvije izvorne reference.
 - [ ] Pregledati 360×800 i 1080×2400 PNG-ove da ekran bude cijeli i dodirni elementi dostupni.
 - [ ] U slučaju funkcionalne ili vizualne regresije vratiti lokalnu izmjenu, ne mijenjati drugu stranicu.
+
+
+## Dodatna lokalna kalibracija boja na istoj grani
+
+Pikselni uzorci unutar izvornoga 941×1672 referentnog fonta u usporedbi s provjerenim Android renderom PR #74 pokazali su da je slovo glavnog naslova nijansu suviše sivo, a istaknute brojke KPI kartica znatno ispranije.
+
+U lokalnom nativnom Canvasu, **samo za svijetlu temu na zaslonima Teme/Statistika**, prilagođeni su:
+- Teme: navy naslov `#0C1F44`, koraljni naslov `#FB5B3C`.
+- Statistika: navy naslov `#15243F`; numeričke vrijednosti: najbolji rezultat `#FC4930`, ukupno partija `#04A2B2`, najveća pločica `#ED7514`, prosjek `#0C66E5`, niz pobjeda `#862AD1`.
+
+Ostala tipografija, stvarni rezultati, zasićenost pozadina kartica i stvarne pločice tijekom igre nisu mijenjani. Brojčani primjeri na referenci nisu fiksno ugrađeni u aplikaciju. Te boje tek treba ponovno provjeriti na **novom** CI rendereru: ukoliko povećaju MAE ili smanje čitljivost, vratiti lokalnu kalibraciju.
+
+Reprodukcija mjerenja: stvarna emulatorska PNG slika + originalni PNG, isti pixel grid 941×1672, apsolutna razlika po tri RGB kanala. Izvorni screenshotovi su vlasnikove datoteke u razgovoru, a ne dio repozitorija.
