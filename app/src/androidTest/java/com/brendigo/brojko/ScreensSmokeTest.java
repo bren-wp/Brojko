@@ -5879,8 +5879,9 @@ public class ScreensSmokeTest {
                         if(tap.label.equals("Započni izazov")||
                            tap.label.equals("Igraj ponovno")||
                            tap.label.equals("Nastavi izazov")){
-                            boolean compactViewport=
-                                size[1]/(float)size[0]<1.85f;
+                            // 400x880 is a tall owner portrait, not the old
+                            // unrelated 880-unit Daily layout.
+                            boolean compactViewport=board.referencePortraitLayout;
                             float expectedWidth=compactViewport?314f:350f;
                             float expectedX=compactViewport?43f:25f;
                             assertEquals("Daily CTA width must match this viewport",
