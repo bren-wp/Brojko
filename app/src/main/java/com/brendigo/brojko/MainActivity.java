@@ -965,6 +965,35 @@ public final class MainActivity extends ComponentActivity {
                 c.restore();
             }else txt(content,x,baseline,size,color,bold);
         }
+        // Small, consistent raised Nunito-Black face for illustrated
+        // headings. Measure the actual glyph advance; never stretch one word
+        // independently or substitute a screenshot for a native text run.
+        // Only the light palette gets the extra specular face / soft depth.
+        void illustratedTitle(String label,float x,float baseline,float size,
+                              float maxWidth,int color){
+            if(label==null||label.isEmpty()||maxWidth<=0f)return;
+            p.clearShadowLayer();p.setShader(null);
+            p.setTypeface(displayFont);p.setTextScaleX(1f);
+            p.setFakeBoldText(false);p.setTextSize(size);
+            while(p.measureText(label)>maxWidth&&size>10f){
+                size=Math.max(10f,size-.5f);p.setTextSize(size);
+            }
+            p.setTextAlign(Paint.Align.CENTER);p.setColor(color);
+            p.setStyle(Paint.Style.FILL);
+            if(theme==0){
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStyle(Paint.Style.FILL_AND_STROKE);
+                p.setStrokeWidth(.7f);
+                p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
+                p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
+                    lighten(color,.075f),darken(color,.045f),
+                    Shader.TileMode.CLAMP));
+            }
+            recordTextInk(label,x,baseline);
+            c.drawText(label,x,baseline,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
+        }
         // Home shortcut captions must never run into neighboring cards.
         // Preserve their intended font size: only compress the horizontal
         // glyph advance when a long localized caption exceeds its card.
@@ -3621,10 +3650,10 @@ public final class MainActivity extends ComponentActivity {
                 button("","back",14,16,48,48,card,false,()->navigate("home"));
             else back();
             // Reference: dominant two-line title with compact line spacing.
-            fitted("Dnevni",portrait?196:184,portrait?54:90,
-                portrait?51:48,portrait?240:223,ink,true);
-            fitted("izazov",portrait?205:199,portrait?99:141,
-                portrait?49:48,234,CORAL,true);
+            illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
+                portrait?51:48,portrait?240:223,ink);
+            illustratedTitle("izazov",portrait?205:199,portrait?99:141,
+                portrait?49:48,234,CORAL);
             dailyHeaderAccents(154,portrait?16:39);
             float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
@@ -4150,7 +4179,19 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(displayFont);p.setTextSize(textSize);
             p.setStrokeWidth(0f);p.setColor(ink);
             p.setTextAlign(Paint.Align.LEFT);
+            if(theme==0){
+                p.setStrokeJoin(Paint.Join.ROUND);
+                p.setStrokeWidth(.5f);
+                p.setStyle(Paint.Style.FILL_AND_STROKE);
+                p.setShadowLayer(.65f,0f,.8f,0x241c2a3e);
+                p.setShader(new LinearGradient(0f,baseline-textSize,
+                    0f,baseline,lighten(ink,.06f),ink,
+                    Shader.TileMode.CLAMP));
+            }
+            recordTextInk(title,63f,baseline);
             c.drawText(title,63f,baseline,p);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
             p.setTextAlign(Paint.Align.CENTER);
         }
         // Measure the *actual* Nunito Black glyph advances before splitting
