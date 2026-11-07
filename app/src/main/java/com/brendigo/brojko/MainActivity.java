@@ -5349,7 +5349,8 @@ public final class MainActivity extends ComponentActivity {
                 // preview; do not move its tappable card.
                 shape(x+47,y+116,22,22,11,theme==i?CORAL:0xffe4e3e0);
                 if(theme==i)icon("check",x+58,y+127,13,WHITE);
-                taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
+                taps.add(new Tap(i==0?14f:x,y,
+                    i==0?138f:x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
