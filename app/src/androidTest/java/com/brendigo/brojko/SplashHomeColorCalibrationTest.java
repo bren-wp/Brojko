@@ -65,6 +65,38 @@ public final class SplashHomeColorCalibrationTest {
         });
     }
 
+    @Test public void lightHomeScoreHeadingsRetainSourceSizedInkBounds(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="home";activity.theme=0;
+                MainActivity.BoardScreen screen=activity.new BoardScreen(activity);
+                screen.auditTextLayout=true;
+                screen.measure(View.MeasureSpec.makeMeasureSpec(941,View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
+                screen.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
+                try{screen.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+                android.graphics.RectF first=null,last=null;
+                for(MainActivity.BoardScreen.TextRegion region:screen.textRegions){
+                    if("Najbolji rezultat".equals(region.text))first=region.bounds;
+                    if("Zadnji rezultat".equals(region.text))last=region.bounds;
+                }
+                assertNotNull("First score label must be present",first);
+                assertNotNull("Last score label must be present",last);
+                assertTrue("Source first header should be compact: "+first,
+                    first.width()>=135f&&first.width()<=198f);
+                assertTrue("Source last header should be compact: "+last,
+                    last.width()>=120f&&last.width()<=187f);
+                assertNear("First header center",Math.round(first.centerX()),271,17);
+                assertNear("Last header center",Math.round(last.centerX()),701,17);
+                assertTrue("Header must not overlap scores",
+                    first.bottom<562&&last.bottom<562);
+            }finally{activity.page=oldPage;activity.theme=oldTheme;}
+        });
+    }
+
     @Test public void lightSplashTaglineRetainsPaleIvoryBehindLiveText(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
