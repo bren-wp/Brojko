@@ -2865,6 +2865,58 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void settingsNativeFooterPreservesLocalActionsAndVersion(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="settings";activity.theme=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{view.draw(new Canvas(image));}
+                finally{image.recycle();}
+                assertNotNull("Original Br2jko footer uses native navy paths",
+                    view.ownerHomeNavyPath);
+                assertNotNull("Live footer keeps the author byline",
+                    screenInk(view,"by Brendigo"));
+                boolean version=false;
+                for(MainActivity.BoardScreen.TextRegion region:view.textRegions)
+                    if(region.text.startsWith("v1."))
+                        version=true;
+                assertTrue("Footer renders actual build version",version);
+                int rows=0;
+                for(MainActivity.BoardScreen.Tap tap:view.taps){
+                    if("Zvuk".equals(tap.label)||
+                       "Vibracija".equals(tap.label)||
+                       "Jezik".equals(tap.label)||
+                       "Obavijesti".equals(tap.label)||
+                       tap.label.startsWith("Sinkronizacija napretka")||
+                       "Pravila privatnosti".equals(tap.label)||
+                       "O aplikaciji".equals(tap.label)){
+                        rows++;
+                        assertTrue("Settings controls keep meaningful hitboxes",
+                            tap.right-tap.left>=45f&&
+                            tap.bottom-tap.top>=45f);
+                    }
+                }
+                assertEquals("All seven Settings rows are still interactive",
+                    7,rows);
+                captureReference(activity,view,
+                    "phase51-settings-native-footer-941x1672");
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void dailyPreviewUsesOwnerColorFacesButNeverChangesLiveGameTiles(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
