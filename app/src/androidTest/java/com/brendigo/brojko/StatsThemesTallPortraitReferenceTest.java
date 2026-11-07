@@ -3,6 +3,9 @@ package com.brendigo.brojko;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.view.View;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -30,8 +33,25 @@ public final class StatsThemesTallPortraitReferenceTest {
             View.MeasureSpec.makeMeasureSpec(height,View.MeasureSpec.EXACTLY));
         view.layout(0,0,width,height);
         Bitmap bitmap=Bitmap.createBitmap(width,height,Bitmap.Config.ARGB_8888);
-        try{view.draw(new Canvas(bitmap));}
-        finally{bitmap.recycle();}
+        try{
+            view.draw(new Canvas(bitmap));
+            // Real Android captures for 20:9 and large tablet portrait,
+            // rendered from the functional Canvas, never resized mockups.
+            if((width==360&&height==800)||
+               (width==1080&&height==2400)){
+                File root=activity.getExternalFilesDir(null);
+                assertNotNull("Screenshot output directory",root);
+                File dir=new File(root,"screenshots");
+                assertTrue(dir.isDirectory()||dir.mkdirs());
+                File png=new File(dir,"phase57-source-"+page+"-"+
+                    width+"x"+height+".png");
+                try(FileOutputStream output=new FileOutputStream(png)){
+                    assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));
+                }catch(IOException error){
+                    throw new AssertionError("Unable to save real viewport",error);
+                }
+            }
+        }finally{bitmap.recycle();}
         return view;
     }
 
