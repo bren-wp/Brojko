@@ -4837,14 +4837,18 @@ public final class MainActivity extends ComponentActivity {
                 // approximately x138,y640, with no light interior void.
                 statisticsSourceBlueStar(x+38f,y+36f,45f);
             }else{
-                icon(symbol,x+(width<=118?27:38),
-                    y+(referenceStats?(width<=118?38:43):29),
-                    referenceStats?(width<=118?34:43):
-                        (width<=118?24:29),
+                icon(symbol,x+(width<=125?27:38),
+                    y+(referenceStats?(width<=125?38:43):29),
+                    referenceStats?(width<=125?34:43):
+                        (width<=125?24:29),
                     "gamepad".equals(symbol)?ink:accent);
             }
-            float labelX=x+(width<=118?77:98);
-            float labelWidth=width<=118?68:123;
+            // The source's slightly widened first compact KPI (123
+            // units) still needs the three-column layout; thresholding
+            // at 118 incorrectly switched its icon and labels to the
+            // two-column layout.
+            float labelX=x+(width<=125?77:98);
+            float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
             // Keep two lines for the other four cards; the narrow 4x4
@@ -4853,9 +4857,9 @@ public final class MainActivity extends ComponentActivity {
                 leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
             }else{
                 fitted(top,labelX,y+(dense?24:31),
-                    width<=118?13:16,labelWidth,ink,true);
+                    width<=125?13:16,labelWidth,ink,true);
                 fitted(bottom,labelX,y+(dense?41:48),
-                    width<=118?13:16,labelWidth,ink,true);
+                    width<=125?13:16,labelWidth,ink,true);
             }
             // Keep the average score to the right of its icon, as in
             // the owner's 941px KPI card. Other values retain their
