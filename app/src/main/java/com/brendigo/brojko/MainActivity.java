@@ -2297,8 +2297,13 @@ public final class MainActivity extends ComponentActivity {
                 portrait&&theme==0?36:28,0xffffb228);
             // Owner titles sit ~12 native pixels above the PR43
             // emulator's labels, inside unchanged tappable cards.
-            fitted("Najbolji rezultat",132,
-                scoresY+(portrait&&theme==0?24:29),13,117,muted,true);
+            // Source header ink measures ~171x17 native px, while the
+            // previous 13-unit bold render occupied ~225x28. Confine
+            // the owner typography correction to the light Home cards.
+            boolean sourceScoreHeading=portrait&&theme==0;
+            fitted("Najbolji rezultat",sourceScoreHeading?115:132,
+                scoresY+(sourceScoreHeading?24:29),
+                sourceScoreHeading?11:13,117,muted,!sourceScoreHeading);
             // Source-matched 12.560 remains clear of the three right-hand
             // mini bars even for larger real records.
             fitted(fmt(best),112,
@@ -2308,9 +2313,11 @@ public final class MainActivity extends ComponentActivity {
                 scoresY+(theme==0?53:58));
             icon("stats",236,
                 scoresY+(portrait&&theme==0?26:30),27,0xff63799d);
-            fitted("Zadnji rezultat",portrait?301:319,
-                scoresY+(portrait&&theme==0?24:29),
-                13,portrait?104:116,muted,true);
+            fitted("Zadnji rezultat",sourceScoreHeading?298:
+                    portrait?301:319,
+                scoresY+(sourceScoreHeading?24:29),
+                sourceScoreHeading?11:13,
+                portrait?104:116,muted,!sourceScoreHeading);
             fitted(fmt(lastScore),portrait?296:311,
                 scoresY+(portrait&&theme==0?54:60),
                 27,portrait?113:125,ink,true);
