@@ -474,6 +474,54 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themesPortraitSwatchesMatchSourceRowOffsets(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldStyle=activity.tileStyle;
+            try{
+                activity.page="themes";activity.theme=0;
+                activity.tileStyle=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.auditTextLayout=true;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap image=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(image));
+                    int first=image.getPixel(110,535);
+                    int second=image.getPixel(110,555);
+                    assertTrue("Owner first row remains coral near its foot",
+                        android.graphics.Color.red(first)>
+                            android.graphics.Color.green(first)+65);
+                    assertTrue("Second row starts blue below a true gap",
+                        android.graphics.Color.blue(second)>
+                            android.graphics.Color.red(second)+55);
+                    android.graphics.RectF caption=screenInk(view,"Svijetla");
+                    assertNotNull("Theme caption is native accessible ink",caption);
+                    assertTrue("Caption must follow source lower y baseline: "+
+                        caption.top,caption.top>730f&&caption.bottom<795f);
+                    int choices=0;
+                    for(MainActivity.BoardScreen.Tap tap:view.taps)
+                        if("Svijetla".equals(tap.label)||
+                           "Tamna".equals(tap.label)||
+                           "Živopisna".equals(tap.label))choices++;
+                    assertEquals("Theme-selection hitboxes remain functional",3,
+                        choices);
+                    captureReference(activity,view,
+                        "phase50-theme-source-row-offsets-941x1672");
+                }finally{image.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.tileStyle=oldStyle;activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void statisticsKpiIconsAreOpaqueLikeOwnerSource(){
         rule.getScenario().onActivity(activity->{
             int oldTheme=activity.theme;
