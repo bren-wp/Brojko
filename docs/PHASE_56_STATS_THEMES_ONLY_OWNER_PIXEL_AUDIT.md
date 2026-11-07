@@ -64,3 +64,29 @@ Postojeći `ScreensSmokeTest` dodatno ima pokrivenost drugih zaslona, no ova faz
 - [ ] Ne tvrditi 0 % odstupanja bez binarno jednakog rendera i očekivanog podatkovnog stanja.
 
 Praktična napomena: iste pikselne koordinate na telefonima različitih omjera nisu isto što i ispravan responzivni raspored; zadržava se izvorni 941×1672 za vizualno mjerenje, a prikaz drugih uređaja prilagođava se bez rastezanja ili blokiranih kontrola.
+
+
+## Faza 56 — potvrđeni rezultat prvog prolaza, prije korekcije unutarnjeg sadržaja
+
+Na SHA-u `ed67f23516cfa0c629d2cc75ff99f4763ee10d4d` uspješno su završili Android build/lint/unit, Android16 insets i **stvarni Android screenshot workflow [42418288816](https://github.com/bren-wp/Brojko/actions/runs/42418288816)**, artefakt `13592986326`.
+
+Isti vlasnički PNG-ovi i identične 941×1672 emulatorske snimke uspoređeni su bez resizea, pomicanja i poravnanja:
+
+| Regija | Prije faze 56 | Prvi rezultat | Razlika |
+|---|---:|---:|---:|
+| Teme cijeli | 19,816 | **17,715** | −2,101 |
+| Teme naslov (x180–775,y205–325) | 41,538 | **26,310** | −15,228 |
+| Teme izbor (y370–790) | 24,512 | **23,193** | −1,319 |
+| Teme pregled (x30–465,y810–1470) | 24,654 | **18,929** | −5,725 |
+| Statistika cijeli | 19,020 | **17,677** | −1,343 |
+| Statistika naslov (x210–735,y160–295) | 53,655 | **40,615** | −13,040 |
+| Statistika grafikon (y770–1160) | 22,607 | **20,119** | −2,488 |
+| Statistika gornje kartice (y306–550) | 26,360 | **25,615** | −0,745 |
+| Statistika donje kartice (y550–770) | **16,854** | 17,093 | **+0,239, mala regresija** |
+| Statistika prva KPI ROI (x20–328,y308–540) | **23,777** | 24,559 | **+0,782, lokalna regresija** |
+
+### Lokalna korekcija nakon mjerenja
+
+Na sljedećem SHA-u `7b36465f5c62640dad046068448e8b04a63e3985` zadržani su izvorno široki vanjski okviri, ali su **samo ikona i naslov** prve kartice `Najbolji rezultat` i kartice `Prosjek bodova` pomaknuti +6 dizajnerskih jedinica udesno, kako bi kruna i plava zvijezda ponovno odgovarale izvornim centrima. Stvarne brojke ostaju na već usklađenim pozicijama.
+
+Ovo je nova, još **nemjerena** lokalna korekcija. Ne tvrditi da su regresije uklonjene prije novog uspješnog emulator artefakta na zadnjem SHA-u. Ni jedan screenshot nije ugrađen u APK/AAB, gameplay i sve druge stranice nisu dirani.
