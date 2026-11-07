@@ -1670,7 +1670,17 @@ public final class MainActivity extends ComponentActivity {
             // Themes has a compact bottom navigation within the 880-unit design.
             // Fit it to the available window INCLUDING system bar insets; only
             // genuinely taller content (statistics/history) must always scroll.
-            referencePortraitLayout=usableHeight/usableWidth<1.85f;
+            // Splash/Home are one owner-supplied composition at 941x1672.
+            // A tall portrait phone must not switch to a different 880-unit
+            // drawing with missing blur, smaller icons and a different logo.
+            // Reuse the same native 710-unit artwork and give taller windows
+            // symmetric breathing room. All other screens keep their
+            // established responsive breakpoints and gameplay coordinates.
+            boolean tallOwnerPortrait=(page.equals("splash")||
+                page.equals("home"))&&usableHeight>usableWidth&&
+                usableHeight/usableWidth>=1.85f;
+            referencePortraitLayout=
+                usableHeight/usableWidth<1.85f||tallOwnerPortrait;
             compactBoardLayout=inGame&&referencePortraitLayout;
             gridY=compactBoardLayout&&game!=null&&game.size==4?159:(compactBoardLayout?171:222);
             boolean extended=page.equals("stats");
@@ -1743,6 +1753,12 @@ public final class MainActivity extends ComponentActivity {
             offY=(compact||landscape&&!page.equals("splash"))?
                 getPaddingTop()-scrollOffset*scale:
                 getPaddingTop()+(usableHeight-880*scale)/2f;
+            // Reference 941x1672 is unchanged (tallOwnerPortrait=false).
+            // For e.g. 360x800 or 1080x2400, keep the full source drawing
+            // at width-based scale, vertically centered without stretching.
+            // If the canvas is too short, keep zero inset and Home scrolling.
+            if(tallOwnerPortrait&&maxScroll==0f)
+                offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             taps.clear();
             switch(page) {
