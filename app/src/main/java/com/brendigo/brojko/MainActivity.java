@@ -4837,14 +4837,18 @@ public final class MainActivity extends ComponentActivity {
                 // approximately x138,y640, with no light interior void.
                 statisticsSourceBlueStar(x+38f,y+36f,45f);
             }else{
-                icon(symbol,x+(width<=118?27:38),
-                    y+(referenceStats?(width<=118?38:43):29),
-                    referenceStats?(width<=118?34:43):
-                        (width<=118?24:29),
+                icon(symbol,x+(width<=125?27:38),
+                    y+(referenceStats?(width<=125?38:43):29),
+                    referenceStats?(width<=125?34:43):
+                        (width<=125?24:29),
                     "gamepad".equals(symbol)?ink:accent);
             }
-            float labelX=x+(width<=118?77:98);
-            float labelWidth=width<=118?68:123;
+            // The source's slightly widened first compact KPI (123
+            // units) still needs the three-column layout; thresholding
+            // at 118 incorrectly switched its icon and labels to the
+            // two-column layout.
+            float labelX=x+(width<=125?77:98);
+            float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
             // Keep two lines for the other four cards; the narrow 4x4
@@ -4853,9 +4857,9 @@ public final class MainActivity extends ComponentActivity {
                 leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
             }else{
                 fitted(top,labelX,y+(dense?24:31),
-                    width<=118?13:16,labelWidth,ink,true);
+                    width<=125?13:16,labelWidth,ink,true);
                 fitted(bottom,labelX,y+(dense?41:48),
-                    width<=118?13:16,labelWidth,ink,true);
+                    width<=125?13:16,labelWidth,ink,true);
             }
             // Keep the average score to the right of its icon, as in
             // the owner's 941px KPI card. Other values retain their
@@ -4954,9 +4958,28 @@ public final class MainActivity extends ComponentActivity {
             }
             float w1=p.measureText(navy),w2=p.measureText(coral);
             float start=(400f-w1-w2-gap)*.5f;
-            illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
-            illustratedTitle(coral,start+w1+gap+w2/2f,baseline,size,
-                w2+1f,CORAL);
+            if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
+                // The owner's 941x1672 heading ink is materially taller
+                // than the baseline Nunito raster. Its navy portion is
+                // x202..490,y223..306; coral x511..746,y223..319.
+                // Keep the original text glyphs and measured word gap;
+                // stretch locally without changing any other screen.
+                c.save();
+                c.scale(1.10f,1.32f,86f,baseline+5f);
+                illustratedTitle(navy,start+w1/2f,baseline+5f,
+                    size,w1+1f,ink);
+                c.restore();
+                c.save();
+                c.translate(8f,0f);
+                c.scale(.975f,1.22f,209f,baseline+3f);
+                illustratedTitle(coral,start+w1+gap+w2/2f,
+                    baseline+3f,size,w2+1f,CORAL);
+                c.restore();
+            }else{
+                illustratedTitle(navy,start+w1/2f,baseline,size,w1+1f,ink);
+                illustratedTitle(coral,start+w1+gap+w2/2f,baseline,size,
+                    w2+1f,CORAL);
+            }
         }
         void themesTitlePill(float y,float h){
             p.setShader(null);p.setColor(WHITE);
@@ -5174,19 +5197,39 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void statisticsCompact(){
-            back();
+            // Owner's Stats back control is a soft ivory square around
+            // native x31..130,y28..130. The shared detail-page back()
+            // started at y~101px, substantially below this reference.
+            // Use only this screen's native Canvas card and live Tap.
+            card(13,12,42,42,17,card);
+            icon("back",34,33,23,ink);
+            taps.add(new Tap(7,7,61,61,"Natrag",()->navigate("home")));
             brand(40,35);
-            illustratedTitle("Statistika",200,116,43,325,ink);
+            // Owner's dark-navy Stats title raster is x238..714,
+            // y184..285 at 941x1672. Preserve horizontal/vertical
+            // position of the original word while restoring its tall
+            // softly rounded lettering; other themes keep the fallback.
+            if(theme==0){
+                c.save();
+                c.scale(1.025f,1.27f,101f,120f);
+                illustratedTitle("Statistika",200,120,43,325,ink);
+                c.restore();
+            }else illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
             statsHeaderBurst(354,104,true);
-            statCell("Najbolji rezultat",fmt(best),20,132,114,94,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,132,114,94,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),266,132,114,94,0xffffb431);
+            // Owner 941x1672 KPI surfaces: three edge-aligned pastel
+            // cards, native x~33..323,345..612,630..896.
+            // All labels and scores remain sourced from local state.
+            statCell("Najbolji rezultat",fmt(best),14,132,123,94,CORAL);
+            statCell("Ukupno partija",fmt(plays),146,132,114,94,TEAL);
+            statCell("Najveća pločica",Integer.toString(recordTile),267,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,235,174,84,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),205,235,174,84,0xffa657de);
+            // Source lower cards start at x~35 and x~489, with a
+            // slightly flatter 193px height than the former native pair.
+            statCell("Prosjek bodova",fmt(average),15,234,185,81,0xff478df4);
+            statCell("Niz pobjeda",fmt(consecutiveWins()),207,234,174,81,0xffa657de);
             statsSoftCard(16,329,368,158,23,card);
-            leftFitted("Zadnjih 10 partija",30,353,20,199,ink,true);
+            leftFitted("Zadnjih 10 partija",27,357,20,199,ink,true);
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
@@ -5230,7 +5273,9 @@ public final class MainActivity extends ComponentActivity {
                         // range to preserve source max-height proportion.
                         float barHeight=Math.max(4f,
                             (sourceLightChart?75f:78f)*val/ceiling);
-                        float y=(sourceLightChart?459f:463f)-barHeight;
+                        // Keep the real points but align the baseline
+                        // with the owner's y~1080px (was ~1065px).
+                        float y=(sourceLightChart?465f:463f)-barHeight;
                         int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
@@ -5301,10 +5346,15 @@ public final class MainActivity extends ComponentActivity {
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
-                    card(x,y,116,143,20,card);
+                    // Owner's selected light-theme border spans native
+                    // x~32..325; old x~45..313 was 24px too narrow.
+                    float selectedX=i==0?14f:x;
+                    float selectedW=i==0?124f:116f;
+                    card(selectedX,y,selectedW,143,20,card);
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(3f);
-                    c.drawRoundRect(x+1.5f,y+1.5f,x+114.5f,y+141.5f,19,19,p);
+                    c.drawRoundRect(selectedX+1.5f,y+1.5f,
+                        selectedX+selectedW-1.5f,y+141.5f,19,19,p);
                     p.setStyle(Paint.Style.FILL);
                 }
                 // The reference uses a restrained inset tray for Light,
@@ -5333,35 +5383,45 @@ public final class MainActivity extends ComponentActivity {
                 c.restore();
                 // Selector and caption must follow the same +5-unit
                 // alignment as the tiles; remain inside the live card.
-                shape(x+47,y+119,22,22,11,theme==i?CORAL:0xffe4e3e0);
-                if(theme==i)icon("check",x+58,y+130,13,WHITE);
-                taps.add(new Tap(x,y,x+116,y+143,names[i],()->{
+                // Native owner radio is slightly higher than the old
+                // preview; do not move its tappable card.
+                shape(x+47,y+116,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,y+127,13,WHITE);
+                taps.add(new Tap(i==0?14f:x,y,
+                    i==0?138f:x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
             card(20,335,360,293,26,card);
-            leftFitted("Pregled",30,370,22,167,ink,true);
+            leftFitted("Pregled",26,373,22,167,ink,true);
             leftFitted("Stil pločica",201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
-            themeBoardTray(29,411,163,169);
+            themeBoardTray(25,413,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
             for(int i=0;i<16;i++){
                 int val=sample[i],col=i%4,row=i/4;
-                float x=34+col*39.8f,y=416+row*39.6f;
+                // The owner's 4x4 preview begins about 8px left and
+                // 5px below the previous emulator sample.
+                float x=30+col*39.8f,y=418+row*39.6f;
                 themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
                 fitted(Integer.toString(val),x+18,y+25,
                     val>=1000?11:15,33,WHITE,true);
             }
-            leftFitted("Ovako će izgledati",30,384,12,159,muted,false);
-            leftFitted("tvoja ploča u odabranoj temi.",30,399,11,161,muted,false);
+            leftFitted("Ovako će izgledati",26,389,12,159,muted,false);
+            leftFitted("tvoja ploča u odabranoj temi.",26,404,11,161,muted,false);
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
-                card(x,371,51,69,13,card);
+                // Selected Zaobljene frame is ~133px wide in the
+                // source versus ~116px in the former Android render.
+                float frameX=i==0?x-7f:x;
+                float frameW=i==0?58f:51f;
+                card(frameX,371,frameW,69,13,card);
                 if(tileStyle==i){
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(2.5f);
-                    c.drawRoundRect(x+1.5f,372.5f,x+49.5f,438.5f,12,12,p);
+                    c.drawRoundRect(frameX+1.5f,372.5f,
+                        frameX+frameW-1.5f,438.5f,12,12,p);
                     p.setStyle(Paint.Style.FILL);
                 }
                 int swatchColor=i==2?0xffffc8ad:
@@ -5370,7 +5430,7 @@ public final class MainActivity extends ComponentActivity {
                 fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
-                taps.add(new Tap(x,371,x+51,461,styles[i],()->{
+                taps.add(new Tap(frameX,371,frameX+frameW,461,styles[i],()->{
                     tileStyle=value;persist();invalidate();
                 }));
             }
