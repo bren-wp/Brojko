@@ -862,6 +862,15 @@ public final class MainActivity extends ComponentActivity {
                 0xfffe8c50,0xfffd1118,Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
             p.setShader(null);
+            // Owner's coral hero has a localized warm lift around the
+            // upper-left edge. Keep the main face gradient and touch
+            // geometry unchanged; fade the source glow before the text.
+            p.setColor(WHITE);
+            p.setShader(new RadialGradient(x+29f,y+8f,56f,
+                new int[]{0x39ffd6a6,0x19ffbd83,0x00ffbd83},
+                new float[]{0f,.35f,1f},Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
+            p.setShader(null);
         }
         int lighten(int color,float amount) {
             int r=Color.red(color),g=Color.green(color),b=Color.blue(color);
@@ -2031,17 +2040,19 @@ public final class MainActivity extends ComponentActivity {
             if(referencePortraitLayout){
                 // Source 941x1672 uses full width; only edge decorations crop.
                 // All information stays inside the 400x~667 compact viewport.
-                splashAmbient(161,24,40,43,-18,0x1fffbd94);
-                splashAmbient(167,198,35,38,14,0x12eabb93);
+                splashAmbient(161,24,40,43,-18,0x31ffb989);
+                splashAmbient(167,198,35,38,14,0x38efb67d);
                 // Source teal haze native centroid (289,1081), radius ~80px.
                 // Former (286,1195) decoration was 114px too low.
-                splashAmbient(90,427,64,64,-17,0x342ec4b6);
-                splashAmbient(321,444,79,78,20,0x36ff7a5b);
+                splashAmbient(90,427,64,64,-17,0x4328dcd8);
+                splashAmbient(321,444,79,78,20,0x72ff7a5b);
                 // Pixel audit: yellow lower-left accent was incorrectly
                 // painted below centre; teal also sat ~70 pixels too far right.
                 // These are visual-only background pieces, never live tiles.
                 splashAmbient(-6,621,73,77,-18,0x25ffba30);
-                splashAmbient(141,636,65,65,29,0x282ec4b6);
+                // The source's bottom cyan glow starts lower; the previous
+                // blurred silhouette colored clean ivory at native y1500.
+                splashAmbient(143,654,61,61,29,0x3523d9d2);
                 // The user's blurred coral 32 behind the lower-right logo
                 // was absent from our prior native illustration.
                 if(theme==0){
@@ -2084,7 +2095,14 @@ public final class MainActivity extends ComponentActivity {
                 }else c.rotate(-17f,289f,123f);
                 splashFloatingTile(239,76,101,101,24,TILES[2]);
                 txt("4",289,145,57,WHITE,true);c.restore();
-                c.save();c.rotate(-17,42,236);
+                // Reduce the excessive vertical extent of the decorative blue 8.
+                // Native source lower edge is ~y650, not the old ~y685.
+                c.save();
+                if(theme==0){
+                    c.translate(0f,-4.5f);
+                    c.scale(1f,.92f,42f,236f);
+                }
+                c.rotate(-17,42,236);
                 splashFloatingTile(-12,187,106,100,22,TILES[3]);
                 txt("8",42,256,56,WHITE,true);c.restore();
                 // Owner artwork: yellow tile leans counterclockwise.
@@ -2180,7 +2198,8 @@ public final class MainActivity extends ComponentActivity {
             // 16% white mixing reduces source MAE for the three mode cards
             // but adds error on the score and bottom shortcut cards.
             // Calibrate ONLY the owner-supplied Home mode card row.
-            float homeWhiteMix=y>=380f&&y<560f?.16f:.40f;
+            float homeWhiteMix=y>=380f&&y<560f?.16f:
+                y>=200f&&y<300f?.18f:.40f;
             gradient(x,y,w,h,radius,lighten(color,homeWhiteMix),color);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.85f);p.setColor(0xb4ffffff);
@@ -2364,12 +2383,12 @@ public final class MainActivity extends ComponentActivity {
             }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
-            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffff4ed,false,
+            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffef3e9,false,
                 ()->requestNew("classic"));
-            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe9fcfa,false,
+            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe1fcf9,false,
                 ()->requestNew("relaxed"));
             modeCard("Dnevni izazov","Novi izazov svaki dan!",
-                267,modeY,117,modeH,0xfffff4d7,true,()->navigate("daily"));
+                267,modeY,117,modeH,0xfffef6d6,true,()->navigate("daily"));
             float shortcutY=portrait?570:687;
             float shortcutH=portrait?120:144;
             shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
