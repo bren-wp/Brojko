@@ -2968,7 +2968,9 @@ public class ScreensSmokeTest {
                 boolean hasBack=false,hasStart=false;
                 for(MainActivity.BoardScreen.Tap tap:screen.taps){
                     if("Natrag".equals(tap.label))hasBack=true;
-                    if(tap.label.startsWith("Započni izazov"))hasStart=true;
+                    if(tap.label.startsWith("Započni izazov")||
+                       tap.label.startsWith("Nastavi izazov")||
+                       tap.label.startsWith("Igraj ponovno"))hasStart=true;
                 }
                 assertTrue("Owner daily still has functional Back",hasBack);
                 assertTrue("Owner daily still has functional Start",hasStart);
