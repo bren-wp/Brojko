@@ -1677,10 +1677,19 @@ public final class MainActivity extends ComponentActivity {
             // Themes cards. Preserve the source Canvas composition and
             // center it on the available viewport, without stretching.
             // All other pages retain their own existing breakpoints.
+            // Three additional supplied owner references are fully drawn
+            // on the 400x710 portrait plane. Tall phones previously
+            // switched them to an unrelated 880-unit layout, changing
+            // the Missions cards, Daily challenge and Classic gameplay.
+            // Scope Classic to the actual 4x4 mode: 5x5 and Daily gameplay
+            // keep their own independent responsive behavior.
+            boolean ownerClassicGame=page.equals("game")&&game!=null&&
+                "classic".equals(game.mode)&&game.size==4;
             boolean tallOwnerPortrait=(page.equals("splash")||
                 page.equals("home")||page.equals("themes")||
-                page.equals("stats"))&&usableHeight>usableWidth&&
-                usableHeight/usableWidth>=1.85f;
+                page.equals("stats")||page.equals("missions")||
+                page.equals("daily")||ownerClassicGame)&&
+                usableHeight>usableWidth&&usableHeight/usableWidth>=1.85f;
             referencePortraitLayout=
                 usableHeight/usableWidth<1.85f||tallOwnerPortrait;
             compactBoardLayout=inGame&&referencePortraitLayout;
@@ -1744,6 +1753,13 @@ public final class MainActivity extends ComponentActivity {
                 ((page.equals("settings")||page.equals("themes")||
                     page.equals("missions")||page.equals("daily"))&&
                     referencePortraitLayout?710f:880f)))));
+            // The owner Classic 4x4 artwork ends at y~671 of its
+            // 710-unit reference scene. The inherited 880-unit content
+            // height caused a phantom 169-unit scroll on 941x1672,
+            // despite all gameplay actions already fitting. Keep real
+            // overflow scroll on genuinely short screens.
+            if(ownerClassicGame&&referencePortraitLayout)
+                contentHeight=710f;
             // Splash must never scroll; its compact lettering fits a 360x600
             // viewport while longer non-splash pages still scroll as needed.
             maxScroll=page.equals("splash")?0:
@@ -3847,10 +3863,27 @@ public final class MainActivity extends ComponentActivity {
                 button("","back",14,16,48,48,card,false,()->navigate("home"));
             else back();
             // Reference: dominant two-line title with compact line spacing.
-            illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
-                portrait?51:48,portrait?240:223,ink);
-            illustratedTitle("izazov",portrait?205:199,portrait?99:141,
-                portrait?49:48,234,CORAL);
+            if(portrait&&theme==0){
+                // Measured owner 941px title ink:
+                // Dnevni x271..667 / y50..150; izazov x325..641 / y142..222.
+                // The earlier title put navy 13px too high and coral
+                // 12px too low; correct the two native text runs locally.
+                c.save();
+                c.translate(2f,8f);
+                c.scale(1f,1.07f,196f,54f);
+                illustratedTitle("Dnevni",196,54,51,240,ink);
+                c.restore();
+                c.save();
+                c.translate(0f,-5f);
+                c.scale(.95f,.93f,205f,99f);
+                illustratedTitle("izazov",205,99,49,234,CORAL);
+                c.restore();
+            }else{
+                illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
+                    portrait?51:48,portrait?240:223,ink);
+                illustratedTitle("izazov",portrait?205:199,portrait?99:141,
+                    portrait?49:48,234,CORAL);
+            }
             dailyHeaderAccents(154,portrait?16:39);
             float dateY=portrait?99:164;
             // Keep the calendar glyph and locally formatted long date apart.
@@ -4456,9 +4489,28 @@ public final class MainActivity extends ComponentActivity {
             float coralWidth=p.measureText(coral);
             float left=(400f-navyWidth-gap-coralWidth)/2f;
             float baseline=portrait?105f:128f;
-            missionHeadlineRun(navy,left,baseline,size,ink);
-            missionHeadlineRun(coral,left+navyWidth+gap,
-                baseline,size,CORAL);
+            if(portrait&&theme==0){
+                // Source ink: navy x130..398/y189..276,
+                // coral x425..823/y189..277. Keep natural text,
+                // its order and its baseline, adjust only the two
+                // measured native transforms (not the card/row geometry).
+                c.save();
+                c.translate(6.5f,5f);
+                c.scale(1.02f,1.11f,left+navyWidth/2f,baseline);
+                missionHeadlineRun(navy,left,baseline,size,ink);
+                c.restore();
+                c.save();
+                c.translate(-4f,4f);
+                c.scale(.92f,1.01f,
+                    left+navyWidth+gap+coralWidth/2f,baseline);
+                missionHeadlineRun(coral,left+navyWidth+gap,
+                    baseline,size,CORAL);
+                c.restore();
+            }else{
+                missionHeadlineRun(navy,left,baseline,size,ink);
+                missionHeadlineRun(coral,left+navyWidth+gap,
+                    baseline,size,CORAL);
+            }
         }
         void missions() {
             boolean portrait=referencePortraitLayout;
