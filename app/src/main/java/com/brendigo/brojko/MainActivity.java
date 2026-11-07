@@ -3596,6 +3596,28 @@ public final class MainActivity extends ComponentActivity {
             gradient(x,y,width,height,24,0xfffffcf5,0xfff8efe5);
             shape(x+10,y+9,width-20,height-18,18,0xfff4eadd);
         }
+        // Pixel samples from the owner's *static daily preview artwork*
+        // (941x1672 PNG, source date 14 March 2025). Scope these hues to
+        // the light-mode illustration; actual game tiles, vivid/dark themes,
+        // moves, achievement criteria and saved scores remain untouched.
+        // The palette compensates for dailySampleTile's 13% top-face light
+        // blend. The 2/4/8/16 source centres are notably more saturated than
+        // the regular gameplay palette.
+        int dailyPreviewColor(int value){
+            switch(value){
+                case 2: return 0xfffd7b45;
+                case 4: return 0xff16dccd;
+                case 8: return 0xff32a0fd;
+                case 16: return 0xfffdc441;
+                case 32: return 0xfffd8055;
+                case 64: return 0xfffc84a0;
+                case 128: return 0xffc26efb;
+                case 256: return 0xff945cfd;
+                case 512: return 0xff3c90fe;
+                case 1024: return 0xff4fe9c9;
+                default: return tileColor(value);
+            }
+        }
         void dailySampleTile(float x,float y,float size,int color){
             // Subtle 3D volume without the harsh double outline of
             // the shared game tile. Restrict to the illustration preview.
@@ -3782,7 +3804,8 @@ public final class MainActivity extends ComponentActivity {
                 int value=sample[i];
                 float cellSize=portrait?51:52;
                 if(portrait&&theme!=1&&tileStyle==0)
-                    dailySampleTile(x,y,cellSize,tileColor(value));
+                    dailySampleTile(x,y,cellSize,
+                        theme==0?dailyPreviewColor(value):tileColor(value));
                 else glossyTile(x,y,cellSize,cellSize,10,tileColor(value));
                 float numeral=portrait?
                     (value>=1000?15.3f:value>=100?19.0f:
