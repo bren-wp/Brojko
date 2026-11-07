@@ -1670,14 +1670,16 @@ public final class MainActivity extends ComponentActivity {
             // Themes has a compact bottom navigation within the 880-unit design.
             // Fit it to the available window INCLUDING system bar insets; only
             // genuinely taller content (statistics/history) must always scroll.
-            // Splash/Home are one owner-supplied composition at 941x1672.
-            // A tall portrait phone must not switch to a different 880-unit
-            // drawing with missing blur, smaller icons and a different logo.
-            // Reuse the same native 710-unit artwork and give taller windows
-            // symmetric breathing room. All other screens keep their
-            // established responsive breakpoints and gameplay coordinates.
+            // These four screens have supplied, distinct owner reference
+            // compositions at 941x1672 (400x710 design units). Tall portrait
+            // phones must not switch to the unrelated 880-unit arrangement:
+            // it substantially changes the Stats chart/history geometry and
+            // Themes cards. Preserve the source Canvas composition and
+            // center it on the available viewport, without stretching.
+            // All other pages retain their own existing breakpoints.
             boolean tallOwnerPortrait=(page.equals("splash")||
-                page.equals("home"))&&usableHeight>usableWidth&&
+                page.equals("home")||page.equals("themes")||
+                page.equals("stats"))&&usableHeight>usableWidth&&
                 usableHeight/usableWidth>=1.85f;
             referencePortraitLayout=
                 usableHeight/usableWidth<1.85f||tallOwnerPortrait;
@@ -1754,9 +1756,9 @@ public final class MainActivity extends ComponentActivity {
                 getPaddingTop()-scrollOffset*scale:
                 getPaddingTop()+(usableHeight-880*scale)/2f;
             // Reference 941x1672 is unchanged (tallOwnerPortrait=false).
-            // For e.g. 360x800 or 1080x2400, keep the full source drawing
-            // at width-based scale, vertically centered without stretching.
-            // If the canvas is too short, keep zero inset and Home scrolling.
+            // On taller portrait phones, center the full 710-unit source
+            // scene when it fits. Compact split-screen and short windows
+            // continue to scroll instead of clipping interactive controls.
             if(tallOwnerPortrait&&maxScroll==0f)
                 offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
