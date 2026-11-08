@@ -72,8 +72,8 @@ assert "older.peak>game.peak" in java["TileGame.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
 assert "minSdk 24" in gradle and "targetSdk 36" in gradle
-assert "compileSdk 37" in gradle, "AndroidX Core 1.19.1 requires Android 17 SDK"
-assert "androidx.core:core:1.19.1" in gradle
+assert "compileSdk 36" in gradle, "AndroidX Core newer releases require unavailable SDK 37"
+assert "androidx.core:core:1.17.0" in gradle
 assert "minifyEnabled true" in gradle and "shrinkResources true" in gradle
 assert not re.search(r"(implementation|androidTestImplementation|testImplementation)[^\n]*:\+['\"]", gradle)
 
