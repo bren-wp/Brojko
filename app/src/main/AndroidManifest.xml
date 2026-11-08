@@ -7,7 +7,7 @@
         android:theme="@style/Theme.Brojko"
         android:usesCleartextTraffic="false" android:allowBackup="false" android:supportsRtl="true">
         <receiver android:name=".AppReminder" android:exported="false"/>
-        <receiver android:name=".AppReminderBoot" android:exported="true">
+        <receiver android:name=".AppReminderBoot" android:exported="false">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/></intent-filter>
         </receiver>
         <activity android:name=".MainActivity" android:resizeableActivity="true"

@@ -280,10 +280,29 @@ public final class MainActivity extends ComponentActivity {
             JSONArray arr=s.getJSONArray("cells");
             int n=s.getInt("n");
             if(n!=4&&n!=5||arr.length()!=n*n)return;
-            game=new TileGame(n==5?"relaxed":"classic","",new java.util.Random().nextLong());
-            for(int i=0;i<arr.length();i++)game.cells[i]=arr.getInt(i);
-            game.score=s.optInt("score");game.peak=game.maxTile();
-            prefs.edit().remove("board").apply();persist();
+            // The pre-v1 legacy board is untrusted persisted state: never
+            // instantiate a playable session containing invalid tiles,
+            // negative scores or integer-overflowing powers of two.
+            int[] restored=new int[n*n];
+            for(int i=0;i<restored.length;i++){
+                int tile=arr.getInt(i);
+                if(tile!=0&&(tile<2||(tile&(tile-1))!=0||
+                    tile>1073741824))return;
+                restored[i]=tile;
+            }
+            int legacyScore=s.optInt("score");
+            if(legacyScore<0)return;
+            TileGame imported=new TileGame(n==5?"relaxed":"classic","",
+                new java.util.Random().nextLong());
+            imported.cells=restored;
+            imported.score=legacyScore;
+            imported.peak=imported.maxTile();
+            // Commit migrated session and legacy cleanup as one atomic
+            // SharedPreferences transaction before any in-memory switch.
+            if(!prefs.edit().putString("session",imported.toJson().toString())
+                .remove("board").commit())return;
+            game=imported;
+            persist();
         }catch(Exception ignored){game=null;}
     }
     String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
@@ -2879,27 +2898,6 @@ public final class MainActivity extends ComponentActivity {
         // Source-calibrated 4×4 heading: the owner's thick, navy, rounded
         // letterforms must not inherit the thinner generic caption stroke.
         // This is drawn only for active Classic portrait gameplay.
-        void classicGameplayHeading(float x,float baseline,float fontSize){
-            p.clearShadowLayer();p.setShader(null);
-            p.setTypeface(displayFont);p.setTextAlign(Paint.Align.CENTER);
-            p.setFakeBoldText(false);p.setTextScaleX(1f);
-            p.setTextSize(fontSize);p.setColor(ink);
-            p.setStrokeJoin(Paint.Join.ROUND);
-            p.setStyle(Paint.Style.FILL_AND_STROKE);
-            p.setStrokeWidth(2.9f);
-            // Keep the owner-matched navy contour; give its upper face a
-            // restrained highlight and its lower edge a shallow 3D lift.
-            // The heading is already 40% taller in its own Canvas transform.
-            p.setShadowLayer(1.6f,0f,1.4f,0x29535b73);
-            p.setShader(new LinearGradient(0f,baseline-fontSize,
-                0f,baseline,
-                new int[]{0xff354666,0xff293a59,0xff1b2947},
-                new float[]{0f,.31f,1f},Shader.TileMode.CLAMP));
-            recordTextInk("Klasično",x,baseline);
-            c.drawText("Klasično",x,baseline,p);
-            p.clearShadowLayer();p.setShader(null);p.setStrokeWidth(0f);
-            p.setStyle(Paint.Style.FILL);
-        }
         // A separate 5x5 badge keeps the same warm raised material as
         // Classic, while preserving the original 141x50 box and its score
         // column. Its six coral rays are rounded brush strokes, not dots.

@@ -130,6 +130,21 @@ public class TileGameTest {
         badTile.getJSONArray("cells").put(0,3);
         assertNull(TileGame.fromJson(badTile));
     }
+    @Test public void rejectImpossibleUndoPeakOrMergeCounters() throws Exception {
+        TileGame g=empty(4);
+        g.cells[0]=2;g.cells[1]=2;
+        assertTrue(g.move(TileGame.LEFT).changed);
+        assertEquals(1,g.merges);
+        assertEquals(1,g.moves);
+        org.json.JSONObject hugePeak=g.toJson();
+        hugePeak.getJSONObject("undo").put("peak",1073741824);
+        assertNull("Undo cannot have a greater peak than the active game",
+            TileGame.fromJson(hugePeak));
+        org.json.JSONObject impossibleMerges=g.toJson();
+        impossibleMerges.getJSONObject("undo").put("merges",1);
+        assertNull("One undo snapshot with zero moves cannot contain merges",
+            TileGame.fromJson(impossibleMerges));
+    }
     @Test public void deterministicStressAcrossModesNeverCorruptsGameOrUndo() {
         // More than 4,000 reproducible real merges/turns across 4×4, 5×5,
         // and daily modes. Catches accidental loss of deterministic state.
