@@ -195,6 +195,8 @@ public final class TileGame {
                     if(older.score<0||older.score>game.score||older.moves<0||
                        older.moves>game.moves||older.merges<0||
                        older.merges>game.merges||older.peak<older.maxTile()||
+                       older.peak>1073741824||older.peak>game.peak||
+                       (long)older.merges>(long)older.moves*n*n||
                        older.randomState==0)
                         throw new IllegalArgumentException("Invalid undo state");
                     older.reached2048=u.optBoolean("reached");
