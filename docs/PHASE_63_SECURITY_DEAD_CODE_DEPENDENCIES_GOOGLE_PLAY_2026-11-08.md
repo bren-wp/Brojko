@@ -32,13 +32,13 @@ Stvarni screenshot iz najnovijeg uspješnog emulatorskog UI runa `42434297231`, 
 | `compileSdk` | 36 | **Android 17 SDK 37 isproban u CI-ju, nije dostupan** |
 | `targetSdk` | 36 | Ispunjava zahtjev za Google Play od 31. 8. 2026. |
 | `minSdk` | 24 | Zadržana kompatibilnost s Android 7.0+ |
-| AndroidX Core | 1.17.0 | Najnovije sigurno izgradivo u dostupnom CI-ju |
+| AndroidX Core | **1.18.0** | Stvarno nadograđeno: Gradle je već uspješno razriješio 1.18.0 preko Activity, sada i direktno deklarirano |
 | AndroidX Activity | 1.13.0 | Najnovije stabilno (1.14 je alpha) |
 | AndroidX Test | 1.7.0; ext JUnit 1.3.0 | Najnovije stabilno (1.8/1.4 alpha) |
 | JUnit 4 | 4.13.2 | Zadržano |
 | `org.json` za JVM testove | 20260814 | Zadržano, nije produkcijska runtime ovisnost |
 
-**Pokušaj nadogradnje**: isprobani su `compileSdk=37` i `androidx.core:core:1.19.1`, kao i `sdkmanager "platforms;android-37"` u sva četiri workflowa. Sva tri glavna CI posla pala su u koraku instalacije SDK-a s **`Failed to find package 'platforms;android-37'`** (runs `42435672452`, `42435672431`, `42435672393`), prije kompilacije. Android 17 je javno izdan, ali konkretan automatizirani build image/SDK repozitorij ne nudi stabilni paket kroz postojeću konfiguraciju. Izmjena je zato **vraćena na zadnju izgradivu kombinaciju**, a Dependabot zadržava privremeni izuzetak za Core 1.18+/1.19+ do testiranog prelaska. **Ne izdavati neizgradiv APK/AAB.**
+**Pokušaj nadogradnje**: isprobani su `compileSdk=37` i `androidx.core:core:1.19.1`, kao i `sdkmanager "platforms;android-37"` u sva četiri workflowa. Sva tri glavna CI posla pala su u koraku instalacije SDK-a s **`Failed to find package 'platforms;android-37'`** (runs `42435672452`, `42435672431`, `42435672393`), prije kompilacije. Android 17 je javno izdan, ali konkretan automatizirani build image/SDK repozitorij ne nudi stabilni paket kroz postojeću konfiguraciju. Izmjena je zato **vraćena s Core 1.19.1/compileSdk37 na zadnju izgradivu kombinaciju**, a Dependabot zadržava privremeni izuzetak za Core 1.19+ do testiranog prelaska. **Dodatna provjera Gradle releaseRuntimeClasspath** na PR runu 42436174335 dokazuje da je deklarirani Core 1.17.0 već bio podignut na rezolvirani 1.18.0 preko AndroidX Activity 1.13.0. Zbog toga je usklađena direktna deklaracija na 1.18.0 bez SDK37, pa sljedeći CI mora potvrditi ispravnost. **Ne izdavati neizgradiv APK/AAB.**
 
 Reference: https://developer.android.com/build/releases/agp-9-5-0-release-notes ; https://developer.android.com/jetpack/androidx/releases/core ; https://developer.android.com/jetpack/androidx/releases/activity ; https://developer.android.com/jetpack/androidx/releases/test ; https://support.google.com/googleplay/android-developer/answer/11926878?hl=hr .
 
