@@ -4994,6 +4994,42 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setStyle(Paint.Style.FILL);
             c.restore();
         }
+        // Owner's Stats "Najbolji rezultat" uses a rounded amber crown
+        // with light/shade mass, unlike the sharp generic flat crown.
+        // Only its decorative ink changes; all KPI data remain live.
+        void statsReferenceCrown(float cx,float cy,float size){
+            c.save();c.translate(cx,cy);c.scale(size/28f,size/28f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            Path crown=new Path();
+            crown.moveTo(-12f,-6f);
+            crown.cubicTo(-14f,-13f,-8f,-13f,-7f,-8f);
+            crown.lineTo(-3.4f,-2.6f);
+            crown.lineTo(-1.8f,-10f);
+            crown.cubicTo(-1f,-15f,2.1f,-15f,3f,-10f);
+            crown.lineTo(4.2f,-2.6f);
+            crown.lineTo(8f,-8.7f);
+            crown.cubicTo(9.8f,-13f,15f,-11f,12.5f,-5.5f);
+            crown.lineTo(10f,9.5f);
+            crown.quadTo(9.6f,12.1f,6.7f,12.1f);
+            crown.lineTo(-7.7f,12.1f);
+            crown.quadTo(-10.5f,11.8f,-10.5f,9.5f);
+            crown.close();
+            p.setColor(0xffd98411);
+            p.setShadowLayer(1.6f,0f,2.0f,0x39966b3b);
+            c.drawPath(crown,p);
+            p.clearShadowLayer();
+            p.setShader(new LinearGradient(-9f,-13f,9f,13f,
+                0xffffc451,0xffff8516,Shader.TileMode.CLAMP));
+            c.drawPath(crown,p);
+            p.setShader(null);
+            p.setColor(0xffefa01b);
+            c.drawRoundRect(-10.4f,8.7f,10.1f,12.7f,2.2f,2.2f,p);
+            p.setColor(0x70fff1bb);
+            c.drawOval(-8.8f,-7f,-4.5f,-3.7f,p);
+            p.setShader(null);p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             statsSoftCard(x,y,width,h,21,bg);
@@ -5023,7 +5059,9 @@ public final class MainActivity extends ComponentActivity {
             // matches the owner reference better than enlarging everything.
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
-            if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
+            if(referenceStats&&theme==0&&"Najbolji rezultat".equals(caption)){
+                statsReferenceCrown(x+27f,y+38f,34f);
+            }else if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
                 statisticsSourceBlueStar(x+38f,y+36f,45f);
