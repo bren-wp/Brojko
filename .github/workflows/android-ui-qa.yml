@@ -133,7 +133,7 @@ jobs:
           path: .
       - name: Verify and stage unmodified emulator screenshots
         run: python3 scripts/stage-marketing-screenshots.py
-      - name: Upload the 12 genuine screenshots to this exact release
+      - name: Upload all 28 genuine screenshots to this exact release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
@@ -141,8 +141,8 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
           screenshots=(marketing-screenshots/*.png)
-          if (( ${#screenshots[@]} != 12 )); then
-            echo "::error::Expected 12 real Android gallery files, found ${#screenshots[@]}"
+          if (( ${#screenshots[@]} != 28 )); then
+            echo "::error::Expected 28 real Android gallery files, found ${#screenshots[@]}"
             exit 1
           fi
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
