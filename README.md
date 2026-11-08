@@ -70,6 +70,60 @@ Poništi posljednji potez kad je dostupan, nastavi spremljenu partiju, podijeli 
 
 **☀️ Svijetla · 🌙 Tamna · 🌈 Živopisna.** Biraj između tri vizualne teme i stilova pločica — zaobljeni, ravni i staklasti. Prilagodi zvukove, vibraciju i animacije svojem tempu.
 
+## 📸 Svi ekrani i pravi gameplay
+
+Ovo su **stvarne snimke funkcionalne Android aplikacije** iz automatiziranih emulatorskih UI testova — nisu renderirane ilustracije, generirane slike niti screenshoti ugrađeni u aplikaciju. Galerija pokriva početne stranice, oba načina igre, aktivni dnevni gameplay, statistiku, teme, postavke, pomoć i potvrde. Snimke se dodaju najnovijem izdanju nakon uspješnih Android UI testova; tijekom nove objave pojedine poveznice mogu kratko čekati završetak provjera.
+
+<details open>
+<summary><strong>Otvori galeriju svih 28 stvarnih snimki zaslona i gameplaya</strong></summary>
+
+<table>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-splash.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-splash.png" width="164" alt="Stvarna Android snimka Brojko: Početno učitavanje" /></a><br/><strong>Početno učitavanje</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-home.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-home.png" width="164" alt="Stvarna Android snimka Brojko: Glavni izbornik" /></a><br/><strong>Glavni izbornik</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic.png" width="164" alt="Stvarna Android snimka Brojko: Klasično 4×4" /></a><br/><strong>Klasično 4×4</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-relaxed.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-relaxed.png" width="164" alt="Stvarna Android snimka Brojko: Opušteno 5×5" /></a><br/><strong>Opušteno 5×5</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-live.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-live.png" width="164" alt="Stvarna Android snimka Brojko: Aktivni klasični gameplay" /></a><br/><strong>Aktivni klasični gameplay</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-relaxed-live.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-relaxed-live.png" width="164" alt="Stvarna Android snimka Brojko: Aktivni 5×5 gameplay" /></a><br/><strong>Aktivni 5×5 gameplay</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily.png" width="164" alt="Stvarna Android snimka Brojko: Dnevni izazov" /></a><br/><strong>Dnevni izazov</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-gameplay.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-gameplay.png" width="164" alt="Stvarna Android snimka Brojko: Aktivni dnevni gameplay" /></a><br/><strong>Aktivni dnevni gameplay</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-missions.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-missions.png" width="164" alt="Stvarna Android snimka Brojko: Misije i postignuća" /></a><br/><strong>Misije i postignuća</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-statistics.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-statistics.png" width="164" alt="Stvarna Android snimka Brojko: Statistika i rekordi" /></a><br/><strong>Statistika i rekordi</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-history-detail.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-history-detail.png" width="164" alt="Stvarna Android snimka Brojko: Povijest — detalji partije" /></a><br/><strong>Povijest — detalji partije</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-themes.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-themes.png" width="164" alt="Stvarna Android snimka Brojko: Teme i izgled" /></a><br/><strong>Teme i izgled</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-dark.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-dark.png" width="164" alt="Stvarna Android snimka Brojko: Tamni gameplay" /></a><br/><strong>Tamni gameplay</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-vivid.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-classic-vivid.png" width="164" alt="Stvarna Android snimka Brojko: Živopisni gameplay" /></a><br/><strong>Živopisni gameplay</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-settings.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-settings.png" width="164" alt="Stvarna Android snimka Brojko: Postavke" /></a><br/><strong>Postavke</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-language.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-language.png" width="164" alt="Stvarna Android snimka Brojko: Jezik" /></a><br/><strong>Jezik</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-pause.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-pause.png" width="164" alt="Stvarna Android snimka Brojko: Pauza" /></a><br/><strong>Pauza</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-confirm-new.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-confirm-new.png" width="164" alt="Stvarna Android snimka Brojko: Potvrda nove partije" /></a><br/><strong>Potvrda nove partije</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-confirm-end.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-confirm-end.png" width="164" alt="Stvarna Android snimka Brojko: Potvrda završetka" /></a><br/><strong>Potvrda završetka</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-victory.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-victory.png" width="164" alt="Stvarna Android snimka Brojko: Pobjeda — Bravo!" /></a><br/><strong>Pobjeda — Bravo!</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-game-over.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-game-over.png" width="164" alt="Stvarna Android snimka Brojko: Kraj igre" /></a><br/><strong>Kraj igre</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-win.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-win.png" width="164" alt="Stvarna Android snimka Brojko: Dnevni uspjeh" /></a><br/><strong>Dnevni uspjeh</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-fail.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-daily-fail.png" width="164" alt="Stvarna Android snimka Brojko: Neuspješan dnevni izazov" /></a><br/><strong>Neuspješan dnevni izazov</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-help.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-help.png" width="164" alt="Stvarna Android snimka Brojko: Upute i pomoć" /></a><br/><strong>Upute i pomoć</strong></td>
+</tr>
+<tr>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-privacy.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-privacy.png" width="164" alt="Stvarna Android snimka Brojko: Privatnost" /></a><br/><strong>Privatnost</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-backup.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-backup.png" width="164" alt="Stvarna Android snimka Brojko: Sigurnosna kopija" /></a><br/><strong>Sigurnosna kopija</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-about.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-about.png" width="164" alt="Stvarna Android snimka Brojko: O aplikaciji" /></a><br/><strong>O aplikaciji</strong></td>
+<td align="center" width="25%"><a href="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-icon.png"><img src="https://github.com/bren-wp/Brojko/releases/latest/download/brojko-icon.png" width="164" alt="Stvarna Android snimka Brojko: Ikona aplikacije" /></a><br/><strong>Ikona aplikacije</strong></td>
+</tr>
+</table>
+
+</details>
+
 ## 🔒 Igra ostaje na tvom uređaju
 
 **Bez registracije, reklama i obvezne internetske veze.** Rezultati, trenutačna igra i postavke čuvaju se lokalno. Po želji ručno izvezi ili uvezi sigurnosnu kopiju, uključi dnevni podsjetnik i odluči želiš li podijeliti svoj rezultat.

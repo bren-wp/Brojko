@@ -11,17 +11,34 @@ import struct
 CAPTURES = {
     "brojko-splash.png": "three-screen-source-splash-941x1672.png",
     "brojko-home.png": "owner-home-12560-3864-941x1672.png",
-    "brojko-classic.png": "reference-941x1672-game-classic.png",
+    "brojko-classic.png": "phase58-game-941x1672.png",
     "brojko-relaxed.png": "relaxed-raised-gameplay-941x1672.png",
-    "brojko-daily.png": "daily-refined-board-gift-941x1672.png",
+    "brojko-daily.png": "phase58-daily-941x1672.png",
     "brojko-victory.png": "owner-bravo-full-board-2048-941x1672.png",
-    "brojko-missions.png": "missions-six-real-progress-941x1672.png",
+    "brojko-missions.png": "phase58-missions-941x1672.png",
     "brojko-statistics.png": "golden-state-stats-941x1672.png",
     "brojko-themes.png": "themes-original-final-aligned-941x1672.png",
-    "brojko-settings.png": "settings-phase08-source-on-941x1672.png",
+    "brojko-settings.png": "reference-settings-polished-941x1672.png",
     "brojko-game-over.png": "game-over-raised-portrait-941x1672.png",
     "brojko-icon.png": "phase10-adaptive-icon-safe-512.png",
+    "brojko-classic-live.png": "game-real-classic.png",
+    "brojko-relaxed-live.png": "game-real-relaxed.png",
+    "brojko-daily-gameplay.png": "game-real-daily.png",
+    "brojko-pause.png": "pause-branded-modal-941x1672.png",
+    "brojko-confirm-new.png": "confirm-new-session-941x1672.png",
+    "brojko-confirm-end.png": "confirm-end-session-941x1672.png",
+    "brojko-daily-win.png": "daily-win-raised-portrait-941x1672.png",
+    "brojko-daily-fail.png": "daily-fail-raised-portrait-941x1672.png",
+    "brojko-help.png": "reference-941x1672-help.png",
+    "brojko-privacy.png": "privacy.png",
+    "brojko-about.png": "about.png",
+    "brojko-backup.png": "backup.png",
+    "brojko-language.png": "language.png",
+    "brojko-history-detail.png": "history-detail.png",
+    "brojko-classic-dark.png": "game-theme-1.png",
+    "brojko-classic-vivid.png": "game-theme-2.png",
 }
+
 ROOT = Path("android-screenshots/screenshots")
 TARGET = Path("marketing-screenshots")
 

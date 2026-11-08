@@ -1009,7 +1009,9 @@ public final class MainActivity extends ComponentActivity {
                 // The Daily reference has more full-bodied headline ink.
                 // Keep all other screen typography unchanged.
                 p.setStrokeWidth("daily".equals(page)&&
-                    referencePortraitLayout?1.55f:.7f);
+                    referencePortraitLayout?1.55f:
+                    ("stats".equals(page)&&referencePortraitLayout&&
+                     "Statistika".equals(label)?0.95f:0.7f));
                 p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
                 p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
                     lighten(color,.075f),darken(color,.045f),
@@ -5334,7 +5336,11 @@ public final class MainActivity extends ComponentActivity {
             // softly rounded lettering; other themes keep the fallback.
             if(theme==0){
                 c.save();
-                c.scale(1.025f,1.27f,101f,120f);
+                // In the 941x1672 source the navy title ink spans
+                // x238..714/y184..285. The verified emulator span was
+                // x238..713/y186..283, with a thinner filled face.
+                // Adjust only this title, not KPI text or other screens.
+                c.scale(1.025f,1.30f,101f,120f);
                 illustratedTitle("Statistika",200,120,43,325,0xff15243f);
                 c.restore();
             }else illustratedTitle("Statistika",200,116,43,325,ink);
