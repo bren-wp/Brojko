@@ -5629,6 +5629,18 @@ public final class MainActivity extends ComponentActivity {
                 float frameX=i==0?x-7f:x;
                 float frameW=i==0?58f:51f;
                 card(frameX,371,frameW,69,13,card);
+                if(theme==0&&referencePortraitLayout){
+                    // The owner's 941px Style picker has three separate
+                    // fine ivory outlines; the inactive two formerly
+                    // vanished into the near-white parent panel.
+                    p.clearShadowLayer();p.setShader(null);
+                    p.setColor(0xfff0e8dd);
+                    p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeWidth(.85f);
+                    c.drawRoundRect(frameX+.8f,371.8f,
+                        frameX+frameW-.8f,439.2f,12.5f,12.5f,p);
+                    p.setStyle(Paint.Style.FILL);
+                }
                 if(tileStyle==i){
                     p.setColor(CORAL);p.setShader(null);p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(2.5f);
