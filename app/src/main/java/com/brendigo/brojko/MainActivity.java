@@ -1240,28 +1240,52 @@ public final class MainActivity extends ComponentActivity {
                 c.drawOval(6,5,17,10,p);
                 p.setShader(null);
             }else if("flame".equals(type)){
+                // The 941px Statistics reference has a large, irregular
+                // violet flame with a near-white teardrop core. The old
+                // generic glyph was visibly smaller and its translucent
+                // core looked purple instead of white. Scope to this KPI.
+                boolean ownerStreak="stats".equals(page)&&theme==0&&
+                    referencePortraitLayout;
                 Path flame=new Path();
-                flame.moveTo(12,1);
-                flame.cubicTo(15,6,15,8,17,10);
-                flame.cubicTo(18,7,19,6,19,5);
-                flame.cubicTo(25,12,23,17,20,21);
-                flame.cubicTo(16,25,8,25,4,20);
-                flame.cubicTo(0,15,5,8,12,1);
+                if(ownerStreak){
+                    flame.moveTo(11.2f,.6f);
+                    flame.cubicTo(15.1f,4.0f,12.9f,7.7f,16.3f,10.6f);
+                    flame.cubicTo(18.7f,8.0f,18.0f,6.2f,18.1f,4.8f);
+                    flame.cubicTo(23.5f,9.4f,24.8f,16.4f,20.0f,21.1f);
+                    flame.cubicTo(15.8f,25.2f,8.0f,25.4f,4.1f,20.8f);
+                    flame.cubicTo(.5f,16.7f,3.7f,11.9f,6.8f,8.7f);
+                    flame.cubicTo(9.1f,6.1f,9.5f,3.7f,11.2f,.6f);
+                }else{
+                    flame.moveTo(12,1);
+                    flame.cubicTo(15,6,15,8,17,10);
+                    flame.cubicTo(18,7,19,6,19,5);
+                    flame.cubicTo(25,12,23,17,20,21);
+                    flame.cubicTo(16,25,8,25,4,20);
+                    flame.cubicTo(0,15,5,8,12,1);
+                }
                 flame.close();
                 c.save();c.translate(0,1f);p.setColor(0x270b1740);
                 c.drawPath(flame,p);c.restore();
-                // setColor(0x27...) above sets Paint alpha to 15%.
-                // Restore opacity on EVERY flame, not only Daily:
-                // the owner's Statistics streak flame is vivid purple.
                 p.setColor(WHITE);
                 p.setShader(new LinearGradient(4,2,18,23,
-                    lighten(color,.26f),darken(color,.07f),
+                    ownerStreak?0xffb13eed:lighten(color,.26f),
+                    ownerStreak?0xff791dcc:darken(color,.07f),
                     Shader.TileMode.CLAMP));
                 c.drawPath(flame,p);p.setShader(null);
-                Path core=new Path();core.moveTo(12,12);
-                core.cubicTo(17,17,17,19,14,22);
-                core.cubicTo(11,24,8,21,9,18);
-                core.close();p.setColor(0x70ffffff);c.drawPath(core,p);
+                Path core=new Path();
+                if(ownerStreak){
+                    core.moveTo(12.1f,12.5f);
+                    core.cubicTo(16.8f,17.2f,17.7f,20.3f,13.9f,23.0f);
+                    core.cubicTo(10.2f,25.2f,7.6f,21.6f,9.0f,18.7f);
+                    core.cubicTo(9.9f,16.8f,11.0f,15.0f,12.1f,12.5f);
+                }else{
+                    core.moveTo(12,12);
+                    core.cubicTo(17,17,17,19,14,22);
+                    core.cubicTo(11,24,8,21,9,18);
+                }
+                core.close();
+                p.setColor(ownerStreak?0xfff9f5ff:0x70ffffff);
+                c.drawPath(core,p);
             }else if("stats".equals(type)){
                 int[] fills={0xff8196b8,0xff647d9f,0xff243c66};
                 float[] hs={8,13,19};
@@ -5143,11 +5167,13 @@ public final class MainActivity extends ComponentActivity {
                 // approximately x138,y640, with no light interior void.
                 statisticsSourceBlueStar(x+38f,y+36f,45f);
             }else{
+                float iconSize=referenceStats&&theme==0&&
+                    "Niz pobjeda".equals(caption)?50f:
+                    referenceStats?(width<=125?34:43):
+                        (width<=125?24:29);
                 icon(symbol,x+(width<=125?27:38),
                     y+(referenceStats?(width<=125?38:43):29),
-                    referenceStats?(width<=125?34:43):
-                        (width<=125?24:29),
-                    "gamepad".equals(symbol)?ink:accent);
+                    iconSize,"gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
             // units) still needs the three-column layout; thresholding
