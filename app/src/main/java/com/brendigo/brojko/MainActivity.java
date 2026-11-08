@@ -4411,7 +4411,9 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(0xffef5947);c.drawCircle(0f,0f,3.7f,p);
             // Diagonal cobalt dart: shaft, triangular flight and dark
             // tip. These are drawing paths, not raster source assets.
-            c.save();c.rotate(39f,5f,-7f);
+            c.save();
+            // Shaft already slopes upper-right; rotating it further would
+            // flatten the owner's diagonal dart toward horizontal.
             p.setStrokeCap(Paint.Cap.ROUND);
             p.setColor(0xff1465c3);p.setStrokeWidth(3.1f);
             p.setStyle(Paint.Style.STROKE);
