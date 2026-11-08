@@ -5133,6 +5133,19 @@ public final class MainActivity extends ComponentActivity {
         }
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
+            // Sample the owner's real 941px pastel background at unobstructed
+            // corners. The old generic tint was grayish for teal, too pale
+            // for gold and blue, and slightly dull for the purple streak.
+            // Keep the already close coral card and every other theme unchanged.
+            if(theme==0&&referencePortraitLayout&&"stats".equals(page)){
+                switch(caption){
+                    case "Ukupno partija":bg=0xffcffcef;break;
+                    case "Najveća pločica":bg=0xfffef1cd;break;
+                    case "Prosjek bodova":bg=0xffdceefd;break;
+                    case "Niz pobjeda":bg=0xfff3e6fd;break;
+                    default:break;
+                }
+            }
             statsSoftCard(x,y,width,h,21,bg);
             // The owner card SURFACES extend farther than the old render,
             // but the crown, blue star and text remain optically centered
@@ -5167,13 +5180,11 @@ public final class MainActivity extends ComponentActivity {
                 // approximately x138,y640, with no light interior void.
                 statisticsSourceBlueStar(x+38f,y+36f,45f);
             }else{
-                float iconSize=referenceStats&&theme==0&&
-                    "Niz pobjeda".equals(caption)?50f:
-                    referenceStats?(width<=125?34:43):
-                        (width<=125?24:29);
                 icon(symbol,x+(width<=125?27:38),
                     y+(referenceStats?(width<=125?38:43):29),
-                    iconSize,"gamepad".equals(symbol)?ink:accent);
+                    referenceStats?(width<=125?34:43):
+                        (width<=125?24:29),
+                    "gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
             // units) still needs the three-column layout; thresholding
