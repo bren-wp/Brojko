@@ -1182,7 +1182,8 @@ public final class MainActivity extends ComponentActivity {
                 // of the owner's 941x1672 reward illustration.
                 float radius=i%2==0?(page.equals("win")?10.2f:10.6f):
                     (page.equals("win")?5.15f:
-                        ("missions".equals(page)&&theme==0?5.85f:
+                        ("missions".equals(page)&&theme==0&&referencePortraitLayout?6.45f:
+                         "missions".equals(page)&&theme==0?5.85f:
                          ("daily".equals(page)&&theme==0&&referencePortraitLayout?5.75f:5.35f)));
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
@@ -1191,7 +1192,8 @@ public final class MainActivity extends ComponentActivity {
                 for(int i=0;i<10;i++){
                     int prev=(i+9)%10,next=(i+1)%10;
                     float corner=page.equals("win")?.73f:
-                        ("missions".equals(page)&&theme==0?.72f:
+                        ("missions".equals(page)&&theme==0&&referencePortraitLayout?.64f:
+                         "missions".equals(page)&&theme==0?.72f:
                          ("daily".equals(page)&&theme==0&&referencePortraitLayout?.73f:.82f));
                     float startX=xs[i]*corner+xs[prev]*(1f-corner);
                     float startY=ys[i]*corner+ys[prev]*(1f-corner);
@@ -4373,10 +4375,31 @@ public final class MainActivity extends ComponentActivity {
         }
         void missionCalendarSeven(float centerX,float centerY){
             float x=centerX-22f,y=centerY-21f;
-            gradient(x,y+1,44,45,10,0xfff8fff9,0xffe8e1d8);
-            shape(x+1.8f,y+3,40.4f,13,8,0xffff694d);
-            shape(x+8,y-1,5,13,2.5f,0xffe74e39);
-            shape(x+29,y-1,5,13,2.5f,0xffe74e39);
+            // The owner's seven-day calendar is a raised ivory object
+            // with a warm coral gradient header and glossy red binder tabs.
+            // Change ONLY its paint; date, streak and mission logic stay live.
+            if(theme==0&&referencePortraitLayout){
+                p.clearShadowLayer();p.setShader(null);
+                p.setColor(0xffdfc6a9);p.setStyle(Paint.Style.FILL);
+                p.setShadowLayer(2.4f,0f,2.8f,0x3d947250);
+                c.drawRoundRect(x,y+2, x+44,y+46,10,10,p);
+                p.clearShadowLayer();
+                p.setColor(WHITE);
+                gradient(x,y+1,44,43,10,0xfffffff9,0xfff1e8db);
+                gradient(x+1.8f,y+3,40.4f,14,8,
+                    0xffff957a,0xfff14a35);
+                gradient(x+8,y-1,5,13,2.5f,0xffff8464,0xffe7442c);
+                gradient(x+29,y-1,5,13,2.5f,0xffff8464,0xffe7442c);
+                p.setShader(null);p.setColor(0x80ffffff);
+                p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.75f);
+                c.drawRoundRect(x+2.2f,y+2,x+41.8f,y+41.8f,8,8,p);
+                p.setStyle(Paint.Style.FILL);
+            }else{
+                gradient(x,y+1,44,45,10,0xfff8fff9,0xffe8e1d8);
+                shape(x+1.8f,y+3,40.4f,13,8,0xffff694d);
+                shape(x+8,y-1,5,13,2.5f,0xffe74e39);
+                shape(x+29,y-1,5,13,2.5f,0xffe74e39);
+            }
             fitted("7",centerX,centerY+17,25,34,ink,true);
         }
         void missionTarget(float cx,float cy,float size){
