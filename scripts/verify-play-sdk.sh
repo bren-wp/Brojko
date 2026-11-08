@@ -32,4 +32,14 @@ for apk in "$@"; do
     echo "Play manifest validation failed: Brojko must use its stable package, minSdk >= 24 and targetSdk >= 36." >&2
     exit 1
   fi
+  # Check merged APK permissions too: a transitive library must not silently
+  # add network, contacts, location, camera, microphone or SMS access.
+  merged_permissions="$("${AAPT}" dump permissions "${apk}")"
+  if grep -Eq "uses-permission: name='android.permission.(INTERNET|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|ACCESS_BACKGROUND_LOCATION|READ_CONTACTS|WRITE_CONTACTS|READ_SMS|SEND_SMS|RECORD_AUDIO|CAMERA|READ_PHONE_STATE|READ_MEDIA_IMAGES|READ_EXTERNAL_STORAGE|WRITE_EXTERNAL_STORAGE)'" <<< "${merged_permissions}"; then
+    echo "Play privacy validation failed: unexpected sensitive merged permission in ${apk}" >&2
+    grep "uses-permission:" <<< "${merged_permissions}" >&2 || true
+    exit 1
+  fi
+  echo "Merged APK permissions: no network/contact/location/media/mic/camera/SMS access."
+
 done
