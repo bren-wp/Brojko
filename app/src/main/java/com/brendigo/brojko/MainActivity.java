@@ -1029,8 +1029,11 @@ public final class MainActivity extends ComponentActivity {
                 // Keep all other screen typography unchanged.
                 p.setStrokeWidth("daily".equals(page)&&
                     referencePortraitLayout?1.55f:
+                    ("themes".equals(page)&&referencePortraitLayout&&
+                     ("Teme i".equals(label)||"izgled".equals(label))?
+                     1.55f:
                     ("stats".equals(page)&&referencePortraitLayout&&
-                     "Statistika".equals(label)?0.95f:0.7f));
+                     "Statistika".equals(label)?0.95f:0.7f)));
                 p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
                 p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
                     lighten(color,.075f),darken(color,.045f),
