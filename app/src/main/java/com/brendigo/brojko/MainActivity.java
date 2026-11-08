@@ -4304,7 +4304,13 @@ public final class MainActivity extends ComponentActivity {
                 return;
             }
             final float cx=62f, cy=y+34f;
-            missionSoftIconBackground(38,y+7,51f);
+            // Source 941x1672: ivory illustration bay occupies about
+            // x64..218 px (27..93 source units); the former 51-unit
+            // square started at x89 and left a visible empty strip.
+            // This is decorative only: progress, row captions and tap
+            // geometry remain unchanged on every device.
+            if(theme==0&&!name.startsWith("Kralj"))missionSoftIconBackground(27,y+6,65f);
+            else missionSoftIconBackground(38,y+7,51f);
             if(name.startsWith("Spoji 20")){
                 missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
                 missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
@@ -4554,8 +4560,16 @@ public final class MainActivity extends ComponentActivity {
             int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
             int achievementTint=theme==1?0xff24483f:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
-            missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
-            missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
+            // Owner's 941px light card bounds: the weekly panel ends near
+            // y1228 while the achievement panel begins near y1247.
+            // Keep the original geometry in dark and vibrant themes.
+            if(portrait&&theme==0){
+                missionSurface(13,328,374,194,24,weeklyTint);
+                missionSurface(13,530,374,179,24,achievementTint);
+            }else{
+                missionSurface(17,portrait?328:398,366,portrait?185:207,24,weeklyTint);
+                missionSurface(17,portrait?522:614,366,portrait?187:249,24,achievementTint);
+            }
             float sunY=portrait?148:204;
             if(portrait&&theme==0)missionSectionSun(43,sunY);
             else {
@@ -4569,12 +4583,12 @@ public final class MainActivity extends ComponentActivity {
             if(portrait&&theme!=1)
                 missionWeeklyHeaderIcon(43,portrait?346:420);
             else icon("calendar",43,portrait?346:420,23,0xff3d98f0);
-            icon("crown",43,portrait?540:636,23,0xffffb431);
+            icon("crown",43,portrait&&theme==0?549:portrait?540:636,23,0xffffb431);
             missionPeriodPill("week",portrait?330:402);
             // The source layout counts achievements, not star currency.
             // Only two achievements currently exist; don't display a fictive
             // 4/20 or incorrectly label the total stars as achievements.
-            float countTop=portrait?522:619;
+            float countTop=portrait&&theme==0?530:portrait?522:619;
             missionSurface(299,countTop,76,25,13,
                 theme==1?card:0xfffff5e5);
             fitted(completedAchievements()+"/2",337,countTop+18,
@@ -4588,16 +4602,16 @@ public final class MainActivity extends ComponentActivity {
             if(portrait&&theme==0)missionSectionTitle("Tjedne",352f,20.5f);
             else txt("Tjedne",105,portrait?348:422,23,ink,true);
             missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
-                playDayStreak,7,150,portrait?356:433,0xff3ecb8c);
+                playDayStreak,7,150,portrait&&theme==0?365:portrait?356:433,0xff3ecb8c);
             missionRow("Ostvari 10.000 bodova ukupno",
                 "Skupi ukupno 10.000 bodova u svim igrama.",
-                weekPoints,10000,200,portrait?434:516,0xffff934b);
-            if(portrait&&theme==0)missionSectionTitle("Postignuća",550f,16.1f);
+                weekPoints,10000,200,portrait&&theme==0?443:portrait?434:516,0xffff934b);
+            if(portrait&&theme==0)missionSectionTitle("Postignuća",560f,16.1f);
             else txt("Postignuća",132,portrait?542:638,23,ink,true);
             missionRow("Majstor spajanja","Ostvari pločicu 1024.",
-                recordTile,1024,500,portrait?550:648,0xffa663e4);
+                recordTile,1024,500,portrait&&theme==0?565:portrait?550:648,0xffa663e4);
             missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
-                best,50000,1000,portrait?627:741,0xffff934b);
+                best,50000,1000,portrait&&theme==0?636:portrait?627:741,0xffff934b);
         }
         void missionPeriodPill(String period,int y){
             boolean week="week".equals(period);
@@ -4610,8 +4624,14 @@ public final class MainActivity extends ComponentActivity {
         }
         void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
             boolean portrait=referencePortraitLayout;
-            int height=portrait?70:80;
-            missionSurface(26,y,348,height,19,card);
+            int height=portrait?
+                (theme==0&&name.startsWith("Majstor")?66:
+                 theme==0&&name.startsWith("Ostvari 10.000")?73:70):80;
+            // Light 941px source rows span about x44..896, not x61..879.
+            // On the source reference only, keep a 6-unit inset from the
+            // wider section frame and leave title/reward hit areas intact.
+            missionSurface(portrait&&theme==0?19:26,y,
+                portrait&&theme==0?362:348,height,19,card);
             if(!portrait||theme==1)
                 shape(39,y+(portrait?9:10),portrait?46:52,
                     portrait?50:58,15,
