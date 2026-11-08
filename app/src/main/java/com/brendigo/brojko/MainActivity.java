@@ -2968,11 +2968,86 @@ public final class MainActivity extends ComponentActivity {
                 r-1f,r-1f,p);
             p.setStyle(Paint.Style.FILL);
         }
+        // Owner reference: Classic 4x4 actions have plump navy arrowheads,
+        // not the thin generic line-art refresh/undo loops. Native Canvas
+        // vector drawing keeps these interactive icons resolution-independent.
+        // No reference bitmap is packaged into the game.
+        void classicOwnerActionGlyph(String glyph,float cx,float cy,
+                float size,int color){
+            c.save();
+            c.translate(cx-size/2f,cy-size/2f);
+            c.scale(size/24f,size/24f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setColor(color);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setStrokeWidth(4.0f);
+            if("refresh".equals(glyph)){
+                // Broad clockwise ring plus a separate filled, rounded
+                // forward arrow, matching the visible "Novo" source glyph.
+                Path ring=new Path();
+                ring.arcTo(new RectF(4.1f,4.1f,19.9f,19.9f),
+                    40f,288f,false);
+                c.drawPath(ring,p);
+                p.setStyle(Paint.Style.FILL);
+                Path arrow=new Path();
+                arrow.moveTo(16.2f,3.8f);
+                arrow.quadTo(15.3f,3.5f,16.1f,5.0f);
+                arrow.lineTo(19.1f,8.5f);
+                arrow.lineTo(16.0f,10.1f);
+                arrow.quadTo(15.1f,10.8f,16.2f,11.5f);
+                arrow.lineTo(21.7f,11.1f);
+                arrow.quadTo(22.8f,11.1f,22.8f,9.6f);
+                arrow.lineTo(22.2f,3.6f);
+                arrow.quadTo(22.0f,2.7f,21.1f,3.0f);
+                arrow.close();
+                c.drawPath(arrow,p);
+            }else if("undo".equals(glyph)){
+                // The owner source uses a LEFT pointing return arrow:
+                // avoid looking like a backwards clock/refresh action.
+                Path returnCurve=new Path();
+                returnCurve.moveTo(7.8f,8.9f);
+                returnCurve.lineTo(15.2f,8.9f);
+                returnCurve.cubicTo(20.1f,8.9f,21.5f,12.2f,20.2f,15.6f);
+                returnCurve.cubicTo(19.0f,19.3f,15.6f,20.5f,12.2f,20.0f);
+                c.drawPath(returnCurve,p);
+                p.setStyle(Paint.Style.FILL);
+                Path arrow=new Path();
+                arrow.moveTo(3.1f,8.6f);
+                arrow.lineTo(10.2f,3.1f);
+                arrow.quadTo(11.3f,2.6f,11.3f,4.2f);
+                arrow.lineTo(11.3f,6.7f);
+                arrow.lineTo(14.9f,6.7f);
+                arrow.quadTo(15.6f,6.7f,15.6f,8.9f);
+                arrow.lineTo(11.3f,11.3f);
+                arrow.lineTo(11.3f,13.5f);
+                arrow.quadTo(11.3f,14.7f,10.2f,14.2f);
+                arrow.lineTo(3.1f,9.9f);
+                arrow.quadTo(2.4f,9.2f,3.1f,8.6f);
+                arrow.close();
+                c.drawPath(arrow,p);
+            }else{
+                c.restore();icon(glyph,cx,cy,size,color);return;
+            }
+            p.setShader(null);p.setStyle(Paint.Style.FILL);
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setStrokeJoin(Paint.Join.MITER);
+            p.setStrokeWidth(0f);
+            c.restore();
+        }
+        boolean classicSourceActionGlyph(String glyph){
+            return theme==0&&referencePortraitLayout&&
+                "game".equals(page)&&game!=null&&
+                "classic".equals(game.mode)&&
+                ("refresh".equals(glyph)||"undo".equals(glyph));
+        }
         void classicBottomControl(String label,String glyph,float x,float y,
                 float w,float h,Runnable action){
             classicSoftCard(x,y,w,h,20f,card);
             float center=x+w/2f;
-            icon(glyph,center,y+h*.36f,39f,ink);
+            if(classicSourceActionGlyph(glyph))
+                classicOwnerActionGlyph(glyph,center,y+h*.36f,39f,ink);
+            else icon(glyph,center,y+h*.36f,39f,ink);
             fitted(label,center,y+h*.81f,19f,w-10f,ink,true);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
@@ -2980,7 +3055,10 @@ public final class MainActivity extends ComponentActivity {
                 float h,Runnable action){
             classicSoftCard(x,y,w,h,15f,card);
             boolean enabled=!glyph.equals("undo")||(game!=null&&game.canUndo());
-            icon(glyph,x+w/2f,y+h/2f,enabled?29f:26f,
+            if(enabled&&classicSourceActionGlyph(glyph))
+                classicOwnerActionGlyph(glyph,x+w/2f,y+h/2f,
+                    29f,ink);
+            else icon(glyph,x+w/2f,y+h/2f,enabled?29f:26f,
                 enabled?ink:muted);
             if(enabled){
                 float extraX=Math.max(0,(54f-w)/2f);
