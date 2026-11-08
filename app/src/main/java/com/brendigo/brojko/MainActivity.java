@@ -3045,9 +3045,14 @@ public final class MainActivity extends ComponentActivity {
                 float w,float h,Runnable action){
             classicSoftCard(x,y,w,h,20f,card);
             float center=x+w/2f;
-            if(classicSourceActionGlyph(glyph))
-                classicOwnerActionGlyph(glyph,center,y+h*.36f,39f,ink);
-            else icon(glyph,center,y+h*.36f,39f,ink);
+            if(classicSourceActionGlyph(glyph)){
+                // Owner 941px glyphs are approximately 22-24px lower
+                // than the unshifted generic controls. Move the filled
+                // native vectors only, NOT the labels or Tap rectangles.
+                float ownerIconX=center+("refresh".equals(glyph)?-2.5f:0f);
+                classicOwnerActionGlyph(glyph,ownerIconX,
+                    y+h*.36f+10f,39f,ink);
+            }else icon(glyph,center,y+h*.36f,39f,ink);
             fitted(label,center,y+h*.81f,19f,w-10f,ink,true);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
@@ -3055,10 +3060,9 @@ public final class MainActivity extends ComponentActivity {
                 float h,Runnable action){
             classicSoftCard(x,y,w,h,15f,card);
             boolean enabled=!glyph.equals("undo")||(game!=null&&game.canUndo());
-            if(enabled&&classicSourceActionGlyph(glyph))
-                classicOwnerActionGlyph(glyph,x+w/2f,y+h/2f,
-                    29f,ink);
-            else icon(glyph,x+w/2f,y+h/2f,enabled?29f:26f,
+            // Preserve the already-measured upper HUD icon: its ROI
+            // regressed slightly when reusing the lower action vectors.
+            icon(glyph,x+w/2f,y+h/2f,enabled?29f:26f,
                 enabled?ink:muted);
             if(enabled){
                 float extraX=Math.max(0,(54f-w)/2f);
