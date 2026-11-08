@@ -4380,8 +4380,62 @@ public final class MainActivity extends ComponentActivity {
             fitted("7",centerX,centerY+17,25,34,ink,true);
         }
         void missionTarget(float cx,float cy,float size){
-            // Large coral bullseye and diagonal blue dart.
-            icon("target",cx,cy,size,0xffff795b);
+            // The owner's 941x1672 fourth mission illustrates a volumetric
+            // coral bullseye *with a blue dart*, not an outline target.
+            // Keep this native artwork local to light portrait Missions;
+            // dark/vivid themes retain their known-good glyphs.
+            if(theme!=0 || !referencePortraitLayout){
+                icon("target",cx,cy,size,0xffff795b);
+                return;
+            }
+            c.save();
+            c.translate(cx,cy);
+            c.scale(size/48f,size/48f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xffca5639);
+            p.setShadowLayer(3.0f,0f,2.8f,0x46855d41);
+            c.drawCircle(0f,1.4f,22.5f,p);
+            p.clearShadowLayer();
+            p.setShader(new LinearGradient(-16f,-18f,17f,20f,
+                0xffffa184,0xfff14c36,Shader.TileMode.CLAMP));
+            c.drawCircle(0f,0f,22f,p);
+            p.setShader(new LinearGradient(-14f,-15f,15f,16f,
+                0xfffffff7,0xffffefdf,Shader.TileMode.CLAMP));
+            c.drawCircle(0f,0f,16.5f,p);
+            p.setShader(new LinearGradient(-9f,-11f,12f,13f,
+                0xffff8a6b,0xffef4b3b,Shader.TileMode.CLAMP));
+            c.drawCircle(0f,0f,11.4f,p);
+            p.setShader(null);p.setColor(0xfffffdf3);
+            c.drawCircle(0f,0f,6.5f,p);
+            p.setColor(0xffef5947);c.drawCircle(0f,0f,3.7f,p);
+            // Diagonal cobalt dart: shaft, triangular flight and dark
+            // tip. These are drawing paths, not raster source assets.
+            c.save();
+            // Shaft already slopes upper-right; rotating it further would
+            // flatten the owner's diagonal dart toward horizontal.
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setColor(0xff1465c3);p.setStrokeWidth(3.1f);
+            p.setStyle(Paint.Style.STROKE);
+            c.drawLine(-2f,4f,18.7f,-19f,p);
+            p.setStyle(Paint.Style.FILL);
+            Path flight=new Path();
+            flight.moveTo(13f,-16f);
+            flight.lineTo(17f,-27f);
+            flight.lineTo(20.7f,-21.7f);
+            flight.lineTo(26f,-20.4f);
+            flight.lineTo(18.7f,-14f);
+            flight.close();
+            p.setShader(new LinearGradient(13f,-27f,25f,-14f,
+                0xff54bdff,0xff1463bf,Shader.TileMode.CLAMP));
+            c.drawPath(flight,p);
+            p.setShader(null);
+            p.setColor(0xff0e407c);
+            c.drawCircle(-2f,4f,1.9f,p);
+            c.restore();
+            p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
+            p.setShader(null);p.clearShadowLayer();
+            c.restore();
         }
         void missionIllustration(String name,float y,boolean portrait,
                                 int accent){
