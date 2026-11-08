@@ -5272,14 +5272,14 @@ public class ScreensSmokeTest {
                     int regularX=Math.round(view.offX+260f*view.scale);
                     int regularY=Math.round(view.offY+213f*view.scale);
                     int shortX=Math.round(view.offX+251f*view.scale);
-                    int shortY=Math.round(view.offY+487f*view.scale);
+                    int shortY=Math.round(view.offY+496f*view.scale);
                     int regular=image.getPixel(regularX,regularY);
                     int shortTrack=image.getPixel(shortX,shortY);
                     int weeklyOrange=image.getPixel(
                         Math.round(view.offX+160f*view.scale),
-                        Math.round(view.offY+500f*view.scale));
+                        Math.round(view.offY+509f*view.scale));
                     assertTrue("10k orange bar must be below the two-line "+
-                        "description (owner y~1169px)",
+                        "description in the source-calibrated row",
                         android.graphics.Color.red(weeklyOrange)>215&&
                         android.graphics.Color.green(weeklyOrange)<205&&
                         android.graphics.Color.blue(weeklyOrange)<165);
@@ -5454,7 +5454,7 @@ public class ScreensSmokeTest {
                             android.graphics.Color.red(daily)+70);
                     int record=image.getPixel(
                         Math.round(view.offX+112f*view.scale),
-                        Math.round(view.offY+680f*view.scale));
+                        Math.round(view.offY+689f*view.scale));
                     assertTrue("Score record progress must be violet",
                         android.graphics.Color.blue(record)>
                             android.graphics.Color.green(record)+80 &&
@@ -5462,7 +5462,7 @@ public class ScreensSmokeTest {
                             android.graphics.Color.green(record)+25);
                     int empty=image.getPixel(
                         Math.round(view.offX+145f*view.scale),
-                        Math.round(view.offY+603f*view.scale));
+                        Math.round(view.offY+618f*view.scale));
                     // Completing only half of the 1024 milestone is *not*
                     // a visual 50%-filled unlock or a reward.
                     assertEquals(0,view.completedAchievements());
@@ -5516,7 +5516,7 @@ public class ScreensSmokeTest {
                 view.draw(new Canvas(bitmap));
                 // offX/offY/scale are updated by onDraw(), not measure().
                 int px=Math.round(view.offX+145f*view.scale);
-                int py=Math.round(view.offY+603f*view.scale);
+                int py=Math.round(view.offY+618f*view.scale);
                 int none=bitmap.getPixel(px,py);
                 activity.recordTile=512;
                 view.draw(new Canvas(bitmap));
@@ -5722,9 +5722,10 @@ public class ScreensSmokeTest {
                             android.graphics.Color.blue(reward)+65);
                     // The illustrated royal crown has a distinct red
                     // jewel, not the old flat yellow generic trophy icon.
-                    // Source jewel is near x146,y1576 in native 941x1672.
+                    // Native light portrait jewel follows the source-aligned
+                    // final row, roughly 21 pixels below its old fixture.
                     int royalGemPixels=0;
-                    for(int y=1560;y<1592;y++)
+                    for(int y=1581;y<1613;y++)
                         for(int x=130;x<164;x++){
                             int color=bmp.getPixel(x,y);
                             int red=android.graphics.Color.red(color);
