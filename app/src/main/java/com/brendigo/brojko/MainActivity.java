@@ -4304,7 +4304,12 @@ public final class MainActivity extends ComponentActivity {
                 return;
             }
             final float cx=62f, cy=y+34f;
-            missionSoftIconBackground(38,y+7,51f);
+            // Source 941x1672: ivory illustration bay occupies about
+            // x64..218 px (27..93 source units); the former 51-unit
+            // square started at x89 and left a visible empty strip.
+            // This is decorative only: progress, row captions and tap
+            // geometry remain unchanged on every device.
+            missionSoftIconBackground(27,y+6,65f);
             if(name.startsWith("Spoji 20")){
                 missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
                 missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
