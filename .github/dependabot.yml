@@ -5,8 +5,14 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
-    # Build with Android 17 compileSdk 37. Keep targetSdk 36 until
-    # Android 17 behavior changes and Play policy are fully tested.
+    # AndroidX Core 1.19+ requires compileSdk 37; GitHub Actions'
+    # sdkmanager currently reports "Failed to find package android-37".
+    # Keep stable API 36/Core 1.17 until the SDK is available in CI.
+    ignore:
+      - dependency-name: "androidx.core:core"
+        versions: [">=1.18.0"]
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">=1.18.0"]
     labels:
       - dependencies
   - package-ecosystem: github-actions
