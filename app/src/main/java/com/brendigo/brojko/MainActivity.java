@@ -5364,7 +5364,15 @@ public final class MainActivity extends ComponentActivity {
                 p.setShader(null);
             }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setColor(preset==1?0x45ffffff:0x90ffffff);
+            // The owner's dark/vivid cases have deep rounded rims,
+            // not the bright white outline seen in the old emulator.
+            // Preserve current contrast in dark UI and non-reference
+            // layouts; only tame the light source picker highlight.
+            int contour=(theme==0&&referencePortraitLayout)?
+                (preset==1?0x17ffffff:preset==2?0x26ffffff:
+                    0x65ffffff):
+                (preset==1?0x45ffffff:0x90ffffff);
+            p.setColor(contour);
             p.setStrokeWidth(1f);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-3,16,16,p);
             p.setStyle(Paint.Style.FILL);
@@ -5690,9 +5698,24 @@ public final class MainActivity extends ComponentActivity {
                 // large unintended white margins at the top and bottom.
                 if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
                 else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
-                int[] colors=i==2?
-                    new int[]{0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb}:
-                    new int[]{TILES[1],TILES[2],TILES[3],TILES[4]};
+                // Reference colour-sample calibration affects ONLY the
+                // three 2x2 picker previews, never real gameplay tiles.
+                // Source 941px tile interiors: teal RGB~(28,218,213)
+                // vs prior emulator ~(65,201,188); blue ~(56,149,251)
+                // vs ~(71,157,241). Correct input for the shared glossy
+                // gradient without changing persistent theme palettes.
+                boolean ownerPreview=theme==0&&referencePortraitLayout;
+                int[] colors=ownerPreview?
+                    (i==2?new int[]{
+                        0xffff4c7d,0xff50e342,0xff00a7ff,0xff9645ff
+                    }:new int[]{
+                        0xfffe8258,0xff08d4c8,0xff2e90fa,0xfffdb536
+                    }):
+                    (i==2?new int[]{
+                        0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb
+                    }:new int[]{
+                        TILES[1],TILES[2],TILES[3],TILES[4]
+                    });
                 for(int j=0;j<4;j++){
                     int xx=j%2,yy=j/2;
                     // Owner 941x1672 source colour spans begin 12px
