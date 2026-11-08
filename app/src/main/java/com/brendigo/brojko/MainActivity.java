@@ -4309,7 +4309,8 @@ public final class MainActivity extends ComponentActivity {
             // square started at x89 and left a visible empty strip.
             // This is decorative only: progress, row captions and tap
             // geometry remain unchanged on every device.
-            missionSoftIconBackground(27,y+6,65f);
+            if(theme==0)missionSoftIconBackground(27,y+6,65f);
+            else missionSoftIconBackground(38,y+7,51f);
             if(name.startsWith("Spoji 20")){
                 missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
                 missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
