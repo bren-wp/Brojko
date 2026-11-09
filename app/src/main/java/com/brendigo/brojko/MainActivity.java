@@ -5336,13 +5336,21 @@ public final class MainActivity extends ComponentActivity {
         void themePreviewTile(float x,float y,float w,float h,int color,int style){
             float radius=style==1?5:style==2?12:9;
             if(style==1){shape(x,y,w,h,radius,color);return;}
-            shape(x+1,y+2.5f,w,h-2,radius,darken(color,.15f));
+            // Owner's 4x4 Themes preview has a gentle 2-3px relief;
+            // the old Android tiles drew an exaggerated dark 6-8px foot.
+            // Do not touch the actual gameplay tile renderer.
+            boolean sourceBoard=theme==0&&referencePortraitLayout&&
+                "themes".equals(page)&&x<190f&&y>=413f&&y<595f;
+            float foot=sourceBoard?1.25f:2.5f;
+            float topH=sourceBoard?1.5f:3f;
+            shape(x+1,y+foot,w,h-2,radius,
+                darken(color,sourceBoard?.085f:.15f));
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,w,h-3,radius,
+            gradient(x,y,w,h-topH,radius,
                 lighten(color,style==2?.23f:.14f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.65f);p.setColor(0x4dffffff);
-            c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-(sourceBoard?3.2f:5f),
                 Math.max(2,radius-1),Math.max(2,radius-1),p);
             p.setStyle(Paint.Style.FILL);
             if(style==2){
