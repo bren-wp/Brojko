@@ -145,6 +145,15 @@ public class TileGameTest {
         assertNull("One undo snapshot with zero moves cannot contain merges",
             TileGame.fromJson(impossibleMerges));
     }
+    @Test public void engineMoveAndMergeCountersStayNonNegativeAtLimit() {
+        TileGame g=empty(4);
+        g.cells[0]=2;g.cells[1]=2;
+        g.moves=Integer.MAX_VALUE;
+        g.merges=Integer.MAX_VALUE;
+        assertTrue(g.move(TileGame.LEFT).changed);
+        assertEquals(Integer.MAX_VALUE,g.moves);
+        assertEquals(Integer.MAX_VALUE,g.merges);
+    }
     @Test public void countersSaturateInsteadOfOverflowing() {
         assertEquals(Integer.MAX_VALUE,TileGame.saturatedAdd(Integer.MAX_VALUE-2,50));
         assertEquals(Integer.MAX_VALUE,TileGame.saturatedAdd(Integer.MAX_VALUE,250));
