@@ -4492,23 +4492,37 @@ public final class MainActivity extends ComponentActivity {
             // geometry remain unchanged on every device.
             if(theme==0&&!name.startsWith("Kralj"))missionSoftIconBackground(27,y+6,65f);
             else missionSoftIconBackground(38,y+7,51f);
+            boolean ownerArtwork=theme==0&&referencePortraitLayout;
             if(name.startsWith("Spoji 20")){
-                missionRaisedNumber(41,y+13,28f,CORAL,"2",-11f);
-                missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
-                missionHand(54,y+29);
+                // Owner PNG's coral/teal ink is about 19px left and
+                // 14px below the older native thumbnail. Keep untouched
+                // dark/vivid and non-reference layouts.
+                missionRaisedNumber(ownerArtwork?30:41,
+                    y+(ownerArtwork?19:13),ownerArtwork?31f:28f,
+                    CORAL,"2",-11f);
+                missionRaisedNumber(ownerArtwork?59:62,
+                    y+(ownerArtwork?20:14),28f,TEAL,"4",9f);
+                missionHand(ownerArtwork?48:54,y+(ownerArtwork?35:29));
             }else if(name.startsWith("Dosegni 512")){
-                // The owner's 512 emblem sits farther left with a
-                // heavier 3-digit caption. Decorative only.
-                missionRaisedNumber(35,y+11,45f,0xffb45bf6,"512",-9f);
+                // Native source silhouette is shifted ~9px downward,
+                // narrower by ~5px, never a playable tile or touch target.
+                missionRaisedNumber(ownerArtwork?34:35,
+                    y+(ownerArtwork?15:11),ownerArtwork?43f:45f,
+                    0xffb45bf6,"512",-9f);
                 missionOrangeRays(84,y+17);
             }else if(name.startsWith("Igraj 7")){
                 missionCalendarSeven(cx,cy);
             }else if(name.startsWith("Ostvari 10.000")){
                 missionTarget(cx,cy,44f);
             }else if(name.startsWith("Majstor")){
+                // Reference 2x2 emblem starts roughly 16px left of the
+                // old native arrangement; enlarge the icons slightly.
                 for(int i=0;i<MISSION_TILE_VALUES.length;i++)
-                    missionRaisedNumber(40+(i%2)*23,y+10+(i/2)*23,
-                        22,TILES[i+1],Integer.toString(MISSION_TILE_VALUES[i]),0);
+                    missionRaisedNumber((ownerArtwork?33:40)+
+                        (i%2)*(ownerArtwork?25:23),
+                        y+10+(i/2)*(ownerArtwork?25:23),
+                        ownerArtwork?24f:22f,TILES[i+1],
+                        Integer.toString(MISSION_TILE_VALUES[i]),0);
             }else if(name.startsWith("Kralj")){
                 if(theme==0)missionRoyalCrown(cx,cy+2);
                 else icon("crown",cx,cy+2,48,0xffffaf25);
@@ -4521,9 +4535,12 @@ public final class MainActivity extends ComponentActivity {
         // a baked screenshot or substitute it for the user's actual progress.
         // Only the light portrait Missions row uses this silhouette.
         void missionRoyalCrown(float cx,float cy){
-            c.save();c.translate(cx-3.4f,cy+5.5f);
+            // The currently deployed screenshot was ~22px below the
+            // actual owner crown, and ~4px too far right. Calibrate
+            // only native light-portrait art; keep gem/body aligned.
+            c.save();c.translate(cx-5.1f,cy-3.7f);
             // Measured owner gold crown bounds are x79..200,y1523..1627.
-            // The first real Android trial was too high and slightly narrow.
+            // Earlier native trials were too low and slightly right.
             // Scale the body about its lower rim so its baseline remains fixed.
             c.scale(1.08f,.92f,0f,23f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
@@ -4570,7 +4587,7 @@ public final class MainActivity extends ComponentActivity {
             // Keep the jewel separate from the silhouette's vertical fit.
             // Owner jewel centroid is near x144,y1577; resizing the body
             // must not push that distinct red highlight down.
-            c.save();c.translate(cx-1f,cy-3.2f);
+            c.save();c.translate(cx-2.7f,cy-12.4f);
             // The owner reference has a rounded coral jewel, absent from
             // the former flat three-point icon.
             p.setColor(0x4a8a4928);c.drawOval(-4.6f,3.8f,5.4f,14.1f,p);
@@ -5790,7 +5807,13 @@ public final class MainActivity extends ComponentActivity {
                 int val=sample[i],col=i%4,row=i/4;
                 // The owner's 4x4 preview begins about 8px left and
                 // 5px below the previous emulator sample.
-                float x=30+col*39.8f,y=418+row*39.6f;
+                // The four preview columns were progressively too far
+                // right (up to ~14 native pixels on the final column).
+                // Real game board geometry and theme selection unchanged.
+                boolean sourceTile=theme==0&&referencePortraitLayout;
+                float x=sourceTile?31.5f+col*38f:30+col*39.8f;
+                float y=sourceTile?419f+row*39.4f:418+row*39.6f;
+                float side=sourceTile?35f:36f;
                 // Calibrated only for the illustrated reference preview.
                 // Gameplay tiles and dynamic player values are unchanged.
                 int previewColor=tileColor(val);
@@ -5809,9 +5832,10 @@ public final class MainActivity extends ComponentActivity {
                         default:break;
                     }
                 }
-                themePreviewTile(x,y,36,36,previewColor,tileStyle);
-                fitted(Integer.toString(val),x+18,y+25,
-                    val>=1000?11:15,33,WHITE,true);
+                themePreviewTile(x,y,side,side,previewColor,tileStyle);
+                fitted(Integer.toString(val),x+side/2f,
+                    y+(sourceTile?24.5f:25f),
+                    val>=1000?11:15,side-3f,WHITE,true);
             }
             leftFitted("Ovako će izgledati",26,389,12,159,muted,false);
             leftFitted("tvoja ploča u odabranoj temi.",26,404,11,161,muted,false);
@@ -5945,7 +5969,13 @@ public final class MainActivity extends ComponentActivity {
             if("sound".equals(glyph)){
                 settingsSpeakerGlyph(cx,cy,Math.min(31,size*.68f));
             }else if("cloud-backup".equals(glyph)){
-                settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
+                // The owner cloud symbol is wider and higher than the
+                // previous 31-unit glyph. Only the reference light
+                // Settings illustration changes; the backup action
+                // remains a truthful local import/export flow.
+                if(theme==0&&referencePortraitLayout)
+                    settingsBackupGlyph(cx-2f,cy-3f,Math.min(37f,size*.80f));
+                else settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
             }else if("shield".equals(glyph)){
                 settingsShieldGlyph(cx,cy,Math.min(32,size*.70f));
             }else{
