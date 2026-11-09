@@ -4351,7 +4351,12 @@ public final class MainActivity extends ComponentActivity {
             // Owner mission mini-tiles have rounded, softly lit faces;
             // the previous dark extrusion and bright double contour gave
             // all four Majstor tiles an artificial heavy-bottom outline.
-            boolean softOwner=theme==0&&referencePortraitLayout;
+            // The softly lit face improved Majstor and 512, but the
+            // independently rotated 2/4 emblem had a measured regression.
+            // Preserve its verified earlier material without affecting
+            // either the game or the other mission illustrations.
+            boolean softOwner=theme==0&&referencePortraitLayout&&
+                (rotation==0f||"512".equals(number));
             p.setColor(darken(color,softOwner?.08f:.14f));
             c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
             p.clearShadowLayer();
