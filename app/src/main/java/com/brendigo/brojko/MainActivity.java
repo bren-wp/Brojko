@@ -4349,7 +4349,7 @@ public final class MainActivity extends ComponentActivity {
                 y+size-3.5f,7.2f,7.2f,p);
             p.setStyle(Paint.Style.FILL);
             fitted(number,x+size/2f,y+size*.68f,
-                number.length()>3?11:number.length()>2?15:
+                number.length()>3?11:number.length()>2?17.5f:
                     number.length()>1?18:21,size-4,WHITE,true);
             c.restore();
         }
@@ -4488,8 +4488,10 @@ public final class MainActivity extends ComponentActivity {
                 missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
                 missionHand(54,y+29);
             }else if(name.startsWith("Dosegni 512")){
-                missionRaisedNumber(42,y+11,45f,0xffb45bf6,"512",-9f);
-                missionOrangeRays(81,y+17);
+                // The owner's 512 emblem sits farther left with a
+                // heavier 3-digit caption. Decorative only.
+                missionRaisedNumber(35,y+11,45f,0xffb45bf6,"512",-9f);
+                missionOrangeRays(84,y+17);
             }else if(name.startsWith("Igraj 7")){
                 missionCalendarSeven(cx,cy);
             }else if(name.startsWith("Ostvari 10.000")){
