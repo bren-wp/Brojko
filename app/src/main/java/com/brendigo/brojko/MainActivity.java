@@ -5969,13 +5969,10 @@ public final class MainActivity extends ComponentActivity {
             if("sound".equals(glyph)){
                 settingsSpeakerGlyph(cx,cy,Math.min(31,size*.68f));
             }else if("cloud-backup".equals(glyph)){
-                // The owner cloud symbol is wider and higher than the
-                // previous 31-unit glyph. Only the reference light
-                // Settings illustration changes; the backup action
-                // remains a truthful local import/export flow.
-                if(theme==0&&referencePortraitLayout)
-                    settingsBackupGlyph(cx-2f,cy-3f,Math.min(37f,size*.80f));
-                else settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
+                // Pixel audit: the enlarged trial regressed the native
+                // Settings icon ROI from 21.5334 to 26.4993 RGB MAE.
+                // Restore the better-fitting local-backup illustration.
+                settingsBackupGlyph(cx,cy,Math.min(31,size*.68f));
             }else if("shield".equals(glyph)){
                 settingsShieldGlyph(cx,cy,Math.min(32,size*.70f));
             }else{
