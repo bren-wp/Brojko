@@ -4336,6 +4336,15 @@ public final class MainActivity extends ComponentActivity {
         }
         void missionRaisedNumber(float x,float y,float size,int color,
                                  String number,float rotation){
+            // Source illustration colours are more saturated than normal
+            // game tiles. This method paints only Missions thumbnails.
+            if(theme==0&&referencePortraitLayout){
+                if(color==CORAL)color=0xffff633e;
+                else if(color==TEAL)color=0xff0fd4c8;
+                else if(color==TILES[3])color=0xff3198ff;
+                else if(color==TILES[4])color=0xfffeb23d;
+                else if(color==0xffb45bf6)color=0xffaa65fb;
+            }
             c.save();c.rotate(rotation,x+size/2f,y+size/2f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
@@ -4343,7 +4352,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
             p.clearShadowLayer();
             gradient(x,y,size,size-2f,8,lighten(color,.18f),color);
-            p.setColor(0x7dffffff);p.setStrokeWidth(.8f);
+            p.setColor(0x55ffffff);p.setStrokeWidth(.75f);
             p.setStyle(Paint.Style.STROKE);
             c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
                 y+size-3.5f,7.2f,7.2f,p);
@@ -4540,7 +4549,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(0,-19,0,23,
-                0xfffff384,0xffffb32a,Shader.TileMode.CLAMP));
+                0xffffea52,0xffffab0e,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);p.setShader(null);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(1.3f);p.setStrokeJoin(Paint.Join.ROUND);
@@ -5109,7 +5118,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
-                0xffffa038,0xffff7516,Shader.TileMode.CLAMP));
+                0xffff882c,0xfff5742d,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
             p.setColor(0xffefa01b);
@@ -5172,6 +5181,8 @@ public final class MainActivity extends ComponentActivity {
                     y+(referenceStats?(width<=125?38:43):29),
                     referenceStats?(width<=125?34:43):
                         (width<=125?24:29),
+                    referenceStats&&theme==0&&"gamepad".equals(symbol)?
+                        0xff112c52:
                     "gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
@@ -5780,7 +5791,25 @@ public final class MainActivity extends ComponentActivity {
                 // The owner's 4x4 preview begins about 8px left and
                 // 5px below the previous emulator sample.
                 float x=30+col*39.8f,y=418+row*39.6f;
-                themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
+                // Calibrated only for the illustrated reference preview.
+                // Gameplay tiles and dynamic player values are unchanged.
+                int previewColor=tileColor(val);
+                if(theme==0&&referencePortraitLayout){
+                    switch(val){
+                        case 2:previewColor=0xfffe7146;break;
+                        case 4:previewColor=0xff0bcfc2;break;
+                        case 8:previewColor=0xff3491f9;break;
+                        case 16:previewColor=0xfffeb33c;break;
+                        case 32:previewColor=0xfffe823f;break;
+                        case 64:previewColor=0xfffd6d9b;break;
+                        case 128:previewColor=0xffb564fc;break;
+                        case 256:previewColor=0xff8c58fb;break;
+                        case 512:previewColor=0xff3e8ffb;break;
+                        case 1024:previewColor=0xff42d896;break;
+                        default:break;
+                    }
+                }
+                themePreviewTile(x,y,36,36,previewColor,tileStyle);
                 fitted(Integer.toString(val),x+18,y+25,
                     val>=1000?11:15,33,WHITE,true);
             }
@@ -6063,7 +6092,7 @@ public final class MainActivity extends ComponentActivity {
             // No cloud service is connected: show honest local backup navigation,
             // not the fictional enabled sync switch in the supplied illustration.
             settingsAction("Sinkronizacija napretka","Lokalna kopija",
-                "cloud-backup",0xffa55ee5,rowY[4],()->navigate("backup"));
+                "cloud-backup",0xffa55efe,rowY[4],()->navigate("backup"));
             settingsAction("Pravila privatnosti","›","shield",0xffff7969,
                 rowY[5],()->navigate("privacy"));
             settingsAction("O aplikaciji","›","info",0xff378ef6,
