@@ -1944,9 +1944,17 @@ public final class MainActivity extends ComponentActivity {
             // The reference's lower-right 256 is intentionally out of focus.
             // Draw a softly lit BLUE distant tile rather than a sharp,
             // foreground purple game tile. It is never a playable tile.
-            c.save();c.rotate(-15f,375f,714f);
+            c.save();
+            // The distant 256 in the supplied owner Splash is soft-focused
+            // and begins noticeably above the former sharp native tile.
+            // No change to real tile graphics, numbers, or game hit areas.
+            boolean sourceHaze=theme==0&&referencePortraitLayout;
+            if(sourceHaze)c.translate(-5f,-18f);
+            c.rotate(-15f,375f,714f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setColor(0xff539aff);
+            if(sourceHaze)p.setMaskFilter(new android.graphics.BlurMaskFilter(
+                8.5f,android.graphics.BlurMaskFilter.Blur.NORMAL));
             p.setShadowLayer(26f,0,0,0x995295fa);
             c.drawRoundRect(298,648,435,775,25,25,p);
             p.clearShadowLayer();
@@ -1957,7 +1965,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
             p.setShadowLayer(7f,0,0,0xaaffffff);
             c.drawText("256",364,726,p);
-            p.clearShadowLayer();c.restore();
+            p.clearShadowLayer();p.setMaskFilter(null);c.restore();
         }
         // Logo-specific, rounded fill+stroke reproduces the extra
         // counterweight visible in the owner's painted wordmark. Using
@@ -4341,7 +4349,7 @@ public final class MainActivity extends ComponentActivity {
                 y+size-3.5f,7.2f,7.2f,p);
             p.setStyle(Paint.Style.FILL);
             fitted(number,x+size/2f,y+size*.68f,
-                number.length()>3?11:number.length()>2?15:
+                number.length()>3?11:number.length()>2?17.5f:
                     number.length()>1?18:21,size-4,WHITE,true);
             c.restore();
         }
@@ -4480,8 +4488,10 @@ public final class MainActivity extends ComponentActivity {
                 missionRaisedNumber(62,y+14,28f,TEAL,"4",9f);
                 missionHand(54,y+29);
             }else if(name.startsWith("Dosegni 512")){
-                missionRaisedNumber(42,y+11,45f,0xffb45bf6,"512",-9f);
-                missionOrangeRays(81,y+17);
+                // The owner's 512 emblem sits farther left with a
+                // heavier 3-digit caption. Decorative only.
+                missionRaisedNumber(35,y+11,45f,0xffb45bf6,"512",-9f);
+                missionOrangeRays(84,y+17);
             }else if(name.startsWith("Igraj 7")){
                 missionCalendarSeven(cx,cy);
             }else if(name.startsWith("Ostvari 10.000")){
@@ -5099,7 +5109,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
-                0xffffc451,0xffff8516,Shader.TileMode.CLAMP));
+                0xffffa038,0xffff7516,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
             p.setColor(0xffefa01b);
@@ -5579,7 +5589,9 @@ public final class MainActivity extends ComponentActivity {
             statCell("Prosjek bodova",fmt(average),15,234,185,81,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),207,234,174,81,0xffa657de);
             statsSoftCard(16,329,368,158,23,card);
-            leftFitted("Zadnjih 10 partija",27,357,20,199,ink,true);
+            // The owner heading has tighter typographic bounds than the
+            // previously oversized native chart title.
+            leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
@@ -5633,7 +5645,7 @@ public final class MainActivity extends ComponentActivity {
                         // Values must fit fully inside their own column.
                         // Earlier +4 width could put equal-height labels
                         // into adjacent columns on compact screens.
-                        fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
+                        fitted(fmt(val),x+(barSlot-6)/2,y-7,8.4f,
                             Math.max(8f,barSlot-8f),ink,true);
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
@@ -5997,9 +6009,9 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeCap(Paint.Cap.ROUND);
             c.drawLine(80,32,90,45,p);
             // Keep the coral accent outside the new Back touch surface.
-            c.drawLine(81,58,94,58,p);
+            c.drawLine(70,58,83,58,p);
             c.drawLine(320,32,310,45,p);
-            c.drawLine(331,58,318,58,p);
+            c.drawLine(334,58,321,58,p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
         void settingsToggle(float x,float y,boolean enabled){
@@ -6022,7 +6034,16 @@ public final class MainActivity extends ComponentActivity {
             int[] rowY=compact?
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
-            illustratedTitle("Postavke",200,compact?75:108,
+            // Original 941x1672 Settings title is taller and ends farther
+            // right than the previous native Nunito contour. Correct only
+            // the light owner viewport; all other layouts remain unchanged.
+            if(compact&&theme==0){
+                c.save();
+                c.translate(2.1f,-1.7f);
+                c.scale(1.02f,1.25f,200f,59f);
+                illustratedTitle("Postavke",200,75,45,330,ink);
+                c.restore();
+            }else illustratedTitle("Postavke",200,compact?75:108,
                 compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
             else {
