@@ -5780,7 +5780,25 @@ public final class MainActivity extends ComponentActivity {
                 // The owner's 4x4 preview begins about 8px left and
                 // 5px below the previous emulator sample.
                 float x=30+col*39.8f,y=418+row*39.6f;
-                themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
+                // Calibrated only for the illustrated reference preview.
+                // Gameplay tiles and dynamic player values are unchanged.
+                int previewColor=tileColor(val);
+                if(theme==0&&referencePortraitLayout){
+                    switch(val){
+                        case 2:previewColor=0xfffe7146;break;
+                        case 4:previewColor=0xff0bcfc2;break;
+                        case 8:previewColor=0xff3491f9;break;
+                        case 16:previewColor=0xfffeb33c;break;
+                        case 32:previewColor=0xfffe823f;break;
+                        case 64:previewColor=0xfffd6d9b;break;
+                        case 128:previewColor=0xffb564fc;break;
+                        case 256:previewColor=0xff8c58fb;break;
+                        case 512:previewColor=0xff3e8ffb;break;
+                        case 1024:previewColor=0xff42d896;break;
+                        default:break;
+                    }
+                }
+                themePreviewTile(x,y,36,36,previewColor,tileStyle);
                 fitted(Integer.toString(val),x+18,y+25,
                     val>=1000?11:15,33,WHITE,true);
             }
@@ -6063,7 +6081,7 @@ public final class MainActivity extends ComponentActivity {
             // No cloud service is connected: show honest local backup navigation,
             // not the fictional enabled sync switch in the supplied illustration.
             settingsAction("Sinkronizacija napretka","Lokalna kopija",
-                "cloud-backup",0xffa55ee5,rowY[4],()->navigate("backup"));
+                "cloud-backup",0xffa55efe,rowY[4],()->navigate("backup"));
             settingsAction("Pravila privatnosti","›","shield",0xffff7969,
                 rowY[5],()->navigate("privacy"));
             settingsAction("O aplikaciji","›","info",0xff378ef6,
