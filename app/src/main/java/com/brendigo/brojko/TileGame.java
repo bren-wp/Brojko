@@ -101,7 +101,7 @@ public final class TileGame {
                    values[i]<1073741824) {
                     output[next]=values[i]*2;
                     score=(int)Math.min(Integer.MAX_VALUE,(long)score+output[next]);
-                    merges++;i++;
+                    merges=saturatedAdd(merges,1);i++;
                 }else output[next]=values[i];
                 next++;
             }
@@ -114,7 +114,7 @@ public final class TileGame {
             return new Result(false,false,gameOver,0,0);
         }
         undo=previous;
-        moves++;
+        moves=saturatedAdd(moves,1);
         spawn();
         peak=Math.max(peak,maxTile());
         boolean first2048=!reached2048 && peak>=2048;
