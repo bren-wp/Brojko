@@ -5708,12 +5708,22 @@ public class ScreensSmokeTest {
                     assertTrue("512 illustrated tile must remain purple",
                         android.graphics.Color.blue(purple)>
                             android.graphics.Color.green(purple)+28);
-                    int teal=bmp.getPixel(
-                        Math.round(view.offX+70*view.scale),
-                        Math.round(view.offY+178*view.scale));
-                    assertTrue("First mission needs a teal numbered tile",
-                        android.graphics.Color.green(teal)>
-                            android.graphics.Color.red(teal)+20);
+                    // The owner-aligned 4 illustration was moved left and
+                    // downward. A fixed former-layout pixel at design y178
+                    // no longer lies inside the tile. Require substantial
+                    // teal pigment in the owner's native 941px ROI instead.
+                    int tealPixels=0;
+                    for(int y=418;y<498;y++)
+                        for(int x=136;x<209;x++){
+                            int color=bmp.getPixel(x,y);
+                            int red=android.graphics.Color.red(color);
+                            int green=android.graphics.Color.green(color);
+                            int blue=android.graphics.Color.blue(color);
+                            if(green>red+45&&blue>red+35)
+                                tealPixels++;
+                        }
+                    assertTrue("First mission needs a real teal tile: "+
+                        tealPixels,tealPixels>=300);
                     int reward=bmp.getPixel(
                         Math.round(view.offX+349*view.scale),
                         Math.round(view.offY+193*view.scale));
@@ -5722,11 +5732,12 @@ public class ScreensSmokeTest {
                             android.graphics.Color.blue(reward)+65);
                     // The illustrated royal crown has a distinct red
                     // jewel, not the old flat yellow generic trophy icon.
-                    // Native light portrait jewel follows the source-aligned
-                    // final row, roughly 21 pixels below its old fixture.
+                    // Its owner-source centroid lies near x144/y1577;
+                    // scan a region around that owner coordinate, not the
+                    // superseded 22px-lower emulator placement.
                     int royalGemPixels=0;
-                    for(int y=1581;y<1613;y++)
-                        for(int x=130;x<164;x++){
+                    for(int y=1560;y<1595;y++)
+                        for(int x=128;x<166;x++){
                             int color=bmp.getPixel(x,y);
                             int red=android.graphics.Color.red(color);
                             int green=android.graphics.Color.green(color);
