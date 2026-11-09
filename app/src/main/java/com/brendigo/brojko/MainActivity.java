@@ -324,7 +324,7 @@ public final class MainActivity extends ComponentActivity {
     }
     void reward(int bit,int amount,boolean reached){
         if(reached&&(rewardFlags&bit)==0){
-            rewardFlags |= bit;stars=Math.max(0,stars+amount);
+            rewardFlags |= bit;stars=TileGame.saturatedAdd(stars,amount);
         }
     }
     void updateRewards(){
@@ -445,10 +445,10 @@ public final class MainActivity extends ComponentActivity {
         dailyBonusGrantedThisAttempt=false;
         ensureDay();
         if(!today().equals(lastPlayDay)){
-            playDayStreak=yesterday().equals(lastPlayDay)?playDayStreak+1:1;
+            playDayStreak=yesterday().equals(lastPlayDay)?TileGame.saturatedAdd(playDayStreak,1):1;
             lastPlayDay=today();
         }
-        plays++;recordTile=Math.max(recordTile,game.maxTile());
+        plays=TileGame.saturatedAdd(plays,1);recordTile=Math.max(recordTile,game.maxTile());
         updateRewards();
         page="game";persist();screen.invalidate();
     }
@@ -507,21 +507,23 @@ public final class MainActivity extends ComponentActivity {
             }
             return;
         }
-        ensureDay();total+=result.points;totalMerges+=result.merges;
-        todayPoints+=result.points;todayMerges+=result.merges;
-        weekPoints+=result.points;
+        ensureDay();total=TileGame.saturatedAdd(total,result.points);
+        totalMerges=TileGame.saturatedAdd(totalMerges,result.merges);
+        todayPoints=TileGame.saturatedAdd(todayPoints,result.points);
+        todayMerges=TileGame.saturatedAdd(todayMerges,result.merges);
+        weekPoints=TileGame.saturatedAdd(weekPoints,result.points);
         best=Math.max(best,game.score);recordTile=Math.max(recordTile,game.peak);
-        if(result.first2048)wins++;
+        if(result.first2048)wins=TileGame.saturatedAdd(wins,1);
         updateRewards();
         boolean daily="daily".equals(game.mode)&&today().equals(game.day);
         boolean dailyComplete=daily && game.isDailyGoalComplete();
         if(dailyComplete&&!today().equals(lastDaily)){
-            streak=yesterday().equals(lastDaily)?streak+1:1;
+            streak=yesterday().equals(lastDaily)?TileGame.saturatedAdd(streak,1):1;
             lastDaily=today();
         }
         if(dailyComplete&&!today().equals(dailyRewardDate)){
             dailyRewardDate=today();
-            stars+=250;
+            stars=TileGame.saturatedAdd(stars,250);
             dailyBonusGrantedThisAttempt=true;
         }
         soundEffect();
