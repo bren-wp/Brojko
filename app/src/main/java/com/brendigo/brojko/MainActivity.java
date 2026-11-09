@@ -5997,9 +5997,9 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeCap(Paint.Cap.ROUND);
             c.drawLine(80,32,90,45,p);
             // Keep the coral accent outside the new Back touch surface.
-            c.drawLine(81,58,94,58,p);
+            c.drawLine(70,58,83,58,p);
             c.drawLine(320,32,310,45,p);
-            c.drawLine(331,58,318,58,p);
+            c.drawLine(334,58,321,58,p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         }
         void settingsToggle(float x,float y,boolean enabled){
@@ -6022,7 +6022,16 @@ public final class MainActivity extends ComponentActivity {
             int[] rowY=compact?
                 new int[]{97,161,223,286,360,433,498}:
                 new int[]{148,229,310,391,478,559,640};
-            illustratedTitle("Postavke",200,compact?75:108,
+            // Original 941x1672 Settings title is taller and ends farther
+            // right than the previous native Nunito contour. Correct only
+            // the light owner viewport; all other layouts remain unchanged.
+            if(compact&&theme==0){
+                c.save();
+                c.translate(2.1f,-1.7f);
+                c.scale(1.02f,1.25f,200f,59f);
+                illustratedTitle("Postavke",200,75,45,330,ink);
+                c.restore();
+            }else illustratedTitle("Postavke",200,compact?75:108,
                 compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
             else {
