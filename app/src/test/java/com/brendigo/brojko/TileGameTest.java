@@ -145,6 +145,24 @@ public class TileGameTest {
         assertNull("One undo snapshot with zero moves cannot contain merges",
             TileGame.fromJson(impossibleMerges));
     }
+    @Test public void countersSaturateInsteadOfOverflowing() {
+        assertEquals(Integer.MAX_VALUE,TileGame.saturatedAdd(Integer.MAX_VALUE-2,50));
+        assertEquals(Integer.MAX_VALUE,TileGame.saturatedAdd(Integer.MAX_VALUE,250));
+        assertEquals(400,TileGame.saturatedAdd(150,250));
+        assertEquals(0,TileGame.saturatedAdd(-5,-1));
+    }
+    @Test public void rejectMalformedUndoRatherThanSilentlyDiscardingIt() throws Exception {
+        TileGame g=empty(4);
+        g.cells[0]=2;g.cells[1]=2;
+        assertTrue(g.move(TileGame.LEFT).changed);
+        org.json.JSONObject malformedBoard=g.toJson();
+        malformedBoard.getJSONObject("undo").put("cells",new org.json.JSONArray("[2]"));
+        assertNull("Truncated undo board must invalidate the save",
+            TileGame.fromJson(malformedBoard));
+        org.json.JSONObject malformedType=g.toJson();
+        malformedType.put("undo","corrupt");
+        assertNull("Undo must be a JSON object",TileGame.fromJson(malformedType));
+    }
     @Test public void deterministicStressAcrossModesNeverCorruptsGameOrUndo() {
         // More than 4,000 reproducible real merges/turns across 4×4, 5×5,
         // and daily modes. Catches accidental loss of deterministic state.
