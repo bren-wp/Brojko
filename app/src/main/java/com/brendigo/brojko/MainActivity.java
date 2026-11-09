@@ -4440,7 +4440,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawCircle(0f,1.4f,22.5f,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-16f,-18f,17f,20f,
-                0xffff8461,0xfffe452d,Shader.TileMode.CLAMP));
+                0xffffa184,0xfff14c36,Shader.TileMode.CLAMP));
             c.drawCircle(0f,0f,22f,p);
             p.setShader(new LinearGradient(-14f,-15f,15f,16f,
                 0xfffffff7,0xffffefdf,Shader.TileMode.CLAMP));
@@ -4457,7 +4457,7 @@ public final class MainActivity extends ComponentActivity {
             // Shaft already slopes upper-right; rotating it further would
             // flatten the owner's diagonal dart toward horizontal.
             p.setStrokeCap(Paint.Cap.ROUND);
-            p.setColor(0xff1189e8);p.setStrokeWidth(4.4f);
+            p.setColor(0xff1465c3);p.setStrokeWidth(3.1f);
             p.setStyle(Paint.Style.STROKE);
             c.drawLine(-2f,4f,18.7f,-19f,p);
             p.setStyle(Paint.Style.FILL);
@@ -4469,7 +4469,7 @@ public final class MainActivity extends ComponentActivity {
             flight.lineTo(18.7f,-14f);
             flight.close();
             p.setShader(new LinearGradient(13f,-27f,25f,-14f,
-                0xff58bcff,0xff147cdd,Shader.TileMode.CLAMP));
+                0xff54bdff,0xff1463bf,Shader.TileMode.CLAMP));
             c.drawPath(flight,p);
             p.setShader(null);
             p.setColor(0xff0e407c);
@@ -5183,8 +5183,6 @@ public final class MainActivity extends ComponentActivity {
                         (width<=125?24:29),
                     referenceStats&&theme==0&&"gamepad".equals(symbol)?
                         0xff112c52:
-                    referenceStats&&theme==0&&"grid".equals(symbol)?
-                        0xfffa8520:
                     "gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
