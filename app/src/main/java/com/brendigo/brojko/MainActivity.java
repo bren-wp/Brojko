@@ -5972,20 +5972,20 @@ public final class MainActivity extends ComponentActivity {
         // a functional menu row or loading a bitmap screenshot.
         void ownerSettingsFooterBrand(){
             c.save();
-            c.translate(44.1f,516.5f);
+            c.translate(43.2f,528.5f);
             c.scale(.775f,.70f);
             ownerHomeNavyWordmark();
             c.restore();
             // Original reference has a small glossy coral 2 and three
             // orange strokes, distinct from gameplay tile hit regions.
-            splashFloatingTile(170f,588f,37f,43f,9f,CORAL);
-            txt("2",188.5f,618f,25f,WHITE,true);
+            splashFloatingTile(170f,600f,37f,43f,9f,CORAL);
+            txt("2",188.5f,630f,25f,WHITE,true);
             p.clearShadowLayer();p.setShader(null);
             p.setColor(CORAL);p.setStyle(Paint.Style.STROKE);
             p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(4.5f);
-            c.drawLine(165f,585f,159f,580f,p);
-            c.drawLine(177f,581f,173f,571f,p);
-            c.drawLine(190f,582f,193f,571f,p);
+            c.drawLine(165f,597f,159f,592f,p);
+            c.drawLine(177f,593f,173f,583f,p);
+            c.drawLine(190f,594f,193f,583f,p);
             p.setStrokeCap(Paint.Cap.BUTT);
             p.setStyle(Paint.Style.FILL);
         }
