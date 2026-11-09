@@ -5107,7 +5107,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
-                0xffffc451,0xffff8516,Shader.TileMode.CLAMP));
+                0xffffa038,0xffff7516,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
             p.setColor(0xffefa01b);
@@ -5595,7 +5595,9 @@ public final class MainActivity extends ComponentActivity {
             statCell("Prosjek bodova",fmt(average),15,234,185,81,0xff478df4);
             statCell("Niz pobjeda",fmt(consecutiveWins()),207,234,174,81,0xffa657de);
             statsSoftCard(16,329,368,158,23,card);
-            leftFitted("Zadnjih 10 partija",27,357,20,199,ink,true);
+            // The owner heading has tighter typographic bounds than the
+            // previously oversized native chart title.
+            leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
@@ -5649,7 +5651,7 @@ public final class MainActivity extends ComponentActivity {
                         // Values must fit fully inside their own column.
                         // Earlier +4 width could put equal-height labels
                         // into adjacent columns on compact screens.
-                        fitted(fmt(val),x+(barSlot-6)/2,y-7,9,
+                        fitted(fmt(val),x+(barSlot-6)/2,y-7,8.4f,
                             Math.max(8f,barSlot-8f),ink,true);
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
