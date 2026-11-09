@@ -4498,8 +4498,9 @@ public final class MainActivity extends ComponentActivity {
                 // 14px below the older native thumbnail. Keep untouched
                 // dark/vivid and non-reference layouts.
                 missionRaisedNumber(ownerArtwork?30:41,
-                    y+(ownerArtwork?19:13),28f,CORAL,"2",-11f);
-                missionRaisedNumber(ownerArtwork?51:62,
+                    y+(ownerArtwork?19:13),ownerArtwork?31f:28f,
+                    CORAL,"2",-11f);
+                missionRaisedNumber(ownerArtwork?59:62,
                     y+(ownerArtwork?20:14),28f,TEAL,"4",9f);
                 missionHand(ownerArtwork?48:54,y+(ownerArtwork?35:29));
             }else if(name.startsWith("Dosegni 512")){
