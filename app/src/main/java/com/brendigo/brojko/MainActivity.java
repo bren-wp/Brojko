@@ -4381,25 +4381,51 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void missionHand(float x,float y){
-            // Explicitly hand-drawn pointer on the orange 2 + teal 4
-            // icon, as in the supplied source (no emoji or network asset).
-            c.save();c.translate(x,y);
-            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
-            Path finger=new Path();
-            finger.moveTo(5,16);finger.lineTo(-1,7);
-            finger.quadTo(-3,2,0,1);
-            finger.quadTo(3,-1,5,3);
-            finger.lineTo(9,11);finger.lineTo(10,7);
-            finger.quadTo(12,4,15,7);
-            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
-            finger.lineTo(12,29);finger.lineTo(5,26);
-            finger.close();
-            p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
+            // The owner 2/4 illustration has a rounded four-finger white
+            // pointer with an indigo outline, not a flat triangular glove.
+            // Native path is decorative, not a bitmap or touch target.
+            c.save();c.translate(x-1f,y-1f);
+            p.clearShadowLayer();p.setShader(null);
             p.setStrokeJoin(Paint.Join.ROUND);
-            c.drawPath(finger,p);
-            p.setColor(0xfffffff8);
-            c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
-            c.drawPath(finger,p);c.restore();
+            p.setStrokeCap(Paint.Cap.ROUND);
+            Path hand=new Path();
+            hand.moveTo(3.5f,13.4f);
+            hand.lineTo(-1.6f,6.5f);
+            hand.cubicTo(-5.2f,1.9f,-1.0f,-3.1f,2.4f,-1f);
+            hand.cubicTo(3.8f,-.4f,5.0f,1.4f,6.2f,3.4f);
+            hand.lineTo(11.8f,12.2f);
+            hand.cubicTo(10.4f,8.6f,13.6f,5.9f,16.3f,8.8f);
+            hand.lineTo(19.7f,14.0f);
+            hand.cubicTo(18.3f,10.9f,21.9f,9.4f,24f,12.9f);
+            hand.lineTo(26.7f,18.5f);
+            hand.cubicTo(29.7f,18.0f,30.1f,21.5f,30.2f,23.7f);
+            hand.cubicTo(31.8f,28.0f,27.5f,32.7f,21.5f,34.4f);
+            hand.lineTo(12.1f,35.3f);
+            hand.cubicTo(6.1f,35.2f,2.7f,31.7f,1.2f,28f);
+            hand.lineTo(-2.0f,22.8f);
+            hand.cubicTo(-4.1f,18.9f,-1.1f,16.6f,3.5f,19.7f);
+            hand.close();
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(0xfff9f7f2);
+            p.setShadowLayer(1.3f,0f,1.5f,0x5232496a);
+            c.drawPath(hand,p);
+            p.clearShadowLayer();
+            p.setShader(new LinearGradient(-1f,2f,22f,35f,
+                0xffffffff,0xffedf1f5,Shader.TileMode.CLAMP));
+            c.drawPath(hand,p);
+            p.setShader(null);
+            p.setColor(0xff2e4e79);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.65f);
+            c.drawPath(hand,p);
+            // Soft fingertip separations preserve the hand's small-scale
+            // legibility and do not bleed into the numbered tiles.
+            p.setColor(0xffb7c9db);p.setStrokeWidth(.8f);
+            c.drawLine(12.1f,13f,13.7f,16.1f,p);
+            c.drawLine(19.9f,14.4f,21.3f,17.4f,p);
+            p.setStyle(Paint.Style.FILL);
+            p.setStrokeCap(Paint.Cap.BUTT);
+            p.setShader(null);p.clearShadowLayer();
             c.restore();
         }
         void missionCalendarSeven(float centerX,float centerY){
