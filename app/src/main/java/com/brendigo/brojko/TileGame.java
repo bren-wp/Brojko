@@ -54,6 +54,11 @@ public final class TileGame {
         return x*2685821657736338717L;
     }
     private int nextInt(int max) { return (int)Long.remainderUnsigned(nextRandom(), max); }
+    /** Monotonic non-negative counters must not wrap into negative values. */
+    public static int saturatedAdd(int current,int increment) {
+        return (int)Math.min(Integer.MAX_VALUE,
+            (long)Math.max(0,current)+Math.max(0,increment));
+    }
     private void spawn() {
         ArrayList<Integer> empty=new ArrayList<>();
         for(int i=0;i<cells.length;i++)if(cells[i]==0)empty.add(i);
@@ -178,32 +183,34 @@ public final class TileGame {
             game.gameOver=obj.optBoolean("gameOver",false);
             game.archived=obj.optBoolean("archived",false);
             game.winAcknowledged=obj.optBoolean("ack",false);
+            if(obj.has("undo") && !(obj.opt("undo") instanceof JSONObject))
+                throw new IllegalArgumentException("Invalid undo type");
             JSONObject u=obj.optJSONObject("undo");
             if(u!=null) {
                 TileGame older=new TileGame(n,mode,day);
                 JSONArray b=u.getJSONArray("cells");
-                if(b.length()==n*n){
-                    for(int i=0;i<b.length();i++){
-                        int tile=b.getInt(i);
-                        if(tile!=0&&(tile<2||(tile&(tile-1))!=0||tile>1073741824))
-                            throw new IllegalArgumentException("Invalid undo tile");
-                        older.cells[i]=tile;
-                    }
-                    older.score=u.getInt("score");older.moves=u.getInt("moves");
-                    older.merges=u.getInt("merges");older.peak=u.getInt("peak");
-                    older.randomState=Long.parseLong(u.getString("rng"));
-                    if(older.score<0||older.score>game.score||older.moves<0||
-                       older.moves>game.moves||older.merges<0||
-                       older.merges>game.merges||older.peak<older.maxTile()||
-                       older.peak>1073741824||older.peak>game.peak||
-                       (long)older.merges>(long)older.moves*n*n||
-                       older.randomState==0)
-                        throw new IllegalArgumentException("Invalid undo state");
-                    older.reached2048=u.optBoolean("reached");
-                    older.gameOver=u.optBoolean("over");
-                    older.winAcknowledged=u.optBoolean("ack");
-                    game.undo=new Snapshot(older);
+                if(b.length()!=n*n)
+                    throw new IllegalArgumentException("Invalid undo board length");
+                for(int i=0;i<b.length();i++){
+                    int tile=b.getInt(i);
+                    if(tile!=0&&(tile<2||(tile&(tile-1))!=0||tile>1073741824))
+                        throw new IllegalArgumentException("Invalid undo tile");
+                    older.cells[i]=tile;
                 }
+                older.score=u.getInt("score");older.moves=u.getInt("moves");
+                older.merges=u.getInt("merges");older.peak=u.getInt("peak");
+                older.randomState=Long.parseLong(u.getString("rng"));
+                if(older.score<0||older.score>game.score||older.moves<0||
+                   older.moves>game.moves||older.merges<0||
+                   older.merges>game.merges||older.peak<older.maxTile()||
+                   older.peak>1073741824||older.peak>game.peak||
+                   (long)older.merges>(long)older.moves*n*n||
+                   older.randomState==0)
+                    throw new IllegalArgumentException("Invalid undo state");
+                older.reached2048=u.optBoolean("reached");
+                older.gameOver=u.optBoolean("over");
+                older.winAcknowledged=u.optBoolean("ack");
+                game.undo=new Snapshot(older);
             }
             return game;
         } catch(Exception ex){return null;}
