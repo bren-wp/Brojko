@@ -28,9 +28,20 @@ assert len(set(mapping.values())) == len(mapping), "Do not reuse one capture for
 assert "if (( ${#screenshots[@]} != 28 )); then" in workflow, (
     "Publication asset count must match the real screenshots in CAPTURES"
 )
+# Link images to a release that already contains all real emulator captures.
+# The latest release may temporarily have only APK/AAB while UI QA is running.
+verified = re.search(
+    r"Galerija koristi provjerene snimke iz izdanja \*\*(v\d+\.\d+\.\d+)\*\*",
+    readme,
+)
+assert verified, "README must identify its complete verified screenshot release"
+gallery_tag = verified.group(1)
+assert "releases/latest/download/brojko-" not in readme, (
+    "Do not embed images from a release before screenshot QA has finished"
+)
 for name, origin in mapping.items():
     assert name.endswith(".png") and origin.endswith(".png")
-    url = "https://github.com/bren-wp/Brojko/releases/latest/download/" + name
+    url = "https://github.com/bren-wp/Brojko/releases/download/" + gallery_tag + "/" + name
     assert f'src="{url}"' in readme, "Missing screenshot in README: " + name
     assert f'alt="Stvarna Android snimka Brojko:' in readme, "Screenshot alt text is required"
 assert "realne snimke" in readme.lower() or "stvarne snimke" in readme.lower()
