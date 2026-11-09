@@ -4336,6 +4336,15 @@ public final class MainActivity extends ComponentActivity {
         }
         void missionRaisedNumber(float x,float y,float size,int color,
                                  String number,float rotation){
+            // Source illustration colours are more saturated than normal
+            // game tiles. This method paints only Missions thumbnails.
+            if(theme==0&&referencePortraitLayout){
+                if(color==CORAL)color=0xffff633e;
+                else if(color==TEAL)color=0xff0fd4c8;
+                else if(color==TILES[3])color=0xff3198ff;
+                else if(color==TILES[4])color=0xfffeb23d;
+                else if(color==0xffb45bf6)color=0xffaa65fb;
+            }
             c.save();c.rotate(rotation,x+size/2f,y+size/2f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
@@ -4343,7 +4352,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
             p.clearShadowLayer();
             gradient(x,y,size,size-2f,8,lighten(color,.18f),color);
-            p.setColor(0x7dffffff);p.setStrokeWidth(.8f);
+            p.setColor(0x55ffffff);p.setStrokeWidth(.75f);
             p.setStyle(Paint.Style.STROKE);
             c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
                 y+size-3.5f,7.2f,7.2f,p);
@@ -4431,7 +4440,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawCircle(0f,1.4f,22.5f,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-16f,-18f,17f,20f,
-                0xffffa184,0xfff14c36,Shader.TileMode.CLAMP));
+                0xffff8461,0xfffe452d,Shader.TileMode.CLAMP));
             c.drawCircle(0f,0f,22f,p);
             p.setShader(new LinearGradient(-14f,-15f,15f,16f,
                 0xfffffff7,0xffffefdf,Shader.TileMode.CLAMP));
@@ -4448,7 +4457,7 @@ public final class MainActivity extends ComponentActivity {
             // Shaft already slopes upper-right; rotating it further would
             // flatten the owner's diagonal dart toward horizontal.
             p.setStrokeCap(Paint.Cap.ROUND);
-            p.setColor(0xff1465c3);p.setStrokeWidth(3.1f);
+            p.setColor(0xff1189e8);p.setStrokeWidth(4.4f);
             p.setStyle(Paint.Style.STROKE);
             c.drawLine(-2f,4f,18.7f,-19f,p);
             p.setStyle(Paint.Style.FILL);
@@ -4460,7 +4469,7 @@ public final class MainActivity extends ComponentActivity {
             flight.lineTo(18.7f,-14f);
             flight.close();
             p.setShader(new LinearGradient(13f,-27f,25f,-14f,
-                0xff54bdff,0xff1463bf,Shader.TileMode.CLAMP));
+                0xff58bcff,0xff147cdd,Shader.TileMode.CLAMP));
             c.drawPath(flight,p);
             p.setShader(null);
             p.setColor(0xff0e407c);
@@ -4540,7 +4549,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(0,-19,0,23,
-                0xfffff384,0xffffb32a,Shader.TileMode.CLAMP));
+                0xffffea52,0xffffab0e,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);p.setShader(null);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(1.3f);p.setStrokeJoin(Paint.Join.ROUND);
@@ -5109,7 +5118,7 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
-                0xffffa038,0xffff7516,Shader.TileMode.CLAMP));
+                0xffff882c,0xfff5742d,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
             p.setColor(0xffefa01b);
@@ -5172,6 +5181,10 @@ public final class MainActivity extends ComponentActivity {
                     y+(referenceStats?(width<=125?38:43):29),
                     referenceStats?(width<=125?34:43):
                         (width<=125?24:29),
+                    referenceStats&&theme==0&&"gamepad".equals(symbol)?
+                        0xff112c52:
+                    referenceStats&&theme==0&&"grid".equals(symbol)?
+                        0xfffa8520:
                     "gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
