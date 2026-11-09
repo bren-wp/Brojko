@@ -1944,9 +1944,17 @@ public final class MainActivity extends ComponentActivity {
             // The reference's lower-right 256 is intentionally out of focus.
             // Draw a softly lit BLUE distant tile rather than a sharp,
             // foreground purple game tile. It is never a playable tile.
-            c.save();c.rotate(-15f,375f,714f);
+            c.save();
+            // The distant 256 in the supplied owner Splash is soft-focused
+            // and begins noticeably above the former sharp native tile.
+            // No change to real tile graphics, numbers, or game hit areas.
+            boolean sourceHaze=theme==0&&referencePortraitLayout;
+            if(sourceHaze)c.translate(-5f,-18f);
+            c.rotate(-15f,375f,714f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setColor(0xff539aff);
+            if(sourceHaze)p.setMaskFilter(new android.graphics.BlurMaskFilter(
+                8.5f,android.graphics.BlurMaskFilter.Blur.NORMAL));
             p.setShadowLayer(26f,0,0,0x995295fa);
             c.drawRoundRect(298,648,435,775,25,25,p);
             p.clearShadowLayer();
@@ -1957,7 +1965,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
             p.setShadowLayer(7f,0,0,0xaaffffff);
             c.drawText("256",364,726,p);
-            p.clearShadowLayer();c.restore();
+            p.clearShadowLayer();p.setMaskFilter(null);c.restore();
         }
         // Logo-specific, rounded fill+stroke reproduces the extra
         // counterweight visible in the owner's painted wordmark. Using
