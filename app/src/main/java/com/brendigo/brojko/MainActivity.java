@@ -4348,11 +4348,16 @@ public final class MainActivity extends ComponentActivity {
             c.save();c.rotate(rotation,x+size/2f,y+size/2f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
-            p.setColor(darken(color,.14f));
+            // Owner mission mini-tiles have rounded, softly lit faces;
+            // the previous dark extrusion and bright double contour gave
+            // all four Majstor tiles an artificial heavy-bottom outline.
+            boolean softOwner=theme==0&&referencePortraitLayout;
+            p.setColor(darken(color,softOwner?.08f:.14f));
             c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
             p.clearShadowLayer();
-            gradient(x,y,size,size-2f,8,lighten(color,.18f),color);
-            p.setColor(0x55ffffff);p.setStrokeWidth(.75f);
+            gradient(x,y,size,size-2f,8,lighten(color,softOwner?.26f:.18f),color);
+            p.setColor(softOwner?0x26ffffff:0x55ffffff);
+            p.setStrokeWidth(.75f);
             p.setStyle(Paint.Style.STROKE);
             c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
                 y+size-3.5f,7.2f,7.2f,p);
@@ -5366,12 +5371,18 @@ public final class MainActivity extends ComponentActivity {
         void themePreviewTile(float x,float y,float w,float h,int color,int style){
             float radius=style==1?5:style==2?12:9;
             if(style==1){shape(x,y,w,h,radius,color);return;}
-            shape(x+1,y+2.5f,w,h-2,radius,darken(color,.15f));
+            // Local material treatment only for the native 4x4 swatch
+            // grid. Preserve tested geometry (earlier height edits
+            // worsened MAE), and do not change real gameplay tiles.
+            boolean ownerGrid=theme==0&&referencePortraitLayout&&
+                "themes".equals(page)&&x<190f&&y>=413f&&y<595f;
+            shape(x+1,y+2.5f,w,h-2,radius,
+                darken(color,ownerGrid?.065f:.15f));
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-3,radius,
                 lighten(color,style==2?.23f:.14f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.65f);p.setColor(0x4dffffff);
+            p.setStrokeWidth(.65f);p.setColor(ownerGrid?0x26ffffff:0x4dffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
                 Math.max(2,radius-1),Math.max(2,radius-1),p);
             p.setStyle(Paint.Style.FILL);
