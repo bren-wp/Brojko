@@ -6042,20 +6042,8 @@ public final class MainActivity extends ComponentActivity {
                 // alignment as the tiles; remain inside the live card.
                 // Native owner radio is slightly higher than the old
                 // preview; do not move its tappable card.
-                // Owner source radio buttons are neutral grey discs set into
-                // bright ivory rings, with a gentle lower contact shadow.
-                // Keep their existing centers and accessible tap rectangles.
-                if(theme==i){
-                    shape(x+47,y+116,22,22,11,CORAL);
-                    icon("check",x+58,y+127,13,WHITE);
-                }else if(theme==0&&referencePortraitLayout){
-                    shape(x+46.5f,y+116.9f,24f,24f,12f,0x26a88b6f);
-                    shape(x+46f,y+115.4f,24f,24f,12f,WHITE);
-                    shape(x+48.4f,y+117.8f,19.2f,19.2f,9.6f,
-                        0xffd9dbdd);
-                }else{
-                    shape(x+47,y+116,22,22,11,0xffe4e3e0);
-                }
+                shape(x+47,y+116,22,22,11,theme==i?CORAL:0xffe4e3e0);
+                if(theme==i)icon("check",x+58,y+127,13,WHITE);
                 taps.add(new Tap(i==0?14f:x,y,
                     i==0?138f:x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
@@ -6132,16 +6120,8 @@ public final class MainActivity extends ComponentActivity {
                 }
                 int swatchColor=i==2?0xffffc8ad:
                     (i==1?0xffffa87d:0xffffad6a);
-                // The owner artwork has smaller 3D material samples than
-                // the earlier 39-unit emulator swatches. Center in the same
-                // live style card; real gameplay tile dimensions are untouched.
-                boolean sourceStyle=theme==0&&referencePortraitLayout;
-                themePreviewTile(sourceStyle?x+8.5f:x+6,
-                    sourceStyle?380.5f:383,
-                    sourceStyle?34f:39f,sourceStyle?34f:39f,
-                    swatchColor,i);
-                fitted(styles[i],x+25,434,sourceStyle?8.6f:9f,
-                    48,ink,true);
+                themePreviewTile(x+6,383,39,39,swatchColor,i);
+                fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
                 taps.add(new Tap(frameX,371,frameX+frameW,461,styles[i],()->{
