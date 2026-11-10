@@ -1138,20 +1138,42 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.FILL);p.setColor(0xffffe379);
                 c.drawCircle(12,10,2.1f,p);
             }else if("gamepad".equals(type)){
+                // Original Stats gamepad edge was sampled at native
+                // 941x1672 x383..460/y352..410 and approximated as
+                // an Android Path (no screenshot/bitmap in the app).
+                // Owner body has a flat top and a smoothly curved
+                // inner notch, unlike the default domed generic icon.
+                boolean ownerPad=theme==0&&referencePortraitLayout&&
+                    "stats".equals(page);
                 Path pad=new Path();
-                pad.moveTo(6,6);pad.cubicTo(8,4,16,4,18,6);
-                pad.cubicTo(21,8,24,17,22,20);
-                pad.cubicTo(20,23,17,17,15,17);
-                pad.lineTo(9,17);pad.cubicTo(7,17,4,23,2,20);
-                pad.cubicTo(0,17,3,8,6,6);pad.close();
+                if(ownerPad){
+                    pad.moveTo(6.40f,4.34f);
+                    pad.cubicTo(9.15f,4.18f,15.14f,4.18f,17.60f,4.34f);
+                    pad.cubicTo(19.78f,4.75f,21.17f,7.25f,21.97f,10.75f);
+                    pad.cubicTo(22.37f,12.85f,22.60f,16.36f,22.52f,17.71f);
+                    pad.cubicTo(22.31f,19.14f,21.33f,20.36f,20.61f,20.50f);
+                    pad.cubicTo(19.70f,20.77f,18.62f,20.66f,18.15f,20.50f);
+                    pad.cubicTo(16.55f,20.10f,15.68f,16.96f,14.32f,16.60f);
+                    pad.cubicTo(12.69f,16.20f,11.90f,16.12f,10.22f,16.32f);
+                    pad.cubicTo(8.62f,16.68f,7.41f,19.76f,6.67f,19.94f);
+                    pad.cubicTo(5.29f,20.75f,3.50f,20.66f,2.85f,20.22f);
+                    pad.cubicTo(1.31f,19.12f,1.40f,17.02f,1.48f,15.48f);
+                    pad.cubicTo(1.58f,12.90f,1.86f,11.10f,2.30f,9.35f);
+                    pad.cubicTo(3.02f,6.87f,4.20f,5.10f,6.40f,4.34f);
+                    pad.close();
+                }else{
+                    pad.moveTo(6,6);pad.cubicTo(8,4,16,4,18,6);
+                    pad.cubicTo(21,8,24,17,22,20);
+                    pad.cubicTo(20,23,17,17,15,17);
+                    pad.lineTo(9,17);pad.cubicTo(7,17,4,23,2,20);
+                    pad.cubicTo(0,17,3,8,6,6);pad.close();
+                }
                 // Small raised navy controller, as on the reference KPI.
                 c.save();c.translate(0,1.15f);
                 p.setColor(0x35081327);c.drawPath(pad,p);c.restore();
                 // Colored silhouette geometry now matches x384–459,
                 // y352–410. Owner face is dark navy RGB~16/44/81,
                 // not the generic slate RGB~38/61/92.
-                boolean ownerPad=theme==0&&referencePortraitLayout&&
-                    "stats".equals(page);
                 p.setColor(WHITE);
                 p.setShader(new LinearGradient(0,4,0,22,
                     ownerPad?0xff1c3456:lighten(color,.20f),
