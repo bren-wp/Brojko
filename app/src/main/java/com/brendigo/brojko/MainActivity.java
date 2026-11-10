@@ -4507,11 +4507,16 @@ public final class MainActivity extends ComponentActivity {
                 // Owner PNG's coral/teal ink is about 19px left and
                 // 14px below the older native thumbnail. Keep untouched
                 // dark/vivid and non-reference layouts.
-                missionRaisedNumber(ownerArtwork?30:41,
-                    y+(ownerArtwork?19:13),ownerArtwork?31f:28f,
+                // Color-mask measurements: the 2/4 owner tiles are
+                // slightly narrower and sit ~3-5 native px above main.
+                // Isolated to owner 941x1672 Missions artwork, not the
+                // playable board or its tap regions.
+                missionRaisedNumber(ownerArtwork?30.6f:41,
+                    y+(ownerArtwork?17.2f:13),ownerArtwork?29.5f:28f,
                     CORAL,"2",-11f);
-                missionRaisedNumber(ownerArtwork?59:62,
-                    y+(ownerArtwork?20:14),28f,TEAL,"4",9f);
+                missionRaisedNumber(ownerArtwork?60f:62,
+                    y+(ownerArtwork?19f:14),ownerArtwork?27f:28f,
+                    TEAL,"4",9f);
                 missionHand(ownerArtwork?48:54,y+(ownerArtwork?35:29));
             }else if(name.startsWith("Dosegni 512")){
                 // Native source silhouette is shifted ~9px downward,
@@ -4528,8 +4533,8 @@ public final class MainActivity extends ComponentActivity {
                 // Reference 2x2 emblem starts roughly 16px left of the
                 // old native arrangement; enlarge the icons slightly.
                 for(int i=0;i<MISSION_TILE_VALUES.length;i++)
-                    missionRaisedNumber((ownerArtwork?33:40)+
-                        (i%2)*(ownerArtwork?25:23),
+                    missionRaisedNumber((ownerArtwork?34.3f:40)+
+                        (i%2)*(ownerArtwork?27.1f:23),
                         y+10+(i/2)*(ownerArtwork?25:23),
                         ownerArtwork?24f:22f,TILES[i+1],
                         Integer.toString(MISSION_TILE_VALUES[i]),0);
@@ -5198,19 +5203,31 @@ public final class MainActivity extends ComponentActivity {
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
             if(referenceStats&&theme==0&&"Najbolji rezultat".equals(caption)){
-                statsReferenceCrown(x+27f,y+38f,34f);
+                // Source orange ink centroid y≈385; before correction
+                // it sat near y≈400 on the same 941x1672 emulator.
+                statsReferenceCrown(x+27f,y+31.5f,34f);
             }else if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
-                statisticsSourceBlueStar(x+38f,y+36f,45f);
+                // The original star has roughly 10% more colored area
+                // and is about 5 px lower; no score state changes.
+                statisticsSourceBlueStar(x+38f,y+38f,49f);
             }else{
-                icon(symbol,x+(width<=125?27:38),
-                    y+(referenceStats?(width<=125?38:43):29),
-                    referenceStats?(width<=125?34:43):
-                        (width<=125?24:29),
-                    referenceStats&&theme==0&&"gamepad".equals(symbol)?
-                        0xff112c52:
-                    "gamepad".equals(symbol)?ink:accent);
+                // Color-mask centroid corrections for the first three
+                // illustrated Stats KPIs. Keep the actual live counts
+                // and all other theme layouts unchanged.
+                boolean ownerStatIcon=referenceStats&&theme==0;
+                boolean isPad=ownerStatIcon&&"gamepad".equals(symbol);
+                boolean isGrid=ownerStatIcon&&"grid".equals(symbol);
+                float iconX=x+(width<=125?27:38)+(isPad?4f:isGrid?10.6f:0f);
+                float iconY=y+(referenceStats?(width<=125?38:43):29)-
+                    ((isPad||isGrid)?7.3f:0f);
+                float iconSize=referenceStats?(width<=125?34:43):
+                    (width<=125?24:29);
+                if(isPad)iconSize*=.79f;
+                if(isGrid)iconSize*=.86f;
+                icon(symbol,iconX,iconY,iconSize,
+                    isPad?0xff112c52:"gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
             // units) still needs the three-column layout; thresholding
