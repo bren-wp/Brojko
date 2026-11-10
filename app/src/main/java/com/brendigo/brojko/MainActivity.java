@@ -5643,16 +5643,14 @@ public final class MainActivity extends ComponentActivity {
         // Scope Screen 07's preview materials to the picker only.
         // Actual game tile colors and the persisted game are untouched.
         void themeChoiceSurface(float x,float y,float w,float h,int preset){
-            // Measured against the user's native 941x1672 reference:
-            // dark tray centre around (480,430) is RGB 24/35/53,
-            // while the old rendering was 42/60/89. The vivid lower
-            // corners likewise require more depth, without changing
-            // any actual gameplay tile, theme preference or non-reference UI.
+            // Only the dark native portrait thumbnail needs a deeper
+            // navy material. Earlier vivid-gradient experiments failed
+            // the existing cyan/purple source-corner regression test.
             boolean ownerPicker=theme==0&&referencePortraitLayout&&
                 "themes".equals(page);
-            int top=preset==2?(ownerPicker?0xff7c47f8:0xff9f54f9):
+            int top=preset==2?0xff9f54f9:
                 preset==1?(ownerPicker?0xff203049:0xff2d405e):0xfffff7eb;
-            int bottom=preset==2?(ownerPicker?0xff0047c8:0xff177be9):
+            int bottom=preset==2?0xff177be9:
                 preset==1?(ownerPicker?0xff0d172a:0xff101c32):0xfff1e5d6;
             shape(x+1.1f,y+3,w-2.2f,h-1,17,
                 theme==1?0x55000000:0x239d7957);
@@ -5665,26 +5663,13 @@ public final class MainActivity extends ComponentActivity {
                 // both corners the same uniform blue. Native radial
                 // overlays belong to this preview, not real game tiles.
                 p.setStyle(Paint.Style.FILL);
-                // Previous vivid overlays made the lower corners
-                // substantially lighter than the reference. Reduce
-                // their alpha and let the deeper blue/purple base show.
                 p.setShader(new RadialGradient(x+w*.10f,y+h*.98f,
-                    w*.87f,new int[]{0x4600dcff,0x2400bbf8,0x0000bbf8},
+                    w*.87f,new int[]{0x8300dcff,0x4600bbf8,0x0000bbf8},
                     null,Shader.TileMode.CLAMP));
                 c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
                 p.setShader(new RadialGradient(x+w*1.08f,y+h*.98f,
-                    w*.96f,new int[]{0x98c047ff,0x52a642ff,0x00a642ff},
+                    w*.96f,new int[]{0xddc047ff,0x85a642ff,0x00a642ff},
                     null,Shader.TileMode.CLAMP));
-                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
-                // The owner vivid artwork retains a *localized* bright
-                // cyan bevel at its lower-left edge (native x650,y650:
-                // RGB 9/162/253), with a much darker lower interior.
-                // Restore only that edge glint rather than brightening
-                // the entire source surface again.
-                p.setShader(new RadialGradient(
-                    x+w*.065f,y+h*.87f,12.5f,
-                    new int[]{0xee0aa2ff,0x9b0aa2ff,0x000aa2ff},
-                    new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
                 c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
                 p.setShader(null);
             }
