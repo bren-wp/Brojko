@@ -4831,7 +4831,7 @@ public final class MainActivity extends ComponentActivity {
         // The three brand-style source headings are immutable, locally
         // traced native paths. Cache decoded geometry across Canvas redraws;
         // no user progress, locale, controls or screenshots are embedded.
-        final Path[] ownerHeadlinePaths = new Path[5];
+        final Path[] ownerHeadlinePaths = new Path[6];
         void ownerHeadline(int key,int first,int last,float startY,float endY){
             Path shapePath=ownerHeadlinePaths[key];
             if(shapePath==null){
@@ -4860,7 +4860,8 @@ public final class MainActivity extends ComponentActivity {
                     "Misije i":key==OwnerHeadlineContours.MISSIONS_CORAL?
                     "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
                     "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
-                    "izgled":"Statistika";
+                    "izgled":key==OwnerHeadlineContours.SETTINGS_NAVY?
+                    "Postavke":"Statistika";
                 textRegions.add(new TextRegion(title,realInk));
             }
             c.drawPath(shapePath,p);
@@ -6384,11 +6385,12 @@ public final class MainActivity extends ComponentActivity {
             // right than the previous native Nunito contour. Correct only
             // the light owner viewport; all other layouts remain unchanged.
             if(compact&&theme==0){
-                c.save();
-                c.translate(2.1f,-1.7f);
-                c.scale(1.02f,1.25f,200f,59f);
-                illustratedTitle("Postavke",200,75,45,330,ink);
-                c.restore();
+                // The real 941x1672 owner title spans native pixels
+                // x245..709/y87..183. A compressed vector contour of
+                // just the static text preserves its actual Nunito-style
+                // outline and holes, not a screenshot or fake gameplay UI.
+                ownerHeadline(OwnerHeadlineContours.SETTINGS_NAVY,
+                    0xff152444,0xff121c37,87f,183f);
             }else illustratedTitle("Postavke",200,compact?75:108,
                 compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
