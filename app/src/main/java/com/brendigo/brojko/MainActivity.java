@@ -4378,10 +4378,17 @@ public final class MainActivity extends ComponentActivity {
             // Source illustration colours are more saturated than normal
             // game tiles. This method paints only Missions thumbnails.
             if(theme==0&&referencePortraitLayout){
-                if(color==CORAL)color=0xffff633e;
-                else if(color==TEAL)color=0xff0fd4c8;
-                else if(color==TILES[3])color=0xff3198ff;
-                else if(color==TILES[4])color=0xfffeb23d;
+                // Measured owner/emulator averages on actual 941px
+                // Missions mini-tiles: coral (251,110,70) vs
+                // (251,117,85); teal (36,211,192) vs (43,213,202);
+                // Majstor blue (57,158,249) vs (76,163,251) and
+                // yellow (252,180,58) vs (249,184,84).
+                // Adjust only the illustrated tile pigments; gameplay
+                // board palette / score cells remain untouched.
+                if(color==CORAL)color=0xffff5730;
+                else if(color==TEAL)color=0xff02d2bf;
+                else if(color==TILES[3])color=0xff1e96fd;
+                else if(color==TILES[4])color=0xffffb024;
                 else if(color==0xffb45bf6)color=0xffaa65fb;
             }
             c.save();c.rotate(rotation,x+size/2f,y+size/2f);
@@ -4564,7 +4571,11 @@ public final class MainActivity extends ComponentActivity {
                 missionRaisedNumber(ownerArtwork?60f:62,
                     y+(ownerArtwork?19f:14),ownerArtwork?27f:28f,
                     TEAL,"4",9f);
-                missionHand(ownerArtwork?48:54,y+(ownerArtwork?35:29));
+                // Current navy outline x109..162/y460..526 is offset
+                // from the original glove x124..178/y470..535.
+                // Shift only the picture, not any interaction target.
+                missionHand(ownerArtwork?54.5f:54,
+                    y+(ownerArtwork?38.6f:29));
             }else if(name.startsWith("Dosegni 512")){
                 // Native source silhouette is shifted ~9px downward,
                 // narrower by ~5px, never a playable tile or touch target.
@@ -5208,6 +5219,12 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
                 0xffff822f,0xffff6f31,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
+            // Reference crown has three rounded finials at the tips.
+            // The existing silhouette lacked these balls and looked
+            // like three flattened triangles despite correct bounds.
+            c.drawCircle(-11.9f,-8.2f,2.25f,p);
+            c.drawCircle(.45f,-12.1f,2.35f,p);
+            c.drawCircle(12.4f,-8.2f,2.25f,p);
             p.setShader(null);
             // The lower rim on the owner crown stays orange, not gold.
             p.setColor(0xfffc752c);
@@ -5288,7 +5305,16 @@ public final class MainActivity extends ComponentActivity {
                     (width<=125?24:29);
                 if(isPad)iconSize*=1.10f;
                 if(isGrid)iconSize*=.86f;
-                if(isPad){c.save();c.scale(1f,1.17f,iconX,iconY);}
+                // Owner's navy gamepad spans native y352..410 while
+                // current tall dome covers y340..409. Use a 0.98
+                // Y scale (formerly 1.17) plus +2.9 Canvas units:
+                // preserve the already-matched x383..460 extent.
+                // Entirely decorative; accessibility labels unchanged.
+                if(isPad){
+                    c.save();
+                    c.translate(0f,2.9f);
+                    c.scale(1f,.98f,iconX,iconY);
+                }
                 icon(symbol,iconX,iconY,iconSize,
                     isPad?0xff112c52:"gamepad".equals(symbol)?ink:accent);
                 if(isPad)c.restore();
