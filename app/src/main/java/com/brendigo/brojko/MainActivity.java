@@ -1147,17 +1147,33 @@ public final class MainActivity extends ComponentActivity {
                 // Small raised navy controller, as on the reference KPI.
                 c.save();c.translate(0,1.15f);
                 p.setColor(0x35081327);c.drawPath(pad,p);c.restore();
-                // Gradient shaders do not reset the previously translucent
-                // Paint alpha. The gamepad was only 21% opaque and looked
-                // grey against the source's solid dark-navy icon.
+                // Colored silhouette geometry now matches x384–459,
+                // y352–410. Owner face is dark navy RGB~16/44/81,
+                // not the generic slate RGB~38/61/92.
+                boolean ownerPad=theme==0&&referencePortraitLayout&&
+                    "stats".equals(page);
                 p.setColor(WHITE);
                 p.setShader(new LinearGradient(0,4,0,22,
-                    lighten(color,.20f),darken(color,.11f),
+                    ownerPad?0xff1c3456:lighten(color,.20f),
+                    ownerPad?0xff082749:darken(color,.11f),
                     Shader.TileMode.CLAMP));
                 c.drawPath(pad,p);p.setShader(null);
-                p.setColor(WHITE);c.drawRoundRect(6,9,8,15,1,1,p);
-                c.drawRoundRect(4,11,10,13,1,1,p);
-                c.drawCircle(16,10,1.5f,p);c.drawCircle(19,13,1.5f,p);
+                p.setColor(WHITE);
+                if(ownerPad){
+                    // Owner plus sign 16×17 native px vs old 22×26.
+                    c.save();c.translate(.8f,.4f);c.scale(.74f,.74f,7f,12f);
+                    c.drawRoundRect(6,9,8,15,1,1,p);
+                    c.drawRoundRect(4,11,10,13,1,1,p);
+                    c.restore();
+                    // Source has the right dot ABOVE the left dot.
+                    c.drawCircle(16f,13f,1.1f,p);
+                    c.drawCircle(18f,10f,1.1f,p);
+                }else{
+                    c.drawRoundRect(6,9,8,15,1,1,p);
+                    c.drawRoundRect(4,11,10,13,1,1,p);
+                    c.drawCircle(16,10,1.5f,p);
+                    c.drawCircle(19,13,1.5f,p);
+                }
             }else if("grid".equals(type)){
                 for(int row=0;row<2;row++){
                     for(int col=0;col<2;col++){
@@ -4422,12 +4438,7 @@ public final class MainActivity extends ComponentActivity {
             finger.quadTo(3,-1,5,3);
             finger.lineTo(9,11);finger.lineTo(10,7);
             finger.quadTo(12,4,15,7);
-            // Preserve the proven smaller pointer footprint while
-            // gently shaping the three right-hand knuckles.
-            finger.quadTo(18,8,20,13);
-            finger.quadTo(23,12,23,16);
-            finger.quadTo(26,20,23,23);
-            finger.quadTo(21,27,18,27);
+            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
             finger.lineTo(12,29);finger.lineTo(5,26);
             finger.close();
             p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
@@ -4436,14 +4447,6 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(0xfffffff8);
             c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
             c.drawPath(finger,p);c.restore();
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeCap(Paint.Cap.ROUND);
-            p.setStrokeWidth(.65f);
-            p.setColor(0x74304b73);
-            c.drawLine(12.4f,10.0f,15.7f,14.2f,p);
-            c.drawLine(18.0f,11.4f,20.2f,16.5f,p);
-            p.setStyle(Paint.Style.FILL);
-            p.setStrokeCap(Paint.Cap.BUTT);
             c.restore();
         }
         void missionCalendarSeven(float centerX,float centerY){
@@ -5161,8 +5164,10 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(WHITE);
             // Owner star was geometrically close already (MAE 4.867),
             // but its blue face was ~10 levels too bright in both R/G.
+            // Restore the measured-better 4.8669 RGB MAE pigment;
+            // the darker trial increased it to 4.9161.
             p.setShader(new LinearGradient(-7f,-11f,7f,11f,
-                0xff3c9dff,0xff076bea,Shader.TileMode.CLAMP));
+                0xff48a9ff,0xff1174ed,Shader.TileMode.CLAMP));
             c.drawPath(star,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.64f);p.setColor(0x85c0e8ff);
@@ -5295,7 +5300,8 @@ public final class MainActivity extends ComponentActivity {
             // After restoring the full-sized pad, the source
             // "Ukupno partija" caption begins farther right.
             float labelX=x+(width<=125?77:98)+
-                (referenceStats&&theme==0&&"Ukupno partija".equals(caption)?7.2f:0f);
+                (referenceStats&&theme==0&&"Ukupno partija".equals(caption)?7.2f:
+                 referenceStats&&theme==0&&"Najveća pločica".equals(caption)?6f:0f);
             float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
