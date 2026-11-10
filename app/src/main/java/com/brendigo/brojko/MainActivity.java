@@ -4402,7 +4402,8 @@ public final class MainActivity extends ComponentActivity {
             // Preserve its verified earlier material without affecting
             // either the game or the other mission illustrations.
             boolean softOwner=theme==0&&referencePortraitLayout&&
-                (rotation==0f||"512".equals(number));
+                (rotation==0f||("missions".equals(page)&&size==24f)||
+                    "512".equals(number));
             p.setColor(darken(color,softOwner?.08f:.14f));
             c.drawRoundRect(x,y+1.2f,x+size,y+size+1.2f,8,8,p);
             p.clearShadowLayer();
@@ -4417,8 +4418,10 @@ public final class MainActivity extends ComponentActivity {
             // 23–25px high; previous emulator glyphs were 24–29px
             // wide and ~30px high. Do not shrink the separate
             // large 2/4 gesture illustration or the 512 emblem.
+            // Slightly rotated reference thumbnails must retain the
+            // already-verified smaller 2/4/8/16 lettering.
             boolean majstorThumb=theme==0&&referencePortraitLayout&&
-                "missions".equals(page)&&rotation==0f&&size==24f;
+                "missions".equals(page)&&size==24f;
             float font=number.length()>3?11:number.length()>2?17.5f:
                 number.length()>1?18:21;
             fitted(number,x+size/2f,
@@ -4590,12 +4593,26 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Majstor")){
                 // Reference 2x2 emblem starts roughly 16px left of the
                 // old native arrangement; enlarge the icons slightly.
-                for(int i=0;i<MISSION_TILE_VALUES.length;i++)
-                    missionRaisedNumber((ownerArtwork?34.3f:40)+
-                        (i%2)*(ownerArtwork?27.1f:23),
-                        y+10+(i/2)*(ownerArtwork?25:23),
+                // Original 941px Majstor emblems are independently
+                // rotated, unlike the previous axis-aligned four tiles.
+                // Native color-mask oriented rectangle angles:
+                // 2: -2.6°, 4: +5.2°, 8: -3.1°, 16: +3.8°.
+                // Correct each visual center by at most 2.7 native px;
+                // no real game tile positions or actions change.
+                for(int i=0;i<MISSION_TILE_VALUES.length;i++){
+                    float tilt=ownerArtwork?
+                        (i==0?-2.6f:i==1?5.2f:i==2?-3.1f:3.8f):0f;
+                    float dx=ownerArtwork?
+                        (i==0||i==2?1f:i==1?-.7f:-1.1f):0f;
+                    float dy=ownerArtwork?
+                        (i>=2?-1.1f:-.4f):0f;
+                    missionRaisedNumber(
+                        (ownerArtwork?34.3f:40)+
+                        (i%2)*(ownerArtwork?27.1f:23)+dx,
+                        y+10+(i/2)*(ownerArtwork?25:23)+dy,
                         ownerArtwork?24f:22f,TILES[i+1],
-                        Integer.toString(MISSION_TILE_VALUES[i]),0);
+                        Integer.toString(MISSION_TILE_VALUES[i]),tilt);
+                }
             }else if(name.startsWith("Kralj")){
                 if(theme==0)missionRoyalCrown(cx,cy+2);
                 else icon("crown",cx,cy+2,48,0xffffaf25);
