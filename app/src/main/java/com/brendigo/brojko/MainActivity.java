@@ -5676,6 +5676,16 @@ public final class MainActivity extends ComponentActivity {
                     w*.96f,new int[]{0x98c047ff,0x52a642ff,0x00a642ff},
                     null,Shader.TileMode.CLAMP));
                 c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                // The owner vivid artwork retains a *localized* bright
+                // cyan bevel at its lower-left edge (native x650,y650:
+                // RGB 9/162/253), with a much darker lower interior.
+                // Restore only that edge glint rather than brightening
+                // the entire source surface again.
+                p.setShader(new RadialGradient(
+                    x+w*.065f,y+h*.87f,12.5f,
+                    new int[]{0xee0aa2ff,0x9b0aa2ff,0x000aa2ff},
+                    new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
                 p.setShader(null);
             }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
