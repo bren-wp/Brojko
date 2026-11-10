@@ -4847,6 +4847,22 @@ public final class MainActivity extends ComponentActivity {
             p.setAntiAlias(true);
             p.setShader(new LinearGradient(0f,startY,0f,endY,
                 first,last,Shader.TileMode.CLAMP));
+            if(auditTextLayout){
+                // Canvas text geometry is independently audited in Android
+                // instrumentation. A native vector title must report the
+                // actual transformed ink bounds, not a fake font rectangle.
+                RectF realInk=new RectF();
+                shapePath.computeBounds(realInk,true);
+                android.graphics.Matrix transform=new android.graphics.Matrix();
+                c.getMatrix(transform);
+                transform.mapRect(realInk);
+                String title=key==OwnerHeadlineContours.MISSIONS_NAVY?
+                    "Misije i":key==OwnerHeadlineContours.MISSIONS_CORAL?
+                    "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
+                    "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
+                    "izgled":"Statistika";
+                textRegions.add(new TextRegion(title,realInk));
+            }
             c.drawPath(shapePath,p);
             p.setShader(null);
             c.restore();
