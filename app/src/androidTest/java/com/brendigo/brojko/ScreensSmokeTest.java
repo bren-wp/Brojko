@@ -28,7 +28,12 @@ public class ScreensSmokeTest {
             {201,222,493,310}, // Themes navy
             {509,221,749,325}, // Themes coral
             {237,183,716,287}, // Statistics navy
-            {243,85,711,186}    // Settings native header text
+            {243,85,711,186},   // Settings native header text
+            {65,806,357,844},   // Statistics chart caption
+            {482,834,655,871},  // Themes style caption
+            {148,328,296,363},  // Missions daily section
+            {147,799,282,844},  // Missions weekly section
+            {149,1268,346,1313}// Missions achievements section
         };
         for(int index=0;index<expected.length;index++){
             android.graphics.Path outline=OwnerHeadlineContours.decode(index);
