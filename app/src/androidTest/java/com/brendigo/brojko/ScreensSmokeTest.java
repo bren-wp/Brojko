@@ -5308,19 +5308,35 @@ public class ScreensSmokeTest {
                 try{
                     view.draw(new Canvas(image));
                     int regularX=Math.round(view.offX+260f*view.scale);
-                    int regularY=Math.round(view.offY+213f*view.scale);
+                    int regularY=Math.round(view.offY+218f*view.scale);
                     int shortX=Math.round(view.offX+251f*view.scale);
                     int shortY=Math.round(view.offY+496f*view.scale);
                     int regular=image.getPixel(regularX,regularY);
                     int shortTrack=image.getPixel(shortX,shortY);
                     int weeklyOrange=image.getPixel(
                         Math.round(view.offX+160f*view.scale),
-                        Math.round(view.offY+509f*view.scale));
+                        Math.round(view.offY+501f*view.scale));
                     assertTrue("10k orange bar must be below the two-line "+
                         "description in the source-calibrated row",
                         android.graphics.Color.red(weeklyOrange)>215&&
                         android.graphics.Color.green(weeklyOrange)<205&&
                         android.graphics.Color.blue(weeklyOrange)<165);
+                    // Owner-source track top edges are y503 (first daily)
+                    // and y1169 (10k weekly), at native 941px resolution.
+                    // At y208/513 design units we must not leak the former
+                    // out-of-place blue/orange tracks after calibration.
+                    int offBlue=image.getPixel(
+                        Math.round(view.offX+140f*view.scale),
+                        Math.round(view.offY+208f*view.scale));
+                    int offOrange=image.getPixel(
+                        Math.round(view.offX+160f*view.scale),
+                        Math.round(view.offY+513f*view.scale));
+                    assertTrue("Daily blue starts below its former y=208",
+                        android.graphics.Color.blue(offBlue)-
+                            android.graphics.Color.green(offBlue)<55);
+                    assertTrue("Weekly orange ends before its former y=513",
+                        android.graphics.Color.red(offOrange)-
+                            android.graphics.Color.green(offOrange)<55);
                     // Standard source gray bar extends to x~631px,
                     // but long-counter bars end around x~573px.
                     assertTrue("Standard task track must extend right",
@@ -5484,7 +5500,7 @@ public class ScreensSmokeTest {
                         back.bottom-back.top>=48);
                     int daily=image.getPixel(
                         Math.round(view.offX+140f*view.scale),
-                        Math.round(view.offY+213f*view.scale));
+                        Math.round(view.offY+218f*view.scale));
                     assertTrue("Daily merges progress must be owner-source blue",
                         android.graphics.Color.blue(daily)>
                             android.graphics.Color.green(daily)+55 &&
