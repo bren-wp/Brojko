@@ -2760,10 +2760,25 @@ public final class MainActivity extends ComponentActivity {
             // for 5+ digit values shown in the original populated 4x4 artwork.
             icon("crown",narrow?231:224,70,24,0xffffb43d);
             fitted("Najbolji",narrow?230:255,100,12,narrow?66:70,muted,true);
-            fitted(fmt(best),narrow?230:255,129,24,narrow?64:70,ink,true);
+            // Owner Classic 941x1672 HUD ink is ~107x34px for best and
+            // ~100x34px for score; older wide Nunito figures measured
+            // ~129x40px and ~132x38px, also ~10px too low.
+            // Canvas typography-only transform: game state and HUD taps
+            // remain untouched; other modes/themes use existing layout.
+            boolean sourceClassicHud=narrow&&!daily&&!relaxed&&
+                theme==0&&referencePortraitLayout;
+            float bestHudX=narrow?230:255;
+            if(sourceClassicHud){c.save();c.scale(.92f,1f,bestHudX,125f);}
+            fitted(fmt(best),bestHudX,sourceClassicHud?125:129,
+                sourceClassicHud?21.5f:24,narrow?64:70,ink,true);
+            if(sourceClassicHud)c.restore();
             icon("stats",narrow?299:313,69,23,muted);
             fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
-            fitted(fmt(game.score),narrow?301:334,129,23,narrow?64:70,ink,true);
+            float scoreHudX=narrow?301:334;
+            if(sourceClassicHud){c.save();c.scale(.86f,1f,scoreHudX,125f);}
+            fitted(fmt(game.score),scoreHudX,sourceClassicHud?125:129,
+                sourceClassicHud?20.5f:23,narrow?64:70,ink,true);
+            if(sourceClassicHud)c.restore();
             if(narrow&&!relaxed)
                 shape(262,58,1,65,0,theme==1?0xff526078:0xffe1d8cc);
             if(narrow){
@@ -5913,16 +5928,33 @@ public final class MainActivity extends ComponentActivity {
             icon("phone-vibrate",219,476,26,ink);
             leftFitted("Vibracija",245,480,15,86,ink,true);
             leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
-            shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
-            shape(vibration?355:339,468,23,23,12,WHITE);
+            // Sampled owner mask: orange vibration switch is 89×51px
+            // at native x798..886/y1112..1162, versus the former
+            // 100×63px at x793..893/y1096..1159.
+            // Keep switch hit regions and persisted values unchanged.
+            boolean sourceThemeSwitch=theme==0&&referencePortraitLayout;
+            if(sourceThemeSwitch){
+                shape(339,473,38,22,11,vibration?CORAL:0xffb7c1cf);
+                shape(vibration?355:341,475,20,18,10,WHITE);
+            }else{
+                shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
+                shape(vibration?355:339,468,23,23,12,WHITE);
+            }
             taps.add(new Tap(205,461,378,509,"Vibracija",()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
             leftFitted("Zvukovi",245,523,15,86,ink,true);
             leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
-            shape(337,511,43,27,14,sound?CORAL:0xffb7c1cf);
-            shape(sound?355:339,513,23,23,12,WHITE);
+            // Native source sound toggle is also ~89×51px but needs
+            // only a 3px vertical shift (unlike vibration's 16px).
+            if(sourceThemeSwitch){
+                shape(339,512.3f,38,22,11,sound?CORAL:0xffb7c1cf);
+                shape(sound?355:341,514.3f,20,18,10,WHITE);
+            }else{
+                shape(337,511,43,27,14,sound?CORAL:0xffb7c1cf);
+                shape(sound?355:339,513,23,23,12,WHITE);
+            }
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             taps.add(new Tap(205,509,378,557,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
@@ -5933,7 +5965,9 @@ public final class MainActivity extends ComponentActivity {
             // Source 941x1672: one pill-shaped selection per intensity,
             // not a progress fill and oversized circular thumb.
             shape(205,594,165,13,7,theme==1?0xff536078:0xffeee5d9);
-            float activeX=205+animation*54f;
+            // The center strength pill was 10 native pixels too far
+            // left in the owner reference, independent of its tap zone.
+            float activeX=(sourceThemeSwitch?209:205)+animation*54f;
             shape(activeX-2,592,60,17,9,WHITE);
             gradient(activeX,594,56,13,7,
                 lighten(CORAL,.04f),CORAL);
