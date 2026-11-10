@@ -27,7 +27,8 @@ public class ScreensSmokeTest {
             {425,188,825,281}, // Missions coral
             {201,222,493,310}, // Themes navy
             {509,221,749,325}, // Themes coral
-            {237,183,716,287}  // Statistics navy
+            {237,183,716,287}, // Statistics navy
+            {243,85,711,186}    // Settings native header text
         };
         for(int index=0;index<expected.length;index++){
             android.graphics.Path outline=OwnerHeadlineContours.decode(index);
