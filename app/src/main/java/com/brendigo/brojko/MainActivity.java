@@ -1272,6 +1272,19 @@ public final class MainActivity extends ComponentActivity {
                 // Respect the supplied accent instead of recoloring every star.
                 boolean golden=Color.red(color)>200 &&
                     Color.green(color)>100&&Color.blue(color)<140;
+                // Source Missions uses a bright golden pillow star with a
+                // thin curved top-left reflection, not the broad flattened
+                // oval glint used by other screens. Scope material to the
+                // owner light portrait reward pictograms only.
+                boolean sourceMissionGold=golden&&"missions".equals(page)&&
+                    theme==0&&referencePortraitLayout;
+                if(sourceMissionGold){
+                    // Native source mask: ~61x59 px; previous emulator:
+                    // ~58x60 px. Scale only this vector outline to match.
+                    android.graphics.Matrix outlineFit=new android.graphics.Matrix();
+                    outlineFit.setScale(1.04f,.985f,12f,12f);
+                    star.transform(outlineFit);
+                }
                 boolean victoryGold=golden&&page.equals("win");
                 boolean dailyGoalGold=golden&&page.equals("daily")&&
                     theme==0&&referencePortraitLayout;
@@ -1279,17 +1292,20 @@ public final class MainActivity extends ComponentActivity {
                     golden?0xffe48408:darken(color,.28f);
                 int top=victoryGold?0xfffff47f:
                     dailyGoalGold?0xffffd252:
+                    sourceMissionGold?0xffffd243:
                     golden?("missions".equals(page)&&theme==0?0xffffd45b:0xffffed87):
                     lighten(color,.43f);
                 // The victory stars are filled golden-orange with soft tips,
                 // rather than the lighter outline-like mission style.
                 int edge=victoryGold?0xffffa722:
+                    sourceMissionGold?0xffffa719:
                     golden?0xffff9f19:lighten(color,.69f);
                 c.save();c.translate(0,1.6f);
                 p.setColor(rim);c.drawPath(star,p);
                 c.restore();
                 p.setShader(new LinearGradient(0,2,0,23,
-                    top,color,Shader.TileMode.CLAMP));
+                    top,sourceMissionGold?0xffffbc1a:color,
+                    Shader.TileMode.CLAMP));
                 c.drawPath(star,p);p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeJoin(Paint.Join.ROUND);
@@ -1298,11 +1314,28 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.FILL);
                 // Keep the original broad glint outside the victory modal;
                 // its 3D stars instead have a subtle warm highlight.
-                p.setShader(new LinearGradient(6,4,17,12,
-                    victoryGold?0x40ffffff:dailyGoalGold?0x30ffffff:0x7fffffff,
-                    0x00ffffff,Shader.TileMode.CLAMP));
-                c.drawOval(6,5,17,10,p);
-                p.setShader(null);
+                if(sourceMissionGold){
+                    // The owner's source star has a slim, specular arc
+                    // hugging the upper left point. Restore the arc
+                    // rather than tinting its entire upper face white.
+                    p.setShader(null);p.setStyle(Paint.Style.STROKE);
+                    p.setStrokeCap(Paint.Cap.ROUND);
+                    p.setStrokeWidth(.94f);p.setColor(0xb6ffffff);
+                    Path sheen=new Path();
+                    sheen.moveTo(4.9f,10.3f);
+                    sheen.cubicTo(5.2f,7.1f,8.2f,7.9f,9.2f,5.2f);
+                    sheen.quadTo(10.3f,3.0f,11.2f,2.5f);
+                    c.drawPath(sheen,p);
+                    p.setStyle(Paint.Style.FILL);
+                    p.setStrokeCap(Paint.Cap.BUTT);
+                }else{
+                    p.setShader(new LinearGradient(6,4,17,12,
+                        victoryGold?0x40ffffff:
+                            dailyGoalGold?0x30ffffff:0x7fffffff,
+                        0x00ffffff,Shader.TileMode.CLAMP));
+                    c.drawOval(6,5,17,10,p);
+                    p.setShader(null);
+                }
             }else if("flame".equals(type)){
                 Path flame=new Path();
                 flame.moveTo(12,1);

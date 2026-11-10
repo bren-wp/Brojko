@@ -19,6 +19,39 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
+    @Test public void missionGoldenRewardIconKeepsSaturatedNativeMaterial(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="missions";activity.theme=0;
+                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
+                    1672,View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    view.draw(new Canvas(bitmap));
+                    // Source first reward star is gold at x820/y439,
+                    // owner RGB 252/214/71. This assertion verifies
+                    // saturated native material, not hardcoded rewards.
+                    int top=bitmap.getPixel(820,439);
+                    assertTrue("Reward must remain gold, not pale ivory",
+                        android.graphics.Color.red(top)>220 &&
+                        android.graphics.Color.green(top)>170 &&
+                        android.graphics.Color.blue(top)<115);
+                    captureReference(activity,view,
+                        "missions-phase120-native-gold-star-941x1672");
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void fixedBrandHeadingsRetainNativeOwnerOutlines(){
         // Static title art is allowed to mirror owner typography; no
         // gameplay numbers or user-history values are rasterized.
