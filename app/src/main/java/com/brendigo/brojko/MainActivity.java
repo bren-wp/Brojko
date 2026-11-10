@@ -5869,7 +5869,17 @@ public final class MainActivity extends ComponentActivity {
             statsSoftCard(16,329,368,158,23,card);
             // The owner heading has tighter typographic bounds than the
             // previously oversized native chart title.
-            leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+            // Owner source caption is optically narrower than Nunito Bold
+            // while keeping the same baseline and left anchor. This local
+            // x compression never changes chart tabs or history data.
+            if(theme==0&&referencePortraitLayout){
+                c.save();
+                c.scale(.86f,1f,27f,357f);
+                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+                c.restore();
+            }else{
+                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+            }
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
@@ -5900,6 +5910,7 @@ public final class MainActivity extends ComponentActivity {
                     "stats".equals(page);
                 float barSlot=(sourceLightChart?347f:315f)/
                     Math.max(10,count);
+                boolean markedMaximum=false;
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
@@ -5925,6 +5936,16 @@ public final class MainActivity extends ComponentActivity {
                         // into adjacent columns on compact screens.
                         fitted(fmt(val),x+(barSlot-6)/2,y-7,8.4f,
                             Math.max(8f,barSlot-8f),ink,true);
+                        // The reference marks the highest real score with
+                        // one golden crown. Never invent a score or crown
+                        // zero-height columns. Tied maxima receive one
+                        // marker to avoid clutter and overlapping glyphs.
+                        if(sourceLightChart&&chartMetric==0&&
+                                val==ceiling&&!markedMaximum){
+                            icon("crown",x+(barSlot-6)/2,y-25f,
+                                13,0xffffa42b);
+                            markedMaximum=true;
+                        }
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
