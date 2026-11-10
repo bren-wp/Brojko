@@ -5219,12 +5219,6 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
                 0xffff822f,0xffff6f31,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
-            // Reference crown has three rounded finials at the tips.
-            // The existing silhouette lacked these balls and looked
-            // like three flattened triangles despite correct bounds.
-            c.drawCircle(-11.9f,-8.2f,2.25f,p);
-            c.drawCircle(.45f,-12.1f,2.35f,p);
-            c.drawCircle(12.4f,-8.2f,2.25f,p);
             p.setShader(null);
             // The lower rim on the owner crown stays orange, not gold.
             p.setColor(0xfffc752c);
