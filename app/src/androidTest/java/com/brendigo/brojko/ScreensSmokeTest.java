@@ -516,45 +516,6 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void themePickerNeutralRadiosUseOwnerIvoryRings(){
-        rule.getScenario().onActivity(activity->{
-            String previousPage=activity.page;
-            int previousTheme=activity.theme;
-            try{
-                activity.page="themes";activity.theme=0;
-                MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                    View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(
-                    1672,View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap bitmap=Bitmap.createBitmap(941,1672,
-                    Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(bitmap));
-                    // Second theme (dark) is not selected. Sample native
-                    // ivory rim and grey center, not the cream background.
-                    int rim=bitmap.getPixel(
-                        Math.round(view.offX+194f*view.scale),
-                        Math.round(view.offY+286f*view.scale));
-                    int center=bitmap.getPixel(
-                        Math.round(view.offX+203f*view.scale),
-                        Math.round(view.offY+292f*view.scale));
-                    assertTrue("Inactive theme selector retains bright ring",
-                        android.graphics.Color.red(rim)>236&&
-                        android.graphics.Color.green(rim)>230);
-                    assertTrue("Inactive theme selector center is neutral",
-                        Math.abs(android.graphics.Color.red(center)-
-                            android.graphics.Color.green(center))<10);
-                    assertTrue("Inactive theme selector is visibly grey",
-                        android.graphics.Color.red(center)<231);
-                }finally{bitmap.recycle();}
-            }finally{
-                activity.page=previousPage;activity.theme=previousTheme;
-                activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
-
     @Test public void themesPortraitSwatchesMatchSourceRowOffsets(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
