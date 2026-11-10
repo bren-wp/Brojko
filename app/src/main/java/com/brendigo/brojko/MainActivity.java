@@ -5070,15 +5070,33 @@ public final class MainActivity extends ComponentActivity {
             // directly through the second description line.
             boolean twoLineWeeklyScore=portrait&&theme==0&&
                 name.startsWith("Ostvari 10.000");
-            float progressY=y+(portrait?50:59)+(twoLineWeeklyScore?13f:0f);
+            // Exact 941x1672 user-reference measurements show different
+            // vertical baselines for the six mission rows. In the previous
+            // emulator: daily blue y494 instead of y503; 10k orange y1191
+            // instead of y1169; Master grey y1447 vs y1437. Correct only
+            // the source light portrait layout. Keep real fractions intact.
+            float sourceProgressDelta=0f;
+            boolean sourceLightMissionProgress=portrait&&theme==0;
+            if(sourceLightMissionProgress){
+                if(name.startsWith("Spoji 20"))sourceProgressDelta=4f;
+                else if(name.startsWith("Dosegni 512"))sourceProgressDelta=8f;
+                else if(name.startsWith("Ostvari 10.000"))
+                    sourceProgressDelta=-9f;
+                else if(name.startsWith("Majstor")||
+                        name.startsWith("Kralj"))sourceProgressDelta=-4f;
+            }
+            float progressY=y+(portrait?50:59)+
+                (twoLineWeeklyScore?13f:0f)+sourceProgressDelta;
+            float trackX=sourceLightMissionProgress?105.5f:104f;
+            float trackHeight=sourceLightMissionProgress?10f:7f;
             // Owner's 941x1672 source has two progress widths:
             // standard tasks end at x≈631px, while 10k/50k score
             // counters need more room and end near x≈573px.
             // Only the light portrait illustration uses these widths.
             float barWidth=(portrait&&theme==0)?
                 (target>=10000?140f:164f):151f;
-            shape(104,progressY,barWidth,7,4,
-                theme==1?0xff40516c:0xffdce3e8);
+            shape(trackX,progressY,barWidth,trackHeight,
+                trackHeight/2f,theme==1?0xff40516c:0xffdce3e8);
             // "Majstor" is an unlock, not an incremental reward. Keep
             // the filled bar consistent with its 0/1 or 1/1 counter:
             // a previous 512 tile must not display a fake 50% unlock.
@@ -5094,8 +5112,9 @@ public final class MainActivity extends ComponentActivity {
                 if(name.startsWith("Spoji 20"))progressAccent=0xff2aa5ff;
                 else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
             }
-            if(fraction>0)shape(104,progressY,
-                barWidth*fraction,7,4,progressAccent);
+            if(fraction>0)shape(trackX,progressY,
+                barWidth*fraction,trackHeight,trackHeight/2f,
+                progressAccent);
             int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
             int displayTarget=binaryMilestone?1:target;
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
