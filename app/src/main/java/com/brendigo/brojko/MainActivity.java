@@ -584,6 +584,19 @@ public final class MainActivity extends ComponentActivity {
         startActivity(Intent.createChooser(i,"Podijeli rezultat"));
     }
 
+    /** External author website only: no user data or gameplay is uploaded. */
+    static Intent brendigoWebsiteIntent(){
+        return new Intent(Intent.ACTION_VIEW,Uri.parse("https://brendigo.com/"))
+            .addCategory(Intent.CATEGORY_BROWSABLE);
+    }
+    void openBrendigoWebsite(){
+        try{
+            startActivity(brendigoWebsiteIntent());
+        }catch(android.content.ActivityNotFoundException notAvailable){
+            Toast.makeText(this,"Nema dostupnog web preglednika.",Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private static final int EXPORT_BACKUP=601, IMPORT_BACKUP=602;
     private static final String BACKUP_FORMAT="brendigo.brojko.backup.v1";
     private static final String[] BACKUP_KEYS={
@@ -1886,11 +1899,7 @@ public final class MainActivity extends ComponentActivity {
                     "samo na vašem uređaju.","Igra radi bez interneta i računa.",
                     "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
                     "analitiku na poslužitelje."});break;
-                case "about":textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",
-                    "Spajaj jednake pločice i osvoji 2048.",
-                    "Povuci gore, dolje, lijevo ili desno.",
-                    "Dostupni su način 4×4, 5×5",
-                    "te poseban dnevni izazov.","brendigo.com"});break;
+                case "about":aboutPage();break;
                 default:home();
             }
             // Shared press highlight for all visible interactive UI controls.
@@ -6422,6 +6431,18 @@ public final class MainActivity extends ComponentActivity {
             txt("Hrvatski",208,278,25,ink,true);
             txt("Ostali jezici nisu dostupni u ovoj verziji.",200,369,15,muted,false);
             button("Natrag na postavke","back",25,720,350,70,CORAL,true,()->navigate("settings"));
+        }
+        void aboutPage(){
+            textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",
+                "Spajaj jednake pločice i osvoji 2048.",
+                "Povuci gore, dolje, lijevo ili desno.",
+                "Dostupni su način 4×4, 5×5",
+                "te poseban dnevni izazov.","brendigo.com"});
+            // Keep the existing About layout and Back control while making
+            // the previously decorative website address genuinely actionable.
+            button("Posjeti Brendigo web","globe",24,529,352,69,card,false,
+                ()->openBrendigoWebsite());
+            fitted("Otvara se u vanjskom pregledniku.",200,644,15,344,muted,false);
         }
         void textPage(String heading,String[] lines){
             title(heading);
