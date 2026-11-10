@@ -5850,7 +5850,17 @@ public final class MainActivity extends ComponentActivity {
             statsSoftCard(16,329,368,158,23,card);
             // The owner heading has tighter typographic bounds than the
             // previously oversized native chart title.
-            leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+            // Owner source caption is optically narrower than Nunito Bold
+            // while keeping the same baseline and left anchor. This local
+            // x compression never changes chart tabs or history data.
+            if(theme==0&&referencePortraitLayout){
+                c.save();
+                c.scale(.86f,1f,27f,357f);
+                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+                c.restore();
+            }else{
+                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+            }
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
             fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
@@ -5881,6 +5891,7 @@ public final class MainActivity extends ComponentActivity {
                     "stats".equals(page);
                 float barSlot=(sourceLightChart?347f:315f)/
                     Math.max(10,count);
+                boolean markedMaximum=false;
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
                     int val=row==null?0:(chartMetric==0?
@@ -5906,6 +5917,16 @@ public final class MainActivity extends ComponentActivity {
                         // into adjacent columns on compact screens.
                         fitted(fmt(val),x+(barSlot-6)/2,y-7,8.4f,
                             Math.max(8f,barSlot-8f),ink,true);
+                        // The reference marks the highest real score with
+                        // one golden crown. Never invent a score or crown
+                        // zero-height columns. Tied maxima receive one
+                        // marker to avoid clutter and overlapping glyphs.
+                        if(sourceLightChart&&chartMetric==0&&
+                                val==ceiling&&!markedMaximum){
+                            icon("crown",x+(barSlot-6)/2,y-25f,
+                                13,0xffffa42b);
+                            markedMaximum=true;
+                        }
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
@@ -6021,8 +6042,20 @@ public final class MainActivity extends ComponentActivity {
                 // alignment as the tiles; remain inside the live card.
                 // Native owner radio is slightly higher than the old
                 // preview; do not move its tappable card.
-                shape(x+47,y+116,22,22,11,theme==i?CORAL:0xffe4e3e0);
-                if(theme==i)icon("check",x+58,y+127,13,WHITE);
+                // Owner source radio buttons are neutral grey discs set into
+                // bright ivory rings, with a gentle lower contact shadow.
+                // Keep their existing centers and accessible tap rectangles.
+                if(theme==i){
+                    shape(x+47,y+116,22,22,11,CORAL);
+                    icon("check",x+58,y+127,13,WHITE);
+                }else if(theme==0&&referencePortraitLayout){
+                    shape(x+46.5f,y+116.9f,24f,24f,12f,0x26a88b6f);
+                    shape(x+46f,y+115.4f,24f,24f,12f,WHITE);
+                    shape(x+48.4f,y+117.8f,19.2f,19.2f,9.6f,
+                        0xffd9dbdd);
+                }else{
+                    shape(x+47,y+116,22,22,11,0xffe4e3e0);
+                }
                 taps.add(new Tap(i==0?14f:x,y,
                     i==0?138f:x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
@@ -6099,8 +6132,16 @@ public final class MainActivity extends ComponentActivity {
                 }
                 int swatchColor=i==2?0xffffc8ad:
                     (i==1?0xffffa87d:0xffffad6a);
-                themePreviewTile(x+6,383,39,39,swatchColor,i);
-                fitted(styles[i],x+25,434,9,48,ink,true);
+                // The owner artwork has smaller 3D material samples than
+                // the earlier 39-unit emulator swatches. Center in the same
+                // live style card; real gameplay tile dimensions are untouched.
+                boolean sourceStyle=theme==0&&referencePortraitLayout;
+                themePreviewTile(sourceStyle?x+8.5f:x+6,
+                    sourceStyle?380.5f:383,
+                    sourceStyle?34f:39f,sourceStyle?34f:39f,
+                    swatchColor,i);
+                fitted(styles[i],x+25,434,sourceStyle?8.6f:9f,
+                    48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
                 taps.add(new Tap(frameX,371,frameX+frameW,461,styles[i],()->{
