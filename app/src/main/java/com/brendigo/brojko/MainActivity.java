@@ -4828,7 +4828,53 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
             p.setTextAlign(Paint.Align.CENTER);
         }
+        // The three brand-style source headings are immutable, locally
+        // traced native paths. Cache decoded geometry across Canvas redraws;
+        // no user progress, locale, controls or screenshots are embedded.
+        final Path[] ownerHeadlinePaths = new Path[5];
+        void ownerHeadline(int key,int first,int last,float startY,float endY){
+            Path shapePath=ownerHeadlinePaths[key];
+            if(shapePath==null){
+                shapePath=OwnerHeadlineContours.decode(key);
+                ownerHeadlinePaths[key]=shapePath;
+            }
+            c.save();
+            // The reference outlines are native 941x1672 source pixels;
+            // BoardScreen's 400-unit viewport applies the inverse scale.
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setShader(null);p.setColor(WHITE);
+            p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
+            p.setAntiAlias(true);
+            p.setShader(new LinearGradient(0f,startY,0f,endY,
+                first,last,Shader.TileMode.CLAMP));
+            if(auditTextLayout){
+                // Canvas text geometry is independently audited in Android
+                // instrumentation. A native vector title must report the
+                // actual transformed ink bounds, not a fake font rectangle.
+                RectF realInk=new RectF();
+                shapePath.computeBounds(realInk,true);
+                android.graphics.Matrix transform=new android.graphics.Matrix();
+                c.getMatrix(transform);
+                transform.mapRect(realInk);
+                String title=key==OwnerHeadlineContours.MISSIONS_NAVY?
+                    "Misije i":key==OwnerHeadlineContours.MISSIONS_CORAL?
+                    "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
+                    "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
+                    "izgled":"Statistika";
+                textRegions.add(new TextRegion(title,realInk));
+            }
+            c.drawPath(shapePath,p);
+            p.setShader(null);
+            c.restore();
+        }
         void missionMeasuredHeadline(boolean portrait){
+            if(portrait&&theme==0){
+                ownerHeadline(OwnerHeadlineContours.MISSIONS_NAVY,
+                    0xff1a2a4c,0xff182647,190f,278f);
+                ownerHeadline(OwnerHeadlineContours.MISSIONS_CORAL,
+                    0xfffb5534,0xfffc5734,190f,279f);
+                return;
+            }
             final String navy="Misije i",coral="postignuća";
             float size=portrait?36f:33f;
             float gap=portrait?10f:11f;
@@ -5494,6 +5540,13 @@ public final class MainActivity extends ComponentActivity {
         // Previous separate fitted() boxes could touch at the "i/iz" seam
         // on narrow fonts or distort just one segment.
         void themesMeasuredHeading(float baseline,float proposedSize){
+            if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
+                ownerHeadline(OwnerHeadlineContours.THEMES_NAVY,
+                    0xff172c53,0xff122347,223f,307f);
+                ownerHeadline(OwnerHeadlineContours.THEMES_CORAL,
+                    0xfffd663b,0xfffa552e,223f,323f);
+                return;
+            }
             final String navy="Teme i",coral="izgled";
             float size=proposedSize,gap=8f,maxWidth=308f;
             p.setTypeface(displayFont);p.setFakeBoldText(false);
@@ -5777,8 +5830,8 @@ public final class MainActivity extends ComponentActivity {
                 // x238..714/y184..285. The verified emulator span was
                 // x238..713/y186..283, with a thinner filled face.
                 // Adjust only this title, not KPI text or other screens.
-                c.scale(1.025f,1.30f,101f,120f);
-                illustratedTitle("Statistika",200,120,43,325,0xff15243f);
+                ownerHeadline(OwnerHeadlineContours.STATS_NAVY,
+                    0xff1a2948,0xff141f3a,184f,286f);
                 c.restore();
             }else illustratedTitle("Statistika",200,116,43,325,ink);
             statsHeaderBurst(79,104,false);

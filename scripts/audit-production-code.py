@@ -45,7 +45,17 @@ for tag in ("activity", "service", "receiver", "provider"):
 assert exported == [".MainActivity"], "Only the launcher activity may be exported: " + str(exported)
 
 java = {p.name: p.read_text(encoding="utf-8") for p in sorted(SRC.glob("*.java"))}
-assert len(java) == 6, "Audit needs an updated inventory when Java files are added/removed"
+# Explicit production source inventory. New files must be reviewed instead of
+# silently bypassing the security/dead-code checks.
+expected_sources = {
+    "AppReminder.java", "AppReminderBoot.java",
+    "ClassicBrandContours.java", "SplashBrandContours.java",
+    "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
+}
+assert set(java) == expected_sources, (
+    "Audit inventory changed: added=" + str(set(java)-expected_sources)
+    + ", missing=" + str(expected_sources-set(java))
+)
 combined = "\n".join(java.values())
 
 # Keep the app entirely offline and prevent new unsafe dynamic entry points.

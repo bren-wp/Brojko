@@ -1,0 +1,66 @@
+package com.brendigo.brojko;
+
+import android.graphics.Path;
+import android.util.Base64;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.zip.InflaterInputStream;
+
+/**
+ * Native vector outlines traced from user-provided Brojko 941x1672 owner
+ * references. Each segment stores closed polygons, including interior
+ * counters (Path.FillType.EVEN_ODD). No screenshots, backgrounds, fixed
+ * gameplay values or raster images are packed in the application.
+ *
+ * The numbers are compressed geometry, not pixel bitmaps. They are used
+ * only for the three static light-portrait headings where Nunito's actual
+ * glyph contours diverge from the supplied logo-style typography.
+ */
+final class OwnerHeadlineContours {
+    private OwnerHeadlineContours() {}
+
+    static final int MISSIONS_NAVY = 0;
+    static final int MISSIONS_CORAL = 1;
+    static final int THEMES_NAVY = 2;
+    static final int THEMES_CORAL = 3;
+    static final int STATS_NAVY = 4;
+
+    private static final String[] DATA = {
+        "eNodkstLlGEUxp9nNEZtpKzEvBGlEULSBd0EtWqTJRRJiwq6/R0FWZJR1iKocCkE0aaIoKvmrdDRUWosFa85XlLTyjLv2Y8WvznnO3PO8z7f+x2FlOhSdfiSumDFV2yXw02t+pYWXEH9ujqU5t107YAcKjkadq5G4Ke3a8a5Dnir1zjd8U510JucRFznTG/0Fp7yiPlO8R4nu4D/Cx3nQjQKFINuJTkF5WR1OqQe4gqzcho+MohZPGep25vxkaAufqPMRLWME6sfYuQx9WhQn5ThYkV9UJ99QL3ep1H44f2ap7bqYpyWwCl0z6J7Xosw6zO8xUkoIT8KRcwc0TS1aZ/TN1/QOMTI+3wan8c5P9EnqJRwwjGN+TAc4k6KNISDAVT66RpQlmb1UVM4m8D7V/XCsCY1Tn1aC5rRH7Ip4oR+aUxzsKxJi7sNaAmvAXwH8Zmg745jepH5OX0h9mtVg46HIO8a/H8fUe1Umd6rVG0wr6v6q2vUbzN7B617WoGY7mtIlShValRVOHiA5iP6H+PnKW6e0/OSU17R91pLeoNOHfPNEOHcNmYi+g0jakWnhSxMFlYTpzeoVnV6Ac/In6gZ7T495D6qcFilD5zboLv8XwFJbFYNW1XvbWpioyLOU7vzYa9a2ZBGYq13qUYJLlM1m1rnizi5rDaX01WhFra10Tf0lq+SSsd69ELohRT2BjrS6cxGO5uuTLytxUkNG1OtTmJU9Xyjd8QWvlE7Ttt58wg3EIb6f3hI6x0=",
+        "eNodlFts1FUQh38zB3qhUCh2uSg0RUqXxkQxjZf4UPHFpkYNGh8wCgkqD5iIJEbUYDQ+aIzwQGJMjCb2wRhDVUwMEZekFAO11VZI2Nqy9ga7bbelZdvu0gu9+sWHLzP/c+bMzJmZ89c6bfQ5dXhOXT6mfr+pQcihz7K27PPmwaBQy2G1FmA6FCgbVkDAbkFZn1UGRnxZyZCvVChSHyTCSnVoi/+O90YlYNzPa8Kb8HwJz+3mHsd1Qovehxwy+bAWYMbTmoaMD+kW/OuDZJfETzd04atLYx7XpF+BdmzasWnDpoWIBf4cVs/oGiz483jeC/uIso+TL2KxzkbUYSl1Wa96LaEhmLAezbK2bGPmNmVmc+Ro5LoS/ys0gN5r85y5jYdCyyhpWaVsWsM2pXGbUM5GlbVh9LRGkWltsD+J0wQxXbMzyJ/glBJ2yoqtwUrstJXaGThr6y3GWsxk58ihkfitcFlL1qEZ69QkpCyuHvtbnSqw83w1a8BaNWItythFYjdCDD2mYZWFDeoM69UN10OErmyGcvWHCojSqaiGQqXSYQdyM5RoNBTT1bW6g74YSk3hbjq/DaJ0vwruR682Cw9rKTyieRgID6kn7CJWleKhTHHlh23KhO0Q1STkwr2aYWc6bFFOZf453TlJr07SkS/ozFfwjZa8nm7VM0XfUuvvoUFpGPUf6HWDbiOnYNF/pC8/c+Ys83JOczDi3Nh/U5//yhz8ok4/TYzvoJ4p+Br5JXmV+8eK+0d8fYjFu+iH0V9HP6huP0DEA0zTa0zfITI5TEbvwDHN+/t8H2Naj1qeH4FDFvxV5Cu2xg9aib9hEfYj/oGV+idW7J9Zvh/n3AmyO0FGx7ntp/9P5tu64e8picdBPN/yo7yHt3gXb+qmH9Ggtvpduuqr9Y8Xknm+emDAi9iNYLWJtxahCmuQhby9PHLNI7dVVGIt+d0D5eg7WIsyuTu5TwXV2aSUb9R1ZL9vR1bitxL/FcTZqqu80Wo1+y61+gNU5T6qUkVVdqoX/QZrSZjyB7lRNRV5lNrvJtKTRKqjH08RqZZsnoAasqwh2m7O1RKpDh91vLpaIj2O7xpiPKZmreJf0eh3YEJ/+Lj+8qwu+4yu+JLagquFf8tF5AUV+QtYPasL/rQuQSuvus33YL0X65fV7vtZ28/eS2r6D5Cfcwo=",
+        "eNoNkktIlGEUht83qZlpvBRNNvWnQjVaaROWXUBDahUIOiARGETgpiAigqKgoEUtAiOhVrkcEyq6rQLJwK1hIFaUmYrxj2ZEUAaOmdOzePjOd/5zec/5fkUVuEz/HHORV7oYNnu1q13qnQ6827VOey/2Aaegyvv4vosvNa7kVokV4NmIncSfdIPLvd8JH3QZxMmV01pyjfJOKq8IsXFXOOItkKJXyiXeRr9NLlXc41rwJ2Lfa9kf6PLZdQ5hFg1z6PqmgmepF1IrcI/++p5XuJuad7yesxwC36X6fe9wH5qewyvsQW+FKr+m00tUPEPFI3iA6j5vcD+5A9QY9BqIeIBO/XR6gaKsFhR1lv1kUfyQLT3xKipE/RTfYybodYnSPqRFN6K8kR5N6GiibzP9D7PFFmhjnxl8Gfq0e62PQwd2B5OdYMKTxJ4m7iwTn/N2SPgCei7CZa/zFXKvEXOdmJvQRc5tcrtQdcv2DfZxFb2X4DxazrD9Ts5TbPQYZ4aZWtHXylwt+I4Sd4TZEhpRqGHN6I3mNKQ/eqsljWpZ4/BFBU24Vl9drxnv0Txn3nXkFbTIv1MEUarHqBbTd+6hiv1RU36nHC/5kxf9zcvOewpC/eIFf0DOOU17WpMe0+R/phKRvQ==",
+        "eNoNkk1IlHEQxmcebTV3Nbfd9PXjLSozK+vgIYKlNiMPGUgsFKxsXYIOFR704FGiDwo61SmToEKNuvRFUJc6BBHEQtEWJCKhmW1FRFK2ff4OP2aYd2fmmee/VmWhhq2k8/ZHZ71cZzwKcZ32pcRGait1ztfqgq/XNbjta3SX2h1v0i1v0HUYJ7/szbpEvOiBRrxeozDmdbrpy/h9LVSSm27Yb41ZySIa9hgdFboCo16lq15Nd7XVqcl+KkBP4IvUwNdmX6wWaEVb4CugTaG3KwVpNHV6KyzXNvRugQ40pD2i7S6l7ZdStqDQFmyJKsjKmW72V+ahnC5nWplvUNQ3Kk5Mcm3Sy5SgO4GKOO7E6A512H7ooH3XASbsYVI3s7u4aQe7Oj1BHqrbV6nHW5SFXl+tHDHHhiyTM9Dj67QLuti20zdrt2+lntZ+OOQpHaHW55vUh09H2VqpfTjXy/U5/MrhZJZNeyFDnvGoBZqzd5qxaU3AK3uvgn2Ekl6iL4/Wx+SPmHef973nNRDoATofcukT/MvDazx8Q5xE4yzxA9+KaC9aEQ153ucF7hfoLrD7Oa/7DJ56EmospkF299uc+pk9wH9igP5BZh2DE9x7ilknrajjaB2yaYsqYlO8w4z/s0/EL7zLN3yex++v+P4ZZlVrb6lN/QflOYUb",
+        "eNoVlGtsz2cUx7/fo6qq9MLcSkK27JKxMakNI8iYyWZSGZYxYrZskyXUG5mJCFm2vbCwyWhmL5CsLskumLqNurRVjGqVoqqqrfulWNV1n734/J/zPM/5P+c83+ecn1LUM37R2VihWrgcP+t6rNLNWKtr8QdsVmNs0u1YDblqiuVqjh9taBM/OSNWulOscpfIg7XuGusYf4PN7hjbme+FYuwDbg+tosSJUUKMQtXFLlXHXzoT63VaSbHBio2widM34fW7k2M95PGvPCeoTbylihipEzFcp2O4U2KE0+JtcshmHE8+41UV43QyxqhCKT6mMv+j4z6oUz7k1j7iti53qk9CFfY5J/kce1X4nFSZRvp1HfBAHYbjHqQKD9BJ94dXdAbqnKVLrF1m/xK+VzzE4aGcMpIT33GGJ8JU7OmsfeIUf+40z3R7z4OFTvc3RP2ecRnry93OuU72CjV4GecvIc63Kvc8sv6KMYccPlOlP9ZZqPOnxJxJ7LnY82Eh8wXk8CXk6Bq+jZ6uZk+z/aEeewK8p0cep/vQ6GzdgovYDf5A9Z6i856qKnxP+H3iZRNvLLHH6pDfVYlHq9Bvar+HqlBJRLvnRZy+SE883y08F+ZYnqOHZNusUTGYdxmo8uirsuijY/GyiqO39scL2hs9oZuKIlMlcCw64JfOGybpeIjYT4h7h/EGmjdw33rVwBVfJu/ruuu7RH9I3Yn7PCaDJripB74C9dh1vEM9ml9F39vo3wz3qYkWTo0U6iLdLaO9nkSG/o006rm1rvoR+jWj4wPVEr82Wqo+ktUQqdipqiG/6nhKF6IzZLKXqYfR3QnRk4p8kXNfhYFuF0PcGiIG6VH0w6cPefbBvy/1PQAG63wMUbWe9joV+Fft8WoVQalXcutcbryCV8jVOea1rNd5DZmtQdc8J3oDFfInt9oC+VRMAWMha8XsFaP/fhTYywvvgK1qggvexjkFUKhqqMAuZb3U+TrqLbzqRu2h56dpd0zhXSbzJpPRZBL9PYmemsy9PqJXZ8AX9NZM7jgLDWfRlbPpzgXuEF/Tz4sZl+K7FD0Wu0Us1N1Yin4/6Fwsoae/ow8XqjJm62LksJ6jU9j/z4uw98UM7dJrfk673UN/uyt00U6nQxp2IrsPtE9NKtJNleq6KqFGN3Qe6tWoq7pHdSRw547UZVd06EbFd0OTzk6gDxPp+JbUhqmd0B3sW24DGdRTZ9TNdCu8k9yd30w/w7960aX90DaL//fnvCw0zcK7L9XSi655Fm0zqcx2vFUyVZqk05xYQb7l7gQ96KTnmfdG55f4kvQi/7YxStvjDe2MYSqIofTDMB2METoao+mDMTAOe7wOx0R0maA9ka0dasu3K99HtNUl2gVFfMcOu0xHfALOYFfToTW8ZQ01VaVtrlT+f2BNkOs="
+    };
+
+    static Path decode(int index) {
+        if (index < 0 || index >= DATA.length) {
+            throw new IllegalArgumentException("Unknown headline " + index);
+        }
+        try (DataInputStream source = new DataInputStream(
+                 new InflaterInputStream(new ByteArrayInputStream(
+                     Base64.decode(DATA[index], Base64.NO_WRAP))))) {
+            int contours = source.readUnsignedShort();
+            if (contours > 100) throw new IOException("Too many outlines");
+            Path path = new Path();
+            path.setFillType(Path.FillType.EVEN_ODD);
+            for (int i = 0; i < contours; i++) {
+                int vertices = source.readUnsignedShort();
+                if (vertices < 3 || vertices > 2048) {
+                    throw new IOException("Invalid outline size");
+                }
+                for (int j = 0; j < vertices; j++) {
+                    float x = source.readUnsignedShort();
+                    float y = source.readUnsignedShort();
+                    if (j == 0) path.moveTo(x, y);
+                    else path.lineTo(x, y);
+                }
+                path.close();
+            }
+            return path;
+        } catch (IOException ex) {
+            throw new IllegalStateException("Invalid packaged owner contours", ex);
+        }
+    }
+}

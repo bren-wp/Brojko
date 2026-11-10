@@ -19,6 +19,32 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
+    @Test public void fixedBrandHeadingsRetainNativeOwnerOutlines(){
+        // Static title art is allowed to mirror owner typography; no
+        // gameplay numbers or user-history values are rasterized.
+        final float[][] expected={
+            {130,189,400,279}, // Missions navy
+            {425,188,825,281}, // Missions coral
+            {201,222,493,310}, // Themes navy
+            {509,221,749,325}, // Themes coral
+            {237,183,716,287}  // Statistics navy
+        };
+        for(int index=0;index<expected.length;index++){
+            android.graphics.Path outline=OwnerHeadlineContours.decode(index);
+            android.graphics.RectF bounds=new android.graphics.RectF();
+            outline.computeBounds(bounds,true);
+            assertTrue("No empty owner heading "+index,!bounds.isEmpty());
+            assertTrue("Reference x left "+index,
+                bounds.left>=expected[index][0]-2f);
+            assertTrue("Reference y top "+index,
+                bounds.top>=expected[index][1]-2f);
+            assertTrue("Reference x right "+index,
+                bounds.right<=expected[index][2]+2f);
+            assertTrue("Reference y bottom "+index,
+                bounds.bottom<=expected[index][3]+2f);
+        }
+    }
+
     @Test public void aboutExternalWebsiteIsFixedHttpsAndOptIn(){
         android.content.Intent browser=MainActivity.brendigoWebsiteIntent();
         assertEquals(android.content.Intent.ACTION_VIEW,browser.getAction());
