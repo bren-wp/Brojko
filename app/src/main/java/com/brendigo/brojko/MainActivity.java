@@ -1168,8 +1168,16 @@ public final class MainActivity extends ComponentActivity {
                         // Avoid carrying the 0x26 shadow alpha into the
                         // actual bright orange four-square KPI symbol.
                         p.setColor(WHITE);
+                        // Actual reference KPI squares are deep orange,
+                        // RGB ~248/142/32, rather than the old pale
+                        // yellow ~255/189/75. Only override this tiny
+                        // glyph on the light 941px Statistics display.
+                        boolean sourceStatsGrid=theme==0&&
+                            referencePortraitLayout&&"stats".equals(page);
                         p.setShader(new LinearGradient(gx,gy,gx,gy+9,
-                            lighten(color,.25f),color,Shader.TileMode.CLAMP));
+                            sourceStatsGrid?0xffffa031:lighten(color,.25f),
+                            sourceStatsGrid?0xfff28212:color,
+                            Shader.TileMode.CLAMP));
                         c.drawRoundRect(gx,gy,gx+9,gy+9,2.5f,2.5f,p);
                         p.setShader(null);
                     }
@@ -4382,9 +4390,17 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(x+1.3f,y+1.3f,x+size-1.3f,
                 y+size-3.5f,7.2f,7.2f,p);
             p.setStyle(Paint.Style.FILL);
-            fitted(number,x+size/2f,y+size*.68f,
-                number.length()>3?11:number.length()>2?17.5f:
-                    number.length()>1?18:21,size-4,WHITE,true);
+            // Majstor 2/4/8/16 source digits are 16–17px wide,
+            // 23–25px high; previous emulator glyphs were 24–29px
+            // wide and ~30px high. Do not shrink the separate
+            // large 2/4 gesture illustration or the 512 emblem.
+            boolean majstorThumb=theme==0&&referencePortraitLayout&&
+                "missions".equals(page)&&rotation==0f&&size==24f;
+            float font=number.length()>3?11:number.length()>2?17.5f:
+                number.length()>1?18:21;
+            fitted(number,x+size/2f,
+                y+size*.68f+(majstorThumb?2.3f:0f),
+                majstorThumb?font*.76f:font,size-4,WHITE,true);
             c.restore();
         }
         void missionOrangeRays(float x,float y){
@@ -4406,7 +4422,12 @@ public final class MainActivity extends ComponentActivity {
             finger.quadTo(3,-1,5,3);
             finger.lineTo(9,11);finger.lineTo(10,7);
             finger.quadTo(12,4,15,7);
-            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
+            // Preserve the proven smaller pointer footprint while
+            // gently shaping the three right-hand knuckles.
+            finger.quadTo(18,8,20,13);
+            finger.quadTo(23,12,23,16);
+            finger.quadTo(26,20,23,23);
+            finger.quadTo(21,27,18,27);
             finger.lineTo(12,29);finger.lineTo(5,26);
             finger.close();
             p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
@@ -4415,6 +4436,14 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(0xfffffff8);
             c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
             c.drawPath(finger,p);c.restore();
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStrokeWidth(.65f);
+            p.setColor(0x74304b73);
+            c.drawLine(12.4f,10.0f,15.7f,14.2f,p);
+            c.drawLine(18.0f,11.4f,20.2f,16.5f,p);
+            p.setStyle(Paint.Style.FILL);
+            p.setStrokeCap(Paint.Cap.BUTT);
             c.restore();
         }
         void missionCalendarSeven(float centerX,float centerY){
@@ -5130,8 +5159,10 @@ public final class MainActivity extends ComponentActivity {
             c.save();c.translate(0f,1.6f);
             p.setColor(0x335180bc);c.drawPath(star,p);c.restore();
             p.setColor(WHITE);
+            // Owner star was geometrically close already (MAE 4.867),
+            // but its blue face was ~10 levels too bright in both R/G.
             p.setShader(new LinearGradient(-7f,-11f,7f,11f,
-                0xff48a9ff,0xff1174ed,Shader.TileMode.CLAMP));
+                0xff3c9dff,0xff076bea,Shader.TileMode.CLAMP));
             c.drawPath(star,p);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.64f);p.setColor(0x85c0e8ff);
@@ -5143,7 +5174,12 @@ public final class MainActivity extends ComponentActivity {
         // with light/shade mass, unlike the sharp generic flat crown.
         // Only its decorative ink changes; all KPI data remain live.
         void statsReferenceCrown(float cx,float cy,float size){
-            c.save();c.translate(cx,cy);c.scale(size/28f,size/28f);
+            c.save();
+            // Native owner crown: x70–150/y350–410 (81×61);
+            // current was x75–147/y345–420 (73×76).
+            // Wider by ~12%, shorter by ~20%, and 3px lower.
+            c.translate(cx,cy-1.25f);
+            c.scale(size/28f*1.12f,size/28f*.80f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);
             Path crown=new Path();
@@ -5165,10 +5201,11 @@ public final class MainActivity extends ComponentActivity {
             c.drawPath(crown,p);
             p.clearShadowLayer();
             p.setShader(new LinearGradient(-9f,-13f,9f,13f,
-                0xffff882c,0xfff5742d,Shader.TileMode.CLAMP));
+                0xffff822f,0xffff6f31,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
-            p.setColor(0xffefa01b);
+            // The lower rim on the owner crown stays orange, not gold.
+            p.setColor(0xfffc752c);
             c.drawRoundRect(-10.4f,8.7f,10.1f,12.7f,2.2f,2.2f,p);
             p.setColor(0x70fff1bb);
             c.drawOval(-8.8f,-7f,-4.5f,-3.7f,p);
@@ -5234,21 +5271,31 @@ public final class MainActivity extends ComponentActivity {
                 boolean ownerStatIcon=referenceStats&&theme==0;
                 boolean isPad=ownerStatIcon&&"gamepad".equals(symbol);
                 boolean isGrid=ownerStatIcon&&"grid".equals(symbol);
-                float iconX=x+(width<=125?27:38)+(isPad?4f:isGrid?10.6f:0f);
+                // Measured gamepad colored face (not its transparent
+                // canvas): owner 76×59, emulator 55×35. Increase
+                // X×1.39/Y×1.63 and move centroid +5px/−7px.
+                // The grid geometry already matches to ±1px, so
+                // retain its x/y/size and correct only the pigment.
+                float iconX=x+(width<=125?27:38)+(isPad?6.1f:isGrid?10.6f:0f);
                 float iconY=y+(referenceStats?(width<=125?38:43):29)-
-                    ((isPad||isGrid)?7.3f:0f);
+                    (isPad?11.8f:isGrid?7.3f:0f);
                 float iconSize=referenceStats?(width<=125?34:43):
                     (width<=125?24:29);
-                if(isPad)iconSize*=.79f;
+                if(isPad)iconSize*=1.10f;
                 if(isGrid)iconSize*=.86f;
+                if(isPad){c.save();c.scale(1f,1.17f,iconX,iconY);}
                 icon(symbol,iconX,iconY,iconSize,
                     isPad?0xff112c52:"gamepad".equals(symbol)?ink:accent);
+                if(isPad)c.restore();
             }
             // The source's slightly widened first compact KPI (123
             // units) still needs the three-column layout; thresholding
             // at 118 incorrectly switched its icon and labels to the
             // two-column layout.
-            float labelX=x+(width<=125?77:98);
+            // After restoring the full-sized pad, the source
+            // "Ukupno partija" caption begins farther right.
+            float labelX=x+(width<=125?77:98)+
+                (referenceStats&&theme==0&&"Ukupno partija".equals(caption)?7.2f:0f);
             float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
