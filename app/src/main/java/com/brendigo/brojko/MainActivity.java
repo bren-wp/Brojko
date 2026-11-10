@@ -4381,51 +4381,25 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void missionHand(float x,float y){
-            // The owner 2/4 illustration has a rounded four-finger white
-            // pointer with an indigo outline, not a flat triangular glove.
-            // Native path is decorative, not a bitmap or touch target.
-            c.save();c.translate(x-1f,y-1f);
-            p.clearShadowLayer();p.setShader(null);
+            // Explicitly hand-drawn pointer on the orange 2 + teal 4
+            // icon, as in the supplied source (no emoji or network asset).
+            c.save();c.translate(x,y);
+            p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
+            Path finger=new Path();
+            finger.moveTo(5,16);finger.lineTo(-1,7);
+            finger.quadTo(-3,2,0,1);
+            finger.quadTo(3,-1,5,3);
+            finger.lineTo(9,11);finger.lineTo(10,7);
+            finger.quadTo(12,4,15,7);
+            finger.lineTo(20,17);finger.quadTo(24,24,18,27);
+            finger.lineTo(12,29);finger.lineTo(5,26);
+            finger.close();
+            p.setColor(0xff304b73);p.setStrokeWidth(2.0f);
             p.setStrokeJoin(Paint.Join.ROUND);
-            p.setStrokeCap(Paint.Cap.ROUND);
-            Path hand=new Path();
-            hand.moveTo(3.5f,13.4f);
-            hand.lineTo(-1.6f,6.5f);
-            hand.cubicTo(-5.2f,1.9f,-1.0f,-3.1f,2.4f,-1f);
-            hand.cubicTo(3.8f,-.4f,5.0f,1.4f,6.2f,3.4f);
-            hand.lineTo(11.8f,12.2f);
-            hand.cubicTo(10.4f,8.6f,13.6f,5.9f,16.3f,8.8f);
-            hand.lineTo(19.7f,14.0f);
-            hand.cubicTo(18.3f,10.9f,21.9f,9.4f,24f,12.9f);
-            hand.lineTo(26.7f,18.5f);
-            hand.cubicTo(29.7f,18.0f,30.1f,21.5f,30.2f,23.7f);
-            hand.cubicTo(31.8f,28.0f,27.5f,32.7f,21.5f,34.4f);
-            hand.lineTo(12.1f,35.3f);
-            hand.cubicTo(6.1f,35.2f,2.7f,31.7f,1.2f,28f);
-            hand.lineTo(-2.0f,22.8f);
-            hand.cubicTo(-4.1f,18.9f,-1.1f,16.6f,3.5f,19.7f);
-            hand.close();
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(0xfff9f7f2);
-            p.setShadowLayer(1.3f,0f,1.5f,0x5232496a);
-            c.drawPath(hand,p);
-            p.clearShadowLayer();
-            p.setShader(new LinearGradient(-1f,2f,22f,35f,
-                0xffffffff,0xffedf1f5,Shader.TileMode.CLAMP));
-            c.drawPath(hand,p);
-            p.setShader(null);
-            p.setColor(0xff2e4e79);
-            p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(1.65f);
-            c.drawPath(hand,p);
-            // Soft fingertip separations preserve the hand's small-scale
-            // legibility and do not bleed into the numbered tiles.
-            p.setColor(0xffb7c9db);p.setStrokeWidth(.8f);
-            c.drawLine(12.1f,13f,13.7f,16.1f,p);
-            c.drawLine(19.9f,14.4f,21.3f,17.4f,p);
-            p.setStyle(Paint.Style.FILL);
-            p.setStrokeCap(Paint.Cap.BUTT);
-            p.setShader(null);p.clearShadowLayer();
+            c.drawPath(finger,p);
+            p.setColor(0xfffffff8);
+            c.save();c.translate(0,-1f);c.scale(.93f,.92f,9,16);
+            c.drawPath(finger,p);c.restore();
             c.restore();
         }
         void missionCalendarSeven(float centerX,float centerY){
@@ -4533,11 +4507,16 @@ public final class MainActivity extends ComponentActivity {
                 // Owner PNG's coral/teal ink is about 19px left and
                 // 14px below the older native thumbnail. Keep untouched
                 // dark/vivid and non-reference layouts.
-                missionRaisedNumber(ownerArtwork?30:41,
-                    y+(ownerArtwork?19:13),ownerArtwork?31f:28f,
+                // Color-mask measurements: the 2/4 owner tiles are
+                // slightly narrower and sit ~3-5 native px above main.
+                // Isolated to owner 941x1672 Missions artwork, not the
+                // playable board or its tap regions.
+                missionRaisedNumber(ownerArtwork?30.6f:41,
+                    y+(ownerArtwork?17.2f:13),ownerArtwork?29.5f:28f,
                     CORAL,"2",-11f);
-                missionRaisedNumber(ownerArtwork?59:62,
-                    y+(ownerArtwork?20:14),28f,TEAL,"4",9f);
+                missionRaisedNumber(ownerArtwork?60f:62,
+                    y+(ownerArtwork?19f:14),ownerArtwork?27f:28f,
+                    TEAL,"4",9f);
                 missionHand(ownerArtwork?48:54,y+(ownerArtwork?35:29));
             }else if(name.startsWith("Dosegni 512")){
                 // Native source silhouette is shifted ~9px downward,
@@ -4554,8 +4533,8 @@ public final class MainActivity extends ComponentActivity {
                 // Reference 2x2 emblem starts roughly 16px left of the
                 // old native arrangement; enlarge the icons slightly.
                 for(int i=0;i<MISSION_TILE_VALUES.length;i++)
-                    missionRaisedNumber((ownerArtwork?33:40)+
-                        (i%2)*(ownerArtwork?25:23),
+                    missionRaisedNumber((ownerArtwork?34.3f:40)+
+                        (i%2)*(ownerArtwork?27.1f:23),
                         y+10+(i/2)*(ownerArtwork?25:23),
                         ownerArtwork?24f:22f,TILES[i+1],
                         Integer.toString(MISSION_TILE_VALUES[i]),0);
@@ -5224,19 +5203,31 @@ public final class MainActivity extends ComponentActivity {
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
             if(referenceStats&&theme==0&&"Najbolji rezultat".equals(caption)){
-                statsReferenceCrown(x+27f,y+38f,34f);
+                // Source orange ink centroid y≈385; before correction
+                // it sat near y≈400 on the same 941x1672 emulator.
+                statsReferenceCrown(x+27f,y+31.5f,34f);
             }else if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
-                statisticsSourceBlueStar(x+38f,y+36f,45f);
+                // The original star has roughly 10% more colored area
+                // and is about 5 px lower; no score state changes.
+                statisticsSourceBlueStar(x+38f,y+38f,49f);
             }else{
-                icon(symbol,x+(width<=125?27:38),
-                    y+(referenceStats?(width<=125?38:43):29),
-                    referenceStats?(width<=125?34:43):
-                        (width<=125?24:29),
-                    referenceStats&&theme==0&&"gamepad".equals(symbol)?
-                        0xff112c52:
-                    "gamepad".equals(symbol)?ink:accent);
+                // Color-mask centroid corrections for the first three
+                // illustrated Stats KPIs. Keep the actual live counts
+                // and all other theme layouts unchanged.
+                boolean ownerStatIcon=referenceStats&&theme==0;
+                boolean isPad=ownerStatIcon&&"gamepad".equals(symbol);
+                boolean isGrid=ownerStatIcon&&"grid".equals(symbol);
+                float iconX=x+(width<=125?27:38)+(isPad?4f:isGrid?10.6f:0f);
+                float iconY=y+(referenceStats?(width<=125?38:43):29)-
+                    ((isPad||isGrid)?7.3f:0f);
+                float iconSize=referenceStats?(width<=125?34:43):
+                    (width<=125?24:29);
+                if(isPad)iconSize*=.79f;
+                if(isGrid)iconSize*=.86f;
+                icon(symbol,iconX,iconY,iconSize,
+                    isPad?0xff112c52:"gamepad".equals(symbol)?ink:accent);
             }
             // The source's slightly widened first compact KPI (123
             // units) still needs the three-column layout; thresholding
