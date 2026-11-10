@@ -4783,6 +4783,24 @@ public final class MainActivity extends ComponentActivity {
         // unlike the slimmer row captions. Keep coordinates independent of
         // mission values and share one drawing path without allocating fonts.
         void missionSectionTitle(String title,float baseline,float textSize){
+            // Exact source letter shapes for three static Croatian section
+            // captions. No dynamic target, progress or reward data stored.
+            if(theme==0&&referencePortraitLayout&&"missions".equals(page)){
+                int key="Dnevne".equals(title)?
+                    OwnerHeadlineContours.MISSIONS_DAILY:
+                    "Tjedne".equals(title)?
+                    OwnerHeadlineContours.MISSIONS_WEEKLY:
+                    "Postignuća".equals(title)?
+                    OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS:-1;
+                if(key>=0){
+                    float y1=key==OwnerHeadlineContours.MISSIONS_DAILY?330f:
+                        key==OwnerHeadlineContours.MISSIONS_WEEKLY?801f:1270f;
+                    float y2=key==OwnerHeadlineContours.MISSIONS_DAILY?362f:
+                        key==OwnerHeadlineContours.MISSIONS_WEEKLY?843f:1312f;
+                    ownerHeadline(key,0xff1b2c50,0xff0f1d3d,y1,y2);
+                    return;
+                }
+            }
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setTextScaleX(1f);p.setFakeBoldText(false);
             p.setTypeface(displayFont);p.setTextSize(textSize);
@@ -4831,7 +4849,7 @@ public final class MainActivity extends ComponentActivity {
         // The three brand-style source headings are immutable, locally
         // traced native paths. Cache decoded geometry across Canvas redraws;
         // no user progress, locale, controls or screenshots are embedded.
-        final Path[] ownerHeadlinePaths = new Path[6];
+        final Path[] ownerHeadlinePaths = new Path[11];
         void ownerHeadline(int key,int first,int last,float startY,float endY){
             Path shapePath=ownerHeadlinePaths[key];
             if(shapePath==null){
@@ -4861,7 +4879,12 @@ public final class MainActivity extends ComponentActivity {
                     "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
                     "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
                     "izgled":key==OwnerHeadlineContours.SETTINGS_NAVY?
-                    "Postavke":"Statistika";
+                    "Postavke":key==OwnerHeadlineContours.STATS_CHART?
+                    "Zadnjih 10 partija":key==OwnerHeadlineContours.THEMES_STYLE?
+                    "Stil pločica":key==OwnerHeadlineContours.MISSIONS_DAILY?
+                    "Dnevne":key==OwnerHeadlineContours.MISSIONS_WEEKLY?
+                    "Tjedne":key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
+                    "Postignuća":"Statistika";
                 textRegions.add(new TextRegion(title,realInk));
             }
             c.drawPath(shapePath,p);
@@ -5881,10 +5904,10 @@ public final class MainActivity extends ComponentActivity {
             // while keeping the same baseline and left anchor. This local
             // x compression never changes chart tabs or history data.
             if(theme==0&&referencePortraitLayout){
-                c.save();
-                c.scale(.86f,1f,27f,357f);
-                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
-                c.restore();
+                // Source title x67..354/y808..842 at 941px. Draw just
+                // static text contours; keep history points entirely live.
+                ownerHeadline(OwnerHeadlineContours.STATS_CHART,
+                    0xff192c51,0xff101e3b,808f,843f);
             }else{
                 leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
             }
@@ -6086,7 +6109,10 @@ public final class MainActivity extends ComponentActivity {
             }
             card(20,335,360,293,26,card);
             leftFitted("Pregled",26,373,22,167,ink,true);
-            leftFitted("Stil pločica",201,369,18,172,ink,true);
+            if(theme==0&&referencePortraitLayout)
+                ownerHeadline(OwnerHeadlineContours.THEMES_STYLE,
+                    0xff1b2c50,0xff0f1d3e,836f,870f);
+            else leftFitted("Stil pločica",201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
             themeBoardTray(25,413,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
