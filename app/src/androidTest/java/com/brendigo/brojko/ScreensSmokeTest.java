@@ -19,6 +19,18 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class ScreensSmokeTest {
+    @Test public void aboutExternalWebsiteIsFixedHttpsAndOptIn(){
+        android.content.Intent browser=MainActivity.brendigoWebsiteIntent();
+        assertEquals(android.content.Intent.ACTION_VIEW,browser.getAction());
+        assertNotNull(browser.getData());
+        assertEquals("https",browser.getData().getScheme());
+        assertEquals("brendigo.com",browser.getData().getHost());
+        assertEquals("/",browser.getData().getPath());
+        assertTrue(browser.hasCategory(android.content.Intent.CATEGORY_BROWSABLE));
+        assertNull("No app-specific web browser or implicit data upload",browser.getComponent());
+        assertNull("No package targeting",browser.getPackage());
+    }
+
     // org.json.JSONArray(String) throws a checked JSONException on Android.
     // Keep strict parsing and report malformed stored history as test failure.
     // The helper is safe inside ActivityScenario.onActivity callbacks, which

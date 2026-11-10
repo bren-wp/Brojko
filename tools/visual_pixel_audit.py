@@ -95,6 +95,29 @@ def rgb_mae(reference, actual, region=None):
         actual = actual.crop(region)
     return sum(ImageStat.Stat(ImageChops.difference(reference, actual)).mean) / 3
 
+def exact_pixel_difference(reference, actual, region=None):
+    """Count differing RGB pixels exactly, without blur or tolerance.
+
+    Unlike mean error, this explicitly answers whether *every* source
+    pixel is identical. Dynamic dates and results can prevent equality.
+    """
+    if reference.size != actual.size:
+        raise ValueError(f"Image sizes differ: {reference.size} / {actual.size}; refusing resize")
+    if region is not None:
+        left, top, right, bottom = region
+        if not (0 <= left < right <= reference.width and
+                0 <= top < bottom <= reference.height):
+            raise ValueError(f"Invalid native-resolution ROI: {region}")
+        reference = reference.crop(region)
+        actual = actual.crop(region)
+    channel_deltas = ImageChops.difference(reference, actual).split()
+    changed = ImageChops.lighter(
+        ImageChops.lighter(channel_deltas[0], channel_deltas[1]),
+        channel_deltas[2])
+    total = reference.width * reference.height
+    return total - changed.histogram()[0], total
+
+
 def main():
     parser = argparse.ArgumentParser(description="Brojko 941x1672 real-emulator pixel QA")
     parser.add_argument("--reference-dir", type=Path, required=True)
@@ -105,6 +128,10 @@ def main():
     parser.add_argument("--markdown", type=Path)
     parser.add_argument("--include-regions", action="store_true",
                         help="Also report important real-pixel subregions per screen")
+    parser.add_argument("--require-exact", action="store_true",
+                        help="Exit nonzero unless every compared source pixel is identical")
+    parser.add_argument("--max-mae-increase", type=float,
+                        help="Fail if any screen or enabled ROI worsens beyond this MAE; requires --baseline-artifact")
     parser.add_argument("--screen", choices=sorted(SCREENS),
                         help="Audit just one requested screen during pixel-by-pixel work")
     parser.add_argument("--controlled-home", action="store_true",
@@ -118,15 +145,23 @@ def main():
     parser.add_argument("--screen16-missions", action="store_true",
                         help="Use phase 16 source-like 941x1672 mission fixture")
     args = parser.parse_args()
+    if args.max_mae_increase is not None:
+        if args.max_mae_increase < 0:
+            parser.error("--max-mae-increase must be nonnegative")
+        if not args.baseline_artifact:
+            parser.error("--max-mae-increase requires --baseline-artifact")
+    failures = []
     rows = [
         "# Brojko — pixel fidelity audit",
         "",
-        "RGB MAE: mean absolute difference of RGB channels per pixel (lower is closer).",
-        "The comparison never rescales images and is not proof of total 1:1 fidelity.",
-        "Real data, timestamps and the source mockup's 3D lighting can differ.",
+        "RGB MAE: mean absolute difference of RGB channels per pixel, 0–255 (lower is closer).",
+        "Exact match: RGB pixels exactly equal, with NO tolerance or image manipulation.",
+        "Pixel match percentage is not a perceptual quality score.",
+        "Images are never rescaled, registered, aligned or edited by the comparison.",
+        "Different live dates, records and lighting in the owner's mockups can prevent equality.",
         "",
-        "| Zaslon | Trenutno | Prije | Promjena |",
-        "|---|---:|---:|---:|",
+        "| Zaslon / ROI | RGB MAE | Prije | Promjena | Različiti pikseli | Točno jednaki |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
     with ZipFile(args.artifact) as latest:
         if args.baseline_artifact:
@@ -162,14 +197,31 @@ def main():
                     baseline = rgb_mae(reference, previous_image) if previous_image else None
                     before = f"{baseline:.3f}" if baseline is not None else "—"
                     delta = f"{current-baseline:+.3f}" if baseline is not None else "—"
-                    rows.append(f"| {label} | {current:.3f} | {before} | {delta} |")
+                    differing, total = exact_pixel_difference(reference, current_image)
+                    matching_pct = (total - differing) * 100 / total
+                    rows.append(f"| {label} | {current:.3f} | {before} | {delta} | "
+                                f"{differing:,}/{total:,} | {matching_pct:.5f}% |")
+                    if args.require_exact and differing:
+                        failures.append(f"{label}: {differing} different pixels")
+                    if (baseline is not None and args.max_mae_increase is not None
+                            and current - baseline > args.max_mae_increase):
+                        failures.append(f"{label}: MAE increased by {current-baseline:.3f}")
                     if args.include_regions:
                         for region_name, bounds in REGIONS.get(label, []):
                             local = rgb_mae(reference, current_image, bounds)
                             prev = rgb_mae(reference, previous_image, bounds) if previous_image else None
                             old = f"{prev:.3f}" if prev is not None else "—"
                             change = f"{local-prev:+.3f}" if prev is not None else "—"
-                            rows.append(f"| ↳ {region_name} | {local:.3f} | {old} | {change} |")
+                            roi_diff, roi_total = exact_pixel_difference(
+                                reference, current_image, bounds)
+                            roi_pct = (roi_total - roi_diff) * 100 / roi_total
+                            rows.append(f"| ↳ {region_name} | {local:.3f} | {old} | {change} | "
+                                        f"{roi_diff:,}/{roi_total:,} | {roi_pct:.5f}% |")
+                            if args.require_exact and roi_diff:
+                                failures.append(f"{label} / {region_name}: {roi_diff} different pixels")
+                            if (prev is not None and args.max_mae_increase is not None
+                                    and local - prev > args.max_mae_increase):
+                                failures.append(f"{label} / {region_name}: ROI MAE increased by {local-prev:.3f}")
         finally:
             if previous:
                 previous.close()
@@ -178,6 +230,8 @@ def main():
         args.markdown.parent.mkdir(parents=True, exist_ok=True)
         args.markdown.write_text(report, encoding="utf-8")
     print(report)
+    if failures:
+        raise SystemExit("Pixel audit failed:\n" + "\n".join(failures))
 
 if __name__ == "__main__":
     main()
