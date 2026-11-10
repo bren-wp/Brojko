@@ -1183,13 +1183,16 @@ public final class MainActivity extends ComponentActivity {
                 p.setColor(WHITE);
                 if(ownerPad){
                     // Owner plus sign 16×17 native px vs old 22×26.
-                    c.save();c.translate(.8f,.4f);c.scale(.74f,.74f,7f,12f);
+                    // Owner cross x398..414/y365..381, actual
+                    // x398..413/y373..387: preserve its width, raise ink.
+                    c.save();c.translate(.8f,-3.0f);
+                    c.scale(.74f,.80f,7f,12f);
                     c.drawRoundRect(6,9,8,15,1,1,p);
                     c.drawRoundRect(4,11,10,13,1,1,p);
                     c.restore();
-                    // Source has the right dot ABOVE the left dot.
-                    c.drawCircle(16f,13f,1.1f,p);
-                    c.drawCircle(18f,10f,1.1f,p);
+                    // Owner dot centers are 2px and 5px above baseline.
+                    c.drawCircle(16f,10.9f,1.1f,p);
+                    c.drawCircle(18f,9.15f,1.1f,p);
                 }else{
                     c.drawRoundRect(6,9,8,15,1,1,p);
                     c.drawRoundRect(4,11,10,13,1,1,p);
@@ -4414,6 +4417,12 @@ public final class MainActivity extends ComponentActivity {
                 else if(color==0xffb45bf6)color=0xffaa65fb;
             }
             c.save();c.rotate(rotation,x+size/2f,y+size/2f);
+            // Owner Majstor colored faces are about 1-2 native pixels
+            // larger; preserve the accurate tilt and text font size.
+            boolean ownerMajstorFace=theme==0&&referencePortraitLayout&&
+                "missions".equals(page)&&size==24f;
+            if(ownerMajstorFace)
+                c.scale(1.025f,1.020f,x+size/2f,y+size/2f);
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(2.1f,0f,2.5f,0x349c704c);
             // Owner mission mini-tiles have rounded, softly lit faces;
@@ -4629,7 +4638,7 @@ public final class MainActivity extends ComponentActivity {
                     float dy=ownerArtwork?
                         (i>=2?-1.1f:-.4f):0f;
                     missionRaisedNumber(
-                        (ownerArtwork?34.3f:40)+
+                        (ownerArtwork?33.65f:40)+
                         (i%2)*(ownerArtwork?27.1f:23)+dx,
                         y+10+(i/2)*(ownerArtwork?25:23)+dy,
                         ownerArtwork?24f:22f,TILES[i+1],
