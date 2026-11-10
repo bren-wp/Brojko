@@ -5644,8 +5644,15 @@ public final class MainActivity extends ComponentActivity {
         // Scope Screen 07's preview materials to the picker only.
         // Actual game tile colors and the persisted game are untouched.
         void themeChoiceSurface(float x,float y,float w,float h,int preset){
-            int top=preset==2?0xff9f54f9:preset==1?0xff2d405e:0xfffff7eb;
-            int bottom=preset==2?0xff177be9:preset==1?0xff101c32:0xfff1e5d6;
+            // Only the dark native portrait thumbnail needs a deeper
+            // navy material. Earlier vivid-gradient experiments failed
+            // the existing cyan/purple source-corner regression test.
+            boolean ownerPicker=theme==0&&referencePortraitLayout&&
+                "themes".equals(page);
+            int top=preset==2?0xff9f54f9:
+                preset==1?(ownerPicker?0xff203049:0xff2d405e):0xfffff7eb;
+            int bottom=preset==2?0xff177be9:
+                preset==1?(ownerPicker?0xff0d172a:0xff101c32):0xfff1e5d6;
             shape(x+1.1f,y+3,w-2.2f,h-1,17,
                 theme==1?0x55000000:0x239d7957);
             // Shadow uses translucent Paint; reset it before an opaque shader.
@@ -6023,6 +6030,14 @@ public final class MainActivity extends ComponentActivity {
                 // but Dark and Vivid fill nearly the entire preview panel.
                 // Their old 102x96 tray started 13 units too low and left
                 // large unintended white margins at the top and bottom.
+                // Pixel-search on user reference vs real v1.12.200
+                // capture found a consistent +2 px Light / +4 px
+                // Dark+Vivid horizontal offset and a +2 px vertical
+                // offset. Translate art only; active ring and hit zones
+                // stay exactly where they already worked.
+                boolean ownerPreview=theme==0&&referencePortraitLayout;
+                c.save();
+                if(ownerPreview)c.translate(i==0?.85f:1.65f,.85f);
                 if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
                 else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
                 // Reference colour-sample calibration affects ONLY the
@@ -6031,7 +6046,6 @@ public final class MainActivity extends ComponentActivity {
                 // vs prior emulator ~(65,201,188); blue ~(56,149,251)
                 // vs ~(71,157,241). Correct input for the shared glossy
                 // gradient without changing persistent theme palettes.
-                boolean ownerPreview=theme==0&&referencePortraitLayout;
                 int[] colors=ownerPreview?
                     (i==2?new int[]{
                         0xffff4c7d,0xff50e342,0xff00a7ff,0xff9645ff
@@ -6052,6 +6066,7 @@ public final class MainActivity extends ComponentActivity {
                     txt(Integer.toString(2<<j),
                         x+35+xx*43,y+55+yy*41,19,WHITE,true);
                 }
+                c.restore();
                 // Original swatch captions have equal vertical ink height
                 // but approximately 18% less horizontal ink than fallback
                 // Nunito. Keep height, optically narrow just these labels.
@@ -6110,7 +6125,7 @@ public final class MainActivity extends ComponentActivity {
                     val>=1000?11:15,side-3f,WHITE,true);
             }
             leftFitted("Ovako će izgledati",26,389,12,159,muted,false);
-            leftFitted("tvoja ploča u odabranoj temi.",26,404,11,161,muted,false);
+            leftFitted("pločica u odabranoj temi.",26,404,11,161,muted,false);
             String[] styles={"Zaobljene","Ravne","Staklaste"};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;

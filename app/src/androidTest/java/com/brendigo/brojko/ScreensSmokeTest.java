@@ -517,6 +517,50 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void themeOwnerReferenceHasCorrectTrayDepthAndCaption(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            try{
+                activity.page="themes";activity.theme=0;
+                MainActivity.BoardScreen board=activity.new BoardScreen(activity);
+                board.auditTextLayout=true;
+                board.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                board.layout(0,0,941,1672);
+                Bitmap screenshot=Bitmap.createBitmap(941,1672,
+                    Bitmap.Config.ARGB_8888);
+                try{
+                    board.draw(new Canvas(screenshot));
+                    int dark=screenshot.getPixel(480,430);
+                    // Exact owner pixel: RGB 24/35/53. The earlier
+                    // emulator drew 42/60/89, noticeably too light.
+                    assertTrue("Dark native preview must be deep navy: "+
+                        Integer.toHexString(dark),
+                        android.graphics.Color.red(dark)<43 &&
+                        android.graphics.Color.green(dark)<58 &&
+                        android.graphics.Color.blue(dark)<84);
+                    // Vivid hue continuity is verified separately by the
+                    // existing cyan/purple-corners instrumentation test.
+                    // Do not weaken or duplicate that source invariant.
+                    assertNotNull("Reference description is exact Croatian copy",
+                        screenInk(board,"pločica u odabranoj temi."));
+                    assertNull("Old non-reference description is absent",
+                        screenInk(board,"tvoja ploča u odabranoj temi."));
+                    captureReference(activity,board,
+                        "themes-phase116-owner-tray-depth-941x1672");
+                }finally{
+                    screenshot.recycle();
+                }
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themesPortraitSwatchesMatchSourceRowOffsets(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
