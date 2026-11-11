@@ -633,6 +633,41 @@ public final class MainActivity extends ComponentActivity {
         root.put("data",data);
         return root.toString(2).getBytes(StandardCharsets.UTF_8);
     }
+    // Validate archived history before touching saved preferences. A JSON
+    // array can be syntactically valid yet contain numbers, nulls, malformed
+    // rows or impossible tile values. Never import those as game history.
+    // Older legitimate rows may omit optional fields such as "won" and "time".
+    static void validateBackupHistory(JSONArray history){
+        if(history.length()>200)
+            throw new IllegalArgumentException("Oštećena povijest partija.");
+        for(int i=0;i<history.length();i++){
+            JSONObject row=history.optJSONObject(i);
+            if(row==null)
+                throw new IllegalArgumentException("Neispravan zapis povijesti.");
+            for(String key:new String[]{"score","moves","peak"}){
+                if(!row.has(key))continue;
+                Object raw=row.opt(key);
+                if(!(raw instanceof Number))
+                    throw new IllegalArgumentException("Neispravan broj u povijesti.");
+                double value=((Number)raw).doubleValue();
+                if(value<0||value>Integer.MAX_VALUE||value!=Math.floor(value))
+                    throw new IllegalArgumentException("Neispravna vrijednost povijesti.");
+                if("peak".equals(key)&&value!=0){
+                    long tile=(long)value;
+                    if(tile<2||(tile&(tile-1))!=0)
+                        throw new IllegalArgumentException("Neispravna pločica u povijesti.");
+                }
+            }
+            for(String key:new String[]{"mode","day","time"}){
+                if(!row.has(key))continue;
+                Object value=row.opt(key);
+                if(!(value instanceof String)||((String)value).length()>64)
+                    throw new IllegalArgumentException("Neispravan tekst u povijesti.");
+            }
+            if(row.has("won")&&!(row.opt("won") instanceof Boolean))
+                throw new IllegalArgumentException("Neispravna pobjeda u povijesti.");
+        }
+    }
     void readBackupBytes(byte[] bytes) throws Exception{
         if(bytes.length>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
         JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
@@ -648,8 +683,7 @@ public final class MainActivity extends ComponentActivity {
             if(restored==null)throw new IllegalArgumentException("Oštećena spremljena partija.");
         }
         if(data.has("history")){
-            JSONArray history=new JSONArray(data.getString("history"));
-            if(history.length()>200)throw new IllegalArgumentException("Oštećena povijest partija.");
+            validateBackupHistory(new JSONArray(data.getString("history")));
         }
         // Validate each key against its actual SharedPreferences storage
         // type before clearing any existing settings. A backup with e.g.
