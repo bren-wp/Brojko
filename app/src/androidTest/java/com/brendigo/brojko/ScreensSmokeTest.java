@@ -5757,6 +5757,65 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void weeklyMissionTargetTracksOwnerNativeRedCentroid(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme,oldMerges=activity.todayMerges;
+            int oldWeek=activity.weekPoints,oldStreak=activity.playDayStreak;
+            int oldTile=activity.recordTile,oldBest=activity.best;
+            int oldFlags=activity.rewardFlags;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap bitmap=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="missions";activity.theme=0;
+                activity.todayMerges=12;activity.weekPoints=6250;
+                activity.playDayStreak=5;activity.recordTile=512;
+                activity.best=8400;activity.rewardFlags=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                view.draw(new Canvas(bitmap));
+                int pigment=0;long weightedX=0L,weightedY=0L;
+                // Owner's red bullseye mask spans native x77..185,
+                // y1075..1184, centroid approximately x130/y1132.
+                // This probes the illustration, not actual progress.
+                for(int y=1030;y<1200;y++)
+                    for(int x=55;x<220;x++){
+                        int color=bitmap.getPixel(x,y);
+                        int red=android.graphics.Color.red(color);
+                        int green=android.graphics.Color.green(color);
+                        int blue=android.graphics.Color.blue(color);
+                        if(red>170&&red>green*1.45f&&
+                                red>blue*1.35f&&green<180){
+                            pigment++;weightedX+=x;weightedY+=y;
+                        }
+                    }
+                assertTrue("Target must have a substantial opaque coral face",
+                    pigment>4800);
+                float centreX=weightedX/(float)pigment;
+                float centreY=weightedY/(float)pigment;
+                assertEquals("Weekly bullseye source horizontal centroid",
+                    130f,centreX,12f);
+                assertEquals("Weekly bullseye source vertical centroid",
+                    1132f,centreY,13f);
+                assertEquals("Decorative target cannot award any progress",
+                    0,activity.rewardFlags);
+                captureReference(activity,view,
+                    "missions-phase126-weekly-target-owner-941x1672");
+            }finally{
+                bitmap.recycle();activity.page=oldPage;
+                activity.theme=oldTheme;activity.todayMerges=oldMerges;
+                activity.weekPoints=oldWeek;activity.playDayStreak=oldStreak;
+                activity.recordTile=oldTile;activity.best=oldBest;
+                activity.rewardFlags=oldFlags;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void missionsGoldenRewardStarMatchesOwnerSourceBounds(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
