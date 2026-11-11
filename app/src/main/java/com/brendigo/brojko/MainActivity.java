@@ -5649,6 +5649,17 @@ public final class MainActivity extends ComponentActivity {
             // The reference's wide streak KPI has a *single* heading.
             // Keep two lines for the other four cards; the narrow 4x4
             // typography must not cause the streak title to wrap.
+            // Owner's three top KPI headings at 941x1672 are about
+            // 14-18% narrower and 8-10 native pixels higher than the
+            // real emulator. Transform the PAINTED glyphs only; leave
+            // the surface, icon, score and real statistics unchanged.
+            boolean sourceTopLabel=referenceStats&&theme==0&&h>=90;
+            if(sourceTopLabel){
+                float labelScale="Ukupno partija".equals(caption)?.84f:.86f;
+                float labelDx="Ukupno partija".equals(caption)?-1.7f:.85f;
+                c.save();c.translate(labelDx,-3.7f);
+                c.scale(labelScale,1f,labelX,y+31);
+            }
             if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
                 leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
             }else{
@@ -5657,6 +5668,7 @@ public final class MainActivity extends ComponentActivity {
                 fitted(bottom,labelX,y+(dense?41:48),
                     width<=125?13:16,labelWidth,ink,true);
             }
+            if(sourceTopLabel)c.restore();
             if(sourceInset)c.restore();
             // Keep the average score to the right of its icon, as in
             // the owner's 941px KPI card. Other values retain their
@@ -5678,9 +5690,24 @@ public final class MainActivity extends ComponentActivity {
                     default:break;
                 }
             }
+            // Native source number ink versus pre-phase133 Android:
+            // 12.560 x69..297 vs x55..303, 248 x422..553 vs
+            // x406..548, and 1024 x694..859 vs x669..860.
+            // Preserve the live formatted value. Only top-three light
+            // portrait glyph geometry gets a local X transform.
+            boolean sourceTopValue=referenceStats&&theme==0&&h>=90;
+            if(sourceTopValue){
+                float numberScale="Najveća pločica".equals(caption)?
+                    .865f:.92f;
+                float numberShift="Najbolji rezultat".equals(caption)?
+                    1.7f:"Ukupno partija".equals(caption)?4.25f:5.1f;
+                c.save();c.translate(numberShift,0f);
+                c.scale(numberScale,1f,valueX,y+h-14);
+            }
             fitted(value,valueX,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
                 width-10,valuePigment,true);
+            if(sourceTopValue)c.restore();
         }
         void historyDetail(){
             title("Detalji partije");
