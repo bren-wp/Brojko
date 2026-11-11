@@ -1570,7 +1570,14 @@ public final class MainActivity extends ComponentActivity {
                 // The owner's pill is 110px high. The previous native
                 // face extended 9px below it (119px), but its 49-unit
                 // touch target must remain unchanged for accessibility.
-                float visualHeight=ownerDailyStart?h-3.8f:h;
+                // The source blue Victory action ends at native y1377.
+                // Older emulator face/lip extended to y1388+. Paint a
+                // shorter visual surface while preserving its 49-unit
+                // accessibility and click rectangle unchanged.
+                boolean ownerVictoryShare=victoryShare&&theme==0&&
+                    referencePortraitLayout;
+                float visualHeight=ownerDailyStart?h-3.8f:
+                    ownerVictoryShare?h-2.8f:h;
                 boolean homeHero=page.equals("home")&&w>=280;
                 boolean victoryPrimary=page.equals("win")&&
                     "Nastavi igrati".equals(label);
@@ -1579,19 +1586,25 @@ public final class MainActivity extends ComponentActivity {
                 // Source Home CTA ends near y=879px, whereas the old
                 // 6-unit extrusion extended to ~895px at 941x1672.
                 float lip=flatDaily?2.5f:homeHero?1f:
+                    victoryPrimary&&theme==0&&referencePortraitLayout?1.1f:
+                    ownerVictoryShare?.65f:
                     (victoryPrimary||victoryShare?2.7f:5f);
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
                 shape(x,y+lip,w,visualHeight,radius,
                     flatDaily?0xffd94a33:
+                    victoryPrimary&&theme==0&&referencePortraitLayout?
+                        0xffdc391f:
                     victoryPrimary?0xffd8432f:
                     victoryShare?0xff2467c9:
                     homeHero?0xffda4932:darken(color,flatDaily?.13f:.23f));
                 if(homeHero&&theme==0&&referencePortraitLayout){
                     ownerHomeHeroGradient(x,y,w,h-3f,radius);
                 }else{
-                    gradient(x,y,w,visualHeight-(flatDaily?2:homeHero?3:4),radius,
+                    gradient(x,y,w,visualHeight-
+                        (flatDaily?2:homeHero?3:ownerVictoryShare?1.2f:4),
+                        radius,
                         ownerDailyStart?0xffff8e58:
                         flatDaily?0xffff8a60:
                         victoryPrimary?0xffff8054:
@@ -5480,6 +5493,44 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setStyle(Paint.Style.FILL);
             c.restore();
         }
+        // Native 941x1672 owner-reference silhouette for the purple
+        // Statistics streak KPI. The generic flame was too wide (153 px)
+        // and its tip began 31 px too low. This stores only an immutable
+        // decorative vector contour, never a screenshot or player value.
+        Path ownerStatisticsFlamePath;
+        void ownerStatisticsFlame(){
+            if(ownerStatisticsFlamePath==null){
+                // Pixel-measured outer boundary: x556..648/y593..715.
+                // The open lower notch is part of the SAME contour.
+                final int[] xy={
+                    613,593,605,594,595,604,587,630,578,643,
+                    576,634,573,633,568,637,561,648,556,664,
+                    556,679,563,697,577,710,591,715,593,712,
+                    585,702,584,689,595,677,599,663,608,670,
+                    615,685,615,699,611,707,605,713,606,715,
+                    621,712,632,705,641,695,647,681,648,665,
+                    645,652,636,637,625,628,618,619,615,611,
+                    615,595
+                };
+                Path outline=new Path();
+                outline.moveTo(xy[0],xy[1]);
+                for(int i=2;i<xy.length;i+=2)
+                    outline.lineTo(xy[i],xy[i+1]);
+                outline.close();
+                ownerStatisticsFlamePath=outline;
+            }
+            c.save();
+            // Convert native art units into BoardScreen's 400-wide layout.
+            // Canvas anti-aliasing keeps the silhouette DPI-independent.
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+            p.setColor(WHITE);
+            p.setShader(new LinearGradient(558f,592f,645f,718f,
+                0xffa33ee4,0xff8424d4,Shader.TileMode.CLAMP));
+            c.drawPath(ownerStatisticsFlamePath,p);
+            p.setShader(null);
+            c.restore();
+        }
         void statCell(String caption,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             // Sample the owner's real 941px pastel background at unobstructed
@@ -5561,7 +5612,9 @@ public final class MainActivity extends ComponentActivity {
                     c.translate(0f,2.9f);
                     c.scale(1f,.98f,iconX,iconY);
                 }
-                icon(symbol,iconX,iconY,iconSize,
+                if(ownerStatIcon&&"flame".equals(symbol))
+                    ownerStatisticsFlame();
+                else icon(symbol,iconX,iconY,iconSize,
                     isPad?0xff112c52:"gamepad".equals(symbol)?ink:accent);
                 if(isPad)c.restore();
             }
