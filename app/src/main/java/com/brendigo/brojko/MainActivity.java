@@ -3202,7 +3202,12 @@ public final class MainActivity extends ComponentActivity {
         }
         void classicBottomControl(String label,String glyph,float x,float y,
                 float w,float h,Runnable action){
-            classicSoftCard(x,y,w,h,20f,card);
+            // Native source 941x1672: cream action faces start 11px
+            // lower and end 22px lower than the prior emulator. Only
+            // their Canvas material changes: real Tap geometry stays.
+            boolean ownerClassic=classicSourceActionGlyph(glyph);
+            classicSoftCard(x,ownerClassic?y+5f:y,w,
+                ownerClassic?h+4.5f:h,20f,card);
             float center=x+w/2f;
             if(classicSourceActionGlyph(glyph)){
                 // Owner 941px glyphs are approximately 22-24px lower
@@ -3212,7 +3217,12 @@ public final class MainActivity extends ComponentActivity {
                 classicOwnerActionGlyph(glyph,ownerIconX,
                     y+h*.36f+10f,39f,ink);
             }else icon(glyph,center,y+h*.36f,39f,ink);
-            fitted(label,center,y+h*.81f,19f,w-10f,ink,true);
+            // Source letter ink: Novo y1530..1556 / width~85px,
+            // old emulator y1505..1536 / width~102px. Keep the
+            // source baseline and narrower Nunito face without moving
+            // the touch target, icon, or functional action.
+            fitted(label,center,y+h*.81f+(ownerClassic?8.5f:0f),
+                ownerClassic?16f:19f,w-10f,ink,true);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
         }
         void classicHeaderControl(String glyph,float x,float y,float w,
@@ -3313,13 +3323,18 @@ public final class MainActivity extends ComponentActivity {
         void portraitClassicFinish(float x,float y,float width,
                 float height,Runnable action){
             float radius=22f;
-            shape(x,y+3,width,height,radius,0xffdf5941);
-            // The owner's Classic finish face has less blue in its
-            // coral pigment. Daily gameplay also calls this routine:
-            // do not recolor that unsupplied gameplay variation.
+            // The source 4x4 confirmation button ends ~23 native px
+            // lower and begins ~11 px lower. Reposition ONLY its
+            // painted surface; hit region remains exactly unchanged.
             boolean sourceClassicFinish=theme==0&&"game".equals(page)&&
                 game!=null&&"classic".equals(game.mode);
-            gradient(x,y,width,height-3,radius,
+            boolean ownerFrame=sourceClassicFinish&&referencePortraitLayout;
+            float faceY=ownerFrame?y+5f:y;
+            float faceH=ownerFrame?height+4.5f:height;
+            shape(x,faceY+3,width,faceH,radius,0xffdf5941);
+            // Keep the previously calibrated coral pigment; this only
+            // changes the light reference portrait visual geometry.
+            gradient(x,faceY,width,faceH-3,radius,
                 sourceClassicFinish?0xffff9a69:0xffff9a71,
                 sourceClassicFinish?0xffff704a:0xffff6341);
             if(sourceClassicFinish){
@@ -3331,21 +3346,23 @@ public final class MainActivity extends ComponentActivity {
                 // round-rect and avoids shading the interactive text.
                 p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
                 p.setColor(WHITE);
-                p.setShader(new LinearGradient(x,y,x+width,y,
+                p.setShader(new LinearGradient(x,faceY,x+width,faceY,
                     0x00ff7147,0x50ff7147,Shader.TileMode.CLAMP));
-                c.drawRoundRect(x,y,x+width,y+height-3,
+                c.drawRoundRect(x,faceY,x+width,faceY+faceH-3,
                     radius,radius,p);
                 p.setShader(null);
             }
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
             p.setColor(0x70ffffff);
-            c.drawRoundRect(x+2,y+2,x+width-2,y+height-4,
+            c.drawRoundRect(x+2,faceY+2,x+width-2,faceY+faceH-4,
                 radius-2,radius-2,p);
             p.setStyle(Paint.Style.FILL);
             float center=x+width/2f;
-            icon("check",center,y+height*.37f,39f,WHITE);
-            fitted("Završi",center,y+height*.81f,18.5f,width-10,WHITE,true);
+            icon("check",center,y+height*.37f-(ownerFrame?3.5f:0f),
+                39f,WHITE);
+            fitted("Završi",center,y+height*.81f+(ownerFrame?8.5f:0f),
+                ownerFrame?16f:18.5f,width-10,WHITE,true);
             taps.add(new Tap(x,y,x+width,y+height,"Završi",action));
         }
         void headerUndo(float x,float y,float w,float h){
