@@ -66,7 +66,8 @@ public class ScreensSmokeTest {
             {482,834,655,871},  // Themes style caption
             {148,328,296,363},  // Missions daily section
             {147,799,282,844},  // Missions weekly section
-            {149,1268,346,1313}// Missions achievements section
+            {149,1268,346,1313},// Missions achievements section
+            {349,1570,706,1624} // Daily static Start Challenge label
         };
         for(int index=0;index<expected.length;index++){
             android.graphics.Path outline=OwnerHeadlineContours.decode(index);

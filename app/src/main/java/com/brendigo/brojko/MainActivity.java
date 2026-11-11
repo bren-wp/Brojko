@@ -1565,6 +1565,12 @@ public final class MainActivity extends ComponentActivity {
                 // The original daily-start pill has a shallow lip, unlike the
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
+                boolean ownerDailyStart=flatDaily&&theme==0&&
+                    referencePortraitLayout&&"Započni izazov".equals(label);
+                // The owner's pill is 110px high. The previous native
+                // face extended 9px below it (119px), but its 49-unit
+                // touch target must remain unchanged for accessibility.
+                float visualHeight=ownerDailyStart?h-3.8f:h;
                 boolean homeHero=page.equals("home")&&w>=280;
                 boolean victoryPrimary=page.equals("win")&&
                     "Nastavi igrati".equals(label);
@@ -1577,7 +1583,7 @@ public final class MainActivity extends ComponentActivity {
                 // Home source has a warm coral top and a deeper red-orange
                 // bottom. The original HERO button used an almost flat
                 // salmon gradient despite matching geometry.
-                shape(x,y+lip,w,h,radius,
+                shape(x,y+lip,w,visualHeight,radius,
                     flatDaily?0xffd94a33:
                     victoryPrimary?0xffd8432f:
                     victoryShare?0xff2467c9:
@@ -1585,11 +1591,13 @@ public final class MainActivity extends ComponentActivity {
                 if(homeHero&&theme==0&&referencePortraitLayout){
                     ownerHomeHeroGradient(x,y,w,h-3f,radius);
                 }else{
-                    gradient(x,y,w,h-(flatDaily?2:homeHero?3:4),radius,
+                    gradient(x,y,w,visualHeight-(flatDaily?2:homeHero?3:4),radius,
+                        ownerDailyStart?0xffff8e58:
                         flatDaily?0xffff8a60:
                         victoryPrimary?0xffff8054:
                         victoryShare?0xff66b0fc:
                         homeHero?0xfffe9058:lighten(color,flatDaily?.10f:.18f),
+                        ownerDailyStart?0xfff93225:
                         flatDaily?0xffff593a:
                         victoryPrimary?0xffff5134:
                         victoryShare?0xff2f83ec:
@@ -1598,10 +1606,11 @@ public final class MainActivity extends ComponentActivity {
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
-                p.setColor(flatDaily||victoryPrimary||victoryShare?
+                p.setColor(ownerDailyStart?0x2dffffff:
+                    flatDaily||victoryPrimary||victoryShare?
                     0x48ffffff:0x86ffffff);
                 c.drawRoundRect(x+3,y+2,x+w-3,
-                    y+h-(flatDaily?5:8),radius-3,radius-3,p);
+                    y+visualHeight-(flatDaily?5:8),radius-3,radius-3,p);
                 p.setStyle(Paint.Style.FILL);
             }else {
                 // Game action cards in the supplied 4x4 screenshot have a
@@ -1691,8 +1700,19 @@ public final class MainActivity extends ComponentActivity {
                     c.save();
                     c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
                 }
-                fitted(label,textCenter,y+h/2+font*.35f,font,
-                    hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                boolean ownerDailyCta=page.equals("daily")&&prominent&&
+                    theme==0&&referencePortraitLayout&&
+                    "Započni izazov".equals(label);
+                if(ownerDailyCta){
+                    // Exact source label x351..704/y1572..1622.
+                    // Dynamic states ('Nastavi izazov', 'Igraj ponovno')
+                    // still use real text and preserved button actions.
+                    ownerHeadline(OwnerHeadlineContours.DAILY_START,
+                        0xffffffff,0xfff9f9f8,1572f,1622f);
+                }else{
+                    fitted(label,textCenter,y+h/2+font*.35f,font,
+                        hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                }
                 if(sourceHomeCTA)c.restore();
             }
             // Icon-only actions need localized TalkBack labels and a full touch target.
@@ -4882,7 +4902,7 @@ public final class MainActivity extends ComponentActivity {
         // The three brand-style source headings are immutable, locally
         // traced native paths. Cache decoded geometry across Canvas redraws;
         // no user progress, locale, controls or screenshots are embedded.
-        final Path[] ownerHeadlinePaths = new Path[11];
+        final Path[] ownerHeadlinePaths = new Path[12];
         void ownerHeadline(int key,int first,int last,float startY,float endY){
             Path shapePath=ownerHeadlinePaths[key];
             if(shapePath==null){
@@ -4917,7 +4937,8 @@ public final class MainActivity extends ComponentActivity {
                     "Stil pločica":key==OwnerHeadlineContours.MISSIONS_DAILY?
                     "Dnevne":key==OwnerHeadlineContours.MISSIONS_WEEKLY?
                     "Tjedne":key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
-                    "Postignuća":"Statistika";
+                    "Postignuća":key==OwnerHeadlineContours.DAILY_START?
+                    "Započni izazov":"Statistika";
                 textRegions.add(new TextRegion(title,realInk));
             }
             c.drawPath(shapePath,p);
