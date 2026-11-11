@@ -6735,9 +6735,20 @@ public final class MainActivity extends ComponentActivity {
             settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
-                leftFitted(caption,compact?91:97,y+(compact?24:31),
-                    compact?17.6f:19,compact?218:212,ink,true);
-                leftFitted(value,compact?91:97,y+(compact?45:55),
+                // Reference 941x1672: progress-backup title ink starts
+                // near x210 and sits optically centered around y900.
+                // The previous two-line drawing was too wide and high:
+                // narrow ONLY the visual label and lower both baselines.
+                // Keep the honest local-backup subtitle and navigation;
+                // this is not a functional cloud-sync toggle.
+                boolean ownerBackup=compact&&theme==0&&
+                    "Sinkronizacija napretka".equals(caption);
+                float titleBaseline=y+(ownerBackup?30:compact?24:31);
+                float subtitleBaseline=y+(ownerBackup?48:compact?45:55);
+                leftFitted(caption,compact?91:97,titleBaseline,
+                    compact?17.6f:19,ownerBackup?180f:compact?218:212,
+                    ink,true);
+                leftFitted(value,compact?91:97,subtitleBaseline,
                     compact?12:13,compact?210:205,muted,false);
                 icon("chevron-right",355,y+height/2f,19,muted);
             }else{
