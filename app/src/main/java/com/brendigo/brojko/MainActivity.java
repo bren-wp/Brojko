@@ -3308,7 +3308,22 @@ public final class MainActivity extends ComponentActivity {
                 game!=null&&"classic".equals(game.mode);
             gradient(x,y,width,height-3,radius,
                 sourceClassicFinish?0xffff9a69:0xffff9a71,
-                sourceClassicFinish?0xffff6339:0xffff6341);
+                sourceClassicFinish?0xffff704a:0xffff6341);
+            if(sourceClassicFinish){
+                // Native 941x1672 owner face falls horizontally by
+                // ~13 green/~11 blue from left to right, but preserves
+                // almost full coral red. Its vertical decline is also
+                // shallower than the earlier flat-x Android pigment.
+                // A rightward translucent coral tint preserves the
+                // round-rect and avoids shading the interactive text.
+                p.clearShadowLayer();p.setStyle(Paint.Style.FILL);
+                p.setColor(WHITE);
+                p.setShader(new LinearGradient(x,y,x+width,y,
+                    0x00ff7147,0x50ff7147,Shader.TileMode.CLAMP));
+                c.drawRoundRect(x,y,x+width,y+height-3,
+                    radius,radius,p);
+                p.setShader(null);
+            }
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(.85f);
             p.setColor(0x70ffffff);
