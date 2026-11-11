@@ -6276,8 +6276,12 @@ public final class MainActivity extends ComponentActivity {
             // Compress only the actual text silhouettes in the source
             // light portrait UI; tap targets, icon and baseline unchanged.
             if(theme==0&&referencePortraitLayout){
-                c.save();c.scale(.85f,1f,245f,480f);
-                leftFitted("Vibracija",245,480,15,86,ink,true);
+                // Native user reference ink bounds: Vibracija
+                // x586..688/y1115..1139; deployed emulator
+                // x577..698/y1104..1134. Narrow, lower and move right
+                // only this painted title; tap switch and action unchanged.
+                c.save();c.scale(.85f,1f,249f,482f);
+                leftFitted("Vibracija",249,482,12.6f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,495f);
                 leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
@@ -6303,8 +6307,10 @@ public final class MainActivity extends ComponentActivity {
             }));
             icon("sound",219,520,26,ink);
             if(theme==0&&referencePortraitLayout){
-                c.save();c.scale(.85f,1f,245f,523f);
-                leftFitted("Zvukovi",245,523,15,86,ink,true);
+                // User source ink x586..678/y1212..1231;
+                // deployed ink x577..682/y1205..1229.
+                c.save();c.scale(.85f,1f,249f,524.5f);
+                leftFitted("Zvukovi",249,524.5f,13.2f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,538f);
                 leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
@@ -6327,8 +6333,12 @@ public final class MainActivity extends ComponentActivity {
                 sound=!sound;persist();invalidate();
             }));
             if(theme==0&&referencePortraitLayout){
-                c.save();c.scale(.83f,1f,208f,570f);
-                leftFitted("Jačina animacija",208,570,17,162,ink,true);
+                // Actual reference title x484..675/y1318..1344
+                // versus emulator x489..729/y1311..1347.
+                // Shrink glyphs to owner dimensions and center on
+                // the existing visual section; keep slider geometry.
+                c.save();c.scale(.83f,1f,206f,569f);
+                leftFitted("Jačina animacija",206,569,13.7f,162,ink,true);
                 c.restore();
                 c.save();c.scale(.92f,1f,208f,588f);
                 leftFitted("Koliko su izražene animacije spajanja.",
