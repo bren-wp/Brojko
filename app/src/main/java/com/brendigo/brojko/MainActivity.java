@@ -6736,17 +6736,19 @@ public final class MainActivity extends ComponentActivity {
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
                 // Reference 941x1672: progress-backup title ink starts
-                // near x210 and sits optically centered around y900.
-                // The previous two-line drawing was too wide and high:
-                // narrow ONLY the visual label and lower both baselines.
+                // ink x215..628/y899..937. The old true Android
+                // screenshot measured x216..642/y873..909, approximately
+                // 27 source pixels too high and 14 too far right.
+                // Narrow ONLY the painted label and lower its baseline
+                // by 12 design units (about 28 source pixels).
                 // Keep the honest local-backup subtitle and navigation;
                 // this is not a functional cloud-sync toggle.
                 boolean ownerBackup=compact&&theme==0&&
                     "Sinkronizacija napretka".equals(caption);
-                float titleBaseline=y+(ownerBackup?30:compact?24:31);
+                float titleBaseline=y+(ownerBackup?36:compact?24:31);
                 float subtitleBaseline=y+(ownerBackup?48:compact?45:55);
                 leftFitted(caption,compact?91:97,titleBaseline,
-                    compact?17.6f:19,ownerBackup?180f:compact?218:212,
+                    compact?17.6f:19,ownerBackup?176f:compact?218:212,
                     ink,true);
                 leftFitted(value,compact?91:97,subtitleBaseline,
                     compact?12:13,compact?210:205,muted,false);
