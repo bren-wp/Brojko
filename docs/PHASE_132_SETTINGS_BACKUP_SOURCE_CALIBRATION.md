@@ -11,16 +11,16 @@ Datum: 11. studenoga 2026.
 
 ## Što je promijenjeno
 
-Referenca ima kompaktan jedan naslov `Sinkronizacija napretka`, čiji je vidljivi tamni raspon približno x210..630. Produkcijska aplikacija **nema cloud servis**, već istinsku akciju `Lokalna kopija` koja vodi na korisnički izvoz/uvoz JSON datoteke. Prethodno je preširoki dvoredni naslov zauzimao više vodoravnog prostora i bio postavljen previsoko.
+Referenca ima kompaktan jedan naslov `Sinkronizacija napretka`, čiji je tamni raspon izmjeren na **x215..628/y899..937**. Prethodni stvarni Android emulatorski naslov bio je **x216..642/y873..909**, dakle oko **27 px previsoko** i 14 px previše udesno na desnoj strani. Produkcijska aplikacija **nema cloud servis**, već istinsku akciju `Lokalna kopija` koja vodi na korisnički izvoz/uvoz JSON datoteke. Prethodno je preširoki dvoredni naslov zauzimao više vodoravnog prostora i bio postavljen previsoko.
 
-- U **svijetlom** izvornom portretnom 941×1672 prikazu, samo glavna tipografija lokalne kopije ograničena je na 180 logičkih jedinica (oko 423 piksela) umjesto 218; spuštena je za šest logičkih jedinica, a dopunski tekst tri jedinice.
+- U **svijetlom** izvornom portretnom 941×1672 prikazu, samo glavna tipografija lokalne kopije ograničena je na **176 logičkih jedinica** (oko 414 piksela) umjesto 218; spuštena je za **12 logičkih jedinica** (oko 28 piksela), a dopunski tekst za tri jedinice.
 - Stvarni tekst `Lokalna kopija`, desna strelica i čitava aktivna kartica **ostaju**. Nije dodana lažna sklopka koja bi korisnika navela na vjerovanje da je cloud povezan.
 - Isti font, zajednička grafika ikona, dark mode, stvarni podaci, igra, rezultat i ostali zasloni nisu izmijenjeni.
 
 ## Nove zaštite
 
 `OwnerSettingsBackupPhase132Test` na stvarnom Android Canvas prikazu:
-1. mjeri crni naslov u 941×1672 izvornoj kompoziciji i traži da ne ulazi u desni gumb;
+1. mjeri stvarne granice naslovnog tamnog teksta u 941×1672, prema izvornim x215..628/y899..937 s rezervom za rasterizaciju;
 2. potvrđuje da je subtitle `Lokalna kopija` ispod naslova i unutar kartice;
 3. provjerava jednu aktivnu dostupnu akciju unutar cijelog retka;
 4. provjerava dostupnost iste lokalne kopije na 360×800 i 941×1672 u svijetloj i tamnoj temi.
