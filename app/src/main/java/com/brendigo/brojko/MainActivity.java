@@ -2609,11 +2609,18 @@ public final class MainActivity extends ComponentActivity {
             }else if(color==TILES[2]||color==TILES[10]){
                 top=0xff52e6d5;bottom=0xff1dc4b2;
             }else if(color==TILES[3]||color==TILES[9]){
-                top=0xff5ab2ff;bottom=0xff258eed;
+                // Native Home source blue-cell centre is RGB~78,159,251,
+                // versus v1.12.205 ~57,156,242. Shift *only* the
+                // decorative 4x4 thumbnail face towards the owner's
+                // saturated blue; the playable game's tileColor stays
+                // unchanged, as does the active 4x4 board.
+                top=0xff73b6ff;bottom=0xff3a93f8;
             }else if(color==TILES[4]||color==TILES[11]){
                 top=0xffffd36d;bottom=0xffffb03e;
             }else if(color==TILES[7]||color==TILES[8]){
-                top=0xffce75f4;bottom=0xff9b4ee0;
+                // Reference purple centre RGB~176,90,241; current
+                // native decoration ~166,86,228. Keep the same bevel.
+                top=0xffd879ff;bottom=0xffa552ed;
             }
             float radius=5.0f;
             // Shallow bevel with light ambient shadow rather than the
