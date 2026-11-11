@@ -4704,7 +4704,13 @@ public final class MainActivity extends ComponentActivity {
             }else if(name.startsWith("Igraj 7")){
                 missionCalendarSeven(cx,cy);
             }else if(name.startsWith("Ostvari 10.000")){
-                missionTarget(cx,cy,44f);
+                // Native 941x1672 source bullseye: red mask x77..185,
+                // centre x130/y1132. The prior emulator was x97..193,
+                // centre x145/y1126: too small, right-shifted and high.
+                // Change illustration geometry only, never game results.
+                missionTarget(ownerArtwork?cx-6f:cx,
+                    ownerArtwork?cy+2.4f:cy,
+                    ownerArtwork?49f:44f);
             }else if(name.startsWith("Majstor")){
                 // Reference 2x2 emblem starts roughly 16px left of the
                 // old native arrangement; enlarge the icons slightly.
