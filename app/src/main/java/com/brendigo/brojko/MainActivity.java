@@ -6243,7 +6243,13 @@ public final class MainActivity extends ComponentActivity {
                 int swatchColor=i==2?0xffffc8ad:
                     (i==1?0xffffa87d:0xffffad6a);
                 themePreviewTile(x+6,383,39,39,swatchColor,i);
-                fitted(styles[i],x+25,434,9,48,ink,true);
+                // Source style captions retain their measured baseline
+                // but have more compact horizontal owner letterforms.
+                if(theme==0&&referencePortraitLayout){
+                    c.save();c.scale(.86f,1f,x+25f,434f);
+                    fitted(styles[i],x+25,434,9,48,ink,true);
+                    c.restore();
+                }else fitted(styles[i],x+25,434,9,48,ink,true);
                 shape(x+19,440,13,13,7,tileStyle==i?CORAL:0xffdedfdf);
                 if(tileStyle==i)icon("check",x+25.5f,446.5f,9,WHITE);
                 taps.add(new Tap(frameX,371,frameX+frameW,461,styles[i],()->{
@@ -6252,8 +6258,19 @@ public final class MainActivity extends ComponentActivity {
             }
             shape(208,461,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",219,476,26,ink);
-            leftFitted("Vibracija",245,480,15,86,ink,true);
-            leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+            // Compress only the actual text silhouettes in the source
+            // light portrait UI; tap targets, icon and baseline unchanged.
+            if(theme==0&&referencePortraitLayout){
+                c.save();c.scale(.85f,1f,245f,480f);
+                leftFitted("Vibracija",245,480,15,86,ink,true);
+                c.restore();
+                c.save();c.scale(.88f,1f,245f,495f);
+                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+                c.restore();
+            }else{
+                leftFitted("Vibracija",245,480,15,86,ink,true);
+                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+            }
             // Sampled owner mask: orange vibration switch is 89×51px
             // at native x798..886/y1112..1162, versus the former
             // 100×63px at x793..893/y1096..1159.
@@ -6270,8 +6287,17 @@ public final class MainActivity extends ComponentActivity {
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
-            leftFitted("Zvukovi",245,523,15,86,ink,true);
-            leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+            if(theme==0&&referencePortraitLayout){
+                c.save();c.scale(.85f,1f,245f,523f);
+                leftFitted("Zvukovi",245,523,15,86,ink,true);
+                c.restore();
+                c.save();c.scale(.88f,1f,245f,538f);
+                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+                c.restore();
+            }else{
+                leftFitted("Zvukovi",245,523,15,86,ink,true);
+                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+            }
             // Native source sound toggle is also ~89×51px but needs
             // only a 3px vertical shift (unlike vibration's 16px).
             if(sourceThemeSwitch){
@@ -6285,9 +6311,19 @@ public final class MainActivity extends ComponentActivity {
             taps.add(new Tap(205,509,378,557,"Zvukovi",()->{
                 sound=!sound;persist();invalidate();
             }));
-            leftFitted("Jačina animacija",208,570,17,162,ink,true);
-            leftFitted("Koliko su izražene animacije spajanja.",
-                208,588,9.5f,166,muted,false);
+            if(theme==0&&referencePortraitLayout){
+                c.save();c.scale(.83f,1f,208f,570f);
+                leftFitted("Jačina animacija",208,570,17,162,ink,true);
+                c.restore();
+                c.save();c.scale(.92f,1f,208f,588f);
+                leftFitted("Koliko su izražene animacije spajanja.",
+                    208,588,9.5f,166,muted,false);
+                c.restore();
+            }else{
+                leftFitted("Jačina animacija",208,570,17,162,ink,true);
+                leftFitted("Koliko su izražene animacije spajanja.",
+                    208,588,9.5f,166,muted,false);
+            }
             // Source 941x1672: one pill-shaped selection per intensity,
             // not a progress fill and oversized circular thumb.
             shape(205,594,165,13,7,theme==1?0xff536078:0xffeee5d9);
