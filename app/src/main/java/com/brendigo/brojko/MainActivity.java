@@ -633,6 +633,41 @@ public final class MainActivity extends ComponentActivity {
         root.put("data",data);
         return root.toString(2).getBytes(StandardCharsets.UTF_8);
     }
+    // Validate archived history before touching saved preferences. A JSON
+    // array can be syntactically valid yet contain numbers, nulls, malformed
+    // rows or impossible tile values. Never import those as game history.
+    // Older legitimate rows may omit optional fields such as "won" and "time".
+    static void validateBackupHistory(JSONArray history){
+        if(history.length()>200)
+            throw new IllegalArgumentException("Oštećena povijest partija.");
+        for(int i=0;i<history.length();i++){
+            JSONObject row=history.optJSONObject(i);
+            if(row==null)
+                throw new IllegalArgumentException("Neispravan zapis povijesti.");
+            for(String key:new String[]{"score","moves","peak"}){
+                if(!row.has(key))continue;
+                Object raw=row.opt(key);
+                if(!(raw instanceof Number))
+                    throw new IllegalArgumentException("Neispravan broj u povijesti.");
+                double value=((Number)raw).doubleValue();
+                if(value<0||value>Integer.MAX_VALUE||value!=Math.floor(value))
+                    throw new IllegalArgumentException("Neispravna vrijednost povijesti.");
+                if("peak".equals(key)&&value!=0){
+                    long tile=(long)value;
+                    if(tile<2||(tile&(tile-1))!=0)
+                        throw new IllegalArgumentException("Neispravna pločica u povijesti.");
+                }
+            }
+            for(String key:new String[]{"mode","day","time"}){
+                if(!row.has(key))continue;
+                Object value=row.opt(key);
+                if(!(value instanceof String)||((String)value).length()>64)
+                    throw new IllegalArgumentException("Neispravan tekst u povijesti.");
+            }
+            if(row.has("won")&&!(row.opt("won") instanceof Boolean))
+                throw new IllegalArgumentException("Neispravna pobjeda u povijesti.");
+        }
+    }
     void readBackupBytes(byte[] bytes) throws Exception{
         if(bytes.length>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
         JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
@@ -648,8 +683,7 @@ public final class MainActivity extends ComponentActivity {
             if(restored==null)throw new IllegalArgumentException("Oštećena spremljena partija.");
         }
         if(data.has("history")){
-            JSONArray history=new JSONArray(data.getString("history"));
-            if(history.length()>200)throw new IllegalArgumentException("Oštećena povijest partija.");
+            validateBackupHistory(new JSONArray(data.getString("history")));
         }
         // Validate each key against its actual SharedPreferences storage
         // type before clearing any existing settings. A backup with e.g.
@@ -5649,6 +5683,17 @@ public final class MainActivity extends ComponentActivity {
             // The reference's wide streak KPI has a *single* heading.
             // Keep two lines for the other four cards; the narrow 4x4
             // typography must not cause the streak title to wrap.
+            // Owner's three top KPI headings at 941x1672 are about
+            // 14-18% narrower and 8-10 native pixels higher than the
+            // real emulator. Transform the PAINTED glyphs only; leave
+            // the surface, icon, score and real statistics unchanged.
+            boolean sourceTopLabel=referenceStats&&theme==0&&h>=90;
+            if(sourceTopLabel){
+                float labelScale="Ukupno partija".equals(caption)?.84f:.86f;
+                float labelDx="Ukupno partija".equals(caption)?-1.7f:.85f;
+                c.save();c.translate(labelDx,-3.7f);
+                c.scale(labelScale,1f,labelX,y+31);
+            }
             if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
                 leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
             }else{
@@ -5657,6 +5702,7 @@ public final class MainActivity extends ComponentActivity {
                 fitted(bottom,labelX,y+(dense?41:48),
                     width<=125?13:16,labelWidth,ink,true);
             }
+            if(sourceTopLabel)c.restore();
             if(sourceInset)c.restore();
             // Keep the average score to the right of its icon, as in
             // the owner's 941px KPI card. Other values retain their
@@ -5678,9 +5724,24 @@ public final class MainActivity extends ComponentActivity {
                     default:break;
                 }
             }
+            // Native source number ink versus pre-phase133 Android:
+            // 12.560 x69..297 vs x55..303, 248 x422..553 vs
+            // x406..548, and 1024 x694..859 vs x669..860.
+            // Preserve the live formatted value. Only top-three light
+            // portrait glyph geometry gets a local X transform.
+            boolean sourceTopValue=referenceStats&&theme==0&&h>=90;
+            if(sourceTopValue){
+                float numberScale="Najveća pločica".equals(caption)?
+                    .865f:.92f;
+                float numberShift="Najbolji rezultat".equals(caption)?
+                    1.7f:"Ukupno partija".equals(caption)?4.25f:5.1f;
+                c.save();c.translate(numberShift,0f);
+                c.scale(numberScale,1f,valueX,y+h-14);
+            }
             fitted(value,valueX,y+h-(dense?11:14),
                 referenceStats?(dense?30:35):(dense?21:29),
                 width-10,valuePigment,true);
+            if(sourceTopValue)c.restore();
         }
         void historyDetail(){
             title("Detalji partije");
@@ -5850,7 +5911,7 @@ public final class MainActivity extends ComponentActivity {
                 "themes".equals(page);
             int top=preset==2?0xff9f54f9:
                 preset==1?(ownerPicker?0xff203049:0xff2d405e):0xfffff7eb;
-            int bottom=preset==2?0xff177be9:
+            int bottom=preset==2?0xff09a2fd:
                 preset==1?(ownerPicker?0xff0d172a:0xff101c32):0xfff1e5d6;
             shape(x+1.1f,y+3,w-2.2f,h-1,17,
                 theme==1?0x55000000:0x239d7957);
@@ -5859,7 +5920,8 @@ public final class MainActivity extends ComponentActivity {
             gradient(x,y,w,h-2,17,top,bottom);
             if(preset==2&&theme==0&&referencePortraitLayout){
                 // Owner's vivid theme swatch is 2D: cyan lower-left,
-                // purple lower-right. The old vertical gradient left
+                // purple lower-right. The cyan base now matches the native
+                // lower-left pigment even at the rounded rim. The old gradient left
                 // both corners the same uniform blue. Native radial
                 // overlays belong to this preview, not real game tiles.
                 p.setStyle(Paint.Style.FILL);
@@ -6735,9 +6797,22 @@ public final class MainActivity extends ComponentActivity {
             settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
             boolean hasValue=!"›".equals(value);
             if(hasValue&&caption.length()>16){
-                leftFitted(caption,compact?91:97,y+(compact?24:31),
-                    compact?17.6f:19,compact?218:212,ink,true);
-                leftFitted(value,compact?91:97,y+(compact?45:55),
+                // Reference 941x1672: progress-backup title ink starts
+                // ink x215..628/y899..937. The old true Android
+                // screenshot measured x216..642/y873..909, approximately
+                // 27 source pixels too high and 14 too far right.
+                // Narrow ONLY the painted label and lower its baseline
+                // by 12 design units (about 28 source pixels).
+                // Keep the honest local-backup subtitle and navigation;
+                // this is not a functional cloud-sync toggle.
+                boolean ownerBackup=compact&&theme==0&&
+                    "Sinkronizacija napretka".equals(caption);
+                float titleBaseline=y+(ownerBackup?36:compact?24:31);
+                float subtitleBaseline=y+(ownerBackup?53:compact?45:55);
+                leftFitted(caption,compact?91:97,titleBaseline,
+                    compact?17.6f:19,ownerBackup?176f:compact?218:212,
+                    ink,true);
+                leftFitted(value,compact?91:97,subtitleBaseline,
                     compact?12:13,compact?210:205,muted,false);
                 icon("chevron-right",355,y+height/2f,19,muted);
             }else{
