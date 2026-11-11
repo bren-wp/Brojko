@@ -1574,15 +1574,15 @@ public final class MainActivity extends ComponentActivity {
                 // Older emulator face/lip extended to y1388+. Paint a
                 // shorter visual surface while preserving its 49-unit
                 // accessibility and click rectangle unchanged.
-                boolean ownerVictoryShare=victoryShare&&theme==0&&
-                    referencePortraitLayout;
-                float visualHeight=ownerDailyStart?h-3.8f:
-                    ownerVictoryShare?h-2.8f:h;
                 boolean homeHero=page.equals("home")&&w>=280;
                 boolean victoryPrimary=page.equals("win")&&
                     "Nastavi igrati".equals(label);
                 boolean victoryShare=page.equals("win")&&
                     "Podijeli rezultat".equals(label);
+                boolean ownerVictoryShare=victoryShare&&theme==0&&
+                    referencePortraitLayout;
+                float visualHeight=ownerDailyStart?h-3.8f:
+                    ownerVictoryShare?h-2.8f:h;
                 // Source Home CTA ends near y=879px, whereas the old
                 // 6-unit extrusion extended to ~895px at 941x1672.
                 float lip=flatDaily?2.5f:homeHero?1f:
