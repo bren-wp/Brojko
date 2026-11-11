@@ -78,6 +78,9 @@ jobs:
             set -eu
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            # Catch vivid-corner geometry regressions before the full suite.
+            adb shell am instrument -w -e class com.brendigo.brojko.ScreensSmokeTest#vividThemePreviewHasSourceCyanAndPurpleCorners com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee vivid-preview-results.txt
+            grep -Eq '^OK [(]1 test[)]$' vivid-preview-results.txt
             adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
             grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             bash scripts/pull-verified-screenshots.sh
@@ -90,6 +93,7 @@ jobs:
           name: brojko-release-emulator-proof
           path: |
             instrumentation-results.txt
+            vivid-preview-results.txt
             android-screenshots/
           if-no-files-found: warn
       - name: Generate verified portable SHA256 checksums

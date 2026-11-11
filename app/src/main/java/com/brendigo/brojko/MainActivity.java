@@ -5913,11 +5913,15 @@ public final class MainActivity extends ComponentActivity {
                 preset==1?(ownerPicker?0xff203049:0xff2d405e):0xfffff7eb;
             int bottom=preset==2?0xff09a2fd:
                 preset==1?(ownerPicker?0xff0d172a:0xff101c32):0xfff1e5d6;
-            shape(x+1.1f,y+3,w-2.2f,h-1,17,
+            // The owner lower-left cyan source pixel sits at the rounded
+            // corner. The generic 17-unit radius clipped that pixel away;
+            // use a tighter vivid-only corner without affecting other themes.
+            float previewRadius=ownerPicker&&preset==2?13f:17f;
+            shape(x+1.1f,y+3,w-2.2f,h-1,previewRadius,
                 theme==1?0x55000000:0x239d7957);
             // Shadow uses translucent Paint; reset it before an opaque shader.
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,w,h-2,17,top,bottom);
+            gradient(x,y,w,h-2,previewRadius,top,bottom);
             if(preset==2&&theme==0&&referencePortraitLayout){
                 // Owner's vivid theme swatch is 2D: cyan lower-left,
                 // purple lower-right. The cyan base now matches the native
@@ -5928,11 +5932,11 @@ public final class MainActivity extends ComponentActivity {
                 p.setShader(new RadialGradient(x+w*.10f,y+h*.98f,
                     w*.87f,new int[]{0x8300dcff,0x4600bbf8,0x0000bbf8},
                     null,Shader.TileMode.CLAMP));
-                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                c.drawRoundRect(x,y,x+w,y+h-2,previewRadius,previewRadius,p);
                 p.setShader(new RadialGradient(x+w*1.08f,y+h*.98f,
                     w*.96f,new int[]{0xddc047ff,0x85a642ff,0x00a642ff},
                     null,Shader.TileMode.CLAMP));
-                c.drawRoundRect(x,y,x+w,y+h-2,17,17,p);
+                c.drawRoundRect(x,y,x+w,y+h-2,previewRadius,previewRadius,p);
                 p.setShader(null);
             }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
@@ -5946,7 +5950,8 @@ public final class MainActivity extends ComponentActivity {
                 (preset==1?0x45ffffff:0x90ffffff);
             p.setColor(contour);
             p.setStrokeWidth(1f);
-            c.drawRoundRect(x+1,y+1,x+w-1,y+h-3,16,16,p);
+            c.drawRoundRect(x+1,y+1,x+w-1,y+h-3,
+                previewRadius-1f,previewRadius-1f,p);
             p.setStyle(Paint.Style.FILL);
         }
         void themeBoardTray(float x,float y,float w,float h){

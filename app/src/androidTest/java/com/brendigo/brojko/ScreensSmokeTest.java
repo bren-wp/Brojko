@@ -5026,7 +5026,8 @@ public class ScreensSmokeTest {
                     // purple right RGB(161,76,253).
                     // Old Android gradient: left RGB(31,121,234),
                     // right RGB(38,119,235), both almost the same blue.
-                    assertTrue("Vivid preview left must be cyan-blue",
+                    assertTrue("Vivid preview left must be cyan-blue, pixel #"+
+                        Integer.toHexString(left),
                         android.graphics.Color.green(left)>139&&
                         android.graphics.Color.blue(left)>231);
                     assertTrue("Vivid preview right must be purple, "+
