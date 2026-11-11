@@ -7646,8 +7646,14 @@ public class ScreensSmokeTest {
                     // The owner's gold crown connected silhouette spans
                     // about native y=377..518; the previous emulator was
                     // compressed vertically, beginning around y=399.
+                    // Keep the crown-body ROI separate from the three
+                    // owner-matched decorative rays added in phase 128.
+                    // Their gold pixels extend into x380..389/x551..559
+                    // at y529+, but are not the crown's rim. The ray
+                    // silhouettes have dedicated assertions in
+                    // OwnerVictoryGoldRaysPhase128Test.
                     for(int y=365;y<530;y++)
-                        for(int x=380;x<560;x++){
+                        for(int x=390;x<550;x++){
                             int c=bmp.getPixel(x,y);
                             int red=android.graphics.Color.red(c);
                             int green=android.graphics.Color.green(c);

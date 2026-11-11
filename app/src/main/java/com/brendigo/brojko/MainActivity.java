@@ -3537,6 +3537,29 @@ public final class MainActivity extends ComponentActivity {
             c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
             c.restore();
         }
+        // Three isolated gold accent strokes measured from the owner's
+        // 941x1672 victory PNG. Earlier native screenshots omitted all three
+        // strokes below the crown, leaving ivory where the artwork is gold.
+        // Draw true Canvas geometry, never a raster screen or fake score.
+        void victoryCrownGoldRays(){
+            if(theme!=0||!referencePortraitLayout||!"win".equals(page))return;
+            c.save();
+            c.scale(400f/941f,400f/941f);
+            p.clearShadowLayer();p.setShader(null);
+            p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(19f);
+            // Source masks: left x333..388/y494..543,
+            // right x551..606/y494..547, centre x464..482/y535..565.
+            p.setColor(0xfffec54d);
+            c.drawLine(343.5f,505f,377.5f,532.5f,p);
+            p.setColor(0xfffec44c);
+            c.drawLine(596f,504.5f,561f,536.5f,p);
+            p.setColor(0xfffecb53);
+            c.drawLine(473f,544f,473f,556f,p);
+            p.setStrokeCap(Paint.Cap.BUTT);p.setStrokeWidth(0f);
+            p.setStyle(Paint.Style.FILL);
+            c.restore();
+        }
         void victoryHeadingRays(){
             // The hand-lettered reference has coral strokes framing the
             // raised navy wordmark. Keep rays off the three touch targets.
@@ -3701,6 +3724,7 @@ public final class MainActivity extends ComponentActivity {
             // Match the 941x1672 portrait illustration while retaining all
             // three working actions and readable real scores.
             card(59,200,282,397,29,theme==1?0xff293956:CREAM);
+            victoryCrownGoldRays();
             // Owner's gold crown is x379..562/y375..517; latest
             // emulator was x379..557/y348..518, 27 px too tall.
             // Keep the real vector crown, lower its tips, preserve rim.
