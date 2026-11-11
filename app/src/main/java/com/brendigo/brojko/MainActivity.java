@@ -6221,6 +6221,12 @@ public final class MainActivity extends ComponentActivity {
                 c.save();
                 if(ownerPreview)c.translate(i==0?.85f:1.65f,.85f);
                 if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
+                else if(i==2&&ownerPreview)
+                    // Source vivid panel is ~8 native pixels farther
+                    // right and extends ~10 pixels beyond the old
+                    // emulator surface. Only its painted background
+                    // changes; thumbnail tiles and touch areas stay put.
+                    themeChoiceSurface(x+1,y+5,111,115,i);
                 else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
                 // Reference colour-sample calibration affects ONLY the
                 // three 2x2 picker previews, never real gameplay tiles.
@@ -6259,8 +6265,19 @@ public final class MainActivity extends ComponentActivity {
                 // alignment as the tiles; remain inside the live card.
                 // Native owner radio is slightly higher than the old
                 // preview; do not move its tappable card.
-                shape(x+47,y+116,22,22,11,theme==i?CORAL:0xffe4e3e0);
-                if(theme==i)icon("check",x+58,y+127,13,WHITE);
+                if(ownerPreview&&theme!=i){
+                    // Owner inactive selectors have a visible ivory
+                    // halo (native y~665..714), with a darker #ddd
+                    // center (native y~672..710). Old Android painted
+                    // a flat #e4e3e0 disk from y661 with no white ring.
+                    // The ring is ornamental; selection remains live.
+                    shape(x+47,y+118,22,22,11,WHITE);
+                    shape(x+49.0f,y+120.2f,18,17.2f,9,0xffdddddd);
+                }else{
+                    shape(x+47,y+116,22,22,11,
+                        theme==i?CORAL:0xffe4e3e0);
+                    if(theme==i)icon("check",x+58,y+127,13,WHITE);
+                }
                 taps.add(new Tap(i==0?14f:x,y,
                     i==0?138f:x+116,y+143,names[i],()->{
                     theme=chosen;persist();updateBars();invalidate();
