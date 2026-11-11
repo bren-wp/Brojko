@@ -47,14 +47,18 @@ public class OwnerSettingsBackupPhase132Test {
                     RectF subtitle=ink(screen,"Lokalna kopija");
                     assertNotNull("Backup title must be rendered",title);
                     assertNotNull("Honest local-only caption must remain",subtitle);
-                    // The source's single-line dark heading occupies a
-                    // compact x210..630 band, not the former wide run.
-                    assertTrue("Backup heading should remain in source row",
-                        title.left>=198f && title.right<=671f);
-                    assertTrue("Backup heading cannot span into the action",
-                        title.width()<=445f && title.width()>=265f);
-                    assertTrue("Heading should remain inside the source row",
-                        title.top>854f && title.bottom<950f);
+                    // Reference dark ink: x215..628/y899..937; previously
+                    // deployed Android: x216..642/y873..909.
+                    // Permit font raster/density rounding, but reject the
+                    // previous clearly over-wide and high positioning.
+                    assertTrue("Backup heading near source x position",
+                        title.left>=202f && title.left<=233f &&
+                        title.right>=608f && title.right<=648f);
+                    assertTrue("Backup heading has source-like width",
+                        title.width()<=427f && title.width()>=379f);
+                    assertTrue("Backup heading near source baseline",
+                        title.top>=891f && title.top<=919f &&
+                        title.bottom>=926f && title.bottom<=955f);
                     assertTrue("Subtitle must be below, not over the title",
                         subtitle.top>=title.bottom);
                     assertTrue("Backup subtitle must fit the same card",
