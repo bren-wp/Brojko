@@ -3188,9 +3188,16 @@ public final class MainActivity extends ComponentActivity {
                 // Owner 941px glyphs are approximately 22-24px lower
                 // than the unshifted generic controls. Move the filled
                 // native vectors only, NOT the labels or Tap rectangles.
-                float ownerIconX=center+("refresh".equals(glyph)?-2.5f:0f);
+                // Native 941px audit on live Classic controls:
+                // refresh ink centre x~165 before, owner x~174;
+                // y-top ~1423 before, owner ~1419. Undo x is already
+                // aligned; both action glyphs sit ~3-4px too low.
+                // Correct illustration geometry only; never move the
+                // actual cards, action text or accessibility tap zones.
+                float ownerIconX=center+
+                    ("refresh".equals(glyph)?1f:0f);
                 classicOwnerActionGlyph(glyph,ownerIconX,
-                    y+h*.36f+10f,39f,ink);
+                    y+h*.36f+8.2f,39f,ink);
             }else icon(glyph,center,y+h*.36f,39f,ink);
             fitted(label,center,y+h*.81f,19f,w-10f,ink,true);
             taps.add(new Tap(x,y,x+w,y+h,label,action));
