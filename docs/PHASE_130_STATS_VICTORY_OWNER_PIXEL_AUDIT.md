@@ -49,3 +49,56 @@ Datum: 11. studenoga 2026. Deset vlasnikovih referenci dostavljeno je ponovno (d
 **Napomena:** Postavke pokazuju lokalnu sigurnosnu kopiju, a dostavljena ilustracija sklopku cloud sinkronizacije. To nije moguće podudarno implementirati uz istinit UI bez stvarnog sinkronizacijskog backend-a, korisničkog pristanka i sigurnog protokola. Ne glumiti implementirani cloud.
 
 **Status:** promjene su prijedlog. Nema deklaracije 0 % odstupanja; tek novi uspješan Android artefakt i ponovljena usporedba mogu potvrditi stvarnu vizualnu dobit.
+
+## Faza 131 — dvije dodatne najveće regije, na ISTOM PR-u #130
+
+Mjereno na izvornom 941×1672 PNG-u korisnika i stvarnom emulatorskom
+`themes-phase127-source-control-ink-941x1672.png`/`golden-state-game-941x1672.png`
+iz potvrđenog izdanja v1.12.211. RGB MAE izražen je u jedinicama 0–255;
+**nije postotak**. Slijedi baseline prije popravaka ove faze:
+
+| Izvorni ROI (native x1,y1,x2,y2) | MAE prije |
+|---|---:|
+| Teme: kartica Tamna (343,378,602,802) | 19.860 |
+| Teme: kartica Živopisna (631,375,894,801) | 22.409 |
+| Teme: tamna ilustracija (342,404,609,672) | 23.700 |
+| Teme: živopisna ilustracija (625,403,895,674) | 25.768 |
+| Klasično: sve donje kontrole (35,1330,910,1612) | 20.236 |
+| Klasično: tri retka tekstualnih oznaka (85,1510,835,1560) | 38.639 |
+| Klasično: donji rubovi (40,1573,899,1613) | 27.766 |
+| Klasično: samo gumb Završi (600,1350,910,1610) | 29.494 |
+
+### Implementirani zahvati
+
+- **Tema Živopisna**: nativna pozadina kartice pomaknuta je približno 7 piksela
+  udesno i šira približno 2 piksela, kako bi završavala na izvornome rubu.
+  Iste stvarne kartice ostaju interaktivne.
+- **Neaktivni kružni radio-odabiri**: umjesto jednolikoga `#e4e3e0` diska
+  prikazan je bijeli rub sa središnjim `#dddddd`; izvorno bijeli prsten
+  počinje oko y666, a sivo središte oko y672.
+  Izvorni korisnički PNG: na x477 i x773 / y669 prsten je gotovo bijel
+  (svi kanali ~252), a na y690 središte je RGB ~220/220/221.
+- **Klasično 4×4, Novo i Poništi**: pozadina kartica pomaknuta je oko 12
+  izvornih piksela prema dolje i produžena približno 11 piksela.
+  Natpisi su pomaknuti približno 20 piksela prema dolje i suženi u odnosu
+  na dosadašnji Nunito. Izvorni Novo/Poništi natpisi imaju obojeni raspon
+  y1530–1556; prethodni emulator y1505–1536.
+- **Klasično 4×4, Završi**: prilagođena je donja dubina koraljnoga lica,
+  a ikona kvačice podignuta je oko 8 piksela; natpis je istovjetno spušten
+  i sužen. Originalni izvorni rub se nastavlja do približno y1605,
+  a prethodni emulator završavao je oko y1580.
+- **Nisu promijenjeni**: logika poteza, undo, score, finish/new callbacks,
+  postojeći `Tap` pravokutnici, spremljena igra, drugi modovi/teme i
+  korisnički statistički podatci.
+
+### Novi emulatorski testovi
+
+- `OwnerThemePickerPhase131Test`: izvorne bijele radio rubove i siva
+  središta u 941×1672, položaj Živopisne pozadine, akcije odabira tema.
+- `OwnerClassicFooterPhase131Test`: završni koraljni rub pri y1590,
+  donju osnovicu natpisa Novo, stvarne Novo/Završi akcije i nepromijenjen score.
+
+Ovaj razvoj još **nije potvrđen 1:1**. Prije spajanja zahtijeva najnoviji
+uspješan CI za head SHA, stvarni novi emulatorski artefakt i **ponovljeno
+mjerenje svake regije**. Ne prihvatiti povećanje pogreške u važnoj regiji
+bez jasno opravdanog funkcionalnog razloga.
