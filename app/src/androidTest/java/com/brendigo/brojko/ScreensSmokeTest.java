@@ -600,6 +600,58 @@ public class ScreensSmokeTest {
         });
     }
 
+    @Test public void nativeThemesControlHeadingInkFitsOwnerBounds(){
+        rule.getScenario().onActivity(activity->{
+            String previousPage=activity.page;
+            int previousTheme=activity.theme;
+            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+            Bitmap screenshot=Bitmap.createBitmap(941,1672,
+                Bitmap.Config.ARGB_8888);
+            try{
+                activity.page="themes";activity.theme=0;
+                view.measure(View.MeasureSpec.makeMeasureSpec(941,
+                        View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(1672,
+                        View.MeasureSpec.EXACTLY));
+                view.layout(0,0,941,1672);
+                view.draw(new Canvas(screenshot));
+                // The owner's three navy control titles have compact
+                // glyph silhouettes. Measure ink, not entire row cards.
+                int[][] bounds={{560,1092,790,1151},
+                    {560,1192,790,1260},{470,1301,800,1360}};
+                String[] label={"Vibracija","Zvukovi","Jačina animacija"};
+                int[] maxWidth={118,105,216};
+                int[] maxHeight={30,28,35};
+                for(int i=0;i<bounds.length;i++){
+                    int minX=941,minY=1672,maxX=-1,maxY=-1;
+                    int[] rect=bounds[i];
+                    for(int y=rect[1];y<rect[3];y++)
+                        for(int x=rect[0];x<rect[2];x++){
+                            int pixel=screenshot.getPixel(x,y);
+                            int red=android.graphics.Color.red(pixel);
+                            int green=android.graphics.Color.green(pixel);
+                            int blue=android.graphics.Color.blue(pixel);
+                            if(red<105&&green<120&&blue<140){
+                                minX=Math.min(minX,x);maxX=Math.max(maxX,x);
+                                minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+                            }
+                        }
+                    assertTrue(label[i]+" title must draw dark ink",maxX>=minX);
+                    assertTrue(label[i]+" title must be source-width",
+                        maxX-minX+1<=maxWidth[i]);
+                    assertTrue(label[i]+" title must be source-height",
+                        maxY-minY+1<=maxHeight[i]);
+                }
+                captureReference(activity,view,
+                    "themes-phase127-source-control-ink-941x1672");
+            }finally{
+                screenshot.recycle();activity.page=previousPage;
+                activity.theme=previousTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void themesPortraitSwatchesMatchSourceRowOffsets(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;
