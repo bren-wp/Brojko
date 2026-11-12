@@ -30,3 +30,16 @@ Promijenjen je samo ulazni pastel gradijenta `missions()` u svijetlom izvornom p
 ## Status
 
 Promjena je kandidat za mjerenje, **nije dokaz 0 % ili smanjenog RGB MAE**. Nakon uspješnog novog Android QA izdanja potrebno je izvući stvarne PNG-ove i usporediti iste ROI-je i puni ekran. Povrat koraka ako se pogoršaju. Potpuna 1:1 jednakost znači točan svaki RGB kanal svakog piksela i zahtijeva usklađivanje fontova, ilustracija, sjena i funkcionalnih stanja.
+
+## Potvrda nakon izdanja v1.12.220
+
+[Uspješan Android CI #220](https://github.com/bren-wp/Brojko/actions/runs/43136049995) završio je s **192/192 prolazna instrumentacijska testa** i 254 stvarna Android PNG prikaza. Iz toga je objavljeno 28 slika. Ponovljena stroga RGB analiza istog izvornog PNG-a i novih 941×1672 Android snimki:
+
+| Područje | v1.12.219 prije | v1.12.220 poslije |
+|---|---:|---:|
+| Misije, cijeli zaslon — RGB MAE | 13,8165 | **13,6830** |
+| Misije, tjedna kartica x30..910/y760..1235 | 16,6046 | **16,4179** |
+| Misije, postignuća x30..910/y1245..1670 | 16,0078 | **15,6483** |
+| Misije, centralna tjedna regija x313..626/y836..1254 | 20,8092 | **20,5643** |
+
+Na istim 11×11 RGB zakrpama x320/y830: izvor 232/246/254, Android **234/246/254**; x350/y1300: izvor 223/251/237, Android **226/251/238**. Potpuno jednaki RGB pikseli cijelog zaslona porasli su sa **1,3398 % na 1,4578 %**. Ovo je statistički smjer poboljšanja, **ne dokaz 0 %**.

@@ -5386,8 +5386,24 @@ public final class MainActivity extends ComponentActivity {
             else missionSurface(portrait?315:289,y+(portrait?4:6),
                 portrait?54:71,portrait?61:68,15,
                 theme==1?0xff3b3b4c:0xfffff0d5);
-            icon("star",rewardCenter,
-                y+(sourceMissionStar?33:portrait?23:29),
+            // Native reward stars in the real v1.12.219 emulator were
+            // progressively too low compared with six owner-source stars.
+            // Measured source-minus-Android centers (pixels): +0.39,
+            // -5.73, -9.56, -15.80, -18.10, -19.27. Convert from the
+            // 941px reference plane into 400-unit Canvas coordinates.
+            // Only the drawn gold star moves: reward text, panel and
+            // interactive row remain in their original positions.
+            float ownerRewardStarOffset=0f;
+            if(sourceMissionStar){
+                if(name.startsWith("Spoji 20"))ownerRewardStarOffset=.17f;
+                else if(name.startsWith("Dosegni 512"))ownerRewardStarOffset=-2.44f;
+                else if(name.startsWith("Igraj 7"))ownerRewardStarOffset=-4.06f;
+                else if(name.startsWith("Ostvari 10.000"))ownerRewardStarOffset=-6.72f;
+                else if(name.startsWith("Majstor"))ownerRewardStarOffset=-7.69f;
+                else if(name.startsWith("Kralj"))ownerRewardStarOffset=-8.19f;
+            }
+            icon("star",rewardCenter+(sourceMissionStar?.4f:0f),
+                y+(sourceMissionStar?33f+ownerRewardStarOffset:portrait?23:29),
                 sourceMissionStar?31:portrait?31:29,0xffffad1a);
             // Ensure the real award amount remains below the artwork.
             fitted("+"+fmt(reward),rewardCenter,
