@@ -13,7 +13,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - name: Validate screenshot checker syntax
@@ -50,9 +50,48 @@ jobs:
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
       - name: Verify compiled package and Google Play SDK levels
         run: bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
+      # PR security checks must match the production runtime gate before
+      # a reviewer can merge the branch. Build-tool findings stay visible.
+      - name: Generate and validate runtime and complete-build CycloneDX SBOMs
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon -PbrojkoFullSbom=true cyclonedxBom
+          test -s build/reports/cyclonedx/bom.json
+          cp build/reports/cyclonedx/bom.json SBOM.build.cdx.json
+          ./gradlew --no-daemon cyclonedxBom
+          test -s build/reports/cyclonedx/bom.json
+          cp build/reports/cyclonedx/bom.json SBOM.cdx.json
+          python3 scripts/verify-sbom-scopes.py SBOM.cdx.json SBOM.build.cdx.json
+      - name: Scan shipping Android dependencies for High and Critical CVEs
+        uses: anchore/scan-action@v7
+        with:
+          sbom: SBOM.cdx.json
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+          output-file: grype-runtime.sarif
+      - name: Report build-tool CVEs separately
+        uses: anchore/scan-action@v7
+        with:
+          sbom: SBOM.build.cdx.json
+          fail-build: false
+          severity-cutoff: high
+          output-format: sarif
+          output-file: grype-build.sarif
+      - name: Attach PR SBOMs and vulnerability evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: brojko-pr-sca
+          if-no-files-found: warn
+          path: |
+            SBOM.cdx.json
+            SBOM.build.cdx.json
+            grype-runtime.sarif
+            grype-build.sarif
       - name: Generate release dependency inventory
         run: ./gradlew --no-daemon :app:dependencies --configuration releaseRuntimeClasspath > dependency-inventory.txt
-      - name: Attach Gradle dependency inventory for CVE/SBOM review
+      - name: Attach Gradle dependency inventory
         uses: actions/upload-artifact@v7
         with:
           name: brojko-dependency-inventory
