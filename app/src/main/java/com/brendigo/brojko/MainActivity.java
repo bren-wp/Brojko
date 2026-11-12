@@ -3338,6 +3338,17 @@ public final class MainActivity extends ComponentActivity {
             shape(x,y+2f,w,h-1f,radius,darken(color,.16f));
             gradient(x,y,w,h-3f,radius,
                 lighten(color,.23f),color);
+            // The real owner tiles darken gently from left to right.
+            // A vertical-only gradient left uniform flat rows (e.g. first
+            // coral 2 at x90/x200,y450) and dulled the three-dimensional
+            // material. Overlay a transparent native right-side pigment
+            // before text without changing any board values or positions.
+            p.setShader(null);p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x+w,y,
+                0x00ffffff,0x46000000|(color&0x00ffffff),
+                Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h-3f,radius,radius,p);
+            p.setShader(null);
             // The owner's 941x1672 tiles have a narrow luminous band
             // above the number. A full-height uniform gradient washed out
             // this highlight; keep the extra light only in the top fifth.
@@ -3376,7 +3387,9 @@ public final class MainActivity extends ComponentActivity {
         }
         int classicReferenceTileColor(int value){
             switch(value){
-                case 2: return 0xffff6948;
+                // Source coral 2 top-face has R~253, B~83. The
+                // previous native fixture was R~255, B~104.
+                case 2: return 0xfffd6940;
                 case 4: return 0xff19d6bf;
                 case 8: return 0xff248fff;
                 case 16: return 0xffffb638;
@@ -3419,9 +3432,15 @@ public final class MainActivity extends ComponentActivity {
             shape(x,faceY+3,width,faceH,radius,0xffdf5941);
             // Keep the previously calibrated coral pigment; this only
             // changes the light reference portrait visual geometry.
+            // Source 941x1672 measured 9x9 face samples:
+            // x700/y1450: 253/127/83 (v221: 255/136/91)
+            // x830/y1510: 253/112/71 (v221: 255/124/82).
+            // Calibrate the native pigment, not the hitbox or score state.
             gradient(x,faceY,width,faceH-3,radius,
-                sourceClassicFinish?0xffff9a69:0xffff9a71,
-                sourceClassicFinish?0xffff704a:0xffff6341);
+                ownerFrame?0xfffd9361:
+                    sourceClassicFinish?0xffff9a69:0xffff9a71,
+                ownerFrame?0xfffd6740:
+                    sourceClassicFinish?0xffff704a:0xffff6341);
             if(sourceClassicFinish){
                 // Native 941x1672 owner face falls horizontally by
                 // ~13 green/~11 blue from left to right, but preserves
