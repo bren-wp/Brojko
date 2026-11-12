@@ -50,3 +50,34 @@ originalni native Canvas i lokalizaciju perioda. Imena, redoslijed
 i vrijednosti 10 ilustracijskih nizova nisu izmijenjeni.
 Ne brišemo nijedan lifecycle, delegate ili Canvas callback
 samo na temelju tekstualnih rezultata audita.
+
+## PR #135 — dokazano uklanjanje test-only produkcijskih delegata
+
+U svih 28 Android/JVM testnih Java datoteka i 13 ranije skeniranih
+produkcijskih klasa pronađeni su sljedeći kandidati koji **više nemaju
+produkcijski pozivni lanac**:
+
+| Izvorni simbol | Dokaz pozivatelja | Akcija |
+|---|---|---|
+| `MainActivity.getBackupBytes()` | samo Android testovi | uklonjen |
+| `MainActivity.readBackupBytes()` | samo Android testovi | uklonjen |
+| `MainActivity.validateBackupHistory()` | samo Android testovi | uklonjen |
+| `MainActivity.archive()` | samo Android testovi nakon asinkronog refactoringa | uklonjen |
+| `LocalHistoryRepository.archive()` | starija metoda testova, produkcija koristi `archiveSnapshot` | uklonjen |
+| `LocalBackupRepository.restore()` | sync testna kompatibilna fasada, produkcija koristi `validate/apply` | uklonjen |
+
+Testna kompatibilnost i provjere stvarnog upisa **nisu izbrisane**:
+`BackupTestBridge.java` postoji isključivo u
+`app/src/androidTest`, a `LocalHistoryRepositoryTest` i
+`ScreensSmokeTest` sada testiraju produkcijski `archiveSnapshot`.
+
+**Nisu dead code:** četiri AndroidX
+`ExploreByTouchHelper` override metode u
+`BoardAccessibilityDelegate`. One su pozvane framework-dispatch
+putanjom, pa ih obična brojanja izravnih Java poziva ne prepoznaju.
+
+Brisanje nepoznatih metoda, proizvoljnih vektorskih kontura, funkcija
+povratne kompatibilnosti datoteka i Android lifecycle callbackova
+nije dopušteno bez dokaza. Rezultat nije tvrdnja o potpunom 100%
+dead-code auditu: preostaje ručna inspekcija `BoardScreen` i
+verifikacija R8 usage reporta nakon objavljene minificirane gradnje.
