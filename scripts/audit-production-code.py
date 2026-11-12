@@ -52,6 +52,7 @@ expected_sources = {
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
+    "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
 }
@@ -85,6 +86,11 @@ assert "older.peak>game.peak" in java["TileGame.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
 assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
+assert "LocalBackupRepository.validate(" in java["MainActivity.java"]
+assert "LocalBackupRepository.apply(" in java["MainActivity.java"]
+assert "BackupDocumentIo.read(" in java["MainActivity.java"]
+assert "BackupDocumentIo.write(" in java["MainActivity.java"]
+assert "backupIo.shutdown()" in java["MainActivity.java"]
 assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")

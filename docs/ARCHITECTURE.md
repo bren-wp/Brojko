@@ -36,3 +36,20 @@ tek nakon uspješnog restorea.
    pixel ROI audit na identičnom 941×1672 viewportu.
 
 Ovo nije deklaracija da je cijeli `MainActivity` već refaktoriran.
+
+## Izvan glavne niti: SAF import/export (novi PR)
+
+- `BackupDocumentIo` radi datotečno čitanje i zapis preko SAF-a na
+  jednokratnoj serijskoj pozadinskoj radnoj niti aktivnosti.
+- `LocalBackupRepository.validate()` na radniku provjerava granicu
+  od 512.000 bajtova, format, tipove i spremljenu sesiju/povijest;
+  vraća samo verificirani `RestorePlan`, bez promjene preferencija.
+- `LocalBackupRepository.apply()` izvodi jedini atomski `commit()` na
+  glavnoj niti nakon validacije, radi izbjegavanja utrke sa spremanjem
+  aktivne partije; taj kratki, rijetki commit i dalje može blokirati i
+  nije proglašen potpuno asinkronim.
+- Tijekom importa zaslonski unos, tipkovnica i virtualne TalkBack akcije
+  privremeno su blokirani. Pri promjeni orijentacije ili uništenju Activityja
+  nedovršena validacija se odbacuje **bez promjene korisničkih podataka**.
+- Eksport nastavlja već započeti SAF zapis i kada se aktivnost zatvori;
+  ne šalje UI obavijesti uništenoj aktivnosti.

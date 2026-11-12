@@ -1,0 +1,76 @@
+package com.brendigo.brojko;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.junit.Assert.*;
+
+/** Validation on worker and commit on caller thread share a safe immutable plan. */
+@RunWith(AndroidJUnit4.class)
+public final class BackupValidationWorkerTest {
+    private static final String PACKAGE="com.brendigo.brojko";
+    private SharedPreferences testPrefs(){
+        Context c=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        return c.getSharedPreferences("brojko-backup-worker-test",Context.MODE_PRIVATE);
+    }
+
+    @Test public void workerValidatesBeforeAnyUserPreferenceMutation() throws Exception {
+        SharedPreferences prefs=testPrefs();
+        assertTrue(prefs.edit().clear().putInt("best",64)
+            .putString("futureSetting","do-not-remove").commit());
+        ExecutorService executor=Executors.newSingleThreadExecutor();
+        try{
+            byte[] original=LocalBackupRepository.export(prefs,"2026-11-12",PACKAGE);
+            JSONObject edited=new JSONObject(new String(original,StandardCharsets.UTF_8));
+            edited.getJSONObject("data").put("best",2048);
+            byte[] importBytes=edited.toString().getBytes(StandardCharsets.UTF_8);
+            Future<LocalBackupRepository.RestorePlan> prepared=executor.submit(
+                ()->LocalBackupRepository.validate(PACKAGE,importBytes));
+            LocalBackupRepository.RestorePlan plan=prepared.get();
+            assertEquals("Validation must not commit to preferences",
+                64,prefs.getInt("best",-1));
+            LocalBackupRepository.apply(prefs,plan);
+            assertEquals(2048,prefs.getInt("best",-1));
+            assertEquals("do-not-remove",prefs.getString("futureSetting",null));
+        }finally{
+            executor.shutdownNow();
+            assertTrue(prefs.edit().clear().commit());
+        }
+    }
+
+    @Test public void invalidDataFailsOnWorkerWithoutChangingProgress() throws Exception {
+        SharedPreferences prefs=testPrefs();
+        assertTrue(prefs.edit().clear().putInt("best",4096).commit());
+        Map<String,?> before=new HashMap<>(prefs.getAll());
+        ExecutorService executor=Executors.newSingleThreadExecutor();
+        try{
+            byte[] valid=LocalBackupRepository.export(prefs,"2026-11-12",PACKAGE);
+            JSONObject edited=new JSONObject(new String(valid,StandardCharsets.UTF_8));
+            edited.getJSONObject("data").put("best","NOT_A_NUMBER");
+            byte[] invalid=edited.toString().getBytes(StandardCharsets.UTF_8);
+            Future<Boolean> rejected=executor.submit(()->{
+                try{
+                    LocalBackupRepository.validate(PACKAGE,invalid);
+                    return false;
+                }catch(IllegalArgumentException expected){
+                    return true;
+                }
+            });
+            assertTrue("Invalid backup must be rejected before commit",rejected.get());
+            assertEquals(before,prefs.getAll());
+        }finally{
+            executor.shutdownNow();
+            assertTrue(prefs.edit().clear().commit());
+        }
+    }
+}
