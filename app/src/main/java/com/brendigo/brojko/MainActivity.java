@@ -625,11 +625,19 @@ public final class MainActivity extends ComponentActivity {
         root.put("created",today());
         root.put("package","com.brendigo.brojko");
         JSONObject data=new JSONObject();
+        JSONArray includedKeys=new JSONArray();
         java.util.Map<String,?> stored=prefs.getAll();
         for(String key:BACKUP_KEYS){
             Object value=stored.get(key);
-            if(value!=null)data.put(key,value);
+            if(value!=null){
+                data.put(key,value);
+                includedKeys.put(key);
+            }
         }
+        // Full snapshots have an explicit key manifest. Older backups are
+        // imported as non-destructive patches, never as implicit replacements.
+        root.put("scope","full");
+        root.put("includedKeys",includedKeys);
         root.put("data",data);
         return root.toString(2).getBytes(StandardCharsets.UTF_8);
     }
@@ -678,18 +686,37 @@ public final class MainActivity extends ComponentActivity {
         if(!getPackageName().equals(root.optString("package","")))
             throw new IllegalArgumentException("Sigurnosna kopija nije za Brojko.");
         JSONObject data=root.getJSONObject("data");
-        // Older backups may contain only a subset of settings. The previous
-        // unconditional clear() silently erased every missing preference,
-        // including games, history and the currently saved session.
-        // Treat sparse legacy imports as validated patches instead.
+        // Legacy V1 backups have no explicit completeness marker. Even when
+        // they contain common settings, they may omit a saved game or history.
+        // Never infer permission to delete progress from eight arbitrary keys.
         int knownKeys=0;
         for(String key:BACKUP_KEYS)if(data.has(key))knownKeys++;
         if(knownKeys==0)
             throw new IllegalArgumentException("Sigurnosna kopija nema podatke za vraćanje.");
-        boolean completeSnapshot=true;
-        for(String key:new String[]{"best","games","total","theme",
-                                     "style","sound","vibrate","notifications"}){
-            if(!data.has(key)){completeSnapshot=false;break;}
+        boolean completeSnapshot=false;
+        if("full".equals(root.optString("scope",""))){
+            JSONArray declared=root.optJSONArray("includedKeys");
+            if(declared!=null && declared.length()==knownKeys){
+                java.util.Set<String> included=new java.util.HashSet<>();
+                boolean valid=true;
+                for(int i=0;i<declared.length();i++){
+                    Object candidate=declared.get(i);
+                    if(!(candidate instanceof String)||
+                        !included.add((String)candidate)){
+                        valid=false;
+                        break;
+                    }
+                }
+                if(valid){
+                    for(String key:BACKUP_KEYS){
+                        if(data.has(key)!=included.contains(key)){
+                            valid=false;
+                            break;
+                        }
+                    }
+                }
+                completeSnapshot=valid && included.size()==knownKeys;
+            }
         }
         if(data.has("session")){
             TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));
@@ -729,9 +756,12 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         SharedPreferences.Editor editor=prefs.edit();
-        // Only a verified full snapshot may replace all stored state.
-        // Sparse imports update their present keys without data loss.
-        if(completeSnapshot)editor.clear();
+        // Only an explicit, internally consistent full snapshot can remove
+        // omitted Brojko backup fields. Never clear unrelated/future settings.
+        // Legacy and altered partial exports remain non-destructive patches.
+        if(completeSnapshot){
+            for(String key:BACKUP_KEYS)if(!data.has(key))editor.remove(key);
+        }
         for(String key:BACKUP_KEYS){
             if(!data.has(key))continue;
             Object value=data.get(key);

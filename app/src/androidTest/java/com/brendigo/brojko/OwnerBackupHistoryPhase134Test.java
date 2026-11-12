@@ -120,4 +120,83 @@ public class OwnerBackupHistoryPhase134Test {
             }
         });
     }
+    @Test public void eightKeyLegacyRestoreNeverErasesSavedSessionOrHistory(){
+        rule.getScenario().onActivity(activity -> {
+            activity.persist();
+            try{
+                byte[] original=activity.getBackupBytes();
+                try{
+                    String session=new TileGame("classic","",94821L).toJson().toString();
+                    String history="[{\\"score\\":8,\\"moves\\":2,\\"peak\\":4}]";
+                    assertTrue(activity.prefs.edit()
+                        .putString("session",session).putString("history",history).commit());
+                    JSONObject exported=new JSONObject(new String(
+                        activity.getBackupBytes(),StandardCharsets.UTF_8));
+                    JSONObject partial=new JSONObject();
+                    partial.put("best",120).put("games",2).put("total",8);
+                    partial.put("theme",0).put("style",0);
+                    partial.put("sound",true).put("vibrate",false);
+                    partial.put("notifications",false);
+                    // Old backups have no manifest, even if eight typical keys exist.
+                    JSONObject legacy=new JSONObject(exported.toString());
+                    legacy.put("data",partial);
+                    legacy.remove("scope");
+                    legacy.remove("includedKeys");
+                    activity.readBackupBytes(legacy.toString().getBytes(StandardCharsets.UTF_8));
+                    assertEquals("Legacy restore must keep the running session",
+                        session,activity.prefs.getString("session",null));
+                    assertEquals("Legacy restore must keep past games",
+                        history,activity.prefs.getString("history",null));
+                    // A damaged modern full export with a stale manifest
+                    // must also be applied as a non-destructive patch.
+                    exported.put("data",partial);
+                    activity.readBackupBytes(exported.toString().getBytes(StandardCharsets.UTF_8));
+                    assertEquals(session,activity.prefs.getString("session",null));
+                    assertEquals(history,activity.prefs.getString("history",null));
+                }finally{
+                    activity.readBackupBytes(original);
+                }
+            }catch(Exception e){
+                throw new AssertionError("Sparse backup removed user progress",e);
+            }
+        });
+    }
+
+    @Test public void explicitFullBackupRemovesOnlyOmittedKnownFields(){
+        rule.getScenario().onActivity(activity -> {
+            activity.persist();
+            try{
+                byte[] original=activity.getBackupBytes();
+                try{
+                    JSONObject exported=new JSONObject(new String(original,
+                        StandardCharsets.UTF_8));
+                    JSONObject data=exported.getJSONObject("data");
+                    data.remove("session");
+                    data.remove("history");
+                    JSONArray included=new JSONArray();
+                    java.util.Iterator<String> keys=data.keys();
+                    while(keys.hasNext())included.put(keys.next());
+                    exported.put("includedKeys",included);
+                    assertTrue(activity.prefs.edit()
+                        .putString("session",new TileGame("classic","",82L).toJson().toString())
+                        .putString("history","[]")
+                        .putString("futureSetting","keep-me").commit());
+                    activity.readBackupBytes(exported.toString().getBytes(StandardCharsets.UTF_8));
+                    assertFalse("Full restore must remove omitted stored session",
+                        activity.prefs.contains("session"));
+                    assertFalse("Full restore must remove omitted game history",
+                        activity.prefs.contains("history"));
+                    assertEquals("Unrelated settings must not be deleted",
+                        "keep-me",activity.prefs.getString("futureSetting",null));
+                }finally{
+                    activity.prefs.edit().remove("futureSetting").commit();
+                    activity.readBackupBytes(original);
+                }
+            }catch(Exception e){
+                throw new AssertionError("Explicit full backup restore failed",e);
+            }
+        });
+    }
+
+
 }
