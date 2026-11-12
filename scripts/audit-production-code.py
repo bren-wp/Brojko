@@ -51,7 +51,8 @@ expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
-    "LocalBackupRepository.java",
+    "LocalBackupRepository.java", "LocalHistoryRepository.java",
+    "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
 }
 assert set(java) == expected_sources, (
@@ -84,6 +85,7 @@ assert "older.peak>game.peak" in java["TileGame.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
 assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
+assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
 assert "minSdk 24" in gradle and "targetSdk 36" in gradle
