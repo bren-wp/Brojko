@@ -51,6 +51,7 @@ expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
+    "LocalBackupRepository.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
@@ -74,11 +75,14 @@ for needle in blocked:
 assert "PendingIntent.FLAG_IMMUTABLE" in java["AppReminder.java"]
 assert 'Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())' in java["AppReminderBoot.java"]
 assert "getBoolean(\"notifications\",false)" in java["AppReminderBoot.java"]
-assert "getPackageName().equals(root.optString(\"package\",\"\")" in java["MainActivity.java"]
+assert "packageName.equals(root.optString(\"package\",\"\")" in java["LocalBackupRepository.java"]
 assert "bytes.size()>512000" in java["MainActivity.java"]
 assert "legacyScore<0" in java["MainActivity.java"]
 assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
+assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
+assert "editor.remove(key)" in java["LocalBackupRepository.java"]
+assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
 assert "minSdk 24" in gradle and "targetSdk 36" in gradle
