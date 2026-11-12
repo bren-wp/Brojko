@@ -42,3 +42,11 @@ realni `GameArchiveCoordinator`.
 **Ograničenje:** audit skripta ostaje konzervativna i ne dokazuje
 potpunu nedostižnost svih Java/Android callbackova. Bez dokazivog
 nedostižnog produkcijskog simbola nije brisana aktivna gameplay metoda.
+
+## Novi modularni resursi nisu mrtav kod
+
+`GameArtworkData` i `GameCalendar` uvode se kao živ izvor za
+originalni native Canvas i lokalizaciju perioda. Imena, redoslijed
+i vrijednosti 10 ilustracijskih nizova nisu izmijenjeni.
+Ne brišemo nijedan lifecycle, delegate ili Canvas callback
+samo na temelju tekstualnih rezultata audita.

@@ -53,6 +53,7 @@ expected_sources = {
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
     "GameArchiveCoordinator.java",
+    "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
@@ -154,3 +155,8 @@ for name in (
     assert ("void "+name+"(") in flow_test, "Missing gameplay regression: "+name
 assert "awaitTransaction()" in flow_test
 assert "gameTransitionBusy" in flow_test
+
+assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
+assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
+assert "GameCalendar.today()" in java["MainActivity.java"]
+assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]

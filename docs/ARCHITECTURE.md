@@ -75,3 +75,13 @@ Ovo nije deklaracija da je cijeli `MainActivity` već refaktoriran.
   `newGame/endSession` grane koriste radnika.
 - `migrateLegacy()` i restore SAF sigurnosne kopije još zadržavaju
   pojedinačne sinkrone transakcije te su odvojeni sljedeći zadatak.
+
+## Izolacija stabilne native grafike i hrvatskih razdoblja
+
+- `GameArtworkData.java`: konture Home/Bravo te svi nepromjenjivi
+  victory/misijski nizovi premješteni su bez promjene ijedne
+  koordinatne i numeričke vrijednosti. `MainActivity` zadržava
+  izvorna imena polja kao alias, stoga Canvas ostaje nepromijenjen.
+- `GameCalendar.java`: sve hrvatske oznake datuma i perioda
+  koristi identičan postojeći algoritam. Metode aktivnosti su
+  delegati, a dodani JVM testovi potvrđuju format i oblik trajanja.
