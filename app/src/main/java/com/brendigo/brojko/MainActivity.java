@@ -192,6 +192,7 @@ public final class MainActivity extends ComponentActivity {
     // racing in-memory gameplay state or an Activity recreation.
     private final ExecutorService backupIo=Executors.newSingleThreadExecutor();
     boolean backupDocumentBusy=false;
+    boolean backupImportBusy=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -630,6 +631,7 @@ public final class MainActivity extends ComponentActivity {
         final String appPackage=getPackageName();
         final String created=today();
         backupDocumentBusy=true;
+        backupImportBusy=importing;
         if(importing)screen.setEnabled(false);
         try{
             backupIo.execute(()->{
@@ -653,6 +655,7 @@ public final class MainActivity extends ComponentActivity {
                 runOnUiThread(()->{
                     if(isFinishing()||isDestroyed())return;
                     backupDocumentBusy=false;
+                    backupImportBusy=false;
                     if(screen!=null)screen.setEnabled(true);
                     if(failed!=null){
                         Toast.makeText(this,"Pogreška: "+failed.getMessage(),
@@ -680,13 +683,14 @@ public final class MainActivity extends ComponentActivity {
             });
         }catch(RejectedExecutionException unavailable){
             backupDocumentBusy=false;
+            backupImportBusy=false;
             if(importing)screen.setEnabled(true);
             Toast.makeText(this,"Sigurnosna kopija trenutačno nije dostupna.",
                 Toast.LENGTH_LONG).show();
         }
     }
     @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
-        if(backupDocumentBusy)return true;
+        if(backupImportBusy)return true;
         if("game".equals(page)){
             switch(keyCode){
                 case android.view.KeyEvent.KEYCODE_DPAD_LEFT:move(TileGame.LEFT);return true;
@@ -702,7 +706,7 @@ public final class MainActivity extends ComponentActivity {
         // Do not navigate away or destroy the Activity mid-restore.
         // The validated plan must be applied to the same active session
         // that opened the system document picker.
-        if(backupDocumentBusy)return;
+        if(backupImportBusy)return;
         String target=BackNavigationPolicy.destination(page,game!=null);
         if(target==null)finish();
         else navigate(target);

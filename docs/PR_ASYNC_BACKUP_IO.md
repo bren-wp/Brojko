@@ -47,3 +47,10 @@ Dok se backup uvozi, hardverska / gestovna tipka Android Back ne
 navigira s backup stranice, isto kao što je već blokiran Canvas,
 D-pad i TalkBack unos. I/O čitač napreduje i kada SAF provider jednom
 vrati 0 bajtova bez EOF-a; takav tok pokriva JVM regresijski test.
+
+## Korisnički tijek pri izvozu
+
+Pozadinski izvoz ne zaključava tipku Natrag ni upravljanje aplikacijom
+jer ne prepisuje korisničke postavke. **Samo uvoz** privremeno
+zaključava navigaciju. Dodan je instrumentacijski test za povratak s
+backup zaslona dok izvoz traje.

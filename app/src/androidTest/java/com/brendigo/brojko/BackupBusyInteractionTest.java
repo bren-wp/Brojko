@@ -18,15 +18,33 @@ public final class BackupBusyInteractionTest {
             activity.navigate("backup");
             try{
                 activity.backupDocumentBusy=true;
+                activity.backupImportBusy=true;
                 activity.screen.setEnabled(false);
                 activity.handleBackNavigation();
                 assertEquals("backup",activity.page);
             }finally{
                 activity.backupDocumentBusy=false;
+                activity.backupImportBusy=false;
                 activity.screen.setEnabled(true);
             }
             activity.handleBackNavigation();
             assertEquals("settings",activity.page);
+        });
+    }
+
+    @Test public void exportDoesNotTrapUserOnBackupScreen(){
+        scenario.getScenario().onActivity(activity->{
+            activity.navigate("backup");
+            try{
+                activity.backupDocumentBusy=true;
+                activity.backupImportBusy=false;
+                activity.handleBackNavigation();
+                assertEquals("settings",activity.page);
+            }finally{
+                activity.backupDocumentBusy=false;
+                activity.backupImportBusy=false;
+                activity.screen.setEnabled(true);
+            }
         });
     }
 }
