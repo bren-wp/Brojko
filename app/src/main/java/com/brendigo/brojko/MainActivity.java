@@ -400,6 +400,7 @@ public final class MainActivity extends ComponentActivity {
         screen.setContentDescription("Brojko — "+target+
             (game==null?"":". Rezultat "+fmt(game.score)));
         screen.invalidate();
+        screen.accessibilityHelper.invalidateRoot();
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
     }
     void requestNew(String mode){
@@ -700,6 +701,7 @@ public final class MainActivity extends ComponentActivity {
     }
 
     final class BoardScreen extends View {
+        final BoardAccessibilityDelegate accessibilityHelper;
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         // Optional instrumentation-only ink bounds: no production text
@@ -757,6 +759,8 @@ public final class MainActivity extends ComponentActivity {
         }
         BoardScreen(Context context){
             super(context);
+            accessibilityHelper=new BoardAccessibilityDelegate(this);
+            ViewCompat.setAccessibilityDelegate(this,accessibilityHelper);
             Typeface base;
             try{base=Typeface.createFromAsset(getContext().getAssets(),"Nunito.ttf");}
             catch(RuntimeException error){base=Typeface.create("sans-serif-rounded",Typeface.NORMAL);}
@@ -6892,6 +6896,17 @@ public final class MainActivity extends ComponentActivity {
                 fitted(lines[i],200,219+i*48,17,330,ink,false);
             button("Nazad","back",25,722,350,72,CORAL,true,()->navigate("settings"));
         }
+        @Override public boolean dispatchHoverEvent(MotionEvent event){
+            return accessibilityHelper.dispatchHoverEvent(event)||
+                super.dispatchHoverEvent(event);
+        }
+        @Override protected void onFocusChanged(boolean gainFocus,int direction,
+                android.graphics.Rect previouslyFocusedRect){
+            super.onFocusChanged(gainFocus,direction,previouslyFocusedRect);
+            accessibilityHelper.onFocusChanged(gainFocus,direction,previouslyFocusedRect);
+        }
+        // Virtual children expose individual focusable button targets; the
+        // existing directional game actions remain available on the host.
         // Screen readers expose the buttons and all four board directions as
         // explicit custom actions; directional keyboard keys also remain supported.
         static final int ACTION_TAP_BASE=0x01001000;

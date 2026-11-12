@@ -52,6 +52,7 @@ expected_sources = {
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java",
+    "BoardAccessibilityDelegate.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
