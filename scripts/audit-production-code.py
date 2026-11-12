@@ -52,6 +52,8 @@ expected_sources = {
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
+    "GameArchiveCoordinator.java",
+    "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
@@ -88,14 +90,25 @@ assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
-assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
+assert "getBackupBytes(" not in java["MainActivity.java"]
+assert "readBackupBytes(" not in java["MainActivity.java"]
+assert "validateBackupHistory(" not in java["MainActivity.java"]
+assert "static void restore(" not in java["LocalBackupRepository.java"]
 assert "LocalBackupRepository.validate(" in java["MainActivity.java"]
 assert "LocalBackupRepository.apply(" in java["MainActivity.java"]
 assert "BackupDocumentIo.read(" in java["MainActivity.java"]
 assert "BackupDocumentIo.write(" in java["MainActivity.java"]
 assert "backupIo.shutdown()" in java["MainActivity.java"]
-assert "if(backupImportBusy)return;" in java["MainActivity.java"]
-assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
+assert "backupImportBusy||gameTransitionBusy" in java["MainActivity.java"]
+assert "boolean archive()" not in java["MainActivity.java"]
+assert "static boolean archive(" not in java["LocalHistoryRepository.java"]
+assert "GameArchiveCoordinator.start(" in java["MainActivity.java"]
+assert "LocalHistoryRepository.archiveSnapshot(" in java["GameArchiveCoordinator.java"]
+assert 'putString("session",archivedSession)' in java["LocalHistoryRepository.java"]
+assert 'putInt("lastScore",snapshot.score).commit()' in java["LocalHistoryRepository.java"]
+assert "LocalHistoryRepository.hasCommittedArchive(prefs)" in java["MainActivity.java"]
+assert "if(gameTransitionBusy)return;" in java["MainActivity.java"]
+assert "GameArchiveCoordinator.attach(this)" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
 assert "minSdk 24" in gradle and "targetSdk 36" in gradle
@@ -132,3 +145,29 @@ for item in candidates:
     print("  REVIEW: " + item)
 print("Scanned %d production Java classes; %d potential dead-code symbols."
       % (len(java), len(candidates)))
+
+# Screenshot/gameplay test refactoring preserves all five old cases
+# in their asynchronous, deterministic instrumentation suite.
+flow_test=(ROOT/"app/src/androidTest/java/com/brendigo/brojko/GameplayAsyncArchiveFlowTest.java").read_text(encoding="utf-8")
+for name in (
+    "failedDailyReplayCannotClaimSuccessReward",
+    "confirmationCancelIsNonDestructiveAndConfirmedEndArchives",
+    "confirmNewGameArchivesBeforeSwitchingToRequestedMode",
+    "gameOverNewGameArchivesExactlyOnceAndBackKeepsSession",
+    "dailyResultButtonsPreserveRewardDateAndArchiveRealScore",
+):
+    assert ("void "+name+"(") in flow_test, "Missing gameplay regression: "+name
+assert "awaitTransaction()" in flow_test
+assert "gameTransitionBusy" in flow_test
+
+assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
+assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
+assert "GameCalendar.today()" in java["MainActivity.java"]
+assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]
+
+# Test-only compatibility helpers stay out of the shipping APK.
+bridge=(ROOT/"app/src/androidTest/java/com/brendigo/brojko/BackupTestBridge.java").read_text(encoding="utf-8")
+assert "LocalBackupRepository.export(" in bridge
+assert "LocalBackupRepository.validate(" in bridge
+assert "LocalBackupRepository.apply(" in bridge
+assert "skipPersistOnPauseAfterImport=true" in bridge

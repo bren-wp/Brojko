@@ -200,9 +200,4 @@ final class LocalBackupRepository {
         if(!editor.commit())throw new IllegalStateException("Neuspješno spremanje.");
     }
 
-    /** Synchronous compatibility facade retained for existing regression tests. */
-    static void restore(SharedPreferences prefs,String packageName,byte[] bytes)
-            throws Exception{
-        apply(prefs,validate(packageName,bytes));
-    }
 }

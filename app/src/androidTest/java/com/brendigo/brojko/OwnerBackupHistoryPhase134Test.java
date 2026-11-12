@@ -19,10 +19,10 @@ public class OwnerBackupHistoryPhase134Test {
         new ActivityScenarioRule<>(MainActivity.class);
 
     @Test public void validLegacyHistoryRowsMayOmitOptionalProperties() throws Exception {
-        MainActivity.validateBackupHistory(new JSONArray(
+        BackupTestBridge.validateHistory(new JSONArray(
             "[{\"score\":0,\"moves\":0,\"peak\":0},"+
             "{\"score\":4,\"moves\":1,\"peak\":2,\"won\":true}]"));
-        MainActivity.validateBackupHistory(new JSONArray("[]"));
+        BackupTestBridge.validateHistory(new JSONArray("[]"));
     }
 
     @Test public void emptyOrUnknownBackupNeverErasesProgress() {
@@ -31,14 +31,14 @@ public class OwnerBackupHistoryPhase134Test {
             Map<String,?> before=new HashMap<>(activity.prefs.getAll());
             try {
                 JSONObject original=new JSONObject(
-                    new String(activity.getBackupBytes(),StandardCharsets.UTF_8));
+                    new String(BackupTestBridge.export(activity),StandardCharsets.UTF_8));
                 String[] badData={"{}", "{\"not_a_brojko_setting\":true}"};
                 for(String raw:badData){
                     JSONObject candidate=new JSONObject(original.toString());
                     candidate.put("data",new JSONObject(raw));
                     boolean rejected=false;
                     try{
-                        activity.readBackupBytes(candidate.toString().getBytes(
+                        BackupTestBridge.restore(activity,candidate.toString().getBytes(
                             StandardCharsets.UTF_8));
                     }catch(IllegalArgumentException expected){
                         rejected=true;
@@ -58,13 +58,13 @@ public class OwnerBackupHistoryPhase134Test {
             activity.persist();
             Map<String,?> original=new HashMap<>(activity.prefs.getAll());
             try{
-                byte[] full=activity.getBackupBytes();
+                byte[] full=BackupTestBridge.export(activity);
                 JSONObject patched=new JSONObject(
                     new String(full,StandardCharsets.UTF_8));
                 int newBest=activity.prefs.getInt("best",0)==19137?19138:19137;
                 patched.put("data",new JSONObject().put("best",newBest));
                 try {
-                    activity.readBackupBytes(patched.toString().getBytes(
+                    BackupTestBridge.restore(activity,patched.toString().getBytes(
                         StandardCharsets.UTF_8));
                     assertEquals("Selected imported preference should update",
                         newBest,activity.prefs.getInt("best",-1));
@@ -74,7 +74,7 @@ public class OwnerBackupHistoryPhase134Test {
                             item.getValue(),activity.prefs.getAll().get(item.getKey()));
                     }
                 }finally{
-                    activity.readBackupBytes(full);
+                    BackupTestBridge.restore(activity,full);
                 }
             }catch(Exception e){
                 throw new AssertionError("Sparse legacy backup lost progress",e);
@@ -99,14 +99,14 @@ public class OwnerBackupHistoryPhase134Test {
                 "[{\"day\":23}]"
             };
             try {
-                byte[] source=activity.getBackupBytes();
+                byte[] source=BackupTestBridge.export(activity);
                 for(String history:invalid){
                     JSONObject imported=new JSONObject(
                         new String(source,StandardCharsets.UTF_8));
                     imported.getJSONObject("data").put("history",history);
                     boolean rejected=false;
                     try {
-                        activity.readBackupBytes(
+                        BackupTestBridge.restore(activity,
                             imported.toString().getBytes(StandardCharsets.UTF_8));
                     }catch(Exception invalidBackup){
                         rejected=true;
@@ -124,14 +124,14 @@ public class OwnerBackupHistoryPhase134Test {
         rule.getScenario().onActivity(activity -> {
             activity.persist();
             try{
-                byte[] original=activity.getBackupBytes();
+                byte[] original=BackupTestBridge.export(activity);
                 try{
                     String session=new TileGame("classic","",94821L).toJson().toString();
                     String history="[{\"score\":8,\"moves\":2,\"peak\":4}]";
                     assertTrue(activity.prefs.edit()
                         .putString("session",session).putString("history",history).commit());
                     JSONObject exported=new JSONObject(new String(
-                        activity.getBackupBytes(),StandardCharsets.UTF_8));
+                        BackupTestBridge.export(activity),StandardCharsets.UTF_8));
                     JSONObject partial=new JSONObject();
                     partial.put("best",120).put("games",2).put("total",8);
                     partial.put("theme",0).put("style",0);
@@ -142,7 +142,7 @@ public class OwnerBackupHistoryPhase134Test {
                     legacy.put("data",partial);
                     legacy.remove("scope");
                     legacy.remove("includedKeys");
-                    activity.readBackupBytes(legacy.toString().getBytes(StandardCharsets.UTF_8));
+                    BackupTestBridge.restore(activity,legacy.toString().getBytes(StandardCharsets.UTF_8));
                     assertEquals("Legacy restore must keep the running session",
                         session,activity.prefs.getString("session",null));
                     assertEquals("Legacy restore must keep past games",
@@ -150,11 +150,11 @@ public class OwnerBackupHistoryPhase134Test {
                     // A damaged modern full export with a stale manifest
                     // must also be applied as a non-destructive patch.
                     exported.put("data",partial);
-                    activity.readBackupBytes(exported.toString().getBytes(StandardCharsets.UTF_8));
+                    BackupTestBridge.restore(activity,exported.toString().getBytes(StandardCharsets.UTF_8));
                     assertEquals(session,activity.prefs.getString("session",null));
                     assertEquals(history,activity.prefs.getString("history",null));
                 }finally{
-                    activity.readBackupBytes(original);
+                    BackupTestBridge.restore(activity,original);
                 }
             }catch(Exception e){
                 throw new AssertionError("Sparse backup removed user progress",e);
@@ -166,7 +166,7 @@ public class OwnerBackupHistoryPhase134Test {
         rule.getScenario().onActivity(activity -> {
             activity.persist();
             try{
-                byte[] original=activity.getBackupBytes();
+                byte[] original=BackupTestBridge.export(activity);
                 try{
                     JSONObject exported=new JSONObject(new String(original,
                         StandardCharsets.UTF_8));
@@ -181,7 +181,7 @@ public class OwnerBackupHistoryPhase134Test {
                         .putString("session",new TileGame("classic","",82L).toJson().toString())
                         .putString("history","[]")
                         .putString("futureSetting","keep-me").commit());
-                    activity.readBackupBytes(exported.toString().getBytes(StandardCharsets.UTF_8));
+                    BackupTestBridge.restore(activity,exported.toString().getBytes(StandardCharsets.UTF_8));
                     assertFalse("Full restore must remove omitted stored session",
                         activity.prefs.contains("session"));
                     assertFalse("Full restore must remove omitted game history",
@@ -190,7 +190,7 @@ public class OwnerBackupHistoryPhase134Test {
                         "keep-me",activity.prefs.getString("futureSetting",null));
                 }finally{
                     activity.prefs.edit().remove("futureSetting").commit();
-                    activity.readBackupBytes(original);
+                    BackupTestBridge.restore(activity,original);
                 }
             }catch(Exception e){
                 throw new AssertionError("Explicit full backup restore failed",e);

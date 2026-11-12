@@ -40,9 +40,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -58,106 +55,17 @@ public final class MainActivity extends ComponentActivity {
     static final int[] TILES={0xffeee0ce,0xffff7a5b,0xff2ec4b6,0xff3d98f0,
         0xffffbb4a,0xffff8751,0xffff6f96,0xffbd60e9,0xff835bea,
         0xff409ff0,0xff36c7a1,0xfff3b547,0xffe16bca,0xff587be3};
-    // Original Brendigo Home navy letter silhouettes, vectorized from
-    // the owner's 941 x 1672 PNG: j, r, o, o-counter, i-dot, k,
-    // B, B-lower-counter and B-upper-counter. At 1px contour
-    // simplification the dark-ink mask IoU against the supplied
-    // artwork is ~98.5%, without shipping a screenshot in the app.
-    private static final int[][] HOME_SOURCE_NAVY_CONTOURS={
-        {526,276,516,276,506,280,503,283,500,290,504,339,502,369,
-         500,374,494,381,476,387,472,391,469,398,470,410,475,416,
-         481,419,500,420,520,413,532,402,540,386,543,369,543,339,
-         539,292,536,283,531,278},
-        {382,272,371,272,366,274,359,281,356,288,354,286,352,279,
-         349,276,343,274,331,276,326,279,322,284,320,295,326,363,
-         330,375,336,380,347,381,358,378,362,375,365,370,366,358,
-         362,334,362,322,364,316,370,310,384,306,388,302,390,296,
-         390,281,388,277},
-        {702,261,680,268,669,276,662,284,653,302,651,313,652,333,
-         660,352,672,365,678,369,698,376,721,376,733,373,745,367,
-         758,355,766,341,769,332,770,309,766,294,762,286,746,270,
-         726,262},
-        {708,299,713,299,720,302,725,308,727,314,727,322,724,330,
-         714,337,707,337,702,335,697,330,694,323,694,314,697,307,
-         700,303},
-        {510,230,503,233,498,238,495,244,495,256,502,266,509,269,
-         519,269,529,264,533,259,535,254,535,244,531,236,526,232,
-         521,230},
-        {554,223,548,229,545,241,554,359,557,369,562,374,567,376,
-         581,375,589,371,594,361,592,337,594,335,619,365,625,370,
-         630,372,638,372,647,368,654,358,653,347,628,318,624,311,
-         651,281,653,277,653,268,651,264,646,259,637,255,627,255,
-         622,257,616,262,591,295,589,288,586,242,583,228,579,223,
-         572,220,563,220},
-        {289,220,273,215,240,216,192,226,180,231,173,238,170,245,
-         169,255,180,367,183,385,187,392,191,395,201,398,207,398,
-         250,392,281,384,299,374,311,360,316,348,318,337,318,329,
-         315,316,311,308,305,301,295,295,284,292,299,279,304,270,
-         307,259,307,247,305,239,298,227},
-        {265,328,265,339,257,347,250,350,234,353,228,350,225,328,
-         228,324,241,321,256,321,259,322},
-        {253,262,255,266,255,273,249,281,232,287,223,287,221,285,
-         219,274,219,264,221,261,230,258,244,257,248,258}
-    };
-    // Owner's 941x1672 "Bravo!" illustration: seven filled navy
-    // components and four open counters. Native vector paths, never
-    // a static screenshot or a fake gameplay-state image.
-    private static final int[][] OWNER_BRAVO_CONTOURS={
-        {666,622,660,625,657,628,654,635,654,643,657,649,663,654,
-         675,655,680,653,685,648,688,641,687,632,684,627,679,623},
-        {427,592,421,592,417,594,413,598,412,602,410,604,407,598,
-         401,595,396,595,390,597,384,604,384,615,385,616,387,638,
-         389,645,390,659,393,667,398,671,405,672,413,670,419,663,
-         420,657,418,648,417,631,421,623,431,617,434,609,432,596},
-        {445,591,439,599,439,607,442,611,452,612,461,607,470,606,
-         476,611,476,615,475,616,472,615,454,616,447,619,440,625,
-         437,630,435,640,437,649,441,656,446,660,455,663,468,662,
-         473,660,479,655,485,661,495,661,501,658,505,652,506,644,
-         505,643,505,632,504,631,502,608,500,601,496,594,490,588,
-         477,583,460,584},
-        {478,634,477,639,471,644,464,644,461,641,460,638,461,635,
-         464,632,469,630,475,631},
-        {512,583,506,588,505,597,520,637,529,653,537,657,546,656,
-         553,650,556,644,568,600,569,588,563,582,555,582,551,584,
-         547,590,542,610,539,615,536,609,531,591,528,586,521,582},
-        {604,572,597,574,587,580,578,591,574,600,572,609,572,623,
-         576,637,585,649,598,656,615,657,630,651,637,645,642,638,
-         647,625,648,607,644,593,639,585,633,579,618,572},
-        {607,601,615,602,620,607,621,610,620,621,617,625,612,628,
-         605,627,600,622,599,619,600,607},
-        {359,560,353,557,344,555,326,555,325,556,313,557,279,567,
-         269,572,262,580,260,586,260,598,261,599,261,605,262,606,
-         262,612,263,613,263,619,264,620,264,626,265,627,265,633,
-         267,640,272,678,276,691,282,696,286,697,303,696,319,693,
-         344,686,363,677,376,664,381,652,381,635,379,628,374,620,
-         369,616,362,613,352,611,364,599,369,588,369,573,366,567},
-        {340,639,341,642,340,646,333,653,320,658,314,658,312,656,
-         310,648,310,640,312,638,321,635,331,634,337,636},
-        {328,592,327,599,318,607,311,610,305,610,303,608,302,597,
-         306,593,316,589,324,589},
-        {665,534,659,536,653,542,651,546,650,565,651,566,651,576,
-         652,577,653,589,657,603,663,611,670,613,674,612,678,609,
-         683,598,685,588,685,581,686,580,686,572,687,571,687,547,
-         685,542,679,536,674,534}
-    };
-    // Reuse immutable victory lettering data; no array allocations in onDraw.
-    private static final String[] VICTORY_GLYPHS={"B","r","a","v","o","!"};
-    private static final float[] VICTORY_TILT={-8f,4f,-6f,5f,-4f,7f};
-    private static final float[] VICTORY_RISE={2f,-2f,1f,-1f,0f,-3f};
-    // B and exclamation are deliberately oversized in the source logo.
-    private static final float[] VICTORY_WIDTH={1.24f,1f,1f,1f,1f,1.35f};
-    private static final float[] VICTORY_HEIGHT={1.2f,1f,1f,1f,1f,1.08f};
-    // Immutable mission pictogram data: avoid new arrays on every redraw.
-    private static final int[] MISSION_TILE_VALUES={2,4,8,16};
-    private static final float[][] MISSION_CORAL_RAYS={
-        {-10f,-10f,-33f},{11f,-7f,38f},{-12f,12f,36f}
-    };
-    // Reused on each Canvas frame; no per-frame array allocations.
-    private static final float[][] MISSION_HEADER_RAYS={
-        {35f,86f,41f,92f},{28f,103f,39f,103f},{35f,112f,41f,108f},
-        {363f,85f,357f,92f},{374f,103f,363f,103f},
-        {363f,111f,357f,108f}
-    };
+    // Source art aliases: preserve all original Canvas values and call sites.
+    private static final int[][] HOME_SOURCE_NAVY_CONTOURS=GameArtworkData.HOME_SOURCE_NAVY_CONTOURS;
+    private static final int[][] OWNER_BRAVO_CONTOURS=GameArtworkData.OWNER_BRAVO_CONTOURS;
+    private static final String[] VICTORY_GLYPHS=GameArtworkData.VICTORY_GLYPHS;
+    private static final float[] VICTORY_TILT=GameArtworkData.VICTORY_TILT;
+    private static final float[] VICTORY_RISE=GameArtworkData.VICTORY_RISE;
+    private static final float[] VICTORY_WIDTH=GameArtworkData.VICTORY_WIDTH;
+    private static final float[] VICTORY_HEIGHT=GameArtworkData.VICTORY_HEIGHT;
+    private static final int[] MISSION_TILE_VALUES=GameArtworkData.MISSION_TILE_VALUES;
+    private static final float[][] MISSION_CORAL_RAYS=GameArtworkData.MISSION_CORAL_RAYS;
+    private static final float[][] MISSION_HEADER_RAYS=GameArtworkData.MISSION_HEADER_RAYS;
     SharedPreferences prefs;
     TileGame game;
     BoardScreen screen;
@@ -193,6 +101,9 @@ public final class MainActivity extends ComponentActivity {
     private final ExecutorService backupIo=Executors.newSingleThreadExecutor();
     boolean backupDocumentBusy=false;
     boolean backupImportBusy=false;
+    // Only archival transitions use a worker-side durable commit; while
+    // pending, the old mutable session must not be overwritten by onPause.
+    boolean gameTransitionBusy=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -257,6 +168,18 @@ public final class MainActivity extends ComponentActivity {
                 page.equals("dailyWin")||page.equals("dailyFail")))page="home";
         }
         screen=new BoardScreen(this);setContentView(screen);
+        // Android rotation may recreate the screen before the worker commits.
+        // Reattach instead of persisting an obsolete unarchived session.
+        gameTransitionBusy=GameArchiveCoordinator.attach(this);
+        if(gameTransitionBusy){
+            screen.setEnabled(false);
+        }else if(LocalHistoryRepository.hasCommittedArchive(prefs)){
+            // A crash or Activity recreation after the atomic archive commit
+            // must not resume the old board and archive it twice. History is
+            // already durable; allow a fresh game from Home.
+            game=null;
+            page="home";
+        }
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
         if("splash".equals(page)){
             long elapsed=Math.max(0L,android.os.SystemClock.elapsedRealtime()-
@@ -312,12 +235,8 @@ public final class MainActivity extends ComponentActivity {
             persist();
         }catch(Exception ignored){game=null;}
     }
-    String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
-    String currentWeekStart(){
-        Calendar c=Calendar.getInstance();
-        c.add(Calendar.DAY_OF_YEAR,-((c.get(Calendar.DAY_OF_WEEK)+5)%7));
-        return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
-    }
+    String today(){return GameCalendar.today();}
+    String currentWeekStart(){return GameCalendar.currentWeekStart();}
     void ensureDay(){
         if(!today().equals(statsDay)){
             statsDay=today();todayMerges=0;todayPoints=0;
@@ -342,30 +261,11 @@ public final class MainActivity extends ComponentActivity {
         reward(16,1000,best>=50000);
         reward(32,200,weekPoints>=10000);
     }
-    String timeRemainingInPeriod(boolean week){
-        Calendar now=Calendar.getInstance();
-        Calendar end=(Calendar)now.clone();
-        if(week){
-            int daysUntilMonday=(Calendar.MONDAY-end.get(Calendar.DAY_OF_WEEK)+7)%7;
-            end.add(Calendar.DAY_OF_YEAR,daysUntilMonday==0?7:daysUntilMonday);
-        }else end.add(Calendar.DAY_OF_YEAR,1);
-        end.set(Calendar.HOUR_OF_DAY,0);end.set(Calendar.MINUTE,0);
-        end.set(Calendar.SECOND,0);end.set(Calendar.MILLISECOND,0);
-        long remaining=Math.max(0,
-            (end.getTimeInMillis()-now.getTimeInMillis())/60000);
-        return week?(remaining<1440?(remaining/60)+"h":
-            (remaining/1440)+"d "+((remaining%1440)/60)+"h"):
-            (remaining/60)+"h "+(remaining%60)+"min";
-    }
-    String yesterday(){
-        Calendar c=Calendar.getInstance();c.add(Calendar.DAY_OF_YEAR,-1);
-        return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
-    }
-    String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
-    String historyDate(){return new SimpleDateFormat("d. MMM yyyy.",new Locale("hr","HR")).format(new Date());}
-    String dailyLongDate(){
-        return new SimpleDateFormat("d. MMMM yyyy.",new Locale("hr","HR")).format(new Date());
-    }
+    String timeRemainingInPeriod(boolean week){return GameCalendar.timeRemainingInPeriod(week);}
+    String yesterday(){return GameCalendar.yesterday();}
+    String compactTime(){return GameCalendar.compactTime();}
+    String historyDate(){return GameCalendar.historyDate();}
+    String dailyLongDate(){return GameCalendar.dailyLongDate();}
     String fmt(int x){return number.format(x);}
     String labelMode(String m) {
         return "relaxed".equals(m)?"Opušteno 5×5":"daily".equals(m)?"Dnevni izazov":"Klasično 4×4";
@@ -381,6 +281,9 @@ public final class MainActivity extends ComponentActivity {
         controller.setAppearanceLightNavigationBars(lightBackground);
     }
     void persist() {
+        // apply() is asynchronous, but its in-memory write could otherwise
+        // override the worker's archived session during rotation/onPause.
+        if(gameTransitionBusy)return;
         SharedPreferences.Editor e=prefs.edit()
             .putInt("best",best).putInt("games",plays).putInt("total",total)
             .putInt("lastScore",lastScore)
@@ -401,6 +304,7 @@ public final class MainActivity extends ComponentActivity {
         e.apply();
     }
     void navigate(String target) {
+        if(gameTransitionBusy)return;
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();
@@ -411,23 +315,22 @@ public final class MainActivity extends ComponentActivity {
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
     }
     void requestNew(String mode){
+        if(gameTransitionBusy)return;
         if(game!=null&&!game.gameOver&&!game.archived&&game.moves>0){
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
     }
-    boolean archive(){
-        if(game==null||game.archived||game.moves==0)return true;
-        if(!LocalHistoryRepository.archive(prefs,game,historyDate(),compactTime()))
-            return false;
-        lastScore=game.score;
-        return true;
-    }
     void newGame(String mode) {
-        if(!archive()){
-            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
-                Toast.LENGTH_LONG).show();
+        if(gameTransitionBusy||backupImportBusy)return;
+        if(game!=null&&!game.archived&&game.moves>0){
+            beginGameArchive(mode,false);
             return;
         }
+        startFreshGame(mode);
+    }
+
+    /** The old game is committed before this method is invoked. */
+    private void startFreshGame(String mode){
         long seed="daily".equals(mode)?
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
@@ -488,7 +391,7 @@ public final class MainActivity extends ComponentActivity {
         }catch(Exception ignored){}
     }
     void move(int direction) {
-        if(!page.equals("game")||game==null)return;
+        if(gameTransitionBusy||!page.equals("game")||game==null)return;
         boolean dailyWasComplete=game.isDailyGoalComplete() && today().equals(game.day);
         TileGame.Result result=game.move(direction);
         if(!result.changed){
@@ -537,15 +440,61 @@ public final class MainActivity extends ComponentActivity {
         persist();animate();
     }
     void endSession(){
-        if(!archive()){
+        if(gameTransitionBusy||backupImportBusy)return;
+        if(game!=null&&!game.archived&&game.moves>0){
+            beginGameArchive(null,true);
+            return;
+        }
+        finishSessionAfterArchive();
+    }
+
+    private void finishSessionAfterArchive(){
+        game=null;page="home";persist();screen.invalidate();
+    }
+
+    /** Start one durable archive with immutable game data. */
+    private void beginGameArchive(String nextMode,boolean ending){
+        if(!GameArchiveCoordinator.start(this,prefs,game,historyDate(),
+            compactTime(),nextMode,ending)){
+            Toast.makeText(this,"Spremanje partije nije moguće.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
+        gameTransitionBusy=true;
+        screen.setEnabled(false);
+        screen.announceForAccessibility("Spremanje partije.");
+    }
+
+    /** Invoked on main after a worker commit; it also survives rotation. */
+    void onArchiveTransactionFinished(GameArchiveCoordinator.Pending request,
+            boolean saved){
+        gameTransitionBusy=false;
+        if(screen!=null)screen.setEnabled(true);
+        if(!saved){
             Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
                 Toast.LENGTH_LONG).show();
             return;
         }
-        game=null;page="home";persist();screen.invalidate();
+        // Use the immutable archived source rather than a possibly stale
+        // restored Bundle during a mid-commit configuration change.
+        try{
+            TileGame archived=TileGame.fromJson(new JSONObject(request.session));
+            if(archived==null)throw new IllegalStateException("Neispravna sesija.");
+            archived.archived=true;
+            game=archived;
+        }catch(Exception invalid){
+            // The archived session is already durable on disk; recover it
+            // without allowing a stale bundle to overwrite the transaction.
+            try{
+                game=TileGame.fromJson(new JSONObject(prefs.getString("session","")));
+            }catch(Exception ignored){game=null;}
+        }
+        lastScore=request.score;
+        if(request.finishSession)finishSessionAfterArchive();
+        else startFreshGame(request.nextMode);
     }
     void undo() {
-        if(game==null||!game.canUndo())return;
+        if(gameTransitionBusy||game==null||!game.canUndo())return;
         ensureDay();undoUsedThisGame=true;
         int mergeCount=game.merges;
         boolean hadWon=game.reached2048;
@@ -594,8 +543,8 @@ public final class MainActivity extends ComponentActivity {
         catch(Exception ignored){return "1.1";}
     }
     void chooseBackupFile(boolean exporting){
-        if(backupDocumentBusy){
-            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
             return;
         }
         Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
@@ -605,23 +554,12 @@ public final class MainActivity extends ComponentActivity {
         try{startActivityForResult(i,exporting?EXPORT_BACKUP:IMPORT_BACKUP);}
         catch(Exception ex){Toast.makeText(this,"Nije moguće otvoriti datoteke.",Toast.LENGTH_LONG).show();}
     }
-    byte[] getBackupBytes() throws Exception{
-        return LocalBackupRepository.export(prefs,today(),getPackageName());
-    }
-    // Existing Android integration tests and callers retain this API.
-    static void validateBackupHistory(JSONArray history){
-        LocalBackupRepository.validateHistory(history);
-    }
-    void readBackupBytes(byte[] bytes) throws Exception{
-        LocalBackupRepository.restore(prefs,getPackageName(),bytes);
-        skipPersistOnPauseAfterImport=true;
-    }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
         if(requestCode!=EXPORT_BACKUP&&requestCode!=IMPORT_BACKUP)return;
-        if(backupDocumentBusy){
-            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -690,7 +628,7 @@ public final class MainActivity extends ComponentActivity {
         }
     }
     @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
-        if(backupImportBusy)return true;
+        if(backupImportBusy||gameTransitionBusy)return true;
         if("game".equals(page)){
             switch(keyCode){
                 case android.view.KeyEvent.KEYCODE_DPAD_LEFT:move(TileGame.LEFT);return true;
@@ -706,7 +644,7 @@ public final class MainActivity extends ComponentActivity {
         // Do not navigate away or destroy the Activity mid-restore.
         // The validated plan must be applied to the same active session
         // that opened the system document picker.
-        if(backupImportBusy)return;
+        if(backupImportBusy||gameTransitionBusy)return;
         String target=BackNavigationPolicy.destination(page,game!=null);
         if(target==null)finish();
         else navigate(target);
@@ -725,10 +663,11 @@ public final class MainActivity extends ComponentActivity {
         super.onSaveInstanceState(out);
     }
     @Override protected void onPause(){
-        if(!skipPersistOnPauseAfterImport)persist();
+        if(!skipPersistOnPauseAfterImport&&!gameTransitionBusy)persist();
         super.onPause();
     }
     @Override protected void onDestroy(){
+        GameArchiveCoordinator.detach(this);
         // Finish already-started SAF file I/O without retaining UI callbacks.
         // Stale validation results are discarded if this Activity was replaced.
         backupIo.shutdown();

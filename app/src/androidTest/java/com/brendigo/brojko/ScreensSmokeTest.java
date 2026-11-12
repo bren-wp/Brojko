@@ -1619,74 +1619,7 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void gameOverNewGameArchivesExactlyOnceAndBackKeepsSession(){
-        rule.getScenario().onActivity(activity->{
-            TileGame oldGame=activity.game;
-            String oldPage=activity.page;
-            String oldHistory=activity.prefs.getString("history","[]");
-            int oldPlays=activity.plays,oldLastScore=activity.lastScore;
-            int oldRecordTile=activity.recordTile;
-            int oldStreak=activity.playDayStreak;
-            String oldLastDay=activity.lastPlayDay;
-            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
-            int oldStars=activity.stars,oldRewardFlags=activity.rewardFlags;
-            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
-            int oldWeekPoints=activity.weekPoints;
-            boolean oldUndo=activity.undoUsedThisGame;
-            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-            try{
-                activity.game=new TileGame("classic","",12041L);
-                activity.game.moves=34;activity.game.score=6144;
-                for(int i=0;i<16;i++)
-                    activity.game.cells[i]=((i/4+i%4)%2==0)?2:4;
-                activity.game.cells[0]=512;
-                activity.game.peak=512;activity.game.gameOver=true;
-                activity.page="over";
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                        View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap canvas=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(canvas));
-                    view.taps.get(1).action.run();
-                    assertEquals("Back returns Home","home",activity.page);
-                    assertEquals("Home preserves completed game",6144,
-                        activity.game.score);
-                    assertEquals("Back does not create archive",oldHistory,
-                        activity.prefs.getString("history","[]"));
-                    activity.page="over";
-                    view.draw(new Canvas(canvas));
-                    view.taps.get(0).action.run();
-                    assertEquals("Restart enters game","game",activity.page);
-                    assertNotNull(activity.game);
-                    assertEquals("Mode stays classic","classic",activity.game.mode);
-                    org.json.JSONArray history=checkedHistory(
-                        activity.prefs.getString("history","[]"));
-                    assertEquals("One archive entry per finished session",
-                        Math.min(20,checkedHistory(oldHistory).length()+1),
-                        history.length());
-                    org.json.JSONObject latest=history.optJSONObject(0);
-                    assertNotNull(latest);
-                    assertEquals(6144,latest.optInt("score"));
-                    assertEquals(34,latest.optInt("moves"));
-                    assertEquals(512,latest.optInt("peak"));
-                    assertEquals("classic",latest.optString("mode"));
-                }finally{canvas.recycle();}
-            }finally{
-                activity.game=oldGame;activity.page=oldPage;
-                activity.plays=oldPlays;activity.lastScore=oldLastScore;
-                activity.recordTile=oldRecordTile;activity.playDayStreak=oldStreak;
-                activity.lastPlayDay=oldLastDay;
-                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
-                activity.stars=oldStars;activity.rewardFlags=oldRewardFlags;
-                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
-                activity.weekPoints=oldWeekPoints;activity.undoUsedThisGame=oldUndo;
-                activity.prefs.edit().putString("history",oldHistory).commit();
-                activity.persist();activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
+
 
     @Test public void confirmationModalsStayOnScreenAndShowLiveSessionSummary(){
         rule.getScenario().onActivity(activity->{
@@ -1748,126 +1681,9 @@ public class ScreensSmokeTest {
     }
 
 
-    @Test public void confirmNewGameArchivesBeforeSwitchingToRequestedMode(){
-        rule.getScenario().onActivity(activity->{
-            TileGame oldGame=activity.game;
-            String oldPage=activity.page,oldMode=activity.pendingMode;
-            String oldHistory=activity.prefs.getString("history","[]");
-            String oldLastPlayDay=activity.lastPlayDay;
-            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
-            int oldPlays=activity.plays,oldRecordTile=activity.recordTile;
-            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
-            int oldStars=activity.stars,oldFlags=activity.rewardFlags;
-            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
-            int oldWeekPoints=activity.weekPoints;
-            boolean oldUndo=activity.undoUsedThisGame;
-            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-            try{
-                activity.game=new TileGame("classic","",90127L);
-                activity.game.score=4096;activity.game.moves=15;
-                activity.requestNew("relaxed");
-                assertEquals("New game requires an explicit confirmation",
-                    "confirm",activity.page);
-                assertEquals("Requested next mode is retained","relaxed",
-                    activity.pendingMode);
-                assertEquals("No archive before confirmation",oldHistory,
-                    activity.prefs.getString("history","[]"));
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                        View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(1672,
-                        View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(image));
-                    view.taps.get(0).action.run();
-                }finally{image.recycle();}
-                assertEquals("Confirmed action enters actual game","game",
-                    activity.page);
-                assertEquals("New mode is relaxed 5x5","relaxed",activity.game.mode);
-                assertEquals(5,activity.game.size);
-                assertEquals(25,activity.game.cells.length);
-                org.json.JSONArray history=checkedHistory(
-                    activity.prefs.getString("history","[]"));
-                assertTrue("Prior active session must be archived",history.length()>0);
-                org.json.JSONObject first=history.optJSONObject(0);
-                assertNotNull(first);
-                assertEquals(4096,first.optInt("score"));
-                assertEquals(15,first.optInt("moves"));
-                assertEquals("classic",first.optString("mode"));
-            }finally{
-                activity.game=oldGame;activity.page=oldPage;
-                activity.pendingMode=oldMode;activity.plays=oldPlays;
-                activity.recordTile=oldRecordTile;activity.lastScore=oldLastScore;
-                activity.lastPlayDay=oldLastPlayDay;activity.playDayStreak=oldStreak;
-                activity.stars=oldStars;activity.rewardFlags=oldFlags;
-                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
-                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
-                activity.weekPoints=oldWeekPoints;
-                activity.undoUsedThisGame=oldUndo;
-                activity.prefs.edit().putString("history",oldHistory).commit();
-                activity.persist();activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
 
-    @Test public void confirmationCancelIsNonDestructiveAndConfirmedEndArchives(){
-        rule.getScenario().onActivity(activity->{
-            TileGame prior=activity.game;
-            String previousPage=activity.page,previousMode=activity.pendingMode;
-            int previousLastScore=activity.lastScore;
-            String oldHistory=activity.prefs.getString("history","[]");
-            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-            try{
-                activity.game=new TileGame("classic","",71484L);
-                activity.game.score=3072;activity.game.moves=12;
-                activity.page="confirm";activity.pendingMode="relaxed";
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                        View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(1672,
-                        View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap image=Bitmap.createBitmap(941,1672,Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(image));
-                    MainActivity.BoardScreen.Tap cancel=view.taps.get(1);
-                    cancel.action.run();
-                    assertEquals("Cancel returns to same game","game",activity.page);
-                    assertEquals(3072,activity.game.score);
-                    assertEquals(12,activity.game.moves);
-                    assertEquals("Cancel cannot write history",oldHistory,
-                        activity.prefs.getString("history","[]"));
-                    activity.page="confirmEnd";
-                    view.draw(new Canvas(image));
-                    view.taps.get(1).action.run();
-                    assertEquals("Resume from end confirmation","game",activity.page);
-                    assertNotNull(activity.game);
-                    assertEquals(3072,activity.game.score);
-                    activity.page="confirmEnd";
-                    view.draw(new Canvas(image));
-                    view.taps.get(0).action.run();
-                    assertEquals("End moves to Home","home",activity.page);
-                    assertNull("Finished active session must no longer be playable",
-                        activity.game);
-                    org.json.JSONArray saved=checkedHistory(
-                        activity.prefs.getString("history","[]"));
-                    assertTrue("History must contain the finished session",
-                        saved.length()>0);
-                    org.json.JSONObject latest=saved.optJSONObject(0);
-                    assertNotNull(latest);
-                    assertEquals("Archive actual score",3072,latest.optInt("score"));
-                    assertEquals("Archive actual moves",12,latest.optInt("moves"));
-                    assertEquals("Archive actual mode","classic",
-                        latest.optString("mode"));
-                }finally{image.recycle();}
-            }finally{
-                activity.game=prior;activity.page=previousPage;
-                activity.pendingMode=previousMode;activity.lastScore=previousLastScore;
-                activity.prefs.edit().putString("history",oldHistory).commit();
-                activity.persist();activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
+
+
 
     @Test public void pauseModalKeepsTheRealGameAndUsesOnlyTwoSafeActions(){
         rule.getScenario().onActivity(activity->{
@@ -2064,140 +1880,10 @@ public class ScreensSmokeTest {
         });
     }
 
-    @Test public void dailyResultButtonsPreserveRewardDateAndArchiveRealScore(){
-        rule.getScenario().onActivity(activity->{
-            TileGame oldGame=activity.game;
-            String oldPage=activity.page,oldLastDay=activity.lastPlayDay;
-            String oldRewardDate=activity.dailyRewardDate;
-            String oldHistory=activity.prefs.getString("history","[]");
-            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
-            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
-            int oldWeekPoints=activity.weekPoints;
-            boolean oldUndo=activity.undoUsedThisGame;
-            int oldStars=activity.stars,oldPlays=activity.plays;
-            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
-            int oldRewardFlags=activity.rewardFlags,oldTile=activity.recordTile;
-            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
-            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-            try{
-                activity.game=new TileGame("daily",activity.today(),12552L);
-                activity.game.cells[0]=256;
-                activity.game.peak=256;activity.game.score=3024;
-                activity.game.moves=78;
-                activity.page="dailyWin";
-                activity.dailyBonusGrantedThisAttempt=true;
-                activity.dailyRewardDate=activity.today();
-                activity.stars=500;
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                        View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap bitmap=Bitmap.createBitmap(941,1672,
-                    Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(bitmap));
-                    view.taps.get(1).action.run();
-                    assertEquals("Daily menu returns home","home",activity.page);
-                    assertEquals("Menu must not discard the daily session",3024,
-                        activity.game.score);
-                    assertEquals("Menu does not write history",oldHistory,
-                        activity.prefs.getString("history","[]"));
-                    activity.page="dailyWin";
-                    view.draw(new Canvas(bitmap));
-                    view.taps.get(0).action.run();
-                    assertEquals("Replay enters playable game","game",activity.page);
-                    assertEquals("daily",activity.game.mode);
-                    assertEquals("Replay must preserve granted reward date",
-                        activity.today(),activity.dailyRewardDate);
-                    assertFalse("New attempt no longer shows previous award",
-                        activity.dailyBonusGrantedThisAttempt);
-                    org.json.JSONArray history=checkedHistory(
-                        activity.prefs.getString("history","[]"));
-                    assertTrue("Completed attempt is archived before replay",
-                        history.length()>0);
-                    assertEquals(3024,history.optJSONObject(0).optInt("score"));
-                    assertEquals(78,history.optJSONObject(0).optInt("moves"));
-                }finally{bitmap.recycle();}
-            }finally{
-                activity.game=oldGame;activity.page=oldPage;
-                activity.lastPlayDay=oldLastDay;activity.dailyRewardDate=oldRewardDate;
-                activity.stars=oldStars;activity.plays=oldPlays;
-                activity.playDayStreak=oldStreak;activity.lastScore=oldLastScore;
-                activity.rewardFlags=oldRewardFlags;activity.recordTile=oldTile;
-                activity.dailyBonusGrantedThisAttempt=oldAward;
-                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
-                activity.todayPoints=oldTodayPoints;
-                activity.todayMerges=oldTodayMerges;
-                activity.weekPoints=oldWeekPoints;
-                activity.undoUsedThisGame=oldUndo;
-                activity.prefs.edit().putString("history",oldHistory).commit();
-                activity.persist();activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
 
 
-    @Test public void failedDailyReplayCannotClaimSuccessReward(){
-        rule.getScenario().onActivity(activity->{
-            TileGame previous=activity.game;
-            String oldPage=activity.page,oldRewardDate=activity.dailyRewardDate;
-            String oldHistory=activity.prefs.getString("history","[]");
-            String oldLastDay=activity.lastPlayDay;
-            String oldStatsDay=activity.statsDay,oldWeekStart=activity.weekStart;
-            int oldStars=activity.stars,oldPlays=activity.plays;
-            int oldFlags=activity.rewardFlags,oldRecordTile=activity.recordTile;
-            int oldStreak=activity.playDayStreak,oldLastScore=activity.lastScore;
-            int oldTodayPoints=activity.todayPoints,oldTodayMerges=activity.todayMerges;
-            int oldWeekPoints=activity.weekPoints;
-            boolean oldAward=activity.dailyBonusGrantedThisAttempt;
-            boolean oldUndo=activity.undoUsedThisGame;
-            MainActivity.BoardScreen view=activity.new BoardScreen(activity);
-            try{
-                activity.game=new TileGame("daily",activity.today(),56044L);
-                activity.game.cells[0]=64;
-                activity.game.peak=64;activity.game.score=1728;
-                activity.game.moves=80;activity.game.gameOver=true;
-                activity.page="dailyFail";
-                activity.dailyRewardDate="";
-                activity.dailyBonusGrantedThisAttempt=false;
-                view.measure(View.MeasureSpec.makeMeasureSpec(941,
-                        View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(1672,View.MeasureSpec.EXACTLY));
-                view.layout(0,0,941,1672);
-                Bitmap bitmap=Bitmap.createBitmap(941,1672,
-                    Bitmap.Config.ARGB_8888);
-                try{
-                    view.draw(new Canvas(bitmap));
-                    view.taps.get(0).action.run();
-                }finally{bitmap.recycle();}
-                assertEquals("Replay after failure returns to game","game",
-                    activity.page);
-                assertEquals("daily",activity.game.mode);
-                assertEquals("Failed attempt cannot award today's bonus","",
-                    activity.dailyRewardDate);
-                assertFalse("No winning UI status after a failed retry",
-                    activity.dailyBonusGrantedThisAttempt);
-                org.json.JSONArray saved=checkedHistory(
-                    activity.prefs.getString("history","[]"));
-                assertTrue("Failed attempt remains in history",saved.length()>0);
-                assertEquals(1728,saved.optJSONObject(0).optInt("score"));
-                assertEquals(80,saved.optJSONObject(0).optInt("moves"));
-            }finally{
-                activity.game=previous;activity.page=oldPage;
-                activity.dailyRewardDate=oldRewardDate;activity.lastPlayDay=oldLastDay;
-                activity.statsDay=oldStatsDay;activity.weekStart=oldWeekStart;
-                activity.todayPoints=oldTodayPoints;activity.todayMerges=oldTodayMerges;
-                activity.weekPoints=oldWeekPoints;activity.stars=oldStars;
-                activity.rewardFlags=oldFlags;activity.recordTile=oldRecordTile;
-                activity.plays=oldPlays;activity.playDayStreak=oldStreak;
-                activity.lastScore=oldLastScore;
-                activity.dailyBonusGrantedThisAttempt=oldAward;
-                activity.undoUsedThisGame=oldUndo;
-                activity.prefs.edit().putString("history",oldHistory).commit();
-                activity.persist();activity.updateBars();activity.screen.invalidate();
-            }
-        });
-    }
+
+
 
     @Test public void dailyResultModalKeepsBottomActionInsideItsCard(){
         rule.getScenario().onActivity(activity->{
@@ -4045,12 +3731,12 @@ public class ScreensSmokeTest {
                 activity.prefs.getAll());
             try{
                 org.json.JSONObject data=new org.json.JSONObject(new String(
-                    activity.getBackupBytes(),
+                    BackupTestBridge.export(activity),
                     java.nio.charset.StandardCharsets.UTF_8));
                 data.put("package","com.example.unrelated");
                 boolean rejected=false;
                 try{
-                    activity.readBackupBytes(data.toString().getBytes(
+                    BackupTestBridge.restore(activity,data.toString().getBytes(
                         java.nio.charset.StandardCharsets.UTF_8));
                 }catch(IllegalArgumentException expected){rejected=true;}
                 assertTrue("Import must reject a foreign app package",rejected);
@@ -4059,7 +3745,7 @@ public class ScreensSmokeTest {
                 data.remove("package");
                 rejected=false;
                 try{
-                    activity.readBackupBytes(data.toString().getBytes(
+                    BackupTestBridge.restore(activity,data.toString().getBytes(
                         java.nio.charset.StandardCharsets.UTF_8));
                 }catch(IllegalArgumentException expected){rejected=true;}
                 assertTrue("Import must reject missing package identity",rejected);
@@ -4076,7 +3762,7 @@ public class ScreensSmokeTest {
             java.util.Map<String,?> previous=new java.util.HashMap<>(
                 activity.prefs.getAll());
             try{
-                byte[] original=activity.getBackupBytes();
+                byte[] original=BackupTestBridge.export(activity);
                 String[] keys={"best","sound","lastDaily","history","animation"};
                 Object[] invalid={"9999",1,20261030,true,3};
                 for(int i=0;i<keys.length;i++){
@@ -4085,7 +3771,7 @@ public class ScreensSmokeTest {
                     copy.getJSONObject("data").put(keys[i],invalid[i]);
                     boolean rejected=false;
                     try{
-                        activity.readBackupBytes(copy.toString().getBytes(
+                        BackupTestBridge.restore(activity,copy.toString().getBytes(
                             java.nio.charset.StandardCharsets.UTF_8));
                     }catch(IllegalArgumentException|org.json.JSONException error){
                         rejected=true;
@@ -4109,12 +3795,12 @@ public class ScreensSmokeTest {
         rule.getScenario().onActivity(activity->{
             try{
                 activity.persist();
-                original[0]=activity.getBackupBytes();
+                original[0]=BackupTestBridge.export(activity);
                 org.json.JSONObject backup=new org.json.JSONObject(new String(original[0],
                     java.nio.charset.StandardCharsets.UTF_8));
                 expectedBest[0]=activity.best==19001?19002:19001;
                 backup.getJSONObject("data").put("best",expectedBest[0]);
-                activity.readBackupBytes(backup.toString().getBytes(
+                BackupTestBridge.restore(activity,backup.toString().getBytes(
                     java.nio.charset.StandardCharsets.UTF_8));
             }catch(Exception ex){throw new AssertionError("Cannot restore test backup",ex);}
         });
@@ -4130,7 +3816,7 @@ public class ScreensSmokeTest {
         }finally{
             rule.getScenario().moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
             rule.getScenario().onActivity(activity->{
-                try{activity.readBackupBytes(original[0]);}
+                try{BackupTestBridge.restore(activity,original[0]);}
                 catch(Exception ex){throw new AssertionError("Cannot restore original backup",ex);}
             });
         }
@@ -6856,9 +6542,10 @@ public class ScreensSmokeTest {
             TileGame originalGame=activity.game;
             int originalLastScore=activity.lastScore;
             String originalHistory=activity.prefs.getString("history","[]");
+            boolean hadOriginalSession=activity.prefs.contains("session");
+            String originalSession=activity.prefs.getString("session",null);
+            int previousStoredLastScore=activity.prefs.getInt("lastScore",0);
             try{
-                assertTrue(activity.prefs.edit().putString("history",
-                    "{bad old archive").commit());
                 TileGame finished=new TileGame("classic","",2026L);
                 finished.cells[0]=2048;
                 finished.score=2048;
@@ -6866,20 +6553,33 @@ public class ScreensSmokeTest {
                 finished.moves=25;
                 finished.reached2048=true;
                 activity.game=finished;
+                assertTrue(activity.prefs.edit()
+                    .putString("history","{bad old archive")
+                    .putString("session",finished.toJson().toString()).commit());
                 assertTrue("Archiving a valid game must survive malformed history",
-                    activity.archive());
-                assertTrue("Game is marked archived only after disk save",
+                    LocalHistoryRepository.archiveSnapshot(activity.prefs,
+                        finished.toJson().toString(),
+                        activity.historyDate(),activity.compactTime()));
+                assertFalse("Worker must not mutate the active TileGame",
                     finished.archived);
+                assertTrue("Persisted old session must be durably archived",
+                    TileGame.fromJson(new org.json.JSONObject(
+                        activity.prefs.getString("session",""))).archived);
                 org.json.JSONArray history=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Latest game must be at the top",history.length()>0);
                 assertEquals(2048,history.getJSONObject(0).getInt("score"));
                 assertEquals("classic",history.getJSONObject(0).getString("mode"));
-                assertEquals(2048,activity.lastScore);
+                assertEquals(2048,activity.prefs.getInt("lastScore",-1));
             }catch(Exception e){
                 throw new AssertionError("New session could not be archived",e);
             }finally{
-                activity.prefs.edit().putString("history",originalHistory).commit();
+                android.content.SharedPreferences.Editor rollback=activity.prefs.edit()
+                    .putString("history",originalHistory)
+                    .putInt("lastScore",previousStoredLastScore);
+                if(hadOriginalSession)rollback.putString("session",originalSession);
+                else rollback.remove("session");
+                assertTrue(rollback.commit());
                 activity.game=originalGame;
                 activity.lastScore=originalLastScore;
                 activity.screen.invalidate();
