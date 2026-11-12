@@ -94,6 +94,7 @@ assert "LocalBackupRepository.apply(" in java["MainActivity.java"]
 assert "BackupDocumentIo.read(" in java["MainActivity.java"]
 assert "BackupDocumentIo.write(" in java["MainActivity.java"]
 assert "backupIo.shutdown()" in java["MainActivity.java"]
+assert "if(backupDocumentBusy)return;" in java["MainActivity.java"]
 assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")

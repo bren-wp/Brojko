@@ -699,6 +699,10 @@ public final class MainActivity extends ComponentActivity {
         return super.onKeyDown(keyCode,event);
     }
     void handleBackNavigation(){
+        // Do not navigate away or destroy the Activity mid-restore.
+        // The validated plan must be applied to the same active session
+        // that opened the system document picker.
+        if(backupDocumentBusy)return;
         String target=BackNavigationPolicy.destination(page,game!=null);
         if(target==null)finish();
         else navigate(target);

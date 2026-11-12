@@ -21,6 +21,18 @@ public final class BackupDocumentIoTest {
         assertArrayEquals(expected,BackupDocumentIo.readBounded(partial));
     }
 
+    @Test public void zeroLengthProviderReadStillMakesForwardProgress() throws Exception {
+        byte[] expected=new byte[]{2,4,8,16};
+        InputStream zeroOnce=new ByteArrayInputStream(expected){
+            boolean first=true;
+            @Override public synchronized int read(byte[] buffer,int offset,int length){
+                if(first){first=false;return 0;}
+                return super.read(buffer,offset,length);
+            }
+        };
+        assertArrayEquals(expected,BackupDocumentIo.readBounded(zeroOnce));
+    }
+
     @Test public void oversizedImportIsRejectedBeforeUnlimitedAllocation() throws Exception {
         byte[] oversized=new byte[BackupDocumentIo.MAX_BYTES+1];
         try{

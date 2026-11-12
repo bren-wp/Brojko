@@ -40,6 +40,15 @@ final class BackupDocumentIo {
         byte[] buffer=new byte[8192];
         int size=0,read;
         while((read=input.read(buffer))!=-1){
+            // A broken provider may return zero bytes without EOF.
+            // Read one byte to ensure forward progress rather than spin.
+            if(read==0){
+                int one=input.read();
+                if(one==-1)break;
+                if(++size>MAX_BYTES)throw new IOException("Datoteka je prevelika.");
+                result.write(one);
+                continue;
+            }
             size+=read;
             if(size>MAX_BYTES)throw new IOException("Datoteka je prevelika.");
             result.write(buffer,0,read);
