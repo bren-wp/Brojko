@@ -79,8 +79,23 @@ final class LocalHistoryRepository {
             // Crucial: a crash between archive and the next newGame() cannot
             // produce an archived history row with an unarchived old session.
             return prefs.edit().putString("history",recent.toString())
-                .putString("session",archivedSession).commit();
+                .putString("session",archivedSession)
+                .putInt("lastScore",snapshot.score).commit();
         }catch(Exception error){return false;}
+    }
+
+    /**
+     * An archived session found during a fresh process start means that the
+     * archive already committed, but the follow-up new game may not have
+     * been persisted before the previous process died.
+     */
+    static boolean hasCommittedArchive(SharedPreferences prefs){
+        try{
+            String source=prefs.getString("session","");
+            if(source==null||source.isEmpty())return false;
+            TileGame previous=TileGame.fromJson(new JSONObject(source));
+            return previous!=null&&previous.archived;
+        }catch(Exception invalid){return false;}
     }
 
     /** Preserves the old ordering, 20-row cap and corrupted-row tolerance. */

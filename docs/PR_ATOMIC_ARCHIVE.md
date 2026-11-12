@@ -32,3 +32,12 @@
 asinkron. `migrateLegacy()`, te potvrda vraćene sigurnosne kopije
 preko SAF-a, i dalje koriste izravni atomarni commit na UI niti.
 Ne može se tvrditi da *nijedna* operacija spremanja ne blokira.
+
+## Recovery nakon neočekivanog prekida
+
+Atomski commit uz povijest i `session.archived=true` sprema i
+`lastScore`. Ako aplikacija bude prekinuta nakon diskovnog commita,
+a prije stvaranja/potvrde nove sesije, sljedeći pokretanje prepoznaje
+trajno arhiviranu staru sesiju i otvara Home, umjesto da ponovno
+otvara tu partiju ili stvara dvostruki povijesni zapis. Nema
+brisanja spremljene povijesti pri oporavku.

@@ -52,6 +52,9 @@ public final class AtomicArchiveWorkerTest {
             assertTrue("Old session and history must be in one commit",
                 stored.getBoolean("archived"));
             assertEquals(512,stored.getInt("score"));
+            assertEquals("Last score must be durable in the same commit",
+                512,prefs.getInt("lastScore",-1));
+            assertTrue(LocalHistoryRepository.hasCommittedArchive(prefs));
             JSONArray history=new JSONArray(prefs.getString("history","[]"));
             assertEquals(1,history.length());
             assertEquals(512,history.getJSONObject(0).getInt("score"));
@@ -81,6 +84,7 @@ public final class AtomicArchiveWorkerTest {
                 "12. stu","22:00"));
             assertEquals(current,prefs.getString("session",null));
             assertEquals("[]",prefs.getString("history",null));
+            assertFalse(LocalHistoryRepository.hasCommittedArchive(prefs));
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 

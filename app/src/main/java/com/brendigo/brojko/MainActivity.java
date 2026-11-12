@@ -263,7 +263,15 @@ public final class MainActivity extends ComponentActivity {
         // Android rotation may recreate the screen before the worker commits.
         // Reattach instead of persisting an obsolete unarchived session.
         gameTransitionBusy=GameArchiveCoordinator.attach(this);
-        if(gameTransitionBusy)screen.setEnabled(false);
+        if(gameTransitionBusy){
+            screen.setEnabled(false);
+        }else if(LocalHistoryRepository.hasCommittedArchive(prefs)){
+            // A crash or Activity recreation after the atomic archive commit
+            // must not resume the old board and archive it twice. History is
+            // already durable; allow a fresh game from Home.
+            game=null;
+            page="home";
+        }
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
         if("splash".equals(page)){
             long elapsed=Math.max(0L,android.os.SystemClock.elapsedRealtime()-
