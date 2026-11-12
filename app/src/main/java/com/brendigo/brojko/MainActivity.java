@@ -320,13 +320,6 @@ public final class MainActivity extends ComponentActivity {
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
     }
-    boolean archive(){
-        if(game==null||game.archived||game.moves==0)return true;
-        if(!LocalHistoryRepository.archive(prefs,game,historyDate(),compactTime()))
-            return false;
-        lastScore=game.score;
-        return true;
-    }
     void newGame(String mode) {
         if(gameTransitionBusy||backupImportBusy)return;
         if(game!=null&&!game.archived&&game.moves>0){
@@ -560,17 +553,6 @@ public final class MainActivity extends ComponentActivity {
         if(exporting)i.putExtra(Intent.EXTRA_TITLE,"Brojko-backup-"+today()+".json");
         try{startActivityForResult(i,exporting?EXPORT_BACKUP:IMPORT_BACKUP);}
         catch(Exception ex){Toast.makeText(this,"Nije moguće otvoriti datoteke.",Toast.LENGTH_LONG).show();}
-    }
-    byte[] getBackupBytes() throws Exception{
-        return LocalBackupRepository.export(prefs,today(),getPackageName());
-    }
-    // Existing Android integration tests and callers retain this API.
-    static void validateBackupHistory(JSONArray history){
-        LocalBackupRepository.validateHistory(history);
-    }
-    void readBackupBytes(byte[] bytes) throws Exception{
-        LocalBackupRepository.restore(prefs,getPackageName(),bytes);
-        skipPersistOnPauseAfterImport=true;
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
