@@ -14,32 +14,6 @@ final class LocalHistoryRepository {
 
     private LocalHistoryRepository() {}
 
-    static boolean archive(SharedPreferences prefs,TileGame game,String day,String time){
-        if(game==null||game.archived||game.moves==0)return true;
-        try{
-            JSONObject row=new JSONObject();
-            row.put("score",game.score).put("moves",game.moves)
-                .put("peak",game.maxTile()).put("mode",game.mode)
-                .put("day",day).put("time",time)
-                .put("won",game.reached2048);
-
-            // A corrupt legacy history must never prevent saving this game.
-            JSONArray previous;
-            try{previous=new JSONArray(prefs.getString("history","[]"));}
-            catch(Exception invalidHistory){previous=new JSONArray();}
-            JSONArray recent=prepend(row,previous);
-
-            // commit(), not apply(): never replace the current game before the
-            // newly archived row is durably persisted.
-            if(!prefs.edit().putString("history",recent.toString()).commit())
-                return false;
-            game.archived=true;
-            return true;
-        }catch(Exception error){
-            return false;
-        }
-    }
-
     /**
      * Worker-only atomic archive transaction. A snapshot is never shared as a
      * mutable TileGame: validate it, then commit both previous session and
