@@ -154,11 +154,56 @@ public final class TileGame {
         }catch(Exception ex){throw new IllegalStateException("Session JSON",ex);}
         return obj;
     }
+    // Do not use JSONObject.getInt/optInt here: Android may truncate 4.9 to 4
+    // or coerce a string into a valid score. Saved user progress must round-trip
+    // exactly and backups must reject malformed session values.
+    private static int sessionInt(JSONObject object,String key) throws Exception {
+        Object raw=object.get(key);
+        if(!(raw instanceof Integer)&&!(raw instanceof Long))
+            throw new IllegalArgumentException("Invalid integer: "+key);
+        long number=((Number)raw).longValue();
+        if(number<Integer.MIN_VALUE||number>Integer.MAX_VALUE)
+            throw new IllegalArgumentException("Integer out of range: "+key);
+        return (int)number;
+    }
+    private static int optionalSessionInt(JSONObject object,String key,int fallback)
+            throws Exception{
+        return object.has(key)?sessionInt(object,key):fallback;
+    }
+    private static int sessionTile(JSONArray values,int index) throws Exception{
+        Object raw=values.get(index);
+        if(!(raw instanceof Integer)&&!(raw instanceof Long))
+            throw new IllegalArgumentException("Invalid tile type");
+        long number=((Number)raw).longValue();
+        if(number<0||number>1073741824L)
+            throw new IllegalArgumentException("Invalid tile size");
+        int tile=(int)number;
+        if(tile!=0&&(tile<2||(tile&(tile-1))!=0))
+            throw new IllegalArgumentException("Invalid tile value");
+        return tile;
+    }
+    private static String sessionText(JSONObject object,String key) throws Exception{
+        Object raw=object.get(key);
+        if(!(raw instanceof String))
+            throw new IllegalArgumentException("Invalid text: "+key);
+        return (String)raw;
+    }
+    private static boolean optionalSessionBoolean(JSONObject object,String key)
+            throws Exception{
+        if(!object.has(key))return false;
+        Object raw=object.get(key);
+        if(!(raw instanceof Boolean))
+            throw new IllegalArgumentException("Invalid boolean: "+key);
+        return (Boolean)raw;
+    }
+    private static boolean validPeak(int peak){
+        return peak==0||(peak>=2&&(peak&(peak-1))==0);
+    }
     public static TileGame fromJson(JSONObject obj) {
         try {
-            int n=obj.getInt("size");
+            int n=sessionInt(obj,"size");
             if(n!=4&&n!=5)throw new IllegalArgumentException("Invalid size");
-            String mode=obj.getString("mode"),day=obj.optString("day","");
+            String mode=sessionText(obj,"mode"),day=obj.has("day")?sessionText(obj,"day"):"";
             if(!("classic".equals(mode)||"relaxed".equals(mode)||"daily".equals(mode)) ||
                (n==5)!="relaxed".equals(mode))
                 throw new IllegalArgumentException("Invalid game mode");
@@ -167,22 +212,23 @@ public final class TileGame {
             JSONArray a=obj.getJSONArray("cells");
             if(a.length()!=n*n)throw new IllegalArgumentException("Invalid board");
             for(int i=0;i<a.length();i++){
-                int x=a.getInt(i);
+                int x=sessionTile(a,i);
                 if(x!=0&&(x<2||(x&(x-1))!=0||x>1073741824))
                     throw new IllegalArgumentException("Invalid tile");
                 game.cells[i]=x;
             }
-            game.score=obj.getInt("score");game.moves=obj.optInt("moves");
-            game.merges=obj.optInt("merges");game.peak=obj.optInt("peak",game.maxTile());
+            game.score=sessionInt(obj,"score");game.moves=optionalSessionInt(obj,"moves",0);
+            game.merges=optionalSessionInt(obj,"merges",0);game.peak=optionalSessionInt(obj,"peak",game.maxTile());
             if(game.score<0||game.moves<0||game.merges<0||game.peak<game.maxTile()||
-               game.peak>1073741824||((long)game.merges)>((long)game.moves)*n*n)
+               game.peak>1073741824||!validPeak(game.peak)||
+               ((long)game.merges)>((long)game.moves)*n*n)
                 throw new IllegalArgumentException("Invalid counters");
-            game.randomState=Long.parseLong(obj.getString("rng"));
+            game.randomState=Long.parseLong(sessionText(obj,"rng"));
             if(game.randomState==0)throw new IllegalArgumentException("Invalid RNG");
-            game.reached2048=obj.optBoolean("reached",false);
-            game.gameOver=obj.optBoolean("gameOver",false);
-            game.archived=obj.optBoolean("archived",false);
-            game.winAcknowledged=obj.optBoolean("ack",false);
+            game.reached2048=optionalSessionBoolean(obj,"reached");
+            game.gameOver=optionalSessionBoolean(obj,"gameOver");
+            game.archived=optionalSessionBoolean(obj,"archived");
+            game.winAcknowledged=optionalSessionBoolean(obj,"ack");
             if(obj.has("undo") && !(obj.opt("undo") instanceof JSONObject))
                 throw new IllegalArgumentException("Invalid undo type");
             JSONObject u=obj.optJSONObject("undo");
@@ -192,24 +238,25 @@ public final class TileGame {
                 if(b.length()!=n*n)
                     throw new IllegalArgumentException("Invalid undo board length");
                 for(int i=0;i<b.length();i++){
-                    int tile=b.getInt(i);
+                    int tile=sessionTile(b,i);
                     if(tile!=0&&(tile<2||(tile&(tile-1))!=0||tile>1073741824))
                         throw new IllegalArgumentException("Invalid undo tile");
                     older.cells[i]=tile;
                 }
-                older.score=u.getInt("score");older.moves=u.getInt("moves");
-                older.merges=u.getInt("merges");older.peak=u.getInt("peak");
-                older.randomState=Long.parseLong(u.getString("rng"));
+                older.score=sessionInt(u,"score");older.moves=sessionInt(u,"moves");
+                older.merges=sessionInt(u,"merges");older.peak=sessionInt(u,"peak");
+                older.randomState=Long.parseLong(sessionText(u,"rng"));
                 if(older.score<0||older.score>game.score||older.moves<0||
                    older.moves>game.moves||older.merges<0||
                    older.merges>game.merges||older.peak<older.maxTile()||
-                   older.peak>1073741824||older.peak>game.peak||
+                   older.peak>1073741824||!validPeak(older.peak)||
+                   older.peak>game.peak||
                    (long)older.merges>(long)older.moves*n*n||
                    older.randomState==0)
                     throw new IllegalArgumentException("Invalid undo state");
-                older.reached2048=u.optBoolean("reached");
-                older.gameOver=u.optBoolean("over");
-                older.winAcknowledged=u.optBoolean("ack");
+                older.reached2048=optionalSessionBoolean(u,"reached");
+                older.gameOver=optionalSessionBoolean(u,"over");
+                older.winAcknowledged=optionalSessionBoolean(u,"ack");
                 game.undo=new Snapshot(older);
             }
             return game;

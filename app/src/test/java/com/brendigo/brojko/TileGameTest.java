@@ -206,6 +206,79 @@ public class TileGameTest {
             }
         }
     }
+    @Test public void malformedNumbersCannotSilentlyAlterRestoredProgress()
+            throws Exception {
+        TileGame base=new TileGame("classic","",41L);
+        for(String field:new String[]{"size","score","moves","merges","peak"}){
+            org.json.JSONObject decimal=base.toJson();
+            decimal.put(field,3.5d);
+            assertNull("Fractional "+field+" must be rejected",
+                TileGame.fromJson(decimal));
+            org.json.JSONObject string=base.toJson();
+            string.put(field,"4");
+            assertNull("Text "+field+" must be rejected",
+                TileGame.fromJson(string));
+        }
+        org.json.JSONObject peak=base.toJson();
+        peak.put("peak",3);
+        assertNull("Peak cannot be a non-power-of-two tile",TileGame.fromJson(peak));
+        org.json.JSONObject overflow=base.toJson();
+        overflow.put("score",((long)Integer.MAX_VALUE)+1L);
+        assertNull("Overflow cannot wrap into a score",TileGame.fromJson(overflow));
+    }
+    @Test public void malformedBoardAndFlagsCannotCorruptSavedGame()
+            throws Exception{
+        TileGame base=new TileGame("classic","",77L);
+        org.json.JSONObject decimalTile=base.toJson();
+        decimalTile.getJSONArray("cells").put(0,2.5d);
+        assertNull(TileGame.fromJson(decimalTile));
+        org.json.JSONObject textTile=base.toJson();
+        textTile.getJSONArray("cells").put(0,"2");
+        assertNull(TileGame.fromJson(textTile));
+        org.json.JSONObject rng=base.toJson();
+        rng.put("rng",12345L);
+        assertNull("RNG requires its exact serialized string format",
+            TileGame.fromJson(rng));
+        org.json.JSONObject badMode=base.toJson();
+        badMode.put("mode",123);
+        assertNull(TileGame.fromJson(badMode));
+        for(String flag:new String[]{"reached","gameOver","archived","ack"}){
+            org.json.JSONObject badFlag=base.toJson();
+            badFlag.put(flag,"false");
+            assertNull("Boolean value must not be coerced: "+flag,
+                TileGame.fromJson(badFlag));
+        }
+    }
+    @Test public void invalidUndoTypesAndImpossiblePeaksAreRejected()
+            throws Exception{
+        TileGame base=empty(4);
+        base.cells[0]=2;base.cells[1]=2;
+        assertTrue(base.move(TileGame.LEFT).changed);
+        org.json.JSONObject fractional=base.toJson();
+        fractional.getJSONObject("undo").put("moves",0.5d);
+        assertNull(TileGame.fromJson(fractional));
+        org.json.JSONObject text=base.toJson();
+        text.getJSONObject("undo").getJSONArray("cells").put(0,"2");
+        assertNull(TileGame.fromJson(text));
+        org.json.JSONObject falseString=base.toJson();
+        falseString.getJSONObject("undo").put("reached","false");
+        assertNull(TileGame.fromJson(falseString));
+        org.json.JSONObject peak=base.toJson();
+        peak.getJSONObject("undo").put("peak",3);
+        assertNull(TileGame.fromJson(peak));
+    }
+    @Test public void validIntegerSaveStillRoundTripsWithLegacyMissingFields()
+            throws Exception{
+        TileGame game=new TileGame("daily","2026-11-12",42L);
+        org.json.JSONObject legacy=game.toJson();
+        legacy.remove("day");legacy.remove("merges");legacy.remove("moves");
+        legacy.remove("reached");legacy.remove("ack");legacy.remove("archived");
+        TileGame restored=TileGame.fromJson(legacy);
+        assertNotNull("Missing old optional fields remain backward compatible",restored);
+        assertArrayEquals(game.cells,restored.cells);
+        assertEquals(game.score,restored.score);
+        assertEquals(game.peak,restored.peak);
+    }
     @Test public void fiveByFiveMode() {
         TileGame g=new TileGame("relaxed","",41L);
         assertEquals(5,g.size);assertEquals(25,g.cells.length);
