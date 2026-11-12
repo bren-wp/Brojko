@@ -52,6 +52,7 @@ expected_sources = {
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
+    "GameArchiveCoordinator.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
@@ -96,6 +97,11 @@ assert "BackupDocumentIo.write(" in java["MainActivity.java"]
 assert "backupIo.shutdown()" in java["MainActivity.java"]
 assert "if(backupImportBusy)return;" in java["MainActivity.java"]
 assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
+assert "GameArchiveCoordinator.start(" in java["MainActivity.java"]
+assert "LocalHistoryRepository.archiveSnapshot(" in java["GameArchiveCoordinator.java"]
+assert 'putString("session",archivedSession).commit()' in java["LocalHistoryRepository.java"]
+assert "if(gameTransitionBusy)return;" in java["MainActivity.java"]
+assert "GameArchiveCoordinator.attach(this)" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
 assert "minSdk 24" in gradle and "targetSdk 36" in gradle

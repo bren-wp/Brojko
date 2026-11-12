@@ -193,6 +193,9 @@ public final class MainActivity extends ComponentActivity {
     private final ExecutorService backupIo=Executors.newSingleThreadExecutor();
     boolean backupDocumentBusy=false;
     boolean backupImportBusy=false;
+    // Only archival transitions use a worker-side durable commit; while
+    // pending, the old mutable session must not be overwritten by onPause.
+    boolean gameTransitionBusy=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -257,6 +260,10 @@ public final class MainActivity extends ComponentActivity {
                 page.equals("dailyWin")||page.equals("dailyFail")))page="home";
         }
         screen=new BoardScreen(this);setContentView(screen);
+        // Android rotation may recreate the screen before the worker commits.
+        // Reattach instead of persisting an obsolete unarchived session.
+        gameTransitionBusy=GameArchiveCoordinator.attach(this);
+        if(gameTransitionBusy)screen.setEnabled(false);
         if(bundle!=null){screen.scrollOffset=restoredScroll;screen.renderedPage=page;}
         if("splash".equals(page)){
             long elapsed=Math.max(0L,android.os.SystemClock.elapsedRealtime()-
@@ -381,6 +388,9 @@ public final class MainActivity extends ComponentActivity {
         controller.setAppearanceLightNavigationBars(lightBackground);
     }
     void persist() {
+        // apply() is asynchronous, but its in-memory write could otherwise
+        // override the worker's archived session during rotation/onPause.
+        if(gameTransitionBusy)return;
         SharedPreferences.Editor e=prefs.edit()
             .putInt("best",best).putInt("games",plays).putInt("total",total)
             .putInt("lastScore",lastScore)
@@ -401,6 +411,7 @@ public final class MainActivity extends ComponentActivity {
         e.apply();
     }
     void navigate(String target) {
+        if(gameTransitionBusy)return;
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();
@@ -411,6 +422,7 @@ public final class MainActivity extends ComponentActivity {
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
     }
     void requestNew(String mode){
+        if(gameTransitionBusy)return;
         if(game!=null&&!game.gameOver&&!game.archived&&game.moves>0){
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
@@ -423,11 +435,16 @@ public final class MainActivity extends ComponentActivity {
         return true;
     }
     void newGame(String mode) {
-        if(!archive()){
-            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
-                Toast.LENGTH_LONG).show();
+        if(gameTransitionBusy||backupImportBusy)return;
+        if(game!=null&&!game.archived&&game.moves>0){
+            beginGameArchive(mode,false);
             return;
         }
+        startFreshGame(mode);
+    }
+
+    /** The old game is committed before this method is invoked. */
+    private void startFreshGame(String mode){
         long seed="daily".equals(mode)?
             (0x3BAF31248EA76C1DL ^ (long)today().hashCode()*0x9E3779B97F4A7C15L):
             new java.util.Random().nextLong();
@@ -488,7 +505,7 @@ public final class MainActivity extends ComponentActivity {
         }catch(Exception ignored){}
     }
     void move(int direction) {
-        if(!page.equals("game")||game==null)return;
+        if(gameTransitionBusy||!page.equals("game")||game==null)return;
         boolean dailyWasComplete=game.isDailyGoalComplete() && today().equals(game.day);
         TileGame.Result result=game.move(direction);
         if(!result.changed){
@@ -537,15 +554,61 @@ public final class MainActivity extends ComponentActivity {
         persist();animate();
     }
     void endSession(){
-        if(!archive()){
+        if(gameTransitionBusy||backupImportBusy)return;
+        if(game!=null&&!game.archived&&game.moves>0){
+            beginGameArchive(null,true);
+            return;
+        }
+        finishSessionAfterArchive();
+    }
+
+    private void finishSessionAfterArchive(){
+        game=null;page="home";persist();screen.invalidate();
+    }
+
+    /** Start one durable archive with immutable game data. */
+    private void beginGameArchive(String nextMode,boolean ending){
+        if(!GameArchiveCoordinator.start(this,prefs,game,historyDate(),
+            compactTime(),nextMode,ending)){
+            Toast.makeText(this,"Spremanje partije nije moguće.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
+        gameTransitionBusy=true;
+        screen.setEnabled(false);
+        screen.announceForAccessibility("Spremanje partije.");
+    }
+
+    /** Invoked on main after a worker commit; it also survives rotation. */
+    void onArchiveTransactionFinished(GameArchiveCoordinator.Pending request,
+            boolean saved){
+        gameTransitionBusy=false;
+        if(screen!=null)screen.setEnabled(true);
+        if(!saved){
             Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
                 Toast.LENGTH_LONG).show();
             return;
         }
-        game=null;page="home";persist();screen.invalidate();
+        // Use the immutable archived source rather than a possibly stale
+        // restored Bundle during a mid-commit configuration change.
+        try{
+            TileGame archived=TileGame.fromJson(new JSONObject(request.session));
+            if(archived==null)throw new IllegalStateException("Neispravna sesija.");
+            archived.archived=true;
+            game=archived;
+        }catch(Exception invalid){
+            // The archived session is already durable on disk; recover it
+            // without allowing a stale bundle to overwrite the transaction.
+            try{
+                game=TileGame.fromJson(new JSONObject(prefs.getString("session","")));
+            }catch(Exception ignored){game=null;}
+        }
+        lastScore=request.score;
+        if(request.finishSession)finishSessionAfterArchive();
+        else startFreshGame(request.nextMode);
     }
     void undo() {
-        if(game==null||!game.canUndo())return;
+        if(gameTransitionBusy||game==null||!game.canUndo())return;
         ensureDay();undoUsedThisGame=true;
         int mergeCount=game.merges;
         boolean hadWon=game.reached2048;
@@ -594,8 +657,8 @@ public final class MainActivity extends ComponentActivity {
         catch(Exception ignored){return "1.1";}
     }
     void chooseBackupFile(boolean exporting){
-        if(backupDocumentBusy){
-            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
             return;
         }
         Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
@@ -620,8 +683,8 @@ public final class MainActivity extends ComponentActivity {
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
         if(requestCode!=EXPORT_BACKUP&&requestCode!=IMPORT_BACKUP)return;
-        if(backupDocumentBusy){
-            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -690,7 +753,7 @@ public final class MainActivity extends ComponentActivity {
         }
     }
     @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
-        if(backupImportBusy)return true;
+        if(backupImportBusy||gameTransitionBusy)return true;
         if("game".equals(page)){
             switch(keyCode){
                 case android.view.KeyEvent.KEYCODE_DPAD_LEFT:move(TileGame.LEFT);return true;
@@ -706,7 +769,7 @@ public final class MainActivity extends ComponentActivity {
         // Do not navigate away or destroy the Activity mid-restore.
         // The validated plan must be applied to the same active session
         // that opened the system document picker.
-        if(backupImportBusy)return;
+        if(backupImportBusy||gameTransitionBusy)return;
         String target=BackNavigationPolicy.destination(page,game!=null);
         if(target==null)finish();
         else navigate(target);
@@ -725,10 +788,11 @@ public final class MainActivity extends ComponentActivity {
         super.onSaveInstanceState(out);
     }
     @Override protected void onPause(){
-        if(!skipPersistOnPauseAfterImport)persist();
+        if(!skipPersistOnPauseAfterImport&&!gameTransitionBusy)persist();
         super.onPause();
     }
     @Override protected void onDestroy(){
+        GameArchiveCoordinator.detach(this);
         // Finish already-started SAF file I/O without retaining UI callbacks.
         // Stale validation results are discarded if this Activity was replaced.
         backupIo.shutdown();

@@ -53,3 +53,25 @@ Ovo nije deklaracija da je cijeli `MainActivity` već refaktoriran.
   nedovršena validacija se odbacuje **bez promjene korisničkih podataka**.
 - Eksport nastavlja već započeti SAF zapis i kada se aktivnost zatvori;
   ne šalje UI obavijesti uništenoj aktivnosti.
+
+## Serijalizirano arhiviranje (PR: atomic archive worker)
+
+- `GameArchiveCoordinator` prima nepromjenjivi JSON snapshot aktivne
+  partije na glavnoj niti, a **jedan** process-scoped executor osigurava
+  redoslijed komitova. Tijekom arhiviranja su Canvas, DPAD, TalkBack i
+  Android Back privremeno blokirani.
+- `LocalHistoryRepository.archiveSnapshot` na radnoj niti jednom
+  `SharedPreferences.Editor.commit()` operacijom upisuje i
+  `history` i staru `session` s `archived=true`. Ako proces
+  stane nakon commita, pri ponovnom pokretanju stara partija više nije
+  neoznačena/neplanirano dvostruko arhivirana.
+- Glavna nit zamjenjuje `game` i radi postojeći
+  `persist().apply()` tek nakon povratne informacije uspješnog upisa.
+- `onPause` i `persist` ne prepisuju staru partiju dok je
+  transakcija aktivna. Activity nakon rotacije preuzima čekajuću
+  transakciju preko `attach/detach` bez veze na stari Activity.
+- `MainActivity.archive()` je zadržan samo radi kompatibilnosti
+  ranijih instrumentacijskih testova; produkcijske
+  `newGame/endSession` grane koriste radnika.
+- `migrateLegacy()` i restore SAF sigurnosne kopije još zadržavaju
+  pojedinačne sinkrone transakcije te su odvojeni sljedeći zadatak.
