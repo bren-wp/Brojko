@@ -71,7 +71,13 @@ public final class OwnerGameplayColorPhase139Test {
                         if("Novo".equals(tap.label)||
                            "Poništi".equals(tap.label)||
                            "Završi".equals(tap.label))commands++;
-                    assertEquals(3,commands);
+                    // The fixture has no previous move: Poništi must be
+                    // visible but intentionally non-clickable. Novo and
+                    // Završi remain real, accessible actions.
+                    assertFalse("No undo exists before any move",
+                        activity.game.canUndo());
+                    assertEquals("Only enabled actions expose Tap targets",
+                        2,commands);
                     assertEquals("Rendering must not fabricate a score",
                         1316,activity.game.score);
                 }finally{image.recycle();}
