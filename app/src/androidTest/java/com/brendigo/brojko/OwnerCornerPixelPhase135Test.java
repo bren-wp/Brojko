@@ -102,6 +102,44 @@ public class OwnerCornerPixelPhase135Test {
         });
     }
 
+    @Test public void missionPastelPanelsKeepOwnerNativeRgb(){
+        rule.getScenario().onActivity(activity -> {
+            String oldPage=activity.page;int oldTheme=activity.theme;
+            try{
+                activity.theme=0;
+                Bitmap screenshot=actualPortrait(activity,"missions");
+                try{
+                    // The source reference's two broad pastels were measured
+                    // from real pixels at the exact 941x1672 viewport.
+                    int[][] patches={
+                        {320,830,232,246,254}, // Weekly pale-blue card
+                        {350,1300,223,251,237} // Achievements mint-green
+                    };
+                    for(int[] sample:patches){
+                        long[] total=new long[3];
+                        for(int y=sample[1]-5;y<=sample[1]+5;y++)
+                            for(int x=sample[0]-5;x<=sample[0]+5;x++){
+                                int pixel=screenshot.getPixel(x,y);
+                                total[0]+=Color.red(pixel);
+                                total[1]+=Color.green(pixel);
+                                total[2]+=Color.blue(pixel);
+                            }
+                        for(int channel=0;channel<3;channel++){
+                            float average=total[channel]/121f;
+                            assertTrue("Missions pastel color at ("+sample[0]+
+                                ","+sample[1]+"), channel "+channel+
+                                ", actual "+average+" source "+sample[2+channel],
+                                Math.abs(average-sample[2+channel])<=8f);
+                        }
+                    }
+                }finally{screenshot.recycle();}
+            }finally{
+                activity.page=oldPage;activity.theme=oldTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void originalThemeSwatchesAndIvoryPanelMatchRgbSamples(){
         rule.getScenario().onActivity(activity -> {
             String previousPage=activity.page;int previousTheme=activity.theme;

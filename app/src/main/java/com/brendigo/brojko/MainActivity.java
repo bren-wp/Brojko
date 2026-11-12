@@ -5175,8 +5175,15 @@ public final class MainActivity extends ComponentActivity {
             missionMeasuredHeadline(portrait);
             // Three section colors follow the Dnevne / Tjedne / Postignuca cards.
             int dailyTint=theme==1?0xff293b4c:0xfffff0df;
-            int weeklyTint=theme==1?0xff253b4f:0xffe9f5ff;
-            int achievementTint=theme==1?0xff24483f:0xffe5fbef;
+            // Owner v1.12.219 @941x1672, sampled flat 11x11 patches:
+            // weekly x320/y830 reference 232/246/254 vs Android 237/247/255;
+            // achievements x350/y1300 reference 223/251/237 vs 235/252/242.
+            // Adjust native pastel ink only in the light reference portrait;
+            // preserve dark mode, responsive alternatives and all hitboxes.
+            int weeklyTint=theme==1?0xff253b4f:
+                portrait&&theme==0?0xffe4f4fe:0xffe9f5ff;
+            int achievementTint=theme==1?0xff24483f:
+                portrait&&theme==0?0xffd9faea:0xffe5fbef;
             missionSurface(17,portrait?134:179,366,portrait?185:209,24,dailyTint);
             // Owner's 941px light card bounds: the weekly panel ends near
             // y1228 while the achievement panel begins near y1247.
