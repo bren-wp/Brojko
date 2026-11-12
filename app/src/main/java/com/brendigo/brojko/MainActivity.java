@@ -1721,6 +1721,10 @@ public final class MainActivity extends ComponentActivity {
                     else if(homeHero&&referencePortraitLayout&&theme==0&&
                             "play".equals(symbol))
                         dailyPlayGlyph(iconX,y+h/2f,43f,iconColor);
+                    else if(page.equals("missions")&&
+                            referencePortraitLayout&&theme==0&&
+                            "back".equals(symbol))
+                        missionSourceBackGlyph(iconX,y+h/2);
                     else icon(symbol,iconX,y+h/2,
                         Math.min(prominent?
                             (page.equals("daily")?34:homeHero?43:33):23,
@@ -1798,6 +1802,26 @@ public final class MainActivity extends ComponentActivity {
             if("Statistika".equals(name))
                 illustratedTitle(name,200,127,34f,356f,ink);
             else fitted(name,200,127,name.length()>18?28:34,356,ink,true);
+        }
+        // Match the supplied Missions back-arrow silhouette: original
+        // navy ink x63..110/y69..112 at 941x1672. Generic back() paints
+        // a narrow chevron x77..100 without the horizontal stem.
+        // Keep the button() action, label and 54-unit touch zone unchanged.
+        void missionSourceBackGlyph(float cx,float cy){
+            p.clearShadowLayer();p.setShader(null);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(4.8f);
+            p.setStrokeCap(Paint.Cap.ROUND);
+            p.setStrokeJoin(Paint.Join.ROUND);
+            p.setColor(ink);
+            Path arrow=new Path();
+            arrow.moveTo(cx+8.1f,cy);
+            arrow.lineTo(cx-9f,cy);
+            arrow.moveTo(cx-1.2f,cy-7.8f);
+            arrow.lineTo(cx-9f,cy);
+            arrow.lineTo(cx-1.2f,cy+7.8f);
+            c.drawPath(arrow,p);
+            p.setStyle(Paint.Style.FILL);
         }
         void back(){button("","back",19,43,48,48,card,false,
                 ()->navigate("historyDetail".equals(page)?"stats":
@@ -2550,10 +2574,21 @@ public final class MainActivity extends ComponentActivity {
             if(portrait&&theme==0)
                 c.scale(1.08f,1.06f,365f,56f);
             homeFloatingTile(324,4,83,81,18,TILES[2],4);c.restore();
-            c.save();c.rotate(-12,11,176);
-            homeFloatingTile(-37,143,71,70,15,TILES[3],8);c.restore();
-            c.save();c.rotate(9,390,179);
-            homeFloatingTile(359,147,77,73,16,TILES[4],16);c.restore();
+            // Owner reference 941x1672: blue 8 centroid (55,330),
+            // v1.12.216 (43,424); gold 16 (873,372) vs (893,429).
+            // Shift decorative corner artwork ONLY, not hit regions or
+            // gameplay cells. These offsets are source-pixel translations
+            // converted to the 400-unit native Canvas plane.
+            c.save();
+            if(portrait&&theme==0)c.translate(10.2f,-41.2f);
+            c.rotate(-12,11,176);
+            homeFloatingTile(-37,143,71,70,15,TILES[3],8);
+            c.restore();
+            c.save();
+            if(portrait&&theme==0)c.translate(-14.4f,-27f);
+            c.rotate(9,390,179);
+            homeFloatingTile(359,147,77,73,16,TILES[4],16);
+            c.restore();
             // Use the geometrically verified Splash wordmark on Home,
             // scaled to the Home source artwork's native bounds. This keeps
             // the navy rounded silhouette, raised "2", and coral rays in sync
