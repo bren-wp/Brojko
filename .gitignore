@@ -1,0 +1,15 @@
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.hprof
+*.log
+android-screenshots/
+marketing-screenshots/
+.DS_Store
+.idea/
+*.iml
