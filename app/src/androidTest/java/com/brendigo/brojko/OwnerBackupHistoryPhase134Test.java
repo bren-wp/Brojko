@@ -127,7 +127,7 @@ public class OwnerBackupHistoryPhase134Test {
                 byte[] original=activity.getBackupBytes();
                 try{
                     String session=new TileGame("classic","",94821L).toJson().toString();
-                    String history="[{\\"score\\":8,\\"moves\\":2,\\"peak\\":4}]";
+                    String history="[{\"score\":8,\"moves\":2,\"peak\":4}]";
                     assertTrue(activity.prefs.edit()
                         .putString("session",session).putString("history",history).commit());
                     JSONObject exported=new JSONObject(new String(
