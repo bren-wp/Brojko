@@ -69,6 +69,10 @@ public final class GameplayAsyncArchiveFlowTest {
                 "daily".equals(mode)?a.today():"",seed);
             candidate.score=score;
             candidate.moves=moves;
+            // Archive history stores maxTile() from the ACTUAL board, not
+            // the lifetime peak. Make the scenario fixture internally
+            // consistent instead of weakening gameplay assertions.
+            if(peak>0)candidate.cells[0]=peak;
             candidate.peak=peak;
             candidate.gameOver=gameOver;
             a.game=candidate;
@@ -77,6 +81,8 @@ public final class GameplayAsyncArchiveFlowTest {
             // the worker may atomically archive it. No fake in-memory-only
             // session is allowed by the production repository.
             a.persist();
+            assertEquals("Fixture must expose its requested maximum tile",
+                peak,candidate.maxTile());
             assertEquals(candidate.toJson().toString(),
                 staging.getString("session",null));
         }
