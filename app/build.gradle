@@ -45,3 +45,13 @@ dependencies {
  androidTestImplementation 'androidx.test:runner:1.7.0'
  androidTestImplementation 'androidx.test:rules:1.7.0'
 }
+
+/*
+ * Two independently auditable dependency scopes:
+ *  - default: shipped release runtime, used to block APK/AAB publication;
+ *  - -PbrojkoFullSbom: all resolvable configurations, including build tools.
+ * Never silence a build-time finding; emit the separate advisory SBOM instead.
+ */
+tasks.named('cyclonedxDirectBom') {
+    includeConfigs = project.hasProperty('brojkoFullSbom') ? [] : ['releaseRuntimeClasspath']
+}

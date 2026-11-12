@@ -26,3 +26,16 @@ Nisu provedeni neovisni penetration test, analiza svih CVE nalaza,
 fizičko accessibility testiranje ni formalna OWASP MASVS certifikacija.
 Sve preostale rizike treba evidentirati s ozbiljnošću, datotekom, dokazom i
 reprodukcijskim testom prije zatvaranja.
+
+## Dokazani nalaz iz CI #231: visok rizik alatnog lanca
+
+Puni gradle konfiguracijski SBOM od 139 komponenti prijavio je tri
+High/Critical GHSA nalaza: `GHSA-9pwp-9qqc-pr26`,
+`GHSA-qp49-qgx5-5m26`, `GHSA-xxph-c9ww-hj94`.
+Putanje pripadaju `com.android.tools.lint:lint-gradle:32.5.1` i
+njegovim transitive paketima `bcprov-jdk18on` i `guava`.
+Izvještaj `docs/SCA_SBOM.md` sadrži ostala tri Medium nalaza.
+Nalazi su **otvoreni** za ocjenu i ažuriranje build tooling-a.
+
+Android produkcijski runtime ima odvojen SBOM i release-blocking
+Grype kontrolu; uspjeh tog testa bit će potvrđen tek kad CI prođe.

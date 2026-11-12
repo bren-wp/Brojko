@@ -57,11 +57,26 @@ jobs:
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
       # The SBOM is generated from resolved Gradle dependencies, not guessed
       # from the app manifest or source file list.
-      - name: Generate resolved CycloneDX SBOM
+      - name: Generate complete build and shipped runtime CycloneDX SBOMs
         run: |
+          set -euo pipefail
+          ./gradlew --no-daemon -PbrojkoFullSbom=true cyclonedxBom
+          test -s build/reports/cyclonedx/bom.json
+          cp build/reports/cyclonedx/bom.json SBOM.build.cdx.json
           ./gradlew --no-daemon cyclonedxBom
           test -s build/reports/cyclonedx/bom.json
           cp build/reports/cyclonedx/bom.json SBOM.cdx.json
+          python3 scripts/verify-sbom-scopes.py SBOM.cdx.json SBOM.build.cdx.json
+      - name: Report build-tool vulnerabilities without hiding them
+        uses: anchore/scan-action@v7
+        with:
+          sbom: SBOM.build.cdx.json
+          fail-build: false
+          severity-cutoff: high
+          output-format: sarif
+          output-file: grype-build.sarif
+      # Critical and high findings in dependencies shipped in the Android app
+      # MUST block publication. Build tooling is reported separately above.
       - name: Scan known vulnerabilities in release SBOM
         uses: anchore/scan-action@v7
         with:
@@ -78,7 +93,9 @@ jobs:
           if-no-files-found: warn
           path: |
             SBOM.cdx.json
+            SBOM.build.cdx.json
             grype.sarif
+            grype-build.sarif
       - name: Validate compiled Google Play SDK and package policy
         run: |
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
@@ -128,6 +145,7 @@ jobs:
           path: |
             SHA256SUMS
             SBOM.cdx.json
+            SBOM.build.cdx.json
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
@@ -146,6 +164,7 @@ jobs:
           files: |
             SHA256SUMS
             SBOM.cdx.json
+            SBOM.build.cdx.json
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
