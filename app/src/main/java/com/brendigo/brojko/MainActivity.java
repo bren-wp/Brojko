@@ -678,6 +678,19 @@ public final class MainActivity extends ComponentActivity {
         if(!getPackageName().equals(root.optString("package","")))
             throw new IllegalArgumentException("Sigurnosna kopija nije za Brojko.");
         JSONObject data=root.getJSONObject("data");
+        // Older backups may contain only a subset of settings. The previous
+        // unconditional clear() silently erased every missing preference,
+        // including games, history and the currently saved session.
+        // Treat sparse legacy imports as validated patches instead.
+        int knownKeys=0;
+        for(String key:BACKUP_KEYS)if(data.has(key))knownKeys++;
+        if(knownKeys==0)
+            throw new IllegalArgumentException("Sigurnosna kopija nema podatke za vraćanje.");
+        boolean completeSnapshot=true;
+        for(String key:new String[]{"best","games","total","theme",
+                                     "style","sound","vibrate","notifications"}){
+            if(!data.has(key)){completeSnapshot=false;break;}
+        }
         if(data.has("session")){
             TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));
             if(restored==null)throw new IllegalArgumentException("Oštećena spremljena partija.");
@@ -715,7 +728,10 @@ public final class MainActivity extends ComponentActivity {
                     throw new IllegalArgumentException("Nevaljane postavke.");
             }
         }
-        SharedPreferences.Editor editor=prefs.edit().clear();
+        SharedPreferences.Editor editor=prefs.edit();
+        // Only a verified full snapshot may replace all stored state.
+        // Sparse imports update their present keys without data loss.
+        if(completeSnapshot)editor.clear();
         for(String key:BACKUP_KEYS){
             if(!data.has(key))continue;
             Object value=data.get(key);

@@ -25,6 +25,63 @@ public class OwnerBackupHistoryPhase134Test {
         MainActivity.validateBackupHistory(new JSONArray("[]"));
     }
 
+    @Test public void emptyOrUnknownBackupNeverErasesProgress() {
+        rule.getScenario().onActivity(activity -> {
+            activity.persist();
+            Map<String,?> before=new HashMap<>(activity.prefs.getAll());
+            try {
+                JSONObject original=new JSONObject(
+                    new String(activity.getBackupBytes(),StandardCharsets.UTF_8));
+                String[] badData={"{}", "{\"not_a_brojko_setting\":true}"};
+                for(String raw:badData){
+                    JSONObject candidate=new JSONObject(original.toString());
+                    candidate.put("data",new JSONObject(raw));
+                    boolean rejected=false;
+                    try{
+                        activity.readBackupBytes(candidate.toString().getBytes(
+                            StandardCharsets.UTF_8));
+                    }catch(IllegalArgumentException expected){
+                        rejected=true;
+                    }
+                    assertTrue("Empty/unknown backup must be rejected",rejected);
+                    assertEquals("No user progress can be removed by empty data",
+                        before,activity.prefs.getAll());
+                }
+            }catch(Exception e){
+                throw new AssertionError("Cannot validate empty backup protection",e);
+            }
+        });
+    }
+
+    @Test public void sparseLegacyBackupKeepsUnrelatedUserProgress() {
+        rule.getScenario().onActivity(activity -> {
+            activity.persist();
+            Map<String,?> original=new HashMap<>(activity.prefs.getAll());
+            try{
+                byte[] full=activity.getBackupBytes();
+                JSONObject patched=new JSONObject(
+                    new String(full,StandardCharsets.UTF_8));
+                int newBest=activity.prefs.getInt("best",0)==19137?19138:19137;
+                patched.put("data",new JSONObject().put("best",newBest));
+                try {
+                    activity.readBackupBytes(patched.toString().getBytes(
+                        StandardCharsets.UTF_8));
+                    assertEquals("Selected imported preference should update",
+                        newBest,activity.prefs.getInt("best",-1));
+                    for(Map.Entry<String,?> item:original.entrySet()){
+                        if("best".equals(item.getKey()))continue;
+                        assertEquals("Sparse import must preserve "+item.getKey(),
+                            item.getValue(),activity.prefs.getAll().get(item.getKey()));
+                    }
+                }finally{
+                    activity.readBackupBytes(full);
+                }
+            }catch(Exception e){
+                throw new AssertionError("Sparse legacy backup lost progress",e);
+            }
+        });
+    }
+
     @Test public void malformedHistoryDoesNotReplaceSavedProgress() {
         rule.getScenario().onActivity(activity -> {
             activity.persist();
