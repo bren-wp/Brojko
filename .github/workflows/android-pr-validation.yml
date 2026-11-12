@@ -44,16 +44,14 @@ jobs:
           test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: '9.8.2'
       - name: Prepare open-source font and license
         run: bash scripts/prepare-nunito.sh
       - name: Compile, lint and test PR without private signing credentials
-        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
       - name: Verify compiled package and Google Play SDK levels
         run: bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
       - name: Generate release dependency inventory
-        run: gradle --no-daemon :app:dependencies --configuration releaseRuntimeClasspath > dependency-inventory.txt
+        run: ./gradlew --no-daemon :app:dependencies --configuration releaseRuntimeClasspath > dependency-inventory.txt
       - name: Attach Gradle dependency inventory for CVE/SBOM review
         uses: actions/upload-artifact@v7
         with:

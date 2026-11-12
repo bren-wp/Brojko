@@ -32,8 +32,6 @@ jobs:
           test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: '9.8.2'
       - name: Prepare bundled font
         run: bash scripts/prepare-nunito.sh
       - name: Enable hardware acceleration
@@ -49,7 +47,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: |
-            gradle --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+            ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
             bash scripts/verify-edge-to-edge-emulator.sh
       - name: Upload Android 16 navigation test logs
         if: always()
