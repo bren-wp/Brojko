@@ -71,7 +71,7 @@ final class BoardAccessibilityDelegate extends ExploreByTouchHelper {
     @Override protected boolean onPerformActionForVirtualView(int virtualId,
             int action,Bundle arguments){
         int index=virtualId-CONTROL_ID_OFFSET;
-        if(action!=AccessibilityNodeInfo.ACTION_CLICK||!visible(index))return false;
+        if(!view.isEnabled()||action!=AccessibilityNodeInfo.ACTION_CLICK||!visible(index))return false;
         MainActivity.BoardScreen.Tap tap=view.taps.get(index);
         sendEventForVirtualView(virtualId,AccessibilityEvent.TYPE_VIEW_CLICKED);
         tap.action.run();

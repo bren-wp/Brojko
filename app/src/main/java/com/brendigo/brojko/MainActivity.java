@@ -8,9 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.widget.Toast;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
+import android.content.ContentResolver;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.nio.charset.StandardCharsets;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -186,6 +187,12 @@ public final class MainActivity extends ComponentActivity {
     boolean dailyBonusGrantedThisAttempt=false;
     // After a successful restore the old Activity must not overwrite imported preferences.
     boolean skipPersistOnPauseAfterImport=false;
+    // SAF providers can be slow or remote. Stream and parse off the UI thread,
+    // but apply the already validated preferences on the main thread to avoid
+    // racing in-memory gameplay state or an Activity recreation.
+    private final ExecutorService backupIo=Executors.newSingleThreadExecutor();
+    boolean backupDocumentBusy=false;
+    boolean backupImportBusy=false;
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
@@ -587,6 +594,10 @@ public final class MainActivity extends ComponentActivity {
         catch(Exception ignored){return "1.1";}
     }
     void chooseBackupFile(boolean exporting){
+        if(backupDocumentBusy){
+            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
         i.setType("application/json");
         i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -608,34 +619,78 @@ public final class MainActivity extends ComponentActivity {
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
-        Uri uri=data.getData();
+        if(requestCode!=EXPORT_BACKUP&&requestCode!=IMPORT_BACKUP)return;
+        if(backupDocumentBusy){
+            Toast.makeText(this,"Sigurnosna kopija se obrađuje.",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final boolean importing=requestCode==IMPORT_BACKUP;
+        final Uri uri=data.getData();
+        final ContentResolver resolver=getApplicationContext().getContentResolver();
+        final String appPackage=getPackageName();
+        final String created=today();
+        backupDocumentBusy=true;
+        backupImportBusy=importing;
+        if(importing)screen.setEnabled(false);
         try{
-            if(requestCode==EXPORT_BACKUP){
-                byte[] bytes=getBackupBytes();
-                try(OutputStream stream=getContentResolver().openOutputStream(uri)){
-                    if(stream==null)throw new IllegalStateException("Datoteka nije dostupna.");
-                    stream.write(bytes);
-                }
-                Toast.makeText(this,"Sigurnosna kopija spremljena.",Toast.LENGTH_LONG).show();
-            }else if(requestCode==IMPORT_BACKUP){
-                ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-                try(InputStream input=getContentResolver().openInputStream(uri)){
-                    if(input==null)throw new IllegalStateException("Datoteka nije dostupna.");
-                    byte[] buffer=new byte[8192];int count;
-                    while((count=input.read(buffer))!=-1){
-                        bytes.write(buffer,0,count);
-                        if(bytes.size()>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
+            backupIo.execute(()->{
+                LocalBackupRepository.RestorePlan plan=null;
+                Exception failure=null;
+                try{
+                    if(importing){
+                        // File reads and the full JSON/session/history validation
+                        // never run on the Android main thread.
+                        byte[] bytes=BackupDocumentIo.read(resolver,uri);
+                        plan=LocalBackupRepository.validate(appPackage,bytes);
+                    }else{
+                        byte[] bytes=LocalBackupRepository.export(prefs,created,appPackage);
+                        BackupDocumentIo.write(resolver,uri,bytes);
                     }
+                }catch(Exception error){
+                    failure=error;
                 }
-                readBackupBytes(bytes.toByteArray());
-                Toast.makeText(this,"Sigurnosna kopija vraćena.",Toast.LENGTH_LONG).show();
-                recreate();
-            }
-        }catch(Exception err){
-            Toast.makeText(this,"Pogreška: "+err.getMessage(),Toast.LENGTH_LONG).show();
+                final LocalBackupRepository.RestorePlan validated=plan;
+                final Exception failed=failure;
+                runOnUiThread(()->{
+                    if(isFinishing()||isDestroyed())return;
+                    backupDocumentBusy=false;
+                    backupImportBusy=false;
+                    if(screen!=null)screen.setEnabled(true);
+                    if(failed!=null){
+                        Toast.makeText(this,"Pogreška: "+failed.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    if(!importing){
+                        Toast.makeText(this,"Sigurnosna kopija spremljena.",
+                            Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    try{
+                        // This short atomic commit is deliberately serialized
+                        // with gameplay and onPause on the main thread.
+                        LocalBackupRepository.apply(prefs,validated);
+                        skipPersistOnPauseAfterImport=true;
+                        Toast.makeText(this,"Sigurnosna kopija vraćena.",
+                            Toast.LENGTH_LONG).show();
+                        recreate();
+                    }catch(Exception error){
+                        Toast.makeText(this,"Pogreška: "+error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+        }catch(RejectedExecutionException unavailable){
+            backupDocumentBusy=false;
+            backupImportBusy=false;
+            if(importing)screen.setEnabled(true);
+            Toast.makeText(this,"Sigurnosna kopija trenutačno nije dostupna.",
+                Toast.LENGTH_LONG).show();
         }
     }
     @Override public boolean onKeyDown(int keyCode,android.view.KeyEvent event){
+        if(backupImportBusy)return true;
         if("game".equals(page)){
             switch(keyCode){
                 case android.view.KeyEvent.KEYCODE_DPAD_LEFT:move(TileGame.LEFT);return true;
@@ -648,6 +703,10 @@ public final class MainActivity extends ComponentActivity {
         return super.onKeyDown(keyCode,event);
     }
     void handleBackNavigation(){
+        // Do not navigate away or destroy the Activity mid-restore.
+        // The validated plan must be applied to the same active session
+        // that opened the system document picker.
+        if(backupImportBusy)return;
         String target=BackNavigationPolicy.destination(page,game!=null);
         if(target==null)finish();
         else navigate(target);
@@ -670,6 +729,9 @@ public final class MainActivity extends ComponentActivity {
         super.onPause();
     }
     @Override protected void onDestroy(){
+        // Finish already-started SAF file I/O without retaining UI callbacks.
+        // Stale validation results are discarded if this Activity was replaced.
+        backupIo.shutdown();
         if(screen!=null)screen.removeCallbacks(finishSplash);
         if(tones!=null){tones.release();tones=null;}
         super.onDestroy();
@@ -6904,6 +6966,7 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         @Override public boolean performAccessibilityAction(int action,Bundle args){
+            if(!isEnabled())return false;
             if(action>=ACTION_TAP_BASE&&action<ACTION_TAP_BASE+taps.size()){
                 taps.get(action-ACTION_TAP_BASE).action.run();invalidate();return true;
             }
@@ -6914,6 +6977,7 @@ public final class MainActivity extends ComponentActivity {
             return super.performAccessibilityAction(action,args);
         }
         @Override public boolean onTouchEvent(MotionEvent event){
+            if(!isEnabled())return true;
             float x=(event.getX()-offX)/Math.max(.1f,scale);
             float y=(event.getY()-offY)/Math.max(.1f,scale);
             if(event.getActionMasked()==MotionEvent.ACTION_DOWN){

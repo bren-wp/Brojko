@@ -81,8 +81,23 @@ final class LocalBackupRepository {
                 throw new IllegalArgumentException("Neispravna pobjeda u povijesti.");
         }
     }
-    static void restore(SharedPreferences prefs,String packageName,byte[] bytes) throws Exception{
-        if(bytes.length>512000)throw new IllegalArgumentException("Datoteka je prevelika.");
+    /** Immutable transport of validated data across worker/main threads. */
+    static final class RestorePlan {
+        final JSONObject data;
+        final boolean completeSnapshot;
+        private RestorePlan(JSONObject data,boolean completeSnapshot){
+            this.data=data;
+            this.completeSnapshot=completeSnapshot;
+        }
+    }
+
+    /**
+     * Validate a SAF document on the I/O worker. No SharedPreferences access
+     * or user-state mutation occurs until apply() is called on the main thread.
+     */
+    static RestorePlan validate(String packageName,byte[] bytes) throws Exception{
+        if(bytes==null||bytes.length>512000)
+            throw new IllegalArgumentException("Datoteka je prevelika.");
         JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
         if(!BACKUP_FORMAT.equals(root.optString("format")))
             throw new IllegalArgumentException("Nepodržani oblik sigurnosne kopije.");
@@ -160,6 +175,14 @@ final class LocalBackupRepository {
                     throw new IllegalArgumentException("Nevaljane postavke.");
             }
         }
+        return new RestorePlan(data,completeSnapshot);
+    }
+
+    /** One atomic durable write; applies a fully validated document only. */
+    static void apply(SharedPreferences prefs,RestorePlan plan) throws Exception{
+        if(plan==null)throw new IllegalArgumentException("Neispravna sigurnosna kopija.");
+        JSONObject data=plan.data;
+        boolean completeSnapshot=plan.completeSnapshot;
         SharedPreferences.Editor editor=prefs.edit();
         // Only an explicit, internally consistent full snapshot can remove
         // omitted Brojko backup fields. Never clear unrelated/future settings.
@@ -175,5 +198,11 @@ final class LocalBackupRepository {
             else editor.putString(key,(String)value);
         }
         if(!editor.commit())throw new IllegalStateException("Neuspješno spremanje.");
+    }
+
+    /** Synchronous compatibility facade retained for existing regression tests. */
+    static void restore(SharedPreferences prefs,String packageName,byte[] bytes)
+            throws Exception{
+        apply(prefs,validate(packageName,bytes));
     }
 }

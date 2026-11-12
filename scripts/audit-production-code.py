@@ -52,6 +52,7 @@ expected_sources = {
     "ClassicBrandContours.java", "SplashBrandContours.java",
     "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
+    "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
     "BoardAccessibilityDelegate.java",
 }
@@ -78,13 +79,22 @@ assert "PendingIntent.FLAG_IMMUTABLE" in java["AppReminder.java"]
 assert 'Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())' in java["AppReminderBoot.java"]
 assert "getBoolean(\"notifications\",false)" in java["AppReminderBoot.java"]
 assert "packageName.equals(root.optString(\"package\",\"\")" in java["LocalBackupRepository.java"]
-assert "bytes.size()>512000" in java["MainActivity.java"]
+# The 512-kB cap moved with SAF I/O from Activity to a dedicated worker.
+assert "size>MAX_BYTES" in java["BackupDocumentIo.java"]
+assert "bytes.length>512000" in java["LocalBackupRepository.java"]
+assert "onActivityResult" in java["MainActivity.java"]
 assert "legacyScore<0" in java["MainActivity.java"]
 assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
 assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
+assert "LocalBackupRepository.validate(" in java["MainActivity.java"]
+assert "LocalBackupRepository.apply(" in java["MainActivity.java"]
+assert "BackupDocumentIo.read(" in java["MainActivity.java"]
+assert "BackupDocumentIo.write(" in java["MainActivity.java"]
+assert "backupIo.shutdown()" in java["MainActivity.java"]
+assert "if(backupImportBusy)return;" in java["MainActivity.java"]
 assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
 
 gradle = (ROOT / "app/build.gradle").read_text(encoding="utf-8")
