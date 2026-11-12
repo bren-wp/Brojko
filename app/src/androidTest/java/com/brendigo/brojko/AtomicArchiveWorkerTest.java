@@ -104,6 +104,53 @@ public final class AtomicArchiveWorkerTest {
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
+    @Test public void memoryOnlyArchiveIsRecommittedBeforeReportingSuccess()
+            throws Exception{
+        SharedPreferences actual=isolated();
+        assertTrue(actual.edit().clear().commit());
+        try{
+            String snapshot=game(451L,128).toJson().toString();
+            assertTrue(actual.edit().putString("session",snapshot)
+                .putString("history","[]").commit());
+
+            // Simulate Android SharedPreferences updating RAM using apply()
+            // while the commit API still reports a failed durable write.
+            SharedPreferences memoryOnly=(SharedPreferences)Proxy.newProxyInstance(
+                SharedPreferences.class.getClassLoader(),
+                new Class<?>[]{SharedPreferences.class},(proxy,method,args)->{
+                    if(!"edit".equals(method.getName()))
+                        return method.invoke(actual,args);
+                    final SharedPreferences.Editor delegate=actual.edit();
+                    return Proxy.newProxyInstance(
+                        SharedPreferences.Editor.class.getClassLoader(),
+                        new Class<?>[]{SharedPreferences.Editor.class},
+                        (editor,action,arguments)->{
+                            if("commit".equals(action.getName())){
+                                delegate.apply();
+                                return false;
+                            }
+                            if("apply".equals(action.getName())){
+                                delegate.apply();
+                                return null;
+                            }
+                            Object result=action.invoke(delegate,arguments);
+                            return result==delegate?editor:result;
+                        });
+                });
+
+            assertFalse(LocalHistoryRepository.archiveSnapshot(memoryOnly,
+                snapshot,"12. stu","22:00"));
+            assertTrue("RAM reflects unconfirmed archived session",
+                LocalHistoryRepository.hasCommittedArchive(actual));
+            assertTrue("Only the second successful commit confirms durability",
+                LocalHistoryRepository.archiveSnapshot(actual,snapshot,
+                    "12. stu","22:00"));
+            JSONArray after=new JSONArray(actual.getString("history","[]"));
+            assertEquals("Recommit cannot append the game twice",1,after.length());
+            assertEquals(128,actual.getInt("lastScore",-1));
+        }finally{assertTrue(actual.edit().clear().commit());}
+    }
+
     @Test public void failedDiskCommitDoesNotPermitNewSession(){
         SharedPreferences actual=isolated();
         assertTrue(actual.edit().clear().commit());

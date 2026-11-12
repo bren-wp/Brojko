@@ -41,3 +41,13 @@ a prije stvaranja/potvrde nove sesije, sljedeći pokretanje prepoznaje
 trajno arhiviranu staru sesiju i otvara Home, umjesto da ponovno
 otvara tu partiju ili stvara dvostruki povijesni zapis. Nema
 brisanja spremljene povijesti pri oporavku.
+
+## Diskovni commit može vratiti false nakon promjene RAM kopije
+
+`SharedPreferences` može promijeniti svoj interni memory state i
+prije nego što povratna vrijednost `commit()` potvrdi uspjeh upisa.
+Ponavljanje arhiviranja zato **ne vjeruje** samo `archived=true`.
+Provjerava postojeći najnoviji history red i ponovno atomarno
+`commit()` zapisuje cijeli par, bez dodavanja duplikata. Novi
+instrumentacijski test simulira takvu situaciju i zahtijeva novi
+uspješan commit prije nastavka.

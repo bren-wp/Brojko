@@ -60,7 +60,23 @@ final class LocalHistoryRepository {
             archived.put("archived",true);
             String archivedSession=archived.toString();
             String persistedSession=prefs.getString("session",null);
-            if(archivedSession.equals(persistedSession))return true;
+            if(archivedSession.equals(persistedSession)){
+                // commit() can report failure after SharedPreferences already
+                // updated its in-memory map. A retry must NEVER treat that
+                // memory-only state as proof the history reached disk.
+                // Recommit the exact same row+session, never append twice.
+                JSONArray existing=new JSONArray(prefs.getString("history","[]"));
+                JSONObject latest=existing.optJSONObject(0);
+                if(latest==null||latest.optInt("score",-1)!=snapshot.score||
+                   latest.optInt("moves",-1)!=snapshot.moves||
+                   latest.optInt("peak",-1)!=snapshot.maxTile()||
+                   !snapshot.mode.equals(latest.optString("mode"))||
+                   latest.optBoolean("won")!=snapshot.reached2048)
+                    return false;
+                return prefs.edit().putString("history",existing.toString())
+                    .putString("session",archivedSession)
+                    .putInt("lastScore",snapshot.score).commit();
+            }
             // Never archive a stale/foreign game snapshot or overwrite one
             // restored from a backup while this task was waiting in the queue.
             if(!sourceSession.equals(persistedSession))return false;
