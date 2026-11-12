@@ -90,14 +90,18 @@ assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
-assert "LocalBackupRepository.restore(" in java["MainActivity.java"]
+assert "getBackupBytes(" not in java["MainActivity.java"]
+assert "readBackupBytes(" not in java["MainActivity.java"]
+assert "validateBackupHistory(" not in java["MainActivity.java"]
+assert "static void restore(" not in java["LocalBackupRepository.java"]
 assert "LocalBackupRepository.validate(" in java["MainActivity.java"]
 assert "LocalBackupRepository.apply(" in java["MainActivity.java"]
 assert "BackupDocumentIo.read(" in java["MainActivity.java"]
 assert "BackupDocumentIo.write(" in java["MainActivity.java"]
 assert "backupIo.shutdown()" in java["MainActivity.java"]
 assert "backupImportBusy||gameTransitionBusy" in java["MainActivity.java"]
-assert "LocalHistoryRepository.archive(" in java["MainActivity.java"]
+assert "boolean archive()" not in java["MainActivity.java"]
+assert "static boolean archive(" not in java["LocalHistoryRepository.java"]
 assert "GameArchiveCoordinator.start(" in java["MainActivity.java"]
 assert "LocalHistoryRepository.archiveSnapshot(" in java["GameArchiveCoordinator.java"]
 assert 'putString("session",archivedSession)' in java["LocalHistoryRepository.java"]
@@ -160,3 +164,10 @@ assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
 assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
 assert "GameCalendar.today()" in java["MainActivity.java"]
 assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]
+
+# Test-only compatibility helpers stay out of the shipping APK.
+bridge=(ROOT/"app/src/androidTest/java/com/brendigo/brojko/BackupTestBridge.java").read_text(encoding="utf-8")
+assert "LocalBackupRepository.export(" in bridge
+assert "LocalBackupRepository.validate(" in bridge
+assert "LocalBackupRepository.apply(" in bridge
+assert "skipPersistOnPauseAfterImport=true" in bridge
