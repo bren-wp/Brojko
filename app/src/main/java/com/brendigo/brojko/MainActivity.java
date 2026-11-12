@@ -5927,11 +5927,18 @@ public final class MainActivity extends ComponentActivity {
             // worsened MAE), and do not change real gameplay tiles.
             boolean ownerGrid=theme==0&&referencePortraitLayout&&
                 "themes".equals(page)&&x<190f&&y>=413f&&y<595f;
+            // Source vivid cyan RGB ~3/181/254; the generic 14% white
+            // mix adds a false red cast. Restrict flatter material to this
+            // static reference preview, not the playable game board.
+            boolean ownerVividCyan=theme==0&&referencePortraitLayout&&
+                "themes".equals(page)&&x>250f&&y<300f&&
+                color==0xff00b3ff;
             shape(x+1,y+2.5f,w,h-2,radius,
                 darken(color,ownerGrid?.065f:.15f));
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-3,radius,
-                lighten(color,style==2?.23f:.14f),color);
+                lighten(color,ownerVividCyan?.02f:
+                    style==2?.23f:.14f),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.65f);p.setColor(ownerGrid?0x26ffffff:0x4dffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
@@ -6371,9 +6378,9 @@ public final class MainActivity extends ComponentActivity {
                 // gradient without changing persistent theme palettes.
                 int[] colors=ownerPreview?
                     (i==2?new int[]{
-                        0xffff4c7d,0xff50e342,0xff00a7ff,0xff9645ff
+                        0xffff4c7d,0xff64e95b,0xff00b3ff,0xffa954ff
                     }:new int[]{
-                        0xfffe8258,0xff08d4c8,0xff2e90fa,0xfffdb536
+                        0xfffe8258,0xff0ad9d2,0xff2e90fa,0xfffdb536
                     }):
                     (i==2?new int[]{
                         0xffff5a92,0xff58d649,0xff19b7f0,0xffb35ceb
@@ -6419,6 +6426,13 @@ public final class MainActivity extends ComponentActivity {
                 }));
             }
             card(20,335,360,293,26,card);
+            if(theme==0&&referencePortraitLayout){
+                // Real source x635,y810 is warm ivory RGB~254/250/242;
+                // v1.12.216 Android card was 255/253/250. Keep the
+                // frame and touch zones; calibrate only the flat fill.
+                gradient(20.6f,335.6f,358.8f,291.8f,25.4f,
+                    0xfffdf9f1,0xfffefbf5);
+            }
             leftFitted("Pregled",26,373,22,167,ink,true);
             if(theme==0&&referencePortraitLayout)
                 ownerHeadline(OwnerHeadlineContours.THEMES_STYLE,

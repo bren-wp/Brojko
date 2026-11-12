@@ -47,3 +47,28 @@ i ponovno izračunati cijeli RGB MAE i regije. Bez stvarnog ponovnog mjerenja ne
 se tvrditi da se ukupni MAE smanjio. **0 % / MAE 0 nije potvrđeno.**
 Za preostale razlike Misija i Tema treba izjednačiti izvorne ikonice, vektorske 
 silhuete, font rasterizaciju, sjene i realna stanja korisničkih podataka.
+
+## Potvrđeno nakon v1.12.218
+
+Stvarne PNG snimke uzete su iz potvrđenog emulator proof artefakta
+[Build and release Android #218](https://github.com/bren-wp/Brojko/actions/runs/43132063872),
+s istim originalnim PNG referencama pri **941×1672**, bez bilo kakvog skaliranja.
+
+| Područje | RGB MAE prije | RGB MAE poslije | Smanjenje |
+|---|---:|---:|---:|
+| Cijela Naslovnica | 13,8979 | **12,4051** | -1,4928 |
+| Plava dekorativna 8 | 43,388 | **19,846** | -23,542 |
+| Žuta dekorativna 16 | 29,435 | **11,889** | -17,546 |
+| Cijele Misije | 13,9238 | **13,8148** | -0,1090 |
+| Strelica Natrag | 41,472 | **12,019** | -29,453 |
+| Teme — bez izmjena u fazi 135 | 13,7633 | 13,7633 | 0 |
+
+**Geometrijski rezultat:** plava dekoracija: y=405,4 → **329,5** (referenca 329,6);
+žuta: y=424,6 → **371,8** (referenca 370,8).
+Originalna strelica ima 827 tamnih piksela u mjernom ROI-ju;
+Android prije 293, nakon nativne korekcije 1017.
+
+RGB MAE je prosjek apsolutnih razlika kanala na skali 0–255,
+**nije postotak**. Ni jedan cijeli zaslon još nije identičan referenci.
+Sljedeći koraci uključuju izvorno mjerenje pozadinskih nijansi i
+pretpreglednih pločica na Temama (faza 136), zatim tipografije i detalja Misija.

@@ -101,4 +101,45 @@ public class OwnerCornerPixelPhase135Test {
             }
         });
     }
+
+    @Test public void originalThemeSwatchesAndIvoryPanelMatchRgbSamples(){
+        rule.getScenario().onActivity(activity -> {
+            String previousPage=activity.page;int previousTheme=activity.theme;
+            try{
+                activity.theme=0;
+                Bitmap bitmap=actualPortrait(activity,"themes");
+                try{
+                    // Source sample coordinates in the original 941×1672.
+                    int[][] patches={
+                        {206,474,35,221,215,15}, // light teal
+                        {800,474,118,235,110,15},// vivid green
+                        {699,570,3,181,254,15},  // vivid cyan
+                        {800,570,179,103,253,15},// vivid purple
+                        {635,810,254,250,242,6}, // warm upper panel
+                        {635,1270,253,250,244,6}// warm lower panel
+                    };
+                    for(int[] sample:patches){
+                        long[] sum=new long[3];
+                        for(int y=sample[1]-4;y<=sample[1]+4;y++)
+                            for(int x=sample[0]-4;x<=sample[0]+4;x++){
+                                int pixel=bitmap.getPixel(x,y);
+                                sum[0]+=Color.red(pixel);
+                                sum[1]+=Color.green(pixel);
+                                sum[2]+=Color.blue(pixel);
+                            }
+                        for(int channel=0;channel<3;channel++){
+                            float average=sum[channel]/81f;
+                            assertTrue("Owner RGB x="+sample[0]+
+                                " y="+sample[1]+" channel="+channel+
+                                " got="+average+" expected="+sample[2+channel],
+                                Math.abs(average-sample[2+channel])<=sample[5]);
+                        }
+                    }
+                }finally{bitmap.recycle();}
+            }finally{
+                activity.page=previousPage;activity.theme=previousTheme;
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
 }
