@@ -7,7 +7,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** User input cannot mutate or duplicate the game during an archive commit. */
+/**
+ * Android UI input barrier regression tests. These tests do not change
+ * persisted player data or race the real background archive worker.
+ */
 @RunWith(AndroidJUnit4.class)
 public final class ArchiveTransitionInputGuardTest {
     @Rule public ActivityScenarioRule<MainActivity> scenario=
@@ -15,48 +18,56 @@ public final class ArchiveTransitionInputGuardTest {
 
     @Test public void rapidNewAndEndCommandsAreIgnoredWhileSaving(){
         scenario.getScenario().onActivity(activity->{
-            // Set a deterministic board without touching other user data.
-            TileGame current=activity.game;
-            String priorPage=activity.page;
+            TileGame original=activity.game;
+            String oldPage=activity.page;
+            boolean oldBusy=activity.gameTransitionBusy;
+            boolean oldEnabled=activity.screen.isEnabled();
             try{
-                activity.game=new TileGame("classic","",9908L);
-                activity.game.moves=4;
-                activity.game.score=64;
+                TileGame waiting=new TileGame("classic","",9908L);
+                waiting.moves=4;
+                waiting.score=64;
+                activity.game=waiting;
                 activity.page="game";
-                activity.persist();
+                activity.gameTransitionBusy=true;
+                activity.screen.setEnabled(false);
                 activity.newGame("relaxed");
-                assertTrue("Archive operation must hold a transition barrier",
-                    activity.gameTransitionBusy);
-                TileGame waiting=activity.game;
                 activity.newGame("daily");
                 activity.endSession();
                 activity.move(TileGame.LEFT);
                 activity.undo();
                 activity.handleBackNavigation();
-                assertSame("No next game until the worker has committed",
+                assertSame("No new session while archive barrier is raised",
                     waiting,activity.game);
-                assertTrue(activity.gameTransitionBusy);
+                assertEquals("game",activity.page);
+                assertEquals(64,waiting.score);
+                assertEquals(4,waiting.moves);
             }finally{
-                // The asynchronous owner transition remains valid; it will
-                // finish after the UI callback and then persist its result.
-                // Do not overwrite the pending archive via test cleanup.
+                activity.gameTransitionBusy=oldBusy;
+                activity.game=original;
+                activity.page=oldPage;
+                activity.screen.setEnabled(oldEnabled);
             }
         });
     }
 
-    @Test public void onPauseCannotOverwriteAnInFlightArchivedSession(){
+    @Test public void onPauseStatePersistCannotOverrideAnInflightArchive(){
         scenario.getScenario().onActivity(activity->{
-            if(activity.gameTransitionBusy)return;
-            TileGame preserved=activity.game;
+            TileGame original=activity.game;
+            String oldPage=activity.page;
+            boolean oldBusy=activity.gameTransitionBusy;
             try{
+                TileGame placeholder=new TileGame("classic","",7878L);
+                placeholder.moves=2;
+                activity.game=placeholder;
                 activity.gameTransitionBusy=true;
                 activity.persist();
-                assertTrue(activity.gameTransitionBusy);
                 activity.handleBackNavigation();
                 assertTrue(activity.gameTransitionBusy);
+                assertSame(placeholder,activity.game);
             }finally{
-                activity.gameTransitionBusy=false;
-                activity.game=preserved;
+                activity.gameTransitionBusy=oldBusy;
+                activity.game=original;
+                activity.page=oldPage;
             }
         });
     }
