@@ -3731,12 +3731,12 @@ public class ScreensSmokeTest {
                 activity.prefs.getAll());
             try{
                 org.json.JSONObject data=new org.json.JSONObject(new String(
-                    activity.getBackupBytes(),
+                    BackupTestBridge.export(activity),
                     java.nio.charset.StandardCharsets.UTF_8));
                 data.put("package","com.example.unrelated");
                 boolean rejected=false;
                 try{
-                    activity.readBackupBytes(data.toString().getBytes(
+                    BackupTestBridge.restore(activity,data.toString().getBytes(
                         java.nio.charset.StandardCharsets.UTF_8));
                 }catch(IllegalArgumentException expected){rejected=true;}
                 assertTrue("Import must reject a foreign app package",rejected);
@@ -3745,7 +3745,7 @@ public class ScreensSmokeTest {
                 data.remove("package");
                 rejected=false;
                 try{
-                    activity.readBackupBytes(data.toString().getBytes(
+                    BackupTestBridge.restore(activity,data.toString().getBytes(
                         java.nio.charset.StandardCharsets.UTF_8));
                 }catch(IllegalArgumentException expected){rejected=true;}
                 assertTrue("Import must reject missing package identity",rejected);
@@ -3762,7 +3762,7 @@ public class ScreensSmokeTest {
             java.util.Map<String,?> previous=new java.util.HashMap<>(
                 activity.prefs.getAll());
             try{
-                byte[] original=activity.getBackupBytes();
+                byte[] original=BackupTestBridge.export(activity);
                 String[] keys={"best","sound","lastDaily","history","animation"};
                 Object[] invalid={"9999",1,20261030,true,3};
                 for(int i=0;i<keys.length;i++){
@@ -3771,7 +3771,7 @@ public class ScreensSmokeTest {
                     copy.getJSONObject("data").put(keys[i],invalid[i]);
                     boolean rejected=false;
                     try{
-                        activity.readBackupBytes(copy.toString().getBytes(
+                        BackupTestBridge.restore(activity,copy.toString().getBytes(
                             java.nio.charset.StandardCharsets.UTF_8));
                     }catch(IllegalArgumentException|org.json.JSONException error){
                         rejected=true;
@@ -3795,12 +3795,12 @@ public class ScreensSmokeTest {
         rule.getScenario().onActivity(activity->{
             try{
                 activity.persist();
-                original[0]=activity.getBackupBytes();
+                original[0]=BackupTestBridge.export(activity);
                 org.json.JSONObject backup=new org.json.JSONObject(new String(original[0],
                     java.nio.charset.StandardCharsets.UTF_8));
                 expectedBest[0]=activity.best==19001?19002:19001;
                 backup.getJSONObject("data").put("best",expectedBest[0]);
-                activity.readBackupBytes(backup.toString().getBytes(
+                BackupTestBridge.restore(activity,backup.toString().getBytes(
                     java.nio.charset.StandardCharsets.UTF_8));
             }catch(Exception ex){throw new AssertionError("Cannot restore test backup",ex);}
         });
@@ -3816,7 +3816,7 @@ public class ScreensSmokeTest {
         }finally{
             rule.getScenario().moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
             rule.getScenario().onActivity(activity->{
-                try{activity.readBackupBytes(original[0]);}
+                try{BackupTestBridge.restore(activity,original[0]);}
                 catch(Exception ex){throw new AssertionError("Cannot restore original backup",ex);}
             });
         }
@@ -6542,9 +6542,10 @@ public class ScreensSmokeTest {
             TileGame originalGame=activity.game;
             int originalLastScore=activity.lastScore;
             String originalHistory=activity.prefs.getString("history","[]");
+            boolean hadOriginalSession=activity.prefs.contains("session");
+            String originalSession=activity.prefs.getString("session",null);
+            int previousStoredLastScore=activity.prefs.getInt("lastScore",0);
             try{
-                assertTrue(activity.prefs.edit().putString("history",
-                    "{bad old archive").commit());
                 TileGame finished=new TileGame("classic","",2026L);
                 finished.cells[0]=2048;
                 finished.score=2048;
@@ -6552,20 +6553,33 @@ public class ScreensSmokeTest {
                 finished.moves=25;
                 finished.reached2048=true;
                 activity.game=finished;
+                assertTrue(activity.prefs.edit()
+                    .putString("history","{bad old archive")
+                    .putString("session",finished.toJson().toString()).commit());
                 assertTrue("Archiving a valid game must survive malformed history",
-                    activity.archive());
-                assertTrue("Game is marked archived only after disk save",
+                    LocalHistoryRepository.archiveSnapshot(activity.prefs,
+                        finished.toJson().toString(),
+                        activity.historyDate(),activity.compactTime()));
+                assertFalse("Worker must not mutate the active TileGame",
                     finished.archived);
+                assertTrue("Persisted old session must be durably archived",
+                    TileGame.fromJson(new org.json.JSONObject(
+                        activity.prefs.getString("session",""))).archived);
                 org.json.JSONArray history=checkedHistory(
                     activity.prefs.getString("history","[]"));
                 assertTrue("Latest game must be at the top",history.length()>0);
                 assertEquals(2048,history.getJSONObject(0).getInt("score"));
                 assertEquals("classic",history.getJSONObject(0).getString("mode"));
-                assertEquals(2048,activity.lastScore);
+                assertEquals(2048,activity.prefs.getInt("lastScore",-1));
             }catch(Exception e){
                 throw new AssertionError("New session could not be archived",e);
             }finally{
-                activity.prefs.edit().putString("history",originalHistory).commit();
+                android.content.SharedPreferences.Editor rollback=activity.prefs.edit()
+                    .putString("history",originalHistory)
+                    .putInt("lastScore",previousStoredLastScore);
+                if(hadOriginalSession)rollback.putString("session",originalSession);
+                else rollback.remove("session");
+                assertTrue(rollback.commit());
                 activity.game=originalGame;
                 activity.lastScore=originalLastScore;
                 activity.screen.invalidate();
