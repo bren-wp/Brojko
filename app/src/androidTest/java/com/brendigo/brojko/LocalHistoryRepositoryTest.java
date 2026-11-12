@@ -10,29 +10,31 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** Real SharedPreferences regression for atomic, local game archiving. */
+/** Actual worker archive regression using isolated SharedPreferences. */
 @RunWith(AndroidJUnit4.class)
-public class LocalHistoryRepositoryTest {
+public final class LocalHistoryRepositoryTest {
     private SharedPreferences isolated(){
-        Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
-        return context.getSharedPreferences("brojko-history-qa",Context.MODE_PRIVATE);
+        Context ctx=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        return ctx.getSharedPreferences("brojko-history-qa",Context.MODE_PRIVATE);
     }
 
-    @Test public void archivePersistsLatestGameAndKeepsLastNineteen() throws Exception {
+    @Test public void archivePersistsLatestGameAndKeepsLastNineteen() throws Exception{
         SharedPreferences prefs=isolated();
         assertTrue(prefs.edit().clear().commit());
         try{
             JSONArray previous=new JSONArray();
             for(int i=0;i<23;i++)
                 previous.put(new JSONObject().put("score",100+i).put("moves",i+1));
-            assertTrue(prefs.edit().putString("history",previous.toString()).commit());
-
             TileGame game=new TileGame("classic","",9955L);
-            game.moves=3;
-            game.score=64;
-            assertFalse(game.archived);
-            assertTrue(LocalHistoryRepository.archive(prefs,game,"12. stu 2026.","20:00"));
-            assertTrue("Game must be marked archived only after disk commit",game.archived);
+            game.moves=3;game.score=64;
+            String snapshot=game.toJson().toString();
+            assertTrue(prefs.edit().putString("session",snapshot)
+                .putString("history",previous.toString()).commit());
+            assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,snapshot,
+                "12. stu 2026.","20:00"));
+            assertFalse("Worker never changes the live game",game.archived);
+            assertTrue(TileGame.fromJson(new JSONObject(
+                prefs.getString("session",""))).archived);
             JSONArray result=new JSONArray(prefs.getString("history","[]"));
             assertEquals(20,result.length());
             assertEquals(64,result.getJSONObject(0).getInt("score"));
@@ -40,24 +42,28 @@ public class LocalHistoryRepositoryTest {
             assertEquals("12. stu 2026.",result.getJSONObject(0).getString("day"));
             assertEquals(100,result.getJSONObject(1).getInt("score"));
             assertEquals(118,result.getJSONObject(19).getInt("score"));
-            assertTrue(LocalHistoryRepository.archive(prefs,game,"12. stu 2026.","20:01"));
-            assertEquals("Archived games must not duplicate rows",
-                result.toString(),prefs.getString("history","[]"));
+            assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,snapshot,
+                "12. stu 2026.","20:01"));
+            assertEquals("Retry must not duplicate a row",result.toString(),
+                prefs.getString("history","[]"));
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
-    @Test public void malformedLegacyHistoryStillPreservesNewGame() throws Exception {
+    @Test public void malformedLegacyHistoryStillPreservesNewGame() throws Exception{
         SharedPreferences prefs=isolated();
-        assertTrue(prefs.edit().clear().putString("history","{bad json").commit());
+        assertTrue(prefs.edit().clear().commit());
         try{
             TileGame game=new TileGame("relaxed","",7721L);
-            game.moves=5;
-            game.score=32;
-            assertTrue(LocalHistoryRepository.archive(prefs,game,"12. stu","20:02"));
+            game.moves=5;game.score=32;
+            String session=game.toJson().toString();
+            assertTrue(prefs.edit().putString("session",session)
+                .putString("history","{bad json").commit());
+            assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,session,
+                "12. stu","20:02"));
             JSONArray result=new JSONArray(prefs.getString("history","[]"));
             assertEquals(1,result.length());
             assertEquals(32,result.getJSONObject(0).getInt("score"));
-            assertTrue(game.archived);
+            assertTrue(LocalHistoryRepository.hasCommittedArchive(prefs));
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
@@ -65,16 +71,20 @@ public class LocalHistoryRepositoryTest {
         SharedPreferences prefs=isolated();
         assertTrue(prefs.edit().clear().putString("history","[]").commit());
         try{
-            assertTrue(LocalHistoryRepository.archive(prefs,null,"today","now"));
+            assertFalse(LocalHistoryRepository.archiveSnapshot(prefs,
+                null,"today","now"));
             TileGame game=new TileGame("classic","",91L);
             assertEquals(0,game.moves);
-            assertTrue(LocalHistoryRepository.archive(prefs,game,"today","now"));
+            String session=game.toJson().toString();
+            assertTrue(prefs.edit().putString("session",session).commit());
+            assertFalse(LocalHistoryRepository.archiveSnapshot(prefs,
+                session,"today","now"));
             assertEquals("[]",prefs.getString("history",null));
-            assertFalse(game.archived);
+            assertEquals(session,prefs.getString("session",null));
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
-    @Test public void nonObjectLegacyRowsAreSkippedNotCopied() throws Exception {
+    @Test public void nonObjectLegacyRowsAreSkippedNotCopied() throws Exception{
         JSONObject newest=new JSONObject().put("score",10);
         JSONArray previous=new JSONArray()
             .put(20).put(JSONObject.NULL).put(new JSONObject().put("score",5));
