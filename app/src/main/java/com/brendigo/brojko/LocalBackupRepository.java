@@ -179,7 +179,7 @@ final class LocalBackupRepository {
     }
 
     /** One atomic durable write; applies a fully validated document only. */
-    static void apply(SharedPreferences prefs,RestorePlan plan){
+    static void apply(SharedPreferences prefs,RestorePlan plan) throws Exception{
         if(plan==null)throw new IllegalArgumentException("Neispravna sigurnosna kopija.");
         JSONObject data=plan.data;
         boolean completeSnapshot=plan.completeSnapshot;
