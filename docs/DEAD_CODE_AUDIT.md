@@ -3,8 +3,8 @@
 ## Doseg
 Provjereni su `MainActivity.java`, `TileGame.java`, `AppReminder.java`,
 `AppReminderBoot.java`, `ClassicBrandContours.java`,
-`OwnerHeadlineContours.java`, `SplashBrandContours.java` i novoodvojeni
-`LocalBackupRepository.java` prema aktualnom `main` stanju.
+`OwnerHeadlineContours.java`, `SplashBrandContours.java` , novoodvojeni
+`LocalBackupRepository.java` i `BoardAccessibilityDelegate.java` prema aktualnom `main` stanju.
 
 ## Rezultati ovog koraka
 - Izmještanje backup metode u `LocalBackupRepository` jest
