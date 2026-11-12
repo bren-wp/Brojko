@@ -55,6 +55,30 @@ jobs:
           BROJKO_KEY_ALIAS: ${{ secrets.BROJKO_KEY_ALIAS }}
           BROJKO_KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
+      # The SBOM is generated from resolved Gradle dependencies, not guessed
+      # from the app manifest or source file list.
+      - name: Generate resolved CycloneDX SBOM
+        run: |
+          ./gradlew --no-daemon cyclonedxBom
+          test -s build/reports/cyclonedx/bom.json
+          cp build/reports/cyclonedx/bom.json SBOM.cdx.json
+      - name: Scan known vulnerabilities in release SBOM
+        uses: anchore/scan-action@v7
+        with:
+          sbom: SBOM.cdx.json
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+          output-file: grype.sarif
+      - name: Archive SBOM and CVE scan evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: brojko-release-sca
+          if-no-files-found: warn
+          path: |
+            SBOM.cdx.json
+            grype.sarif
       - name: Validate compiled Google Play SDK and package policy
         run: |
           bash scripts/verify-play-sdk.sh app/build/outputs/apk/debug/*.apk
@@ -103,6 +127,7 @@ jobs:
           if-no-files-found: error
           path: |
             SHA256SUMS
+            SBOM.cdx.json
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
@@ -120,6 +145,7 @@ jobs:
             **Signing:** debug APK is installed with a debug key. Release APK/AAB are production-signable only when repository keystore secrets are configured.
           files: |
             SHA256SUMS
+            SBOM.cdx.json
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
