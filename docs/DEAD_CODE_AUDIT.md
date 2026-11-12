@@ -25,3 +25,20 @@ Provjereni su `MainActivity.java`, `TileGame.java`, `AppReminder.java`,
 **Granica dokaza:** niti statička provjera niti uspješan compile ne dokazuju
 potpunu nedostižnost metode. Puni dead-code audit svih 7.000+ redaka i
 njegove potvrđene eliminacije ostaju otvorene.
+
+
+## PR #135 — ponovno provjereni padovi stvarnog emulatorskog testiranja
+
+Iz Android UI smoke #846 potvrđeno je **5 neuspjeha od 214 testova**.
+Svi stari testovi pretpostavljali su sinkroni prijelaz na novu igru ili
+Home, iako sada postoji obvezni asinkroni archive barrier. Pet
+funkcionalnih scenarija premješteno je iz gigantskog
+`ScreensSmokeTest.java` u `GameplayAsyncArchiveFlowTest.java`.
+Novi testovi stvarno pritiskaju nativne Canvas akcije, u izoliranom
+SharedPreferences području provjeravaju stare partije i ne čekaju
+na main niti. Testovi ne prikrivaju neuspjeli commit niti preskaču
+realni `GameArchiveCoordinator`.
+
+**Ograničenje:** audit skripta ostaje konzervativna i ne dokazuje
+potpunu nedostižnost svih Java/Android callbackova. Bez dokazivog
+nedostižnog produkcijskog simbola nije brisana aktivna gameplay metoda.

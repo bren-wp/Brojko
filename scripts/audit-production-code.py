@@ -140,3 +140,17 @@ for item in candidates:
     print("  REVIEW: " + item)
 print("Scanned %d production Java classes; %d potential dead-code symbols."
       % (len(java), len(candidates)))
+
+# Screenshot/gameplay test refactoring preserves all five old cases
+# in their asynchronous, deterministic instrumentation suite.
+flow_test=(ROOT/"app/src/androidTest/java/com/brendigo/brojko/GameplayAsyncArchiveFlowTest.java").read_text(encoding="utf-8")
+for name in (
+    "failedDailyReplayCannotClaimSuccessReward",
+    "confirmationCancelIsNonDestructiveAndConfirmedEndArchives",
+    "confirmNewGameArchivesBeforeSwitchingToRequestedMode",
+    "gameOverNewGameArchivesExactlyOnceAndBackKeepsSession",
+    "dailyResultButtonsPreserveRewardDateAndArchiveRealScore",
+):
+    assert ("void "+name+"(") in flow_test, "Missing gameplay regression: "+name
+assert "awaitTransaction()" in flow_test
+assert "gameTransitionBusy" in flow_test
