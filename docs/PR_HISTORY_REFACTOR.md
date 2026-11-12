@@ -21,3 +21,14 @@ a potom postepeno izdvajanje native Canvas renderera uz izravnu
 941×1672 usporedbu s izvornim referencama. TalkBack na fizičkim
 uređajima, svi zasloni 1:1, SBOM nalaze build alata i konačni
 security/dead-code audit ne označavamo završenima bez dokaza.
+
+## Drugi korak: BackNavigationPolicy
+
+Raspored povratne navigacije izdvojen je iz `MainActivity` u statički
+`BackNavigationPolicy.destination(page, hasGame)`. `null` znači
+`finish()`, što ostaje ograničeno na Home; sve druge odredišne stranice
+ostaju jednake prije promjene. Dodano je pet JVM unit testova, uključujući
+potvrde, dovršenu partiju, postavke, povijest i Home.
+
+README galerija povezana je na **v1.12.232**, izdanje s potvrđenih
+28 različitih stvarnih Android PNG snimki (bez umjetnih slika).

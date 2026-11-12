@@ -648,17 +648,9 @@ public final class MainActivity extends ComponentActivity {
         return super.onKeyDown(keyCode,event);
     }
     void handleBackNavigation(){
-        if(page.equals("game"))navigate("pause");
-        else if(page.equals("pause"))navigate("game");
-        else if(page.equals("historyDetail"))navigate("stats");
-        else if(page.equals("privacy")||page.equals("about")||
-            page.equals("language")||page.equals("backup")||page.equals("help"))
-            navigate("settings");
-        else if(page.equals("confirm")||page.equals("confirmEnd"))navigate(game==null?"home":"game");
-        else if(page.equals("win")||page.equals("over")||page.equals("dailyWin")||page.equals("dailyFail"))navigate("home");
-        else if(page.equals("splash"))navigate("home");
-        else if(page.equals("home"))finish();
-        else navigate("home");
+        String target=BackNavigationPolicy.destination(page,game!=null);
+        if(target==null)finish();
+        else navigate(target);
     }
     @Override protected void onSaveInstanceState(Bundle out){
         // Unlocked portrait/landscape and foldable resizing recreate Activities.
