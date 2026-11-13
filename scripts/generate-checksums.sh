@@ -3,15 +3,36 @@
 set -euo pipefail
 shopt -s nullglob
 
-artifacts=(
-  app/build/outputs/apk/debug/*.apk
-  app/build/outputs/apk/release/*.apk
-  app/build/outputs/bundle/release/*.aab
-)
-if (( ${#artifacts[@]} < 3 )); then
+# PRs exercise the checksum generator without signing keys; only the
+# verified, signed release outputs may appear in published SHA256SUMS.
+if [[ "${1:-}" == "--release-only" ]]; then
+  artifacts=(
+    app/build/outputs/apk/release/app-release.apk
+    app/build/outputs/bundle/release/app-release.aab
+  )
+  minimum=2
+elif [[ $# -eq 0 ]]; then
+  artifacts=(
+    app/build/outputs/apk/debug/*.apk
+    app/build/outputs/apk/release/*.apk
+    app/build/outputs/bundle/release/*.aab
+  )
+  minimum=3
+else
+  echo "Usage: bash scripts/generate-checksums.sh [--release-only]" >&2
+  exit 2
+fi
+if (( ${#artifacts[@]} < minimum )); then
   echo "::error::Missing APK/AAB build outputs; refusing empty release checksums" >&2
   exit 1
 fi
+
+for file in "${artifacts[@]}"; do
+  if [[ ! -s "$file" ]]; then
+    echo "::error::Missing or empty checksum input: $file" >&2
+    exit 1
+  fi
+done
 
 declare -A seen=()
 : > SHA256SUMS
