@@ -39,23 +39,45 @@ jobs:
             echo "::error::Release run number $RELEASE_NUMBER is not above known Play release 110. Verify the actual highest used versionCode before publishing."
             exit 1
           fi
-      - name: Require configured production upload key
+      # A merge to main must still run build, lint, SCA and Android QA when
+      # the owner has not configured signing. Only genuine signed artifacts
+      # may be published as a stable release. Tags/manual releases are strict.
+      - name: Inspect production signing configuration
+        id: signing
         env:
           STORE: ${{ secrets.BROJKO_KEYSTORE_B64 }}
           STORE_PASSWORD: ${{ secrets.BROJKO_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.BROJKO_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
+          RELEASE_EVENT: ${{ github.event_name }}
+          RELEASE_REF: ${{ github.ref }}
         run: |
           set -euo pipefail
-          if [[ -z "$STORE" || -z "$STORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
-            echo "::error::BROJKO upload signing secrets are required. Refusing unsigned stable release."
+          configured=0
+          for value in "$STORE" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD"; do
+            if [[ -n "$value" ]]; then configured=$((configured+1)); fi
+          done
+          if (( configured == 0 )); then
+            if [[ "$RELEASE_EVENT" == "workflow_dispatch" || "$RELEASE_REF" == refs/tags/v* ]]; then
+              echo "::error::Production release requires BROJKO_KEYSTORE_B64, BROJKO_STORE_PASSWORD, BROJKO_KEY_ALIAS and BROJKO_KEY_PASSWORD."
+              exit 1
+            fi
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No BROJKO signing secrets: running post-merge QA only. No stable release will be published."
+            echo "### Signed release not published" >> "$GITHUB_STEP_SUMMARY"
+            echo "No BROJKO upload keystore is configured. This main-branch run executes all QA, but **will not publish an unsigned stable APK/AAB**. Set the four signing secrets and trigger a real release." >> "$GITHUB_STEP_SUMMARY"
+          elif (( configured != 4 )); then
+            echo "::error::Incomplete BROJKO upload signing configuration. Configure all four secrets; cannot publish."
             exit 1
+          else
+            printf '%s' "$STORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
+            chmod 600 "$RUNNER_TEMP/brojko-upload.jks"
+            keytool -list -keystore "$RUNNER_TEMP/brojko-upload.jks" \
+              -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+            echo "BROJKO_KEYSTORE_FILE=$RUNNER_TEMP/brojko-upload.jks" >> "$GITHUB_ENV"
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Configured upload key found; signed APK/AAB must pass signature verification."
           fi
-          printf '%s' "$STORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
-          chmod 600 "$RUNNER_TEMP/brojko-upload.jks"
-          keytool -list -keystore "$RUNNER_TEMP/brojko-upload.jks" \
-            -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
-          echo "BROJKO_KEYSTORE_FILE=$RUNNER_TEMP/brojko-upload.jks" >> "$GITHUB_ENV"
       - name: Prepare and verify Nunito font + OFL license
         run: bash scripts/prepare-nunito.sh
       - name: Run unit tests and build APK/AAB
@@ -65,6 +87,7 @@ jobs:
           BROJKO_KEY_PASSWORD: ${{ secrets.BROJKO_KEY_PASSWORD }}
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease :app:bundleRelease
       - name: Verify signed release APK and signed Android App Bundle
+        if: steps.signing.outputs.enabled == 'true'
         run: |
           set -euo pipefail
           SIGNER="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/36.0.0/apksigner"
@@ -160,8 +183,21 @@ jobs:
             android-screenshots/
           if-no-files-found: warn
       - name: Generate verified portable SHA256 checksums
+        if: steps.signing.outputs.enabled == 'true'
         run: bash scripts/generate-checksums.sh --release-only
-      - name: Upload build artifacts
+      - name: Attach verified post-merge QA without claiming a signed release
+        if: steps.signing.outputs.enabled == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Brojko-postmerge-QA-UNSIGNED-NOT-FOR-DISTRIBUTION-${{ github.run_number }}
+          if-no-files-found: error
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            SBOM.cdx.json
+            SBOM.build.cdx.json
+            marketing-screenshots/*.png
+      - name: Upload signed build artifacts
+        if: steps.signing.outputs.enabled == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Brojko-Android-v1.12-${{ github.run_number }}
@@ -174,7 +210,7 @@ jobs:
             app/build/outputs/bundle/release/app-release.aab
             marketing-screenshots/*.png
       - name: Publish GitHub release
-        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+        if: steps.signing.outputs.enabled == 'true' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }}
