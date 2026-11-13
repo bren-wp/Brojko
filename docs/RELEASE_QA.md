@@ -37,3 +37,35 @@ prije slanja na Google Play usporediti fingerprint upload certifikata
 s Play Console, potvrditi monotoni `versionCode` i instalirati novo
 izdanje preko prethodnog na testnom uređaju bez brisanja lokalnih
 rezultata. Ne tvrditi da je distribucija spremna bez tih dokaza.
+
+## Post-merge QA bez konfiguriranog potpisivanja
+
+Nakon PR-a #137 utvrđen je stvarni pad workflowa na spojenom
+commitu `37cb5b61d5ea`: izvršavanje
+[43510154436](https://github.com/bren-wp/Brojko/actions/runs/43510154436)
+zaustavilo se na koraku `Require configured production upload key`
+jer četiri signing secreta nisu postavljena u GitHub Actions okruženju.
+
+Ispravljena je razlika između obveznog QA nakon spajanja i
+objavljivanja **potpisanog** stabilnog izdanja:
+
+- `push main` bez ijednog signing secreta izvršava build,
+  Lint, JVM/instrumentacijske testove, SBOM i sigurnosni sken;
+  rezultate čuva kao jasno označene **QA-only, not for distribution**
+  artefakte. U GitHub Release ne objavljuje APK/AAB.
+- `push main` s ispravno konfiguriranim svim ključevima i dalje
+  automatski provjerava potpise i objavljuje stabilni Release.
+- `workflow_dispatch` i `v*` tag zahtijevaju sve signing
+  podatke i moraju prijaviti **failure** kada nedostaju.
+- Djelomično konfigurirani signing uvijek je pogreška i
+  blokira objavu. Ne postoje fallback ključevi ili debug
+  potpis kao zamjena za produkcijski upload potpis.
+- Odvojeni UI QA workflow dodaje stvarnu galeriju isključivo ako
+  odgovarajuće izdanje već ima `app-release.apk`,
+  `app-release.aab` i `SHA256SUMS`.
+  Kada izdanje ne postoji, screenshotovi ostaju u QA artefaktima.
+
+Ovo sprječava lažni pad post-merge testova, **ali ne znači da je
+produkcijsko izdanje objavljeno**. Da bi ponovno bilo automatsko,
+potrebno je u GitHub Settings → Secrets and variables → Actions
+konfigurirati sve četiri tajne i usporediti certifikat s Play Console.
