@@ -4403,6 +4403,9 @@ public final class MainActivity extends ComponentActivity {
             // Side wall and inset highlight give the box a rounded body.
             gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
                 8,0xff995ae3,0xff6330bf);
+            // Phase 142 measurement: extra spotlight and lid seam
+            // worsened gift-body MAE 24.3818 -> 26.9210. Revert them,
+            // retain the improved curved gold-bow rim below.
             p.setColor(0x59ffffff);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
             c.drawRoundRect(left+1.3f,top+1.3f,
@@ -4454,6 +4457,14 @@ public final class MainActivity extends ComponentActivity {
                 0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
+            // Light running along each curved gold bow rim gives the
+            // original puffy loop depth; the path geometry and knot
+            // remain untouched, retaining the lower-error baseline.
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.25f);p.setStrokeJoin(Paint.Join.ROUND);
+            p.setColor(0x88fff3b8);
+            c.drawPath(bowL,p);c.drawPath(bowR,p);
+            p.setStyle(Paint.Style.FILL);
             // Deep amber interiors create the hollow 3D loops visible in
             // the source rather than flat light-cream ellipse highlights.
             float holeY=top-size*.13f;
@@ -6165,6 +6176,9 @@ public final class MainActivity extends ComponentActivity {
             JSONArray data=history();
             int count=Math.min(10,data.length());
             int ceiling=statisticsChartMaximum(data,count);
+            // The attempted extra baseline worsened the real chart ROI:
+            // keep the previous history-derived columns and zero-state
+            // without decorative data or a second axis.
             if(count==0){
                 txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
                 txt("prve završene partije.",200,436,15,muted,false);
@@ -6626,7 +6640,12 @@ public final class MainActivity extends ComponentActivity {
             float shine=ownerSettingsIcon&&
                 ("sound".equals(glyph)||"shield".equals(glyph))?.05f:
                 ownerSettingsIcon&&"cloud-backup".equals(glyph)?.23f:.17f;
-            gradient(x,y,size,size-1.5f,12,lighten(color,shine),color);
+            // RGB sampling of the actual owner backup pictogram shows
+            // lower-right violet #9552f0. The generic bright #a55efe
+            // bottom was too pink/blue. Keep all other rows unchanged.
+            int faceBottom=ownerSettingsIcon&&"cloud-backup".equals(glyph)?
+                0xff9552f0:color;
+            gradient(x,y,size,size-1.5f,12,lighten(color,shine),faceBottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
             p.setColor(ownerSettingsIcon?0x32ffffff:0x7bffffff);
@@ -6678,6 +6697,8 @@ public final class MainActivity extends ComponentActivity {
             cloud.cubicTo(8.1f,3.1f,18.8f,4.3f,19f,11f);
             cloud.cubicTo(25f,11.5f,23.7f,19f,17.8f,19f);
             cloud.lineTo(6.3f,19f);c.drawPath(cloud,p);
+            // Preserve the native one-arrow cloud: the two-arrow
+            // trial raised backup-icon MAE 23.4472 -> 23.5599.
             p.setStrokeWidth(2.4f);
             c.drawArc(new RectF(8,9.4f,17.4f,18.5f),210,200,false,p);
             Path arrow=new Path();
