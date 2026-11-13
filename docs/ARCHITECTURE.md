@@ -100,3 +100,11 @@ Ovo nije deklaracija da je cijeli `MainActivity` već refaktoriran.
 - Raspored, dimenzije, boje, ikonice, animacija i touch geometrija
   nisu promijenjeni u ovom refactoringu; 1:1 audit i dalje zahtijeva
   zasebno mjerenje stvarnih screenshotova.
+
+## Stari dnevni izazovi s 80 poteza
+
+Engine nakon učitavanja stare/nepotpune `daily` sesije ponovno
+provjerava `isDailyOutOfMoves()` prije svakog pomaka. Ne dopušta
+81. potez, izradu nove pločice ni povećanje rezultata nakon
+neuspjelog 80. poteza. Zadnji dopušteni 80. potez ostaje
+funkcionalan; novi JVM regresijski test pokriva oba slučaja.
