@@ -4403,6 +4403,27 @@ public final class MainActivity extends ComponentActivity {
             // Side wall and inset highlight give the box a rounded body.
             gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
                 8,0xff995ae3,0xff6330bf);
+            // The owner's 3D gift has a soft upper-left specular sweep,
+            // and a recessed violet seam beneath the raised lid. Render
+            // them inside the existing box face without moving its bounds:
+            // phase 141's body-height edit was a measured regression.
+            c.save();
+            Path giftFaceClip=new Path();
+            giftFaceClip.addRoundRect(new RectF(left,top,
+                left+width,top+height),9f,9f,Path.Direction.CW);
+            c.clipPath(giftFaceClip);
+            p.setStyle(Paint.Style.FILL);p.setShader(null);
+            p.setColor(0x36f9e4ff);
+            c.drawOval(left-size*.06f,top+size*.12f,
+                left+width*.49f,top+height*.89f,p);
+            p.setColor(WHITE);
+            p.setShader(new LinearGradient(left,top+size*.15f,
+                left,top+size*.28f,0x4c3b176e,0x001f0a41,
+                Shader.TileMode.CLAMP));
+            c.drawRect(left,top+size*.15f,left+width,
+                top+size*.28f,p);
+            p.setShader(null);
+            c.restore();
             p.setColor(0x59ffffff);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
             c.drawRoundRect(left+1.3f,top+1.3f,
@@ -4454,6 +4475,14 @@ public final class MainActivity extends ComponentActivity {
                 0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
+            // Light running along each curved gold bow rim gives the
+            // original puffy loop depth; the path geometry and knot
+            // remain untouched, retaining the lower-error baseline.
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(1.25f);p.setStrokeJoin(Paint.Join.ROUND);
+            p.setColor(0x88fff3b8);
+            c.drawPath(bowL,p);c.drawPath(bowR,p);
+            p.setStyle(Paint.Style.FILL);
             // Deep amber interiors create the hollow 3D loops visible in
             // the source rather than flat light-cream ellipse highlights.
             float holeY=top-size*.13f;
@@ -6165,6 +6194,12 @@ public final class MainActivity extends ComponentActivity {
             JSONArray data=history();
             int count=Math.min(10,data.length());
             int ceiling=statisticsChartMaximum(data,count);
+            // Empty archives still deserve the source chart's restrained
+            // horizontal axis, not fabricated scores or dummy bars.
+            // The bar series below continues reading only actual history.
+            if(referencePortraitLayout&&theme==0){
+                shape(27f,465f,347f,1.1f,0f,0xffdedbd4);
+            }
             if(count==0){
                 txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
                 txt("prve završene partije.",200,436,15,muted,false);
@@ -6678,11 +6713,19 @@ public final class MainActivity extends ComponentActivity {
             cloud.cubicTo(8.1f,3.1f,18.8f,4.3f,19f,11f);
             cloud.cubicTo(25f,11.5f,23.7f,19f,17.8f,19f);
             cloud.lineTo(6.3f,19f);c.drawPath(cloud,p);
-            p.setStrokeWidth(2.4f);
-            c.drawArc(new RectF(8,9.4f,17.4f,18.5f),210,200,false,p);
-            Path arrow=new Path();
-            arrow.moveTo(15.4f,11.2f);arrow.lineTo(17.4f,12.1f);
-            arrow.lineTo(16.1f,14.2f);c.drawPath(arrow,p);
+            // Owner icon has a *pair* of short rotating arrows inside
+            // the white cloud. This conveys transfer/backup visually,
+            // but does not imply cloud synchronization actually exists.
+            p.setStrokeWidth(2.1f);
+            RectF ring=new RectF(8.1f,9.0f,17.8f,18.7f);
+            c.drawArc(ring,207f,146f,false,p);
+            c.drawArc(ring,25f,142f,false,p);
+            Path heads=new Path();
+            heads.moveTo(15.4f,9.6f);heads.lineTo(17.5f,10.9f);
+            heads.lineTo(17.5f,8.8f);
+            heads.moveTo(10.4f,18.1f);heads.lineTo(8.1f,16.2f);
+            heads.lineTo(8.0f,18.7f);
+            c.drawPath(heads,p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
             c.restore();
         }
