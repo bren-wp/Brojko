@@ -123,11 +123,11 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
-      # A successful main-branch QA-only run is not a signed GitHub release.
-      # Never fail screenshot QA because the owner has not provided the key,
-      # nor create a bogus release with unverified artifacts.
-      - name: Check verified signed release before publishing its gallery
-        id: signed_release
+      # Allow a screenshot gallery for either a verified signed release
+      # or an explicitly labeled unsigned preview with its test APK + AAB.
+      # Never publish a gallery into an incomplete/nonexistent release.
+      - name: Check published APK and AAB release before gallery upload
+        id: verified_release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
@@ -135,30 +135,35 @@ jobs:
           set -euo pipefail
           if ! published="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null)"; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No published signed $RELEASE_TAG release. Keeping UI screenshots as QA artifacts only."
-            echo "### Signed release not available" >> "$GITHUB_STEP_SUMMARY"
-            echo "UI QA succeeded, but no signed $RELEASE_TAG was published. Gallery upload skipped." >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::No published $RELEASE_TAG release. Keeping UI screenshots as QA artifacts only."
             exit 0
           fi
-          for filename in app-release.apk app-release.aab SHA256SUMS; do
-            if ! grep -Fxq "$filename" <<< "$published"; then
-              echo "available=false" >> "$GITHUB_OUTPUT"
-              echo "::warning::Release $RELEASE_TAG has no verified $filename. Skipping gallery upload."
-              echo "### Incomplete signed release" >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-          done
+          has_asset() { grep -Fxq "$1" <<< "$published"; }
+          if ! has_asset SHA256SUMS || ! has_asset app-release.aab; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Release $RELEASE_TAG is missing AAB or SHA256SUMS; gallery upload skipped."
+            exit 0
+          fi
+          if has_asset app-release.apk; then
+            echo "Signed APK/AAB release detected."
+          elif has_asset app-debug.apk && has_asset app-release-unsigned.apk; then
+            echo "Unsigned APK/AAB preview with installable debug-test APK detected."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Release $RELEASE_TAG has no complete signed or unsigned APK set."
+            exit 0
+          fi
           echo "available=true" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        if: steps.signed_release.outputs.available == 'true'
+        if: steps.verified_release.outputs.available == 'true'
         with:
           name: Brojko-real-device-UI
           path: .
       - name: Verify and stage unmodified emulator screenshots
-        if: steps.signed_release.outputs.available == 'true'
+        if: steps.verified_release.outputs.available == 'true'
         run: python3 scripts/stage-marketing-screenshots.py
       - name: Upload all 28 genuine screenshots to this exact release
-        if: steps.signed_release.outputs.available == 'true'
+        if: steps.verified_release.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
