@@ -17,55 +17,67 @@
 ## Ograničenja
 Programatski Canvas zasloni ne predstavljaju još pikselno identičnu reprodukciju korisničkih dizajnerskih referenci. GitHub Actions build i smoke test ne zamjenjuju ručni vizualni i funkcionalni QA na stvarnim uređajima. Nepotpisani release AAB nije spreman za Google Play produkciju.
 
-## Obvezna politika potpisanog stabilnog izdanja (PR #137)
+## Automatska izdanja APK + AAB (potpis nije obvezan za GitHub)
 
-U GitHub Actions spremiti postojeći Android upload ključ i pripadajuće
-vrijednosti kao *repository secrets*:
-`BROJKO_KEYSTORE_B64`, `BROJKO_STORE_PASSWORD`,
-`BROJKO_KEY_ALIAS` i `BROJKO_KEY_PASSWORD`. Ne spremati
-keystore ili lozinke u Git repozitorij niti ih ispisivati u logove.
+**Za svako uspješno izvršavanje release workflowa** nakon spajanja u
+`main`, te za ručno pokretanje ili `v*` tag, objavi novo GitHub
+izdanje tek nakon Android builda, Linta, unit testova, instrumentacijskih
+testova, stvarnih emulator snimki, SDK provjere i sigurnosnog skeniranja.
+GitHub broj izvođenja koristi se za naziv automatskog izdanja.
 
-Nakon pripreme ključa release postupak provjerava alias pomoću
-`keytool`, izgrađuje i provjerava potpis APK-a s `apksigner` te
-potpis AAB-a s `jarsigner`. Pri nedostatku bilo koje tajne,
-nepostojećem potpisu ili neispravnom paketu javna objava se zaustavlja.
-Objavljeni `SHA256SUMS` opisuje samo `app-release.apk` i
-`app-release.aab`; debug APK se koristi samo za testiranje.
+### Bez konfiguriranog produkcijskog upload ključa
 
-**Potpisan** nije isto što i **ispravno potpisan za nadogradnju**:
-prije slanja na Google Play usporediti fingerprint upload certifikata
-s Play Console, potvrditi monotoni `versionCode` i instalirati novo
-izdanje preko prethodnog na testnom uređaju bez brisanja lokalnih
-rezultata. Ne tvrditi da je distribucija spremna bez tih dokaza.
+Automatski objavi jasno označeno `unsigned preview` izdanje, uz
+`prerelease=true` i sljedeće datoteke:
 
-## Post-merge QA bez konfiguriranog potpisivanja
+| Datoteka | Namjena | Potpis |
+| --- | --- | --- |
+| `app-debug.apk` | Instalabilna verzija za razvojno testiranje | Android debug ključ; **nije** ključ Google Play aplikacije |
+| `app-release-unsigned.apk` | Release APK za eventualno naknadno potpisivanje | Nepotpisan; **ne može se izravno instalirati** |
+| `app-release.aab` | Android App Bundle za eventualno naknadno potpisivanje | Nepotpisan; **ne može se poslati na Google Play kao konačna nadogradnja** |
+| `SHA256SUMS` | Provjera preuzetih APK/AAB datoteka | SHA-256 suma sva tri distribuirana paketa |
 
-Nakon PR-a #137 utvrđen je stvarni pad workflowa na spojenom
-commitu `37cb5b61d5ea`: izvršavanje
-[43510154436](https://github.com/bren-wp/Brojko/actions/runs/43510154436)
-zaustavilo se na koraku `Require configured production upload key`
-jer četiri signing secreta nisu postavljena u GitHub Actions okruženju.
+Objaviti i dva CycloneDX SBOM izvještaja i **28 stvarnih emulator
+snimki**, bez generiranja zamjenskih slika. Runtime CVE nalaz visoke ili
+kritične ozbiljnosti, pad testova, nepostojeća datoteka ili pogrešan
+SDK blokiraju objavu; potpis nije uvjet za GitHub pre-release.
 
-Ispravljena je razlika između obveznog QA nakon spajanja i
-objavljivanja **potpisanog** stabilnog izdanja:
+### S postojećim produkcijskim ključem
 
-- `push main` bez ijednog signing secreta izvršava build,
-  Lint, JVM/instrumentacijske testove, SBOM i sigurnosni sken;
-  rezultate čuva kao jasno označene **QA-only, not for distribution**
-  artefakte. U GitHub Release ne objavljuje APK/AAB.
-- `push main` s ispravno konfiguriranim svim ključevima i dalje
-  automatski provjerava potpise i objavljuje stabilni Release.
-- `workflow_dispatch` i `v*` tag zahtijevaju sve signing
-  podatke i moraju prijaviti **failure** kada nedostaju.
-- Djelomično konfigurirani signing uvijek je pogreška i
-  blokira objavu. Ne postoje fallback ključevi ili debug
-  potpis kao zamjena za produkcijski upload potpis.
-- Odvojeni UI QA workflow dodaje stvarnu galeriju isključivo ako
-  odgovarajuće izdanje već ima `app-release.apk`,
-  `app-release.aab` i `SHA256SUMS`.
-  Kada izdanje ne postoji, screenshotovi ostaju u QA artefaktima.
+Ako su sve četiri repository secrets vrijednosti prisutne:
 
-Ovo sprječava lažni pad post-merge testova, **ali ne znači da je
-produkcijsko izdanje objavljeno**. Da bi ponovno bilo automatsko,
-potrebno je u GitHub Settings → Secrets and variables → Actions
-konfigurirati sve četiri tajne i usporediti certifikat s Play Console.
+- `BROJKO_KEYSTORE_B64` (Base64 kodirani postojeći keystore)
+- `BROJKO_STORE_PASSWORD`
+- `BROJKO_KEY_ALIAS`
+- `BROJKO_KEY_PASSWORD`
+
+objaviti `app-release.apk`, `app-release.aab` i `SHA256SUMS`
+kao potpisano izdanje tek nakon provjere `apksigner` i
+`jarsigner` potpisa. Djelomično konfigurirani secrets ostaju greška;
+nikada ne prebacivati na debug potpis kada je produkcijski konfiguriran
+samo djelomično. Keystore i lozinke ne ulaze u Git ni logove.
+
+**Potpisan nije isto što i ispravno potpisan za postojeće Play
+instalacije.** Prije objave u Google Play Console usporediti fingerprint
+upload certifikata, ispitati `versionCode` i nadogradnju preko stare
+verzije bez gubitka lokalnog napretka.
+
+### Galerija i regresijski testovi
+
+Odvojeni `android-ui-qa.yml` smije dodati realne screenshotove
+GitHub izdanju samo ako ono već sadrži `SHA256SUMS`, AAB te potpuni
+skup paketa za potpisano ili nepotpisano izdanje.
+`tools/test_release_gate.py` provjerava main, tag i ručno izdanje
+bez signing ključa, odbijanje nepotpunih ključeva, sadržaj workflowa
+i točne SHA256SUMS stavke za nepotpisano izdanje.
+
+## Poznat uzrok prethodnog pada
+
+Nakon PR-a #137, `Build and release Android`
+[run 43510154436](https://github.com/bren-wp/Brojko/actions/runs/43510154436)
+pao je zato što su nedostajale četiri signing tajne. PR #138
+omogućio je samo post-merge QA bez GitHub izdanja.
+Ovaj zahvat dodatno dopušta stvarno GitHub izdanje bez
+produkcijskog potpisa na izričit zahtjev korisnika, uz ispravnu
+oznaku datoteka i zabranu prikazivanja debug/unsigned paketa kao
+spremnih za Google Play.
