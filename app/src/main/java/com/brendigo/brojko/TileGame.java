@@ -81,6 +81,13 @@ public final class TileGame {
     }
     public Result move(int direction) {
         if(direction<0||direction>3||gameOver)return new Result(false,false,gameOver,0,0);
+        // An 80-move daily defeat is terminal even after reloading an older
+        // session that accidentally still displays the playable board.
+        // Never spawn or award points past the challenge's hard move limit.
+        if(isDailyOutOfMoves()){
+            gameOver=true;
+            return new Result(false,false,true,0,0);
+        }
         int[] original=cells.clone();
         Snapshot previous=new Snapshot(this);
         int oldScore=score, oldMerges=merges;
