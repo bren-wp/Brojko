@@ -290,4 +290,40 @@ public class TileGameTest {
         assertTrue(g.reached2048);assertEquals(2048,g.score);
         assertFalse(g.move(TileGame.RIGHT).first2048);
     }
+
+    @Test public void expiredDailyGameCannotMoveEvenIfRestoredAsPlayable(){
+        TileGame game=new TileGame("daily","2026-11-13",1234L);
+        Arrays.fill(game.cells,0);
+        game.cells[0]=2;game.cells[1]=2;
+        game.moves=80;game.score=0;game.peak=2;
+        int[] before=game.cells.clone();
+        TileGame.Result blocked=game.move(TileGame.RIGHT);
+        assertFalse("An expired challenge cannot merge or spawn",blocked.changed);
+        assertTrue("Invalid saved playable state must become terminal",blocked.lost);
+        assertTrue(game.gameOver);
+        assertArrayEquals(before,game.cells);
+        assertEquals(80,game.moves);
+        assertEquals(0,game.score);
+    }
+
+    @Test public void finalLegalDailyMoveStillWorksButEightyFirstCannot(){
+        TileGame game=new TileGame("daily","2026-11-13",1234L);
+        Arrays.fill(game.cells,0);
+        game.cells[0]=2;game.cells[1]=2;
+        game.moves=79;game.peak=2;
+        TileGame.Result finalMove=game.move(TileGame.RIGHT);
+        assertTrue("80th move must still be playable",finalMove.changed);
+        assertEquals(80,game.moves);
+        assertTrue(game.isDailyOutOfMoves());
+        int[] after=game.cells.clone();
+        int beforeScore=game.score;
+        TileGame.Result extra=game.move(TileGame.LEFT);
+        assertFalse("81st move cannot change the board",extra.changed);
+        assertTrue(extra.lost);
+        assertTrue(game.gameOver);
+        assertArrayEquals(after,game.cells);
+        assertEquals(beforeScore,game.score);
+        assertEquals(80,game.moves);
+    }
+
 }
