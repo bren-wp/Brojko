@@ -4382,12 +4382,16 @@ public final class MainActivity extends ComponentActivity {
             // purple side facets, and a wide gold ribbon, not a flat square.
             // Measured: first bow rose into the final objective row.
             // Raise the box lid, extend the body, but lower its bow tips.
-            float top=cy-size*.22f;
+            // Keep the already aligned bow while lowering the purple
+            // lid/body to the owner silhouette. On the 941px source the
+            // violet left edge starts near y1404, not the old y1385.
+            float bowTop=cy-size*.22f;
+            float top=cy-size*.12f;
             // Original has a broader opaque box and a compact bow above
             // the reward panel, not a narrow translucent parcel.
             float left=cx-size*.47f;
             float width=size*.94f;
-            float height=size*.64f;
+            float height=size*.50f;
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
@@ -4427,33 +4431,33 @@ public final class MainActivity extends ComponentActivity {
             // The previous solid yellow caps had no opening and started
             // above the actual bow on the owner's 941x1672 source image.
             Path bowL=new Path();
-            bowL.moveTo(cx,top-size*.10f);
-            bowL.cubicTo(cx-size*.17f,top-size*.23f,
-                cx-size*.41f,top-size*.28f,
-                cx-size*.39f,top-size*.19f);
-            bowL.cubicTo(cx-size*.39f,top-size*.08f,
-                cx-size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowL.moveTo(cx,bowTop-size*.10f);
+            bowL.cubicTo(cx-size*.17f,bowTop-size*.23f,
+                cx-size*.41f,bowTop-size*.28f,
+                cx-size*.39f,bowTop-size*.19f);
+            bowL.cubicTo(cx-size*.39f,bowTop-size*.08f,
+                cx-size*.15f,bowTop-size*.04f,cx,bowTop-size*.10f);
             bowL.close();
             Path bowR=new Path();
-            bowR.moveTo(cx,top-size*.10f);
-            bowR.cubicTo(cx+size*.17f,top-size*.23f,
-                cx+size*.41f,top-size*.28f,
-                cx+size*.39f,top-size*.19f);
-            bowR.cubicTo(cx+size*.39f,top-size*.08f,
-                cx+size*.15f,top-size*.04f,cx,top-size*.10f);
+            bowR.moveTo(cx,bowTop-size*.10f);
+            bowR.cubicTo(cx+size*.17f,bowTop-size*.23f,
+                cx+size*.41f,bowTop-size*.28f,
+                cx+size*.39f,bowTop-size*.19f);
+            bowR.cubicTo(cx+size*.39f,bowTop-size*.08f,
+                cx+size*.15f,bowTop-size*.04f,cx,bowTop-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
             p.setColor(0xffd5750b);
             c.save();c.translate(0,1.2f);
             c.drawPath(bowL,p);c.drawPath(bowR,p);c.restore();
-            p.setShader(new LinearGradient(cx,top-size*.31f,
-                cx,top-size*.05f,
+            p.setShader(new LinearGradient(cx,bowTop-size*.31f,
+                cx,bowTop-size*.05f,
                 0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
             // Deep amber interiors create the hollow 3D loops visible in
             // the source rather than flat light-cream ellipse highlights.
-            float holeY=top-size*.13f;
+            float holeY=bowTop-size*.13f;
             for(int side=-1;side<=1;side+=2){
                 float holeX=cx+side*size*.255f;
                 c.save();c.rotate(side*18f,holeX,holeY);
@@ -4469,7 +4473,7 @@ public final class MainActivity extends ComponentActivity {
             // below the hollow loops. Its previous top covered the cream
             // background 20px too early above the owner's gold center.
             boolean sourceGift=referencePortraitLayout&&theme==0;
-            float knotTop=top-size*(sourceGift?.11f:.22f);
+            float knotTop=bowTop-size*(sourceGift?.11f:.22f);
             float knotHeight=size*(sourceGift?.18f:.21f);
             gradient(cx-size*.145f,knotTop,
                 size*.29f,knotHeight,6,
@@ -5834,7 +5838,19 @@ public final class MainActivity extends ComponentActivity {
         // Theme-only preview bevels: don't change the real game tiles.
         void themePreviewTile(float x,float y,float w,float h,int color,int style){
             float radius=style==1?5:style==2?12:9;
-            if(style==1){shape(x,y,w,h,radius,color);return;}
+            // A small illustrated 2D swatch is not a gameplay tile.
+            // Source 941x1672: selected rounded tile has a warmer,
+            // deeper lower face; flat swatch has a subtle cast shadow.
+            // Change only the owner light-mode picker, never playable cells.
+            boolean ownerStyleSwatch=theme==0&&referencePortraitLayout&&
+                "themes".equals(page)&&x>=200f&&y>=370f&&y<430f;
+            if(style==1){
+                if(ownerStyleSwatch)
+                    shape(x+.6f,y+2.4f,w,h-1f,radius,0x30b88661);
+                shape(x,y,w,h-(ownerStyleSwatch?1.5f:0f),radius,
+                    ownerStyleSwatch?0xfffead76:color);
+                return;
+            }
             // Local material treatment only for the native 4x4 swatch
             // grid. Preserve tested geometry (earlier height edits
             // worsened MAE), and do not change real gameplay tiles.
@@ -5850,8 +5866,10 @@ public final class MainActivity extends ComponentActivity {
                 darken(color,ownerGrid?.065f:.15f));
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-3,radius,
-                lighten(color,ownerVividCyan?.02f:
-                    style==2?.23f:.14f),color);
+                ownerStyleSwatch&&style==0?0xfffdb96a:
+                    lighten(color,ownerVividCyan?.02f:
+                        style==2?.23f:.14f),
+                ownerStyleSwatch&&style==0?0xfffd8e48:color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.65f);p.setColor(ownerGrid?0x26ffffff:0x4dffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
@@ -6181,10 +6199,17 @@ public final class MainActivity extends ComponentActivity {
                         // Keep the real points but align the baseline
                         // with the owner's y~1080px (was ~1065px).
                         float y=(sourceLightChart?465f:463f)-barHeight;
-                        int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
+                        // Owner's illustrated pigments are deeper coral and
+                        // fresher teal than the generic game palette.
+                        // Preserve actual history values, bar heights,
+                        // order, max marker and touch controls.
+                        int barColor=sourceLightChart?
+                            (val==ceiling||i%2==0?0xfffd895c:0xff27cdbd):
+                            (val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
-                            lighten(barColor,.17f),barColor);
+                            lighten(barColor,sourceLightChart?.06f:.17f),
+                            barColor);
                         // Values must fit fully inside their own column.
                         // Earlier +4 width could put equal-height labels
                         // into adjacent columns on compact screens.
@@ -6597,9 +6622,15 @@ public final class MainActivity extends ComponentActivity {
             shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
                 theme==1?0x66000000:0x26966c51);
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,size,size-1.5f,12,lighten(color,.17f),color);
+            boolean ownerSettingsIcon=theme==0&&referencePortraitLayout&&
+                "settings".equals(page);
+            float shine=ownerSettingsIcon&&
+                ("sound".equals(glyph)||"shield".equals(glyph))?.05f:
+                ownerSettingsIcon&&"cloud-backup".equals(glyph)?.23f:.17f;
+            gradient(x,y,size,size-1.5f,12,lighten(color,shine),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.8f);p.setColor(0x7bffffff);
+            p.setStrokeWidth(.8f);
+            p.setColor(ownerSettingsIcon?0x32ffffff:0x7bffffff);
             c.drawRoundRect(x+1.1f,y+1.1f,x+size-1.1f,y+size-3.3f,11,11,p);
             p.setStyle(Paint.Style.FILL);
             float cx=x+size/2f,cy=y+size/2f;
