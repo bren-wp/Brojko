@@ -4382,6 +4382,9 @@ public final class MainActivity extends ComponentActivity {
             // purple side facets, and a wide gold ribbon, not a flat square.
             // Measured: first bow rose into the final objective row.
             // Raise the box lid, extend the body, but lower its bow tips.
+            // Preserve the lower-regression proven v1.12.240 box
+            // geometry. The phase-141 narrowed body increased the real
+            // owner gift ROI MAE 23.548 -> 27.100 and was reverted.
             float top=cy-size*.22f;
             // Original has a broader opaque box and a compact bow above
             // the reward panel, not a narrow translucent parcel.
@@ -5834,7 +5837,19 @@ public final class MainActivity extends ComponentActivity {
         // Theme-only preview bevels: don't change the real game tiles.
         void themePreviewTile(float x,float y,float w,float h,int color,int style){
             float radius=style==1?5:style==2?12:9;
-            if(style==1){shape(x,y,w,h,radius,color);return;}
+            // A small illustrated 2D swatch is not a gameplay tile.
+            // Source 941x1672: selected rounded tile has a warmer,
+            // deeper lower face; flat swatch has a subtle cast shadow.
+            // Change only the owner light-mode picker, never playable cells.
+            boolean ownerStyleSwatch=theme==0&&referencePortraitLayout&&
+                "themes".equals(page)&&x>=200f&&y>=370f&&y<430f;
+            if(style==1){
+                if(ownerStyleSwatch)
+                    shape(x+.6f,y+2.4f,w,h-1f,radius,0x30b88661);
+                shape(x,y,w,h-(ownerStyleSwatch?1.5f:0f),radius,
+                    ownerStyleSwatch?0xfffead76:color);
+                return;
+            }
             // Local material treatment only for the native 4x4 swatch
             // grid. Preserve tested geometry (earlier height edits
             // worsened MAE), and do not change real gameplay tiles.
@@ -5850,8 +5865,10 @@ public final class MainActivity extends ComponentActivity {
                 darken(color,ownerGrid?.065f:.15f));
             p.setShader(null);p.setColor(WHITE);
             gradient(x,y,w,h-3,radius,
-                lighten(color,ownerVividCyan?.02f:
-                    style==2?.23f:.14f),color);
+                ownerStyleSwatch&&style==0?0xfffdb96a:
+                    lighten(color,ownerVividCyan?.02f:
+                        style==2?.23f:.14f),
+                ownerStyleSwatch&&style==0?0xfffd8e48:color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.65f);p.setColor(ownerGrid?0x26ffffff:0x4dffffff);
             c.drawRoundRect(x+1,y+1,x+w-1,y+h-5,
@@ -6181,10 +6198,17 @@ public final class MainActivity extends ComponentActivity {
                         // Keep the real points but align the baseline
                         // with the owner's y~1080px (was ~1065px).
                         float y=(sourceLightChart?465f:463f)-barHeight;
-                        int barColor=val==ceiling?CORAL:(i%2==0?CORAL:TEAL);
+                        // Owner's illustrated pigments are deeper coral and
+                        // fresher teal than the generic game palette.
+                        // Preserve actual history values, bar heights,
+                        // order, max marker and touch controls.
+                        int barColor=sourceLightChart?
+                            (val==ceiling||i%2==0?0xfffd895c:0xff27cdbd):
+                            (val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
-                            lighten(barColor,.17f),barColor);
+                            lighten(barColor,sourceLightChart?.06f:.17f),
+                            barColor);
                         // Values must fit fully inside their own column.
                         // Earlier +4 width could put equal-height labels
                         // into adjacent columns on compact screens.
@@ -6597,9 +6621,15 @@ public final class MainActivity extends ComponentActivity {
             shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
                 theme==1?0x66000000:0x26966c51);
             p.setShader(null);p.setColor(WHITE);
-            gradient(x,y,size,size-1.5f,12,lighten(color,.17f),color);
+            boolean ownerSettingsIcon=theme==0&&referencePortraitLayout&&
+                "settings".equals(page);
+            float shine=ownerSettingsIcon&&
+                ("sound".equals(glyph)||"shield".equals(glyph))?.05f:
+                ownerSettingsIcon&&"cloud-backup".equals(glyph)?.23f:.17f;
+            gradient(x,y,size,size-1.5f,12,lighten(color,shine),color);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
-            p.setStrokeWidth(.8f);p.setColor(0x7bffffff);
+            p.setStrokeWidth(.8f);
+            p.setColor(ownerSettingsIcon?0x32ffffff:0x7bffffff);
             c.drawRoundRect(x+1.1f,y+1.1f,x+size-1.1f,y+size-3.3f,11,11,p);
             p.setStyle(Paint.Style.FILL);
             float cx=x+size/2f,cy=y+size/2f;
