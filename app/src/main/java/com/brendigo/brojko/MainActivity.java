@@ -6332,12 +6332,20 @@ public final class MainActivity extends ComponentActivity {
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
-            card(20,335,360,293,26,card);
-            if(theme==0&&referencePortraitLayout){
+            // Owner 941x1672 panel starts near x35/y792 and extends
+            // to x~895/y1477. The previous near-white frame started
+            // x~47/y780, leaving narrower side gutters and a taller
+            // blank gap before the live preview controls.
+            // This affects the decorative panel only; controls/taps stay put.
+            boolean sourceThemesPanel=theme==0&&referencePortraitLayout;
+            card(sourceThemesPanel?15f:20f,
+                sourceThemesPanel?340f:335f,
+                sourceThemesPanel?370f:360f,293,26,card);
+            if(sourceThemesPanel){
                 // Real source x635,y810 is warm ivory RGB~254/250/242;
                 // v1.12.216 Android card was 255/253/250. Keep the
                 // frame and touch zones; calibrate only the flat fill.
-                gradient(20.6f,335.6f,358.8f,291.8f,25.4f,
+                gradient(15.6f,340.6f,368.8f,291.8f,25.4f,
                     0xfffdf9f1,0xfffefbf5);
             }
             leftFitted("Pregled",26,373,22,167,ink,true);
