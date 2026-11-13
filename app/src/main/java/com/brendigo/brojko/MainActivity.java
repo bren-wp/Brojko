@@ -4382,16 +4382,15 @@ public final class MainActivity extends ComponentActivity {
             // purple side facets, and a wide gold ribbon, not a flat square.
             // Measured: first bow rose into the final objective row.
             // Raise the box lid, extend the body, but lower its bow tips.
-            // Keep the already aligned bow while lowering the purple
-            // lid/body to the owner silhouette. On the 941px source the
-            // violet left edge starts near y1404, not the old y1385.
-            float bowTop=cy-size*.22f;
-            float top=cy-size*.12f;
+            // Preserve the lower-regression proven v1.12.240 box
+            // geometry. The phase-141 narrowed body increased the real
+            // owner gift ROI MAE 23.548 -> 27.100 and was reverted.
+            float top=cy-size*.22f;
             // Original has a broader opaque box and a compact bow above
             // the reward panel, not a narrow translucent parcel.
             float left=cx-size*.47f;
             float width=size*.94f;
-            float height=size*.50f;
+            float height=size*.64f;
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
@@ -4431,33 +4430,33 @@ public final class MainActivity extends ComponentActivity {
             // The previous solid yellow caps had no opening and started
             // above the actual bow on the owner's 941x1672 source image.
             Path bowL=new Path();
-            bowL.moveTo(cx,bowTop-size*.10f);
-            bowL.cubicTo(cx-size*.17f,bowTop-size*.23f,
-                cx-size*.41f,bowTop-size*.28f,
-                cx-size*.39f,bowTop-size*.19f);
-            bowL.cubicTo(cx-size*.39f,bowTop-size*.08f,
-                cx-size*.15f,bowTop-size*.04f,cx,bowTop-size*.10f);
+            bowL.moveTo(cx,top-size*.10f);
+            bowL.cubicTo(cx-size*.17f,top-size*.23f,
+                cx-size*.41f,top-size*.28f,
+                cx-size*.39f,top-size*.19f);
+            bowL.cubicTo(cx-size*.39f,top-size*.08f,
+                cx-size*.15f,top-size*.04f,cx,top-size*.10f);
             bowL.close();
             Path bowR=new Path();
-            bowR.moveTo(cx,bowTop-size*.10f);
-            bowR.cubicTo(cx+size*.17f,bowTop-size*.23f,
-                cx+size*.41f,bowTop-size*.28f,
-                cx+size*.39f,bowTop-size*.19f);
-            bowR.cubicTo(cx+size*.39f,bowTop-size*.08f,
-                cx+size*.15f,bowTop-size*.04f,cx,bowTop-size*.10f);
+            bowR.moveTo(cx,top-size*.10f);
+            bowR.cubicTo(cx+size*.17f,top-size*.23f,
+                cx+size*.41f,top-size*.28f,
+                cx+size*.39f,top-size*.19f);
+            bowR.cubicTo(cx+size*.39f,top-size*.08f,
+                cx+size*.15f,top-size*.04f,cx,top-size*.10f);
             bowR.close();
             p.setStyle(Paint.Style.FILL);
             p.setColor(0xffd5750b);
             c.save();c.translate(0,1.2f);
             c.drawPath(bowL,p);c.drawPath(bowR,p);c.restore();
-            p.setShader(new LinearGradient(cx,bowTop-size*.31f,
-                cx,bowTop-size*.05f,
+            p.setShader(new LinearGradient(cx,top-size*.31f,
+                cx,top-size*.05f,
                 0xffffed85,0xfff5a91a,Shader.TileMode.CLAMP));
             c.drawPath(bowL,p);c.drawPath(bowR,p);
             p.setShader(null);
             // Deep amber interiors create the hollow 3D loops visible in
             // the source rather than flat light-cream ellipse highlights.
-            float holeY=bowTop-size*.13f;
+            float holeY=top-size*.13f;
             for(int side=-1;side<=1;side+=2){
                 float holeX=cx+side*size*.255f;
                 c.save();c.rotate(side*18f,holeX,holeY);
@@ -4473,7 +4472,7 @@ public final class MainActivity extends ComponentActivity {
             // below the hollow loops. Its previous top covered the cream
             // background 20px too early above the owner's gold center.
             boolean sourceGift=referencePortraitLayout&&theme==0;
-            float knotTop=bowTop-size*(sourceGift?.11f:.22f);
+            float knotTop=top-size*(sourceGift?.11f:.22f);
             float knotHeight=size*(sourceGift?.18f:.21f);
             gradient(cx-size*.145f,knotTop,
                 size*.29f,knotHeight,6,
