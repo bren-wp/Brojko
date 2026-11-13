@@ -46,11 +46,12 @@ podacima ili statičnom slikom.
    glazura na koraljnim ikonama i prilagođen sjaj lokalne backup
    ikone, bez promjene funkcionalnosti. „Sinkronizacija napretka”
    ostaje iskren lokalni backup i ne postaje lažni cloud prekidač.
-3. **Dnevni izazov:** usklađuje se izvorna proporcija ljubičastog
-   tijela darovne ilustracije (ranije lijevi ljubičasti rub počinjao
-   oko y1385, izvor počinje oko y1404), uz zasebno zadržane
-   već usklađene zlatne mašne. Ne mijenja nagradne kriterije,
-   streak, cilj 256/3000/80 ni stvarnu aktivnu partiju.
+3. **Dnevni izazov:** isprobana je korekcija proporcije
+   ljubičastog darovnog tijela, ali je **vraćena** nakon stvarnog
+   emulatorskog mjerenja: lokalni gift ROI povećao je MAE s 23,548
+   na 27,100, a cijeli zaslon s 13,763 na 13,815.
+   Stara, dokazano bolja geometrija ostaje aktivna. Kriteriji nagrada,
+   streak i aktivna partija nisu mijenjani.
 4. **Statistika:** samo ilustracija stupaca u svijetlom vlasničkom
    portretu koristi izvornije koraljne/teal pigmente. Ne mijenja
    podatke, redoslijed povijesti, visine stupaca, datume, maksimalni
@@ -73,3 +74,35 @@ podacima ili statičnom slikom.
 Ovo je iteracija prema 1:1, a ne tvrdnja da je ostvarena potpuna
 pikselna podudarnost ili da je izvršen test nadogradnje potpisanog
 Play paketa na fizičkom uređaju.
+
+## Rezultat prvog kontrolnog mjerenja prije vraćanja Daily poklona
+
+Izvorne reference su **iste** kao baseline. Nova snimka:
+[UI QA run #43523373558](https://github.com/bren-wp/Brojko/actions/runs/43523373558),
+artefakt `Brojko-real-device-UI` ID `14084578273`, PR SHA
+`413c7494a524eecf327b927208d069ac42317800`.
+Stvarne izvorne PNG slike i dvije stvarne emulatorske arhive,
+bez interpolacije ili registracije.
+
+| Zaslon / ROI | v1.12.240 | Prvi rezultat | Razlika |
+|---|---:|---:|---:|
+| Teme cijeli | 13,201 | **13,159** | −0,042 |
+| Teme mini „Zaobljene” | 23,333 | **20,324** | −3,009 |
+| Teme mini „Ravne” | 13,119 | **11,602** | −1,517 |
+| Postavke cijeli | 10,852 | **10,763** | −0,089 |
+| Postavke ikona Zvuk | 21,651 | **19,266** | −2,385 |
+| Postavke backup ikona | 19,867 | **19,047** | −0,820 |
+| Statistika cijeli | 12,959 | **12,913** | −0,046 |
+| Statistika grafikon | 19,356 | **19,130** | −0,226 |
+| Statistika stupci | 26,606 | **26,296** | −0,310 |
+| Dnevni izazov cijeli | **13,763** | 13,815 | **+0,052, regresija** |
+| Dnevni poklon | **23,548** | 27,100 | **+3,552, regresija** |
+
+Na sljedećem SHA-u `00cb505196f0d5c5efb5ec56a0bf2d5a01632fbd`
+izričito je **vraćena isključivo promjena geometrije poklona**,
+bez poništavanja lokalnih poboljšanja ostala tri zaslona.
+Budući da je revert promjena koda, za završno prihvaćanje
+potrebni su novi zeleni CI/emulator rezultati zadnjeg SHA-a.
+
+Nije primjereno tvrditi 1:1 ili 0% odstupanja; preostali ROI
+su dokumentirani za sljedeće iteracije.
