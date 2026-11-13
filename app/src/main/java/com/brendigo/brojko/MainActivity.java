@@ -5880,9 +5880,12 @@ public final class MainActivity extends ComponentActivity {
             // the existing cyan/purple source-corner regression test.
             boolean ownerPicker=theme==0&&referencePortraitLayout&&
                 "themes".equals(page);
-            int top=preset==2?0xff9f54f9:
+            // Native owner PNG: vivid backdrop is darker/less cyan than
+            // the prior preview. Keep the change scoped to the light
+            // 941x1672 Themes portrait; never alter actual gameplay.
+            int top=preset==2?(ownerPicker?0xff9145fa:0xff9f54f9):
                 preset==1?(ownerPicker?0xff203049:0xff2d405e):0xfffff7eb;
-            int bottom=preset==2?0xff09a2fd:
+            int bottom=preset==2?(ownerPicker?0xff007bef:0xff09a2fd):
                 preset==1?(ownerPicker?0xff0d172a:0xff101c32):0xfff1e5d6;
             // The owner lower-left cyan source pixel sits at the rounded
             // corner. The generic 17-unit radius clipped that pixel away;
@@ -5901,14 +5904,20 @@ public final class MainActivity extends ComponentActivity {
                 // overlays belong to this preview, not real game tiles.
                 p.setStyle(Paint.Style.FILL);
                 p.setShader(new RadialGradient(x+w*.10f,y+h*.98f,
-                    w*.87f,new int[]{0x8300dcff,0x4600bbf8,0x0000bbf8},
+                    w*.87f,new int[]{0x5b00c7ff,0x3000aaf8,0x0000aaf8},
                     null,Shader.TileMode.CLAMP));
                 c.drawRoundRect(x,y,x+w,y+h-2,previewRadius,previewRadius,p);
                 p.setShader(new RadialGradient(x+w*1.08f,y+h*.98f,
-                    w*.96f,new int[]{0xddc047ff,0x85a642ff,0x00a642ff},
+                    w*.96f,new int[]{0xba9e46ff,0x70a041ff,0x00a041ff},
                     null,Shader.TileMode.CLAMP));
                 c.drawRoundRect(x,y,x+w,y+h-2,previewRadius,previewRadius,p);
                 p.setShader(null);
+                // The real reference has a recessed, shaded 2x2 tile
+                // cradle; the old fully bright lower edge was especially
+                // wrong at native x670..880 / y620..650. Place the
+                // semitransparent material UNDER all four live swatches.
+                gradient(x+8f,y+15f,w-16f,h-23f,12f,
+                    0x29162b78,0x67101b69);
             }
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             // The owner's dark/vivid cases have deep rounded rims,
