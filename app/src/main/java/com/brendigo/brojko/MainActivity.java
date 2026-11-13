@@ -2842,17 +2842,23 @@ public final class MainActivity extends ComponentActivity {
             // remain untouched; other modes/themes use existing layout.
             boolean sourceClassicHud=narrow&&!daily&&!relaxed&&
                 theme==0&&referencePortraitLayout;
-            float bestHudX=narrow?230:255;
-            if(sourceClassicHud){c.save();c.scale(.92f,1f,bestHudX,125f);}
-            fitted(fmt(best),bestHudX,sourceClassicHud?125:129,
-                sourceClassicHud?21.5f:24,narrow?64:70,ink,true);
+            // 941×1672 source best-score numeral: native navy ink
+            // x490..596 / y259..291. The previous live capture measured
+            // x481..601 / y258..293. Narrow and slightly raise the ink
+            // itself; caption/column alignment, state and taps stay intact.
+            float bestHudX=sourceClassicHud?231f:(narrow?230:255);
+            if(sourceClassicHud){c.save();c.scale(.89f,1f,bestHudX,124.1f);}
+            fitted(fmt(best),bestHudX,sourceClassicHud?124.1f:129,
+                sourceClassicHud?19.7f:24,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             icon("stats",narrow?299:313,69,23,muted);
             fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
             float scoreHudX=narrow?301:334;
             if(sourceClassicHud){c.save();c.scale(.86f,1f,scoreHudX,125f);}
-            fitted(fmt(game.score),scoreHudX,sourceClassicHud?125:129,
-                sourceClassicHud?20.5f:23,narrow?64:70,ink,true);
+            // Source score column already matches horizontally, but its
+            // 33-pixel high numeral was 1–2px too tall and low.
+            fitted(fmt(game.score),scoreHudX,sourceClassicHud?124.1f:129,
+                sourceClassicHud?20f:23,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             if(narrow&&!relaxed)
                 shape(262,58,1,65,0,theme==1?0xff526078:0xffe1d8cc);
@@ -3348,18 +3354,24 @@ public final class MainActivity extends ComponentActivity {
             // vertical cadence. Active gameplay keeps its existing geometry.
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
-            float left=gridX-(tallFour?2.5f:0f);
-            // Source Classic has a slightly lighter cream tray. Limit the
-            // adjustment to active, light, rounded 4×4 gameplay.
+            // Pixel-calibrated 941×1672 owner reference: keep the tray
+            // stationary but widen each Classic tile by about 2.35 device
+            // pixels. Consecutive columns then align their native left edges
+            // (source x≈44,260,476,692; previous x≈43,257,470,684).
+            // Do not stretch the other modes, overlays or theme previews.
             boolean sourceClassicFrame=tallFour&&"game".equals(page)&&
                 "classic".equals(game.mode)&&theme==0&&tileStyle==0;
+            float left=gridX-(tallFour?2.5f:0f)+
+                (sourceClassicFrame?.4f:0f);
             card(left-4,gridY-4,gridSize+8,
                 gridSize+(victoryBoard?14:(tallFour?34:8)),23,
                 theme==1?0xff354661:
                     sourceClassicFrame?0xfff6e9d6:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
-            float tile=(gridSize-gap*(n+1))/n;
-            float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
+            float tile=(gridSize-gap*(n+1))/n+
+                (sourceClassicFrame?1f:0f);
+            float tileHeight=(tallFour?(victoryBoard?84f:89f):tile)+
+                (sourceClassicFrame?.5f:0f);
             // Owner's 941x1672 Classic reference has its first row
             // ~5px lower, with ~2px more separation per subsequent row.
             // Scope to active light Classic only: the Win backdrop, 5x5,
@@ -3371,9 +3383,9 @@ public final class MainActivity extends ComponentActivity {
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
                 float ry=gridY+(tallFour?10:gap)+
-                    (classicSourceGeometry?2f:0f)+
+                    (classicSourceGeometry?2.4f:0f)+
                     (victoryBoard?90.5f:
-                        (tallFour?(classicSourceGeometry?95f:94f):tile+gap))*y;
+                        (tallFour?(classicSourceGeometry?95.5f:94f):tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
@@ -6326,12 +6338,24 @@ public final class MainActivity extends ComponentActivity {
                     theme=chosen;persist();updateBars();invalidate();
                 }));
             }
-            card(20,335,360,293,26,card);
-            if(theme==0&&referencePortraitLayout){
+            // Owner 941x1672 panel starts near x35/y792 and extends
+            // to x~895/y1477. The previous near-white frame started
+            // x~47/y780, leaving narrower side gutters and a taller
+            // blank gap before the live preview controls.
+            // This affects the decorative panel only; controls/taps stay put.
+            boolean sourceThemesPanel=theme==0&&referencePortraitLayout;
+            // Move the visual card down to the owner top edge, but retain
+            // its old bottom edge (near y=628 logical); a taller card
+            // would overlap the functional navigation bar at y=635.
+            card(sourceThemesPanel?15f:20f,
+                sourceThemesPanel?340f:335f,
+                sourceThemesPanel?370f:360f,
+                sourceThemesPanel?288f:293f,26,card);
+            if(sourceThemesPanel){
                 // Real source x635,y810 is warm ivory RGB~254/250/242;
                 // v1.12.216 Android card was 255/253/250. Keep the
                 // frame and touch zones; calibrate only the flat fill.
-                gradient(20.6f,335.6f,358.8f,291.8f,25.4f,
+                gradient(15.6f,340.6f,368.8f,286.8f,25.4f,
                     0xfffdf9f1,0xfffefbf5);
             }
             leftFitted("Pregled",26,373,22,167,ink,true);

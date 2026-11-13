@@ -85,3 +85,26 @@ Ovo nije deklaracija da je cijeli `MainActivity` već refaktoriran.
 - `GameCalendar.java`: sve hrvatske oznake datuma i perioda
   koristi identičan postojeći algoritam. Metode aktivnosti su
   delegati, a dodani JVM testovi potvrđuju format i oblik trajanja.
+
+## Gameplay 4×4 / 5×5: izolirano spajanje jedne linije
+
+- `TileLineMerger.pack()` obrađuje već poredane pločice u jednom retku
+  ili stupcu. Ne pristupa RNG-u, Canvas-u, preferencijama ni zvuku.
+  `TileGame` zadržava odabir smjera, redoslijed obilaska svih redaka,
+  vlastitu inicijalizaciju, undo, zapis sesije i seeded spawn.
+- Svaki par može se spojiti samo jednom; pločice na vrijednosti
+  `2^30` ne spajaju se dalje (nema overflowa), rezultat koristi
+  `long` bodove i saturaciju na `Integer.MAX_VALUE`.
+- Testirano je svih 256 osnovnih redaka duljine 4 te rubni 5×5
+  slučajevi, nemutiranje ulaza i ogromne pločice.
+- Raspored, dimenzije, boje, ikonice, animacija i touch geometrija
+  nisu promijenjeni u ovom refactoringu; 1:1 audit i dalje zahtijeva
+  zasebno mjerenje stvarnih screenshotova.
+
+## Stari dnevni izazovi s 80 poteza
+
+Engine nakon učitavanja stare/nepotpune `daily` sesije ponovno
+provjerava `isDailyOutOfMoves()` prije svakog pomaka. Ne dopušta
+81. potez, izradu nove pločice ni povećanje rezultata nakon
+neuspjelog 80. poteza. Zadnji dopušteni 80. potez ostaje
+funkcionalan; novi JVM regresijski test pokriva oba slučaja.
