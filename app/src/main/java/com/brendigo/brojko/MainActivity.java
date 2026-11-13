@@ -3348,22 +3348,24 @@ public final class MainActivity extends ComponentActivity {
             // vertical cadence. Active gameplay keeps its existing geometry.
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
-            // Real source 941×1672 ROI matching: the previous 4×4 board
-            // was about 5 device px left and 3 px above the user's layout.
-            // Correct only the active light Classic tray and tiles; the HUD,
-            // buttons, win/lose backdrops, dark mode and 5×5 remain unchanged.
+            // Pixel-calibrated 941×1672 owner reference: keep the tray
+            // stationary but widen each Classic tile by about 2.35 device
+            // pixels. Consecutive columns then align their native left edges
+            // (source x≈44,260,476,692; previous x≈43,257,470,684).
+            // Do not stretch the other modes, overlays or theme previews.
             boolean sourceClassicFrame=tallFour&&"game".equals(page)&&
                 "classic".equals(game.mode)&&theme==0&&tileStyle==0;
-            float sourceShiftX=sourceClassicFrame?2.1f:0f;
-            float sourceShiftY=sourceClassicFrame?1.25f:0f;
-            float left=gridX-(tallFour?2.5f:0f)+sourceShiftX;
-            card(left-4,gridY-4+sourceShiftY,gridSize+8,
+            float left=gridX-(tallFour?2.5f:0f)+
+                (sourceClassicFrame?.4f:0f);
+            card(left-4,gridY-4,gridSize+8,
                 gridSize+(victoryBoard?14:(tallFour?34:8)),23,
                 theme==1?0xff354661:
                     sourceClassicFrame?0xfff6e9d6:0xfff2e5d3);
             float gap=tallFour?5:(n==4?9:6);
-            float tile=(gridSize-gap*(n+1))/n;
-            float tileHeight=tallFour?(victoryBoard?84f:89f):tile;
+            float tile=(gridSize-gap*(n+1))/n+
+                (sourceClassicFrame?1f:0f);
+            float tileHeight=(tallFour?(victoryBoard?84f:89f):tile)+
+                (sourceClassicFrame?.5f:0f);
             // Owner's 941x1672 Classic reference has its first row
             // ~5px lower, with ~2px more separation per subsequent row.
             // Scope to active light Classic only: the Win backdrop, 5x5,
@@ -3374,10 +3376,10 @@ public final class MainActivity extends ComponentActivity {
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
-                float ry=gridY+sourceShiftY+(tallFour?10:gap)+
-                    (classicSourceGeometry?2f:0f)+
+                float ry=gridY+(tallFour?10:gap)+
+                    (classicSourceGeometry?2.4f:0f)+
                     (victoryBoard?90.5f:
-                        (tallFour?(classicSourceGeometry?95f:94f):tile+gap))*y;
+                        (tallFour?(classicSourceGeometry?95.5f:94f):tile+gap))*y;
                 // Victory/pause backdrops also call drawGrid(). Only the
                 // *active* light-theme 4x4 gameplay may use this palette.
                 int color="game".equals(page)&&tallFour&&theme==0&&tileStyle==0?
