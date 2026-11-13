@@ -3,14 +3,22 @@
 set -euo pipefail
 shopt -s nullglob
 
-# PRs exercise the checksum generator without signing keys; only the
-# verified, signed release outputs may appear in published SHA256SUMS.
+# Release checksum manifests contain exactly the files present in that
+# GitHub Release: either two signed packages, or three unsigned-preview
+# packages (including a debug-key-signed APK for device testing).
 if [[ "${1:-}" == "--release-only" ]]; then
   artifacts=(
     app/build/outputs/apk/release/app-release.apk
     app/build/outputs/bundle/release/app-release.aab
   )
   minimum=2
+elif [[ "${1:-}" == "--unsigned-release" ]]; then
+  artifacts=(
+    app/build/outputs/apk/debug/app-debug.apk
+    app/build/outputs/apk/release/app-release-unsigned.apk
+    app/build/outputs/bundle/release/app-release.aab
+  )
+  minimum=3
 elif [[ $# -eq 0 ]]; then
   artifacts=(
     app/build/outputs/apk/debug/*.apk
@@ -19,7 +27,7 @@ elif [[ $# -eq 0 ]]; then
   )
   minimum=3
 else
-  echo "Usage: bash scripts/generate-checksums.sh [--release-only]" >&2
+  echo "Usage: bash scripts/generate-checksums.sh [--release-only|--unsigned-release]" >&2
   exit 2
 fi
 if (( ${#artifacts[@]} < minimum )); then

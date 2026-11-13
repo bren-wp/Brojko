@@ -13,11 +13,22 @@
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/hr_badge_web_generic.png" alt="Preuzmite na Google Play" height="72">
 </a>
 
-[📦 Najnovije izdanje](https://github.com/bren-wp/Brojko/releases/latest) · [📸 Stvarni zasloni](#-pogledaj-brojko-uživo) · [🔐 Privatnost](PRIVACY.md) · [🌐 BRENDIGO](https://brendigo.com)
+[📦 Android izdanja (APK + AAB)](https://github.com/bren-wp/Brojko/releases) · [📸 Stvarni zasloni](#-pogledaj-brojko-uživo) · [🔐 Privatnost](PRIVACY.md) · [🌐 BRENDIGO](https://brendigo.com)
 
 </div>
 
 ---
+
+## 📦 Preuzmi BROJKO za Android
+
+Svaka uspješno testirana nadogradnja objavljuje novo [GitHub izdanje s APK-om i AAB-om](https://github.com/bren-wp/Brojko/releases). Za GitHub izdanja **nije obvezan produkcijski potpis**:
+
+- **`app-debug.apk`** — instalabilna testna verzija, potpisana razvojnim Android ključem. Nije za ažuriranje instalacije s Google Playa.
+- **`app-release-unsigned.apk`** — nepotpisani release APK, koji se ne može izravno instalirati bez naknadnog potpisivanja.
+- **`app-release.aab`** — nepotpisani Android App Bundle; za objavu na Google Playu potreban je odgovarajući upload potpis.
+- **`SHA256SUMS`** — provjera integriteta datoteka preuzetih s GitHuba.
+
+Izdanje bez produkcijskog ključa jasno je označeno kao **unsigned preview**. Ako je postojeći produkcijski ključ konfiguriran, objavljuju se provjereni potpisani `app-release.apk` i `app-release.aab`. Sve nove snimke zaslona nastaju na stvarnom Android emulatoru, ne generiraju se umjetno.
 
 ## ✨ Jednostavno počinje. Teško se prestaje igrati.
 

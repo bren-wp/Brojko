@@ -39,9 +39,10 @@ jobs:
             echo "::error::Release run number $RELEASE_NUMBER is not above known Play release 110. Verify the actual highest used versionCode before publishing."
             exit 1
           fi
-      # A merge to main must still run build, lint, SCA and Android QA when
-      # the owner has not configured signing. Only genuine signed artifacts
-      # may be published as a stable release. Tags/manual releases are strict.
+      # Every successful main/tag/manual build publishes APK + AAB.
+      # Without an upload key, publish a clearly labeled unsigned preview,
+      # including a debug-key-signed APK for direct device testing.
+      # Only a validated production upload key may produce a stable release.
       - name: Inspect production signing configuration
         id: signing
         env:
@@ -58,16 +59,12 @@ jobs:
             if [[ -n "$value" ]]; then configured=$((configured+1)); fi
           done
           if (( configured == 0 )); then
-            if [[ "$RELEASE_EVENT" == "workflow_dispatch" || "$RELEASE_REF" == refs/tags/v* ]]; then
-              echo "::error::Production release requires BROJKO_KEYSTORE_B64, BROJKO_STORE_PASSWORD, BROJKO_KEY_ALIAS and BROJKO_KEY_PASSWORD."
-              exit 1
-            fi
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No BROJKO signing secrets: running post-merge QA only. No stable release will be published."
-            echo "### Signed release not published" >> "$GITHUB_STEP_SUMMARY"
-            echo "No BROJKO upload keystore is configured. This main-branch run executes all QA, but **will not publish an unsigned stable APK/AAB**. Set the four signing secrets and trigger a real release." >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::No production upload key. Release will contain an unsigned release APK/AAB plus a debug-key-signed installable testing APK."
+            echo "### GitHub release: unsigned preview" >> "$GITHUB_STEP_SUMMARY"
+            echo "After successful QA, publish **app-debug.apk** (debug-key signed; testing only), **app-release-unsigned.apk**, and **app-release.aab** (unsigned), marked as a prerelease. These packages are not suitable for Google Play updates." >> "$GITHUB_STEP_SUMMARY"
           elif (( configured != 4 )); then
-            echo "::error::Incomplete BROJKO upload signing configuration. Configure all four secrets; cannot publish."
+            echo "::error::Partial BROJKO signing configuration: supply all four secrets or remove all four for an unsigned preview."
             exit 1
           else
             printf '%s' "$STORE" | base64 --decode > "$RUNNER_TEMP/brojko-upload.jks"
@@ -102,6 +99,27 @@ jobs:
             echo "::error::Unsigned or unverifiable Android App Bundle"
             exit 1
           }
+      - name: Verify unsigned packages and debug-test APK
+        if: steps.signing.outputs.enabled == 'false'
+        run: |
+          set -euo pipefail
+          DEBUG_APK=app/build/outputs/apk/debug/app-debug.apk
+          UNSIGNED_APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          UNSIGNED_AAB=app/build/outputs/bundle/release/app-release.aab
+          for file in "$DEBUG_APK" "$UNSIGNED_APK" "$UNSIGNED_AAB"; do
+            test -s "$file"
+            unzip -tq "$file" >/dev/null
+          done
+          SIGNER="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/36.0.0/apksigner"
+          test -x "$SIGNER"
+          "$SIGNER" verify --verbose "$DEBUG_APK"
+          # Never accidentally label a release APK as unsigned when it is
+          # signed with an unknown key, and never distribute it as installable.
+          if "$SIGNER" verify "$UNSIGNED_APK" >/dev/null 2>&1; then
+            echo "::error::Expected unsigned release APK, but found a signature."
+            exit 1
+          fi
+          echo "Unsigned APK/AAB and test APK validated; Play signing is not claimed."
       # The SBOM is generated from resolved Gradle dependencies, not guessed
       # from the app manifest or source file list.
       - name: Generate complete build and shipped runtime CycloneDX SBOMs
@@ -185,16 +203,22 @@ jobs:
       - name: Generate verified portable SHA256 checksums
         if: steps.signing.outputs.enabled == 'true'
         run: bash scripts/generate-checksums.sh --release-only
-      - name: Attach verified post-merge QA without claiming a signed release
+      - name: Generate checksums for unsigned preview packages
+        if: steps.signing.outputs.enabled == 'false'
+        run: bash scripts/generate-checksums.sh --unsigned-release
+      - name: Upload unsigned APK, unsigned AAB, test APK and QA evidence
         if: steps.signing.outputs.enabled == 'false'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Brojko-postmerge-QA-UNSIGNED-NOT-FOR-DISTRIBUTION-${{ github.run_number }}
+          name: Brojko-Unsigned-Preview-v1.12-${{ github.run_number }}
           if-no-files-found: error
           path: |
-            app/build/outputs/apk/debug/app-debug.apk
+            SHA256SUMS
             SBOM.cdx.json
             SBOM.build.cdx.json
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
+            app/build/outputs/bundle/release/app-release.aab
             marketing-screenshots/*.png
       - name: Upload signed build artifacts
         if: steps.signing.outputs.enabled == 'true'
@@ -209,10 +233,12 @@ jobs:
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/bundle/release/app-release.aab
             marketing-screenshots/*.png
-      - name: Publish GitHub release
-        if: steps.signing.outputs.enabled == 'true' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
+      - name: Publish signed GitHub release
+        if: steps.signing.outputs.enabled == 'true'
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
+          fail_on_unmatched_files: true
+          prerelease: false
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }}
           name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }}
           generate_release_notes: true
@@ -225,5 +251,31 @@ jobs:
             SBOM.cdx.json
             SBOM.build.cdx.json
             app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+            marketing-screenshots/*.png
+      - name: Publish unsigned GitHub preview release
+        if: steps.signing.outputs.enabled == 'false'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }}
+          name: Brojko ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }} — unsigned preview
+          prerelease: true
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          body: |
+            BROJKO — automatski izrađeno izdanje nakon uspješnog Android builda, Lint, unit, sigurnosnog i emulator QA.
+
+            **Važno: ovo je nepotpisani release build, nije Google Play produkcijsko izdanje.**
+            - `app-debug.apk`: instalabilni APK potpisan **razvojnim/debug** ključem; samo za testiranje, nije nadogradnja Play instalacije.
+            - `app-release-unsigned.apk`: nepotpisani release APK, **ne može se izravno instalirati** dok se naknadno ne potpiše.
+            - `app-release.aab`: nepotpisani Android App Bundle; **ne može se objaviti na Google Play** dok se ne potpiše odgovarajućim upload ključem.
+            - `SHA256SUMS`: provjerene SHA-256 kontrolne sume sva tri paketa.
+            - 28 stvarnih Android screenshotova iz automatskog emulator QA.
+          files: |
+            SHA256SUMS
+            SBOM.cdx.json
+            SBOM.build.cdx.json
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
             app/build/outputs/bundle/release/app-release.aab
             marketing-screenshots/*.png
