@@ -19,6 +19,11 @@ import static org.junit.Assert.*;
 @RunWith(AndroidJUnit4.class)
 public final class BackupValidationWorkerTest {
     private static final String PACKAGE="com.brendigo.brojko";
+    private static String repeat(char value,int length){
+        char[] result=new char[length];
+        java.util.Arrays.fill(result,value);
+        return new String(result);
+    }
     private SharedPreferences testPrefs(){
         Context c=InstrumentationRegistry.getInstrumentation().getTargetContext();
         return c.getSharedPreferences("brojko-backup-worker-test",Context.MODE_PRIVATE);
@@ -77,7 +82,7 @@ public final class BackupValidationWorkerTest {
         SharedPreferences prefs=testPrefs();
         assertTrue(prefs.edit().clear().putInt("best",4096).commit());
         try{
-            String arrays="[".repeat(80)+"0"+"]".repeat(80);
+            String arrays=repeat('[',80)+"0"+repeat(']',80);
             String source="{\"format\":\"brendigo.brojko.backup.v1\","
                 +"\"package\":\""+PACKAGE+"\",\"data\":{\"best\":4,\"extra\":"+arrays+"}}";
             try{
@@ -99,7 +104,7 @@ public final class BackupValidationWorkerTest {
         try{
             byte[] original=LocalBackupRepository.export(prefs,"2026-11-13",PACKAGE);
             JSONObject root=new JSONObject(new String(original,StandardCharsets.UTF_8));
-            root.getJSONObject("data").put("history","[".repeat(80)+"0"+"]".repeat(80));
+            root.getJSONObject("data").put("history",repeat('[',80)+"0"+repeat(']',80));
             try{
                 LocalBackupRepository.validate(PACKAGE,
                     root.toString().getBytes(StandardCharsets.UTF_8));
