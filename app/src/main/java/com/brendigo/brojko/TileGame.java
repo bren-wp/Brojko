@@ -94,18 +94,13 @@ public final class TileGame {
                 indexes[step]=index;
                 if(cells[index]!=0)values[occupied++]=cells[index];
             }
-            int[] output=new int[size];
-            int next=0;
-            for(int i=0;i<occupied;i++) {
-                if(i+1<occupied && values[i]==values[i+1] &&
-                   values[i]<1073741824) {
-                    output[next]=values[i]*2;
-                    score=(int)Math.min(Integer.MAX_VALUE,(long)score+output[next]);
-                    merges=saturatedAdd(merges,1);i++;
-                }else output[next]=values[i];
-                next++;
-            }
-            for(int i=0;i<size;i++)cells[indexes[i]]=output[i];
+            // Single pure line merge: compress once, merge each adjacent
+            // equal pair once, then copy back. Direction/order and the seeded
+            // spawn stay in TileGame, so saved games remain deterministic.
+            TileLineMerger.Packed packed=TileLineMerger.pack(values,occupied,size);
+            score=(int)Math.min(Integer.MAX_VALUE,(long)score+packed.points);
+            merges=saturatedAdd(merges,packed.merges);
+            for(int i=0;i<size;i++)cells[indexes[i]]=packed.cells[i];
         }
         if(Arrays.equals(original,cells)) {
             // A fully blocked board must finish even if the final attempted swipe

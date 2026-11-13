@@ -50,7 +50,8 @@ java = {p.name: p.read_text(encoding="utf-8") for p in sorted(SRC.glob("*.java")
 expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
-    "MainActivity.java", "TileGame.java", "OwnerHeadlineContours.java",
+    "MainActivity.java", "TileGame.java", "TileLineMerger.java",
+    "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
     "GameArchiveCoordinator.java",
     "GameArtworkData.java", "GameCalendar.java",
@@ -88,6 +89,9 @@ assert "onActivityResult" in java["MainActivity.java"]
 assert "legacyScore<0" in java["MainActivity.java"]
 assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
+assert "TileLineMerger.pack(values,occupied,size)" in java["TileGame.java"]
+assert "MAX_MERGE_INPUT=1<<30" in java["TileLineMerger.java"]
+assert "earned+=doubled" in java["TileLineMerger.java"]
 assert "if(completeSnapshot)" in java["LocalBackupRepository.java"]
 assert "editor.remove(key)" in java["LocalBackupRepository.java"]
 assert "getBackupBytes(" not in java["MainActivity.java"]
