@@ -1,6 +1,9 @@
 package com.brendigo.brojko;
 
 import android.content.SharedPreferences;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -92,13 +95,53 @@ final class LocalBackupRepository {
     }
 
     /**
+     * Bound parser recursion before passing untrusted SAF bytes to org.json.
+     * JSONObject/JSONArray parsing can recursively walk a syntactically valid
+     * 512-kB document with thousands of nested arrays. Strings are scanned
+     * verbatim (respecting escaped quotes), including embedded session JSON.
+     * This is a depth guard, not a substitute for the JSON syntax parser.
+     */
+    static void rejectExcessiveNesting(String json){
+        int depth=0;
+        boolean inString=false,escaped=false;
+        for(int i=0;i<json.length();i++){
+            char ch=json.charAt(i);
+            if(inString){
+                if(escaped)escaped=false;
+                else if(ch=='\\')escaped=true;
+                else if(ch=='"')inString=false;
+            }else if(ch=='"'){
+                inString=true;
+            }else if(ch=='{'||ch=='['){
+                if(++depth>64)
+                    throw new IllegalArgumentException("Previše ugniježđenih JSON podataka.");
+            }else if(ch=='}'||ch==']'){
+                if(--depth<0)
+                    throw new IllegalArgumentException("Neispravna JSON struktura.");
+            }
+        }
+        if(inString||depth!=0)
+            throw new IllegalArgumentException("Neispravna JSON struktura.");
+    }
+
+    /**
      * Validate a SAF document on the I/O worker. No SharedPreferences access
      * or user-state mutation occurs until apply() is called on the main thread.
      */
     static RestorePlan validate(String packageName,byte[] bytes) throws Exception{
         if(bytes==null||bytes.length>512000)
             throw new IllegalArgumentException("Datoteka je prevelika.");
-        JSONObject root=new JSONObject(new String(bytes,StandardCharsets.UTF_8));
+        String document;
+        try{
+            document=StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(bytes)).toString();
+        }catch(CharacterCodingException invalid){
+            throw new IllegalArgumentException("Datoteka nije valjani UTF-8.",invalid);
+        }
+        rejectExcessiveNesting(document);
+        JSONObject root=new JSONObject(document);
         if(!BACKUP_FORMAT.equals(root.optString("format")))
             throw new IllegalArgumentException("Nepodržani oblik sigurnosne kopije.");
         // Match the package identity already written to every exported
@@ -139,11 +182,15 @@ final class LocalBackupRepository {
             }
         }
         if(data.has("session")){
-            TileGame restored=TileGame.fromJson(new JSONObject(data.getString("session")));
+            String session=data.getString("session");
+            rejectExcessiveNesting(session);
+            TileGame restored=TileGame.fromJson(new JSONObject(session));
             if(restored==null)throw new IllegalArgumentException("Oštećena spremljena partija.");
         }
         if(data.has("history")){
-            validateHistory(new JSONArray(data.getString("history")));
+            String history=data.getString("history");
+            rejectExcessiveNesting(history);
+            validateHistory(new JSONArray(history));
         }
         // Validate each key against its actual SharedPreferences storage
         // type before clearing any existing settings. A backup with e.g.

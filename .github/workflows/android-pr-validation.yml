@@ -15,7 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Verify pinned third-party GitHub Actions
+        run: |
+          python3 scripts/verify-action-pins.py
+          python3 -m unittest discover -s tools -p 'test_action_pins.py' -v
       - name: Validate screenshot checker syntax
         run: python3 -m py_compile scripts/verify-emulator-screenshots.py
       - name: Validate pixel QA tool syntax and no-resize regression tests
@@ -34,7 +38,7 @@ jobs:
         run: bash scripts/verify-edge-to-edge.sh
       - name: Security + dead-code audit (static source gate)
         run: python3 scripts/audit-production-code.py
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: '17'
@@ -43,7 +47,7 @@ jobs:
           SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
       - name: Prepare open-source font and license
         run: bash scripts/prepare-nunito.sh
       - name: Compile, lint and test PR without private signing credentials
@@ -63,7 +67,7 @@ jobs:
           cp build/reports/cyclonedx/bom.json SBOM.cdx.json
           python3 scripts/verify-sbom-scopes.py SBOM.cdx.json SBOM.build.cdx.json
       - name: Scan shipping Android dependencies for High and Critical CVEs
-        uses: anchore/scan-action@v7
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         with:
           sbom: SBOM.cdx.json
           fail-build: true
@@ -71,7 +75,7 @@ jobs:
           output-format: sarif
           output-file: grype-runtime.sarif
       - name: Report build-tool CVEs separately
-        uses: anchore/scan-action@v7
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         with:
           sbom: SBOM.build.cdx.json
           fail-build: false
@@ -80,7 +84,7 @@ jobs:
           output-file: grype-build.sarif
       - name: Attach PR SBOMs and vulnerability evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: brojko-pr-sca
           if-no-files-found: warn
@@ -92,7 +96,7 @@ jobs:
       - name: Generate release dependency inventory
         run: ./gradlew --no-daemon :app:dependencies --configuration releaseRuntimeClasspath > dependency-inventory.txt
       - name: Attach Gradle dependency inventory
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: brojko-dependency-inventory
           path: dependency-inventory.txt
