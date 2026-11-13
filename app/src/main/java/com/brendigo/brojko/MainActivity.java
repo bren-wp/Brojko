@@ -4403,27 +4403,9 @@ public final class MainActivity extends ComponentActivity {
             // Side wall and inset highlight give the box a rounded body.
             gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
                 8,0xff995ae3,0xff6330bf);
-            // The owner's 3D gift has a soft upper-left specular sweep,
-            // and a recessed violet seam beneath the raised lid. Render
-            // them inside the existing box face without moving its bounds:
-            // phase 141's body-height edit was a measured regression.
-            c.save();
-            Path giftFaceClip=new Path();
-            giftFaceClip.addRoundRect(new RectF(left,top,
-                left+width,top+height),9f,9f,Path.Direction.CW);
-            c.clipPath(giftFaceClip);
-            p.setStyle(Paint.Style.FILL);p.setShader(null);
-            p.setColor(0x36f9e4ff);
-            c.drawOval(left-size*.06f,top+size*.12f,
-                left+width*.49f,top+height*.89f,p);
-            p.setColor(WHITE);
-            p.setShader(new LinearGradient(left,top+size*.15f,
-                left,top+size*.28f,0x4c3b176e,0x001f0a41,
-                Shader.TileMode.CLAMP));
-            c.drawRect(left,top+size*.15f,left+width,
-                top+size*.28f,p);
-            p.setShader(null);
-            c.restore();
+            // Phase 142 measurement: extra spotlight and lid seam
+            // worsened gift-body MAE 24.3818 -> 26.9210. Revert them,
+            // retain the improved curved gold-bow rim below.
             p.setColor(0x59ffffff);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
             c.drawRoundRect(left+1.3f,top+1.3f,
@@ -6194,12 +6176,9 @@ public final class MainActivity extends ComponentActivity {
             JSONArray data=history();
             int count=Math.min(10,data.length());
             int ceiling=statisticsChartMaximum(data,count);
-            // Empty archives still deserve the source chart's restrained
-            // horizontal axis, not fabricated scores or dummy bars.
-            // The bar series below continues reading only actual history.
-            if(referencePortraitLayout&&theme==0){
-                shape(27f,465f,347f,1.1f,0f,0xffdedbd4);
-            }
+            // The attempted extra baseline worsened the real chart ROI:
+            // keep the previous history-derived columns and zero-state
+            // without decorative data or a second axis.
             if(count==0){
                 txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
                 txt("prve završene partije.",200,436,15,muted,false);
@@ -6661,7 +6640,12 @@ public final class MainActivity extends ComponentActivity {
             float shine=ownerSettingsIcon&&
                 ("sound".equals(glyph)||"shield".equals(glyph))?.05f:
                 ownerSettingsIcon&&"cloud-backup".equals(glyph)?.23f:.17f;
-            gradient(x,y,size,size-1.5f,12,lighten(color,shine),color);
+            // RGB sampling of the actual owner backup pictogram shows
+            // lower-right violet #9552f0. The generic bright #a55efe
+            // bottom was too pink/blue. Keep all other rows unchanged.
+            int faceBottom=ownerSettingsIcon&&"cloud-backup".equals(glyph)?
+                0xff9552f0:color;
+            gradient(x,y,size,size-1.5f,12,lighten(color,shine),faceBottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
             p.setColor(ownerSettingsIcon?0x32ffffff:0x7bffffff);
@@ -6713,19 +6697,13 @@ public final class MainActivity extends ComponentActivity {
             cloud.cubicTo(8.1f,3.1f,18.8f,4.3f,19f,11f);
             cloud.cubicTo(25f,11.5f,23.7f,19f,17.8f,19f);
             cloud.lineTo(6.3f,19f);c.drawPath(cloud,p);
-            // Owner icon has a *pair* of short rotating arrows inside
-            // the white cloud. This conveys transfer/backup visually,
-            // but does not imply cloud synchronization actually exists.
-            p.setStrokeWidth(2.1f);
-            RectF ring=new RectF(8.1f,9.0f,17.8f,18.7f);
-            c.drawArc(ring,207f,146f,false,p);
-            c.drawArc(ring,25f,142f,false,p);
-            Path heads=new Path();
-            heads.moveTo(15.4f,9.6f);heads.lineTo(17.5f,10.9f);
-            heads.lineTo(17.5f,8.8f);
-            heads.moveTo(10.4f,18.1f);heads.lineTo(8.1f,16.2f);
-            heads.lineTo(8.0f,18.7f);
-            c.drawPath(heads,p);
+            // Preserve the native one-arrow cloud: the two-arrow
+            // trial raised backup-icon MAE 23.4472 -> 23.5599.
+            p.setStrokeWidth(2.4f);
+            c.drawArc(new RectF(8,9.4f,17.4f,18.5f),210,200,false,p);
+            Path arrow=new Path();
+            arrow.moveTo(15.4f,11.2f);arrow.lineTo(17.4f,12.1f);
+            arrow.lineTo(16.1f,14.2f);c.drawPath(arrow,p);
             p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
             c.restore();
         }
