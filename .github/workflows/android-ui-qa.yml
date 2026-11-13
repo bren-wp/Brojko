@@ -123,13 +123,42 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
+      # A successful main-branch QA-only run is not a signed GitHub release.
+      # Never fail screenshot QA because the owner has not provided the key,
+      # nor create a bogus release with unverified artifacts.
+      - name: Check verified signed release before publishing its gallery
+        id: signed_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
+        run: |
+          set -euo pipefail
+          if ! published="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null)"; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No published signed $RELEASE_TAG release. Keeping UI screenshots as QA artifacts only."
+            echo "### Signed release not available" >> "$GITHUB_STEP_SUMMARY"
+            echo "UI QA succeeded, but no signed $RELEASE_TAG was published. Gallery upload skipped." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          for filename in app-release.apk app-release.aab SHA256SUMS; do
+            if ! grep -Fxq "$filename" <<< "$published"; then
+              echo "available=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Release $RELEASE_TAG has no verified $filename. Skipping gallery upload."
+              echo "### Incomplete signed release" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          done
+          echo "available=true" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: steps.signed_release.outputs.available == 'true'
         with:
           name: Brojko-real-device-UI
           path: .
       - name: Verify and stage unmodified emulator screenshots
+        if: steps.signed_release.outputs.available == 'true'
         run: python3 scripts/stage-marketing-screenshots.py
       - name: Upload all 28 genuine screenshots to this exact release
+        if: steps.signed_release.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
