@@ -3348,12 +3348,16 @@ public final class MainActivity extends ComponentActivity {
             // vertical cadence. Active gameplay keeps its existing geometry.
             // Source 4×4 artwork has taller tiles and a lower cream frame.
             // Leave the existing 5×5 cell geometry unchanged.
-            float left=gridX-(tallFour?2.5f:0f);
-            // Source Classic has a slightly lighter cream tray. Limit the
-            // adjustment to active, light, rounded 4×4 gameplay.
+            // Real source 941×1672 ROI matching: the previous 4×4 board
+            // was about 5 device px left and 3 px above the user's layout.
+            // Correct only the active light Classic tray and tiles; the HUD,
+            // buttons, win/lose backdrops, dark mode and 5×5 remain unchanged.
             boolean sourceClassicFrame=tallFour&&"game".equals(page)&&
                 "classic".equals(game.mode)&&theme==0&&tileStyle==0;
-            card(left-4,gridY-4,gridSize+8,
+            float sourceShiftX=sourceClassicFrame?2.1f:0f;
+            float sourceShiftY=sourceClassicFrame?1.25f:0f;
+            float left=gridX-(tallFour?2.5f:0f)+sourceShiftX;
+            card(left-4,gridY-4+sourceShiftY,gridSize+8,
                 gridSize+(victoryBoard?14:(tallFour?34:8)),23,
                 theme==1?0xff354661:
                     sourceClassicFrame?0xfff6e9d6:0xfff2e5d3);
@@ -3370,7 +3374,7 @@ public final class MainActivity extends ComponentActivity {
             for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                 int value=game.cells[y*n+x];
                 float rx=left+gap+(tile+gap)*x;
-                float ry=gridY+(tallFour?10:gap)+
+                float ry=gridY+sourceShiftY+(tallFour?10:gap)+
                     (classicSourceGeometry?2f:0f)+
                     (victoryBoard?90.5f:
                         (tallFour?(classicSourceGeometry?95f:94f):tile+gap))*y;
