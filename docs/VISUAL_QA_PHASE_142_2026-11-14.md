@@ -44,19 +44,21 @@ ne imitirati nepostojeći uključeni cloud switch radi MAE broja.
 
 ## Dovršeni ciljano ograničeni zahvati
 
-- **Poklon:** zadržana geometrija iz v1.12.241 (faza #141 dokazala
-  da promjena širine/visine ozbiljno pogoršava ROI). Dodani su
-  mekani lokalni 3D odsjaj, uvučena sjena ispod ljubičastog
-  poklopca i zlatni odsjaj preko postojeće mašne. Samo u
-  `dailyRewardGift()`, ne mijenja 256/3000/80 ciljeve, datum,
-  nagrade, sesiju ili spremanje podataka.
-- **Postavke:** druga dekorativna kružna strelica unutar
-  `settingsBackupGlyph()`, s izvornim cloud pictogramom i
-  nepromijenjenim backup akcijama.
-- **Statistika:** diskretna vodoravna os grafikona i kada je
-  arhiva prazna, **bez** izmišljenih stupaca, rekorda ili
-  vremenskih oznaka. Kada je arhiva popunjena, renderer i dalje
-  koristi samo spremljene rezultate.
+- **Poklon:** geometrija iz v1.12.241 ostala je netaknuta.
+  Prvi pokusaj s dodatnim ljubičastim spotlightom i sjenkom
+  poklopca pogoršao je stvarni ROI pa je **vraćen**. Zadržan
+  je samo izmjereno bolji zlatni odsjaj ruba mašne.
+  Ne mijenja 256/3000/80 ciljeve, datum, nagrade ili igru.
+- **Postavke:** pokušaj druge kružne strelice povećao je
+  odstupanje pa je **vraćen** prethodni cloud pictogram.
+  Umjesto toga preciznije se kalibrira samo donji ljubičasti
+  pigment backup ikone u svijetlom referentnom portretu.
+  Ostale ikone, stvarna funkcija lokalne kopije, navigacija
+  i pohrana ostaju nepromijenjene.
+- **Statistika:** dodatna vodoravna os u praznom/punom
+  grafikonu nije poboljšala pixel diff i **vraćena je**.
+  Prikazuju se isključivo stvarno spremljeni rezultati,
+  bez demo-scoreova ili lažnih povijesnih redaka.
 
 ## Obvezni kriteriji prihvaćanja
 
@@ -75,3 +77,31 @@ ne imitirati nepostojeći uključeni cloud switch radi MAE broja.
 Niti jedna izmjena ne opravdava tvrdnju 0% odstupanja bez stvarnog
 pixel-pixel rezultata. Također se ne tvrdi Play nadogradnja jer ona
 zahtijeva odgovarajući postojeći upload potpis.
+
+## Prva iteracija i odluka prema stvarnim izmjerenim ROI-jevima
+
+Prvi emulatorski test SHA `e162f76cc16183d24c914994a44b74c6c7355935`
+završio je uspješno:
+[Actions 43528669889](https://github.com/bren-wp/Brojko/actions/runs/43528669889),
+artefakt `Brojko-real-device-UI` ID `14087375260`.
+Usporedba s istim vlasničkim PNG-ovima, istim fiksturnim
+podacima i istim prethodno navedenim pravokutnicima:
+
+| ROI | v1.12.241 MAE | Prvi pokušaj | Δ |
+| --- | ---: | ---: | ---: |
+| Dar — cijeli lokalni ROI | **20,8462** | 21,9843 | +1,1380 |
+| Dar — ljubičasto tijelo | **24,3818** | 26,9210 | +2,5393 |
+| Dar — zlatna mašna | 19,8282 | **19,5708** | −0,2575 |
+| Backup ikona | **23,4472** | 23,5599 | +0,1127 |
+| Statistika — grafikon s testnim podacima | **22,3378** | 22,3610 | +0,0232 |
+| Statistika — prazan grafikon | **28,7684** | 28,7861 | +0,0176 |
+
+**Odluka:** sačuvati samo potvrđeni dobitak zlatne mašne;
+vratiti spotlight/seam, dual arrows i dodatnu chart axis.
+U novom commitu `94b988800ad3d28c1ed41f127aeac3875590ffeb`
+testira se druga korekcija *samo* nijanse backup
+piktograma, bez funkcionalnih zahvata.
+
+Ovo nisu završne metrike novog SHA-a: novu snimku
+treba preuzeti i usporediti nakon završetka CI-ja. Merge
+je dopušten samo bez značajne lokalne regresije.
