@@ -2842,17 +2842,23 @@ public final class MainActivity extends ComponentActivity {
             // remain untouched; other modes/themes use existing layout.
             boolean sourceClassicHud=narrow&&!daily&&!relaxed&&
                 theme==0&&referencePortraitLayout;
-            float bestHudX=narrow?230:255;
-            if(sourceClassicHud){c.save();c.scale(.92f,1f,bestHudX,125f);}
-            fitted(fmt(best),bestHudX,sourceClassicHud?125:129,
-                sourceClassicHud?21.5f:24,narrow?64:70,ink,true);
+            // 941×1672 source best-score numeral: native navy ink
+            // x490..596 / y259..291. The previous live capture measured
+            // x481..601 / y258..293. Narrow and slightly raise the ink
+            // itself; caption/column alignment, state and taps stay intact.
+            float bestHudX=sourceClassicHud?231f:(narrow?230:255);
+            if(sourceClassicHud){c.save();c.scale(.89f,1f,bestHudX,124.1f);}
+            fitted(fmt(best),bestHudX,sourceClassicHud?124.1f:129,
+                sourceClassicHud?19.7f:24,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             icon("stats",narrow?299:313,69,23,muted);
             fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
             float scoreHudX=narrow?301:334;
             if(sourceClassicHud){c.save();c.scale(.86f,1f,scoreHudX,125f);}
-            fitted(fmt(game.score),scoreHudX,sourceClassicHud?125:129,
-                sourceClassicHud?20.5f:23,narrow?64:70,ink,true);
+            // Source score column already matches horizontally, but its
+            // 33-pixel high numeral was 1–2px too tall and low.
+            fitted(fmt(game.score),scoreHudX,sourceClassicHud?124.1f:129,
+                sourceClassicHud?20f:23,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             if(narrow&&!relaxed)
                 shape(262,58,1,65,0,theme==1?0xff526078:0xffe1d8cc);
