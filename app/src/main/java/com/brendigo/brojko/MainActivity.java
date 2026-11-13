@@ -6344,14 +6344,18 @@ public final class MainActivity extends ComponentActivity {
             // blank gap before the live preview controls.
             // This affects the decorative panel only; controls/taps stay put.
             boolean sourceThemesPanel=theme==0&&referencePortraitLayout;
+            // Move the visual card down to the owner top edge, but retain
+            // its old bottom edge (near y=628 logical); a taller card
+            // would overlap the functional navigation bar at y=635.
             card(sourceThemesPanel?15f:20f,
                 sourceThemesPanel?340f:335f,
-                sourceThemesPanel?370f:360f,293,26,card);
+                sourceThemesPanel?370f:360f,
+                sourceThemesPanel?288f:293f,26,card);
             if(sourceThemesPanel){
                 // Real source x635,y810 is warm ivory RGB~254/250/242;
                 // v1.12.216 Android card was 255/253/250. Keep the
                 // frame and touch zones; calibrate only the flat fill.
-                gradient(15.6f,340.6f,368.8f,291.8f,25.4f,
+                gradient(15.6f,340.6f,368.8f,286.8f,25.4f,
                     0xfffdf9f1,0xfffefbf5);
             }
             leftFitted("Pregled",26,373,22,167,ink,true);
