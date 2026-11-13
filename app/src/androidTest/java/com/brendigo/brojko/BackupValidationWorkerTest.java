@@ -73,4 +73,52 @@ public final class BackupValidationWorkerTest {
             assertTrue(prefs.edit().clear().commit());
         }
     }
+    @Test public void deeplyNestedBackupCannotOverflowParserOrChangeProgress() throws Exception {
+        SharedPreferences prefs=testPrefs();
+        assertTrue(prefs.edit().clear().putInt("best",4096).commit());
+        try{
+            String arrays="[".repeat(80)+"0"+"]".repeat(80);
+            String source="{\"format\":\"brendigo.brojko.backup.v1\","
+                +"\"package\":\""+PACKAGE+"\",\"data\":{\"best\":4,\"extra\":"+arrays+"}}";
+            try{
+                LocalBackupRepository.validate(PACKAGE,
+                    source.getBytes(StandardCharsets.UTF_8));
+                fail("Reject excessive nesting before org.json recursion");
+            }catch(IllegalArgumentException expected){
+                assertTrue(expected.getMessage().contains("ugniježđenih"));
+            }
+            assertEquals(4096,prefs.getInt("best",-1));
+        }finally{
+            assertTrue(prefs.edit().clear().commit());
+        }
+    }
+
+    @Test public void nestedHistoryAndMalformedUtf8AreRejectedWithoutRestore() throws Exception {
+        SharedPreferences prefs=testPrefs();
+        assertTrue(prefs.edit().clear().putInt("best",2048).commit());
+        try{
+            byte[] original=LocalBackupRepository.export(prefs,"2026-11-13",PACKAGE);
+            JSONObject root=new JSONObject(new String(original,StandardCharsets.UTF_8));
+            root.getJSONObject("data").put("history","[".repeat(80)+"0"+"]".repeat(80));
+            try{
+                LocalBackupRepository.validate(PACKAGE,
+                    root.toString().getBytes(StandardCharsets.UTF_8));
+                fail("Embedded history must have bounded nesting");
+            }catch(IllegalArgumentException expected){
+                assertTrue(expected.getMessage().contains("ugniježđenih"));
+            }
+            byte[] invalid=java.util.Arrays.copyOf(original,original.length+1);
+            invalid[invalid.length-1]=(byte)0xff;
+            try{
+                LocalBackupRepository.validate(PACKAGE,invalid);
+                fail("Invalid UTF-8 must not be silently replaced");
+            }catch(IllegalArgumentException expected){
+                assertTrue(expected.getMessage().contains("UTF-8"));
+            }
+            assertEquals(2048,prefs.getInt("best",-1));
+        }finally{
+            assertTrue(prefs.edit().clear().commit());
+        }
+    }
+
 }
