@@ -16,3 +16,24 @@
 
 ## Ograničenja
 Programatski Canvas zasloni ne predstavljaju još pikselno identičnu reprodukciju korisničkih dizajnerskih referenci. GitHub Actions build i smoke test ne zamjenjuju ručni vizualni i funkcionalni QA na stvarnim uređajima. Nepotpisani release AAB nije spreman za Google Play produkciju.
+
+## Obvezna politika potpisanog stabilnog izdanja (PR #137)
+
+U GitHub Actions spremiti postojeći Android upload ključ i pripadajuće
+vrijednosti kao *repository secrets*:
+`BROJKO_KEYSTORE_B64`, `BROJKO_STORE_PASSWORD`,
+`BROJKO_KEY_ALIAS` i `BROJKO_KEY_PASSWORD`. Ne spremati
+keystore ili lozinke u Git repozitorij niti ih ispisivati u logove.
+
+Nakon pripreme ključa release postupak provjerava alias pomoću
+`keytool`, izgrađuje i provjerava potpis APK-a s `apksigner` te
+potpis AAB-a s `jarsigner`. Pri nedostatku bilo koje tajne,
+nepostojećem potpisu ili neispravnom paketu javna objava se zaustavlja.
+Objavljeni `SHA256SUMS` opisuje samo `app-release.apk` i
+`app-release.aab`; debug APK se koristi samo za testiranje.
+
+**Potpisan** nije isto što i **ispravno potpisan za nadogradnju**:
+prije slanja na Google Play usporediti fingerprint upload certifikata
+s Play Console, potvrditi monotoni `versionCode` i instalirati novo
+izdanje preko prethodnog na testnom uređaju bez brisanja lokalnih
+rezultata. Ne tvrditi da je distribucija spremna bez tih dokaza.
