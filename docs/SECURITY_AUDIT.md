@@ -39,3 +39,28 @@ Nalazi su **otvoreni** za ocjenu i ažuriranje build tooling-a.
 
 Android produkcijski runtime ima odvojen SBOM i release-blocking
 Grype kontrolu; uspjeh tog testa bit će potvrđen tek kad CI prođe.
+
+## Dodatne zaštite u PR #137 (13. 11. 2026.)
+
+- Sigurnosne kopije: prije parsiranja lokalnog SAF dokumenta provjerava se
+  valjani UTF-8 i najviše 64 razine JSON ugniježđenosti. To se odvojeno
+  primjenjuje na vanjski dokument i ugrađene JSON tekstove sesije/povijesti.
+  Ograničenje od 512.000 bajtova i v1 format ostaju nepromijenjeni.
+- Android instrumentacijski regresijski testovi pokrivaju duboko ugniježđeni
+  dokument, duboko ugniježđenu povijest i neispravan UTF-8 te provjeravaju
+  da se postojeći lokalni rezultat ne mijenja.
+- Sva četiri GitHub Actions workflowa koriste provjerene fiksne commit SHA
+  vrijednosti za vanjske akcije. Posebni PR gate i testovi odbijaju nove
+  promjenjive oznake ili nepinnane Docker akcije.
+- Release više ne objavljuje nepodpisani APK: konfigurirani postojeći upload
+  keystore je obvezan, a APK i AAB moraju proći provjeru digitalnog potpisa.
+  Zbrojevi SHA-256 obuhvaćaju samo potpisane datoteke za objavu.
+
+**Preostali rizici:** V1 JSON sigurnosne kopije i dalje nemaju
+kriptografski dokaz autentičnosti; korisnik ih uvozi po izboru i može
+izmijeniti lokalne rezultate. Nijedna nova zaštita ne tvrdi drugačije.
+Potrebna je i neovisna provjera je li korišteni upload certifikat
+identičan certifikatu registriranom u Google Play Consoleu.
+Nalazi za build-toolchain GHSA i neovisni Android runtime/pixel audit nisu
+ovime automatski zatvoreni. CI rezultat PR-a i stvarni signing ostaju
+obvezni dokazi prije spajanja i objave.
