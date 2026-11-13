@@ -72,7 +72,13 @@ jobs:
           test -s app/build/outputs/apk/release/app-release.apk
           test -s app/build/outputs/bundle/release/app-release.aab
           "$SIGNER" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
-          jarsigner -verify app/build/outputs/bundle/release/app-release.aab
+          # jarsigner without -strict can exit 0 for an unsigned archive:
+          # explicitly require its positive verification verdict.
+          verdict="$(jarsigner -verify app/build/outputs/bundle/release/app-release.aab)"
+          grep -Fq "jar verified." <<< "$verdict" || {
+            echo "::error::Unsigned or unverifiable Android App Bundle"
+            exit 1
+          }
       # The SBOM is generated from resolved Gradle dependencies, not guessed
       # from the app manifest or source file list.
       - name: Generate complete build and shipped runtime CycloneDX SBOMs
