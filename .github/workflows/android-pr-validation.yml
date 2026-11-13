@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Verify pinned third-party GitHub Actions
-        run: python3 scripts/verify-action-pins.py
+        run: |
+          python3 scripts/verify-action-pins.py
+          python3 -m unittest discover -s tools -p 'test_action_pins.py' -v
       - name: Validate screenshot checker syntax
         run: python3 -m py_compile scripts/verify-emulator-screenshots.py
       - name: Validate pixel QA tool syntax and no-resize regression tests
