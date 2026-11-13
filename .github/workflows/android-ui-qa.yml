@@ -127,7 +127,7 @@ jobs:
       # Never fail screenshot QA because the owner has not provided the key,
       # nor create a bogus release with unverified artifacts.
       - name: Check verified signed release before publishing its gallery
-        id: signed-release
+        id: signed_release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
@@ -150,15 +150,15 @@ jobs:
           done
           echo "available=true" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        if: steps.signed-release.outputs.available == 'true'
+        if: steps.signed_release.outputs.available == 'true'
         with:
           name: Brojko-real-device-UI
           path: .
       - name: Verify and stage unmodified emulator screenshots
-        if: steps.signed-release.outputs.available == 'true'
+        if: steps.signed_release.outputs.available == 'true'
         run: python3 scripts/stage-marketing-screenshots.py
       - name: Upload all 28 genuine screenshots to this exact release
-        if: steps.signed-release.outputs.available == 'true'
+        if: steps.signed_release.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
