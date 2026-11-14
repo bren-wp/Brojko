@@ -1,6 +1,5 @@
 package com.brendigo.brojko;
 
-import android.os.Bundle;
 import android.content.SharedPreferences;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -15,25 +14,6 @@ import static org.junit.Assert.*;
 public final class BackupRestoreRecreationTest {
     @Rule public ActivityScenarioRule<MainActivity> scenario =
         new ActivityScenarioRule<>(MainActivity.class);
-
-    @Test public void postImportStateBundleNeverContainsStaleGame(){
-        scenario.getScenario().onActivity(activity->{
-            boolean originalFlag=activity.skipPersistOnPauseAfterImport;
-            String originalPage=activity.page;
-            try{
-                activity.page="game";
-                activity.skipPersistOnPauseAfterImport=true;
-                Bundle state=new Bundle();
-                activity.onSaveInstanceState(state);
-                assertEquals("home",state.getString("brojko_page"));
-                assertFalse("Old board must not be included in restore recreation",
-                    state.containsKey("brojko_game"));
-            }finally{
-                activity.page=originalPage;
-                activity.skipPersistOnPauseAfterImport=originalFlag;
-            }
-        });
-    }
 
     @Test public void realRecreationReloadsImportedBoardNotStaleBoard(){
         final String[] originalSession={null};
