@@ -6545,6 +6545,8 @@ public class ScreensSmokeTest {
             boolean hadOriginalSession=activity.prefs.contains("session");
             String originalSession=activity.prefs.getString("session",null);
             int previousStoredLastScore=activity.prefs.getInt("lastScore",0);
+            boolean hadRecovery=activity.prefs.contains("historyRecovery");
+            String oldRecovery=activity.prefs.getString("historyRecovery",null);
             try{
                 TileGame finished=new TileGame("classic","",2026L);
                 finished.cells[0]=2048;
@@ -6560,6 +6562,8 @@ public class ScreensSmokeTest {
                     LocalHistoryRepository.archiveSnapshot(activity.prefs,
                         finished.toJson().toString(),
                         activity.historyDate(),activity.compactTime()));
+                assertEquals("Malformed source must remain available for recovery",
+                    "{bad old archive",activity.prefs.getString("historyRecovery",null));
                 assertFalse("Worker must not mutate the active TileGame",
                     finished.archived);
                 assertTrue("Persisted old session must be durably archived",
@@ -6579,6 +6583,8 @@ public class ScreensSmokeTest {
                     .putInt("lastScore",previousStoredLastScore);
                 if(hadOriginalSession)rollback.putString("session",originalSession);
                 else rollback.remove("session");
+                if(hadRecovery)rollback.putString("historyRecovery",oldRecovery);
+                else rollback.remove("historyRecovery");
                 assertTrue(rollback.commit());
                 activity.game=originalGame;
                 activity.lastScore=originalLastScore;
