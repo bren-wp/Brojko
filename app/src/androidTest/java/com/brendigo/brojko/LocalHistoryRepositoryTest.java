@@ -49,15 +49,29 @@ public final class LocalHistoryRepositoryTest {
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
-    @Test public void malformedLegacyHistoryStillPreservesNewGame() throws Exception{
+    @Test public void malformedLegacyHistoryIsNeverSilentlyErased() throws Exception{
         SharedPreferences prefs=isolated();
         assertTrue(prefs.edit().clear().commit());
         try{
             TileGame game=new TileGame("relaxed","",7721L);
             game.moves=5;game.score=32;
             String session=game.toJson().toString();
-            assertTrue(prefs.edit().putString("session",session)
-                .putString("history","{bad json").commit());
+            for(String corrupted:new String[]{"{bad json","{}","null","[1,2"}){
+                assertTrue(prefs.edit().putString("session",session)
+                    .putString("history",corrupted).putInt("lastScore",777).commit());
+                assertFalse("Corrupt history must block destructive archival",
+                    LocalHistoryRepository.archiveSnapshot(prefs,session,
+                        "12. stu","20:02"));
+                assertEquals("Raw historical evidence must remain recoverable",
+                    corrupted,prefs.getString("history",null));
+                assertEquals("Active game cannot become archived after failure",
+                    session,prefs.getString("session",null));
+                assertEquals("Unrelated progress must remain unchanged",
+                    777,prefs.getInt("lastScore",-1));
+                assertFalse(LocalHistoryRepository.hasCommittedArchive(prefs));
+            }
+            // Once a user has repaired/restored valid history, archiving works.
+            assertTrue(prefs.edit().putString("history","[]").commit());
             assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,session,
                 "12. stu","20:02"));
             JSONArray result=new JSONArray(prefs.getString("history","[]"));
