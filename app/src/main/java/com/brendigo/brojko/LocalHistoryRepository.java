@@ -61,21 +61,31 @@ final class LocalHistoryRepository {
                 .put("day",day).put("time",time)
                 .put("won",snapshot.reached2048);
 
+            String rawHistory=prefs.getString("history","[]");
             JSONArray previous;
-            try{previous=new JSONArray(prefs.getString("history","[]"));}
+            boolean preserveCorruptHistory=false;
+            try{previous=new JSONArray(rawHistory);}
             catch(Exception invalidHistory){
-                // Never silently replace potentially recoverable older history.
-                // Refuse the transition before any SharedPreferences mutation.
-                // The player can export the original data and repair/restore it.
-                return false;
+                // A valid completed game must still be archived even if an old
+                // history value was malformed. Preserve the original bytes in
+                // the SAME durable transaction, never silently discard them.
+                // Do not overwrite a DIFFERENT recovery snapshot from an
+                // earlier failure: that would lose potentially recoverable data.
+                String recovery=prefs.getString("historyRecovery",null);
+                if(recovery!=null&&!recovery.equals(rawHistory))return false;
+                previous=new JSONArray();
+                preserveCorruptHistory=true;
             }
             JSONArray recent=prepend(row,previous);
-            // SharedPreferences writes all entries in one atomic file update.
-            // Crucial: a crash between archive and the next newGame() cannot
-            // produce an archived history row with an unarchived old session.
-            return prefs.edit().putString("history",recent.toString())
+            // SharedPreferences writes history, recovery copy and session in
+            // one transaction. The original unparseable value remains in
+            // historyRecovery and can be exported through local SAF backup.
+            SharedPreferences.Editor editor=prefs.edit()
+                .putString("history",recent.toString())
                 .putString("session",archivedSession)
-                .putInt("lastScore",snapshot.score).commit();
+                .putInt("lastScore",snapshot.score);
+            if(preserveCorruptHistory)editor.putString("historyRecovery",rawHistory);
+            return editor.commit();
         }catch(Exception error){return false;}
     }
 
