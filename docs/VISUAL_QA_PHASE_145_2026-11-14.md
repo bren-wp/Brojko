@@ -33,8 +33,9 @@ rezultata.
 - Dar u izvorniku ima **konveksne tamnije ljubičaste bočne plohe**,
   kojih na prethodnoj vektorskoj ilustraciji nedostaje. U novom
   pokušaju samo u *svijetlom referentnom portretu* iscrtavaju se
-  dvije uske, zaobljene, poluprozirne sjene **unutar već potvrđene
-  siluete**. Ne mijenjaju se mašna, zlatne vrpce, hitboxovi,
+  dvije uske, zaobljene, poluprozirne sjene **samo na gornjih
+  52 % već potvrđene siluete**. Prvi pokušaj sjenčanja cijele
+  visine pokazao je regresiju i nije zadržan. Ne mijenjaju se mašna, zlatne vrpce, hitboxovi,
   dimenzije, nagrade, dnevni ciljevi ili 2048 logika.
 - U istom izvoru medijan boje koraljnog stupca je RGB
   **(254,135,91)** nasuprot prethodnih **(253,141,97)**.
@@ -79,3 +80,42 @@ SBOM-om i stvarnim emulator PNG-ovima).
 
 Nije dopuštena tvrdnja o 1:1 ili 0% odstupanja dok ju
 pixel-diff stvarno ne potvrdi.
+
+## Kontrolno mjerenje — prvi pokušaj i ograničavanje regresije
+
+Na originalnim PNG-ovima i stvarnim novim Android snimkama
+[run #43541746829](https://github.com/bren-wp/Brojko/actions/runs/43541746829),
+artefakt `Brojko-real-device-UI` ID `14092685911`,
+izmjereno je sljedeće (941×1672, iste originalne koordinate):
+
+| ROI | v1.12.244 | Prvi pokušaj | Promjena |
+| --- | ---: | ---: | ---: |
+| 3D poklon cijeli | **17,976349** | 18,158452 | **+0,182103 regresija** |
+| Tijelo | **20,442551** | 20,737816 | **+0,295265 regresija** |
+| Vrpce | **20,798709** | 21,026319 | **+0,227609 regresija** |
+| Mašna | 18,529729 | 18,527422 | −0,002308 |
+| Grafikon cijeli | **21,949750** | 22,098445 | **+0,148695 regresija** |
+| Stupci | **26,296380** | 26,409895 | **+0,113515 regresija** |
+| Osnovica | **8,416837** | 8,467020 | **+0,050183 regresija** |
+
+**Zbog toga prvi pokušaj nije prihvaćen.** Iz samih stvarnih
+PNG-ova napravljen je kontrolirani *counterfactual* bez
+interpolacije: sjenčanje samo do stvarnog y=1460
+predviđa približno **−0,15 MAE** u cijelom poklon
+ROI-u, jer donje sjenčanje čini original svjetlijim
+i pogoršava usporedbu. Preračunato na 400-unit
+Canvas: gornjih oko 52 % tijela. Prethodna tamna
+donja ploha više se ne crta.
+
+Za grafikon prvi pokušaj s dvije boje dokazano je
+pogoršao MAE. Koraljni pigment vraćen je 1:1 na
+v1.12.244, a jedino je tirkizni pomaknut za otprilike
+(+5,+6,+6) RGB kanala. Odvojena simulacija
+na stvarnim pikselima predviđa oko **−0,123 MAE**
+u ukupnom ROI-u grafikona. Nisu izmijenjeni
+stvarni redci, kronološki slijed, visine, osi,
+datumi ili tabovi.
+
+**To su predviđanja, ne rezultati drugog commita.**
+Prije spajanja potreban je novi zeleni emulator
+workflow i novi stvarni RGB MAE na posljednjem SHA-u.
