@@ -650,6 +650,14 @@ public final class MainActivity extends ComponentActivity {
         else navigate(target);
     }
     @Override protected void onSaveInstanceState(Bundle out){
+        if(skipPersistOnPauseAfterImport){
+            // recreate() after an import must NOT carry the old in-memory
+            // board through "brojko_game": onCreate must load the newly
+            // committed session from SharedPreferences instead.
+            out.putString("brojko_page","home");
+            super.onSaveInstanceState(out);
+            return;
+        }
         // Unlocked portrait/landscape and foldable resizing recreate Activities.
         // Keep the current game, page and scroll offset rather than returning
         // to the splash screen or losing the active move after rotation.

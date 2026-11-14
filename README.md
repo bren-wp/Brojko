@@ -94,6 +94,8 @@ BROJKO radi **bez računa, oglasa i obvezne internetske veze**. Napredak se čuv
 
 [Pravila privatnosti](PRIVACY.md) · [Web autora](https://brendigo.com)
 
+Ako aplikacija otkrije nečitljiv stari zapis povijesti, sačuvat će original u lokalnom podatku za oporavak, a novu partiju može normalno arhivirati. Zapis za oporavak uključen je u lokalni izvoz sigurnosne kopije. [Upute za očuvanje povijesti](docs/HISTORY_RECOVERY.md).
+
 ## 📸 Pogledaj BROJKO uživo
 
 **Stvarne snimke ekrana igre — bez maketa i AI-generiranih zaslona.** Riječ je o stvarnim snimkama funkcionalne Android igre izrađenima tijekom automatiziranih emulator testova. Galerija uključuje 27 prikaza aplikacije i izvornu ikonu. Klikni bilo koju snimku za puni prikaz.

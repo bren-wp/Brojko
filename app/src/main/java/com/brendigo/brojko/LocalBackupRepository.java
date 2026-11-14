@@ -25,7 +25,7 @@ final class LocalBackupRepository {
         "lastDaily","dailyRewardDate","statsDay","todayMerges","todayPoints",
         "weekStart","weekPoints","undoUsedThisGame","playDayStreak",
         "lastPlayDay","theme","style","animation","sound","vibrate","notifications",
-        "session","history"
+        "session","history","historyRecovery"
     };
     static byte[] export(SharedPreferences prefs,String created,String packageName) throws Exception{
         JSONObject root=new JSONObject();
@@ -202,6 +202,7 @@ final class LocalBackupRepository {
             boolean booleanKey=key.equals("sound")||key.equals("vibrate")||
                 key.equals("notifications")||key.equals("undoUsedThisGame");
             boolean stringKey=key.equals("session")||key.equals("history")||
+                key.equals("historyRecovery")||
                 key.equals("lastDaily")||key.equals("dailyRewardDate")||
                 key.equals("statsDay")||key.equals("weekStart")||
                 key.equals("lastPlayDay");
@@ -212,7 +213,7 @@ final class LocalBackupRepository {
                 if(!(value instanceof String))
                     throw new IllegalArgumentException("Nevaljani tekstualni podatci.");
                 if(!key.equals("session")&&!key.equals("history")&&
-                    ((String)value).length()>20)
+                    !key.equals("historyRecovery")&&((String)value).length()>20)
                     throw new IllegalArgumentException("Nevaljani datum.");
             }else{
                 if(!(value instanceof Integer)||((Integer)value)<0)
@@ -235,7 +236,11 @@ final class LocalBackupRepository {
         // omitted Brojko backup fields. Never clear unrelated/future settings.
         // Legacy and altered partial exports remain non-destructive patches.
         if(completeSnapshot){
-            for(String key:BACKUP_KEYS)if(!data.has(key))editor.remove(key);
+            for(String key:BACKUP_KEYS){
+                // A full export made before recovery support cannot authorize
+                // deletion of later quarantined data. Retain that evidence.
+                if(!data.has(key)&&!key.equals("historyRecovery"))editor.remove(key);
+            }
         }
         for(String key:BACKUP_KEYS){
             if(!data.has(key))continue;

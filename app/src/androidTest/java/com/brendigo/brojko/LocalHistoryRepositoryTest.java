@@ -49,21 +49,55 @@ public final class LocalHistoryRepositoryTest {
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 
-    @Test public void malformedLegacyHistoryStillPreservesNewGame() throws Exception{
+    @Test public void malformedLegacyHistoryIsQuarantinedBeforeArchiving() throws Exception{
         SharedPreferences prefs=isolated();
         assertTrue(prefs.edit().clear().commit());
         try{
             TileGame game=new TileGame("relaxed","",7721L);
             game.moves=5;game.score=32;
             String session=game.toJson().toString();
+            for(String corrupted:new String[]{"{bad json","{}","null","[1,2"}){
+                assertTrue(prefs.edit().putString("session",session)
+                    .putString("history",corrupted).remove("historyRecovery")
+                    .putInt("lastScore",777).commit());
+                assertTrue("Completed game must be archived despite corrupt history",
+                    LocalHistoryRepository.archiveSnapshot(prefs,session,
+                        "12. stu","20:02"));
+                assertEquals("Corrupt input must remain recoverable",
+                    corrupted,prefs.getString("historyRecovery",null));
+                assertEquals("New result must be durable",32,
+                    prefs.getInt("lastScore",-1));
+                assertTrue(LocalHistoryRepository.hasCommittedArchive(prefs));
+                JSONArray archived=new JSONArray(prefs.getString("history","[]"));
+                assertEquals(1,archived.length());
+                assertEquals(32,archived.getJSONObject(0).getInt("score"));
+                // Retrying a committed archive must not duplicate a result
+                // or mutate the quarantined source.
+                assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,session,
+                    "12. stu","20:03"));
+                assertEquals(corrupted,prefs.getString("historyRecovery",null));
+                assertEquals(archived.toString(),prefs.getString("history",null));
+            }
+        }finally{assertTrue(prefs.edit().clear().commit());}
+    }
+
+    @Test public void distinctRecoveryEvidenceCannotBeOverwritten() throws Exception{
+        SharedPreferences prefs=isolated();
+        assertTrue(prefs.edit().clear().commit());
+        try{
+            TileGame game=new TileGame("classic","",515L);
+            game.moves=2;game.score=4;
+            String session=game.toJson().toString();
             assertTrue(prefs.edit().putString("session",session)
-                .putString("history","{bad json").commit());
-            assertTrue(LocalHistoryRepository.archiveSnapshot(prefs,session,
-                "12. stu","20:02"));
-            JSONArray result=new JSONArray(prefs.getString("history","[]"));
-            assertEquals(1,result.length());
-            assertEquals(32,result.getJSONObject(0).getInt("score"));
-            assertTrue(LocalHistoryRepository.hasCommittedArchive(prefs));
+                .putString("history","{new corrupt archive")
+                .putString("historyRecovery","{older corruption")
+                .putInt("lastScore",44).commit());
+            assertFalse("Never overwrite a different saved recovery",
+                LocalHistoryRepository.archiveSnapshot(prefs,session,"today","now"));
+            assertEquals("{older corruption",prefs.getString("historyRecovery",null));
+            assertEquals("{new corrupt archive",prefs.getString("history",null));
+            assertEquals(session,prefs.getString("session",null));
+            assertEquals(44,prefs.getInt("lastScore",-1));
         }finally{assertTrue(prefs.edit().clear().commit());}
     }
 

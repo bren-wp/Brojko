@@ -78,6 +78,43 @@ public final class BackupValidationWorkerTest {
             assertTrue(prefs.edit().clear().commit());
         }
     }
+    @Test public void corruptHistoryRecoverySurvivesBackupAndOlderFullImport()
+            throws Exception{
+        SharedPreferences prefs=testPrefs();
+        assertTrue(prefs.edit().clear().putInt("best",64)
+            .putString("history","[]")
+            .putString("historyRecovery","{unparseable old games").commit());
+        try{
+            byte[] exported=LocalBackupRepository.export(prefs,"2026-11-14",PACKAGE);
+            JSONObject full=new JSONObject(new String(exported,StandardCharsets.UTF_8));
+            assertEquals("{unparseable old games",
+                full.getJSONObject("data").getString("historyRecovery"));
+
+            assertTrue(prefs.edit().putInt("best",512)
+                .putString("historyRecovery","{new local evidence").commit());
+            LocalBackupRepository.apply(prefs,
+                LocalBackupRepository.validate(PACKAGE,exported));
+            assertEquals(64,prefs.getInt("best",-1));
+            assertEquals("{unparseable old games",
+                prefs.getString("historyRecovery",null));
+
+            // Old complete snapshots never mentioned the newer recovery key.
+            // Restoring one must not delete local forensic evidence.
+            JSONObject legacy=new JSONObject(full.toString());
+            legacy.getJSONObject("data").remove("historyRecovery");
+            legacy.put("includedKeys",new org.json.JSONArray()
+                .put("best").put("history"));
+            assertTrue(prefs.edit()
+                .putString("historyRecovery","{precious corrupt archive").commit());
+            LocalBackupRepository.apply(prefs,LocalBackupRepository.validate(
+                PACKAGE,legacy.toString().getBytes(StandardCharsets.UTF_8)));
+            assertEquals("{precious corrupt archive",
+                prefs.getString("historyRecovery",null));
+        }finally{
+            assertTrue(prefs.edit().clear().commit());
+        }
+    }
+
     @Test public void deeplyNestedBackupCannotOverflowParserOrChangeProgress() throws Exception {
         SharedPreferences prefs=testPrefs();
         assertTrue(prefs.edit().clear().putInt("best",4096).commit());
