@@ -4434,6 +4434,20 @@ public final class MainActivity extends ComponentActivity {
                 0xffffeb75,0xffffaa1d);
             gradient(cx+size*.17f,top,size*.14f,height,2.8f,
                 0xffffeb75,0xffffaa1d);
+            // The reference ribbons bend around the rounded gift,
+            // with narrow soft highlights on their outer edges.
+            // These specular lines stay *inside* the existing straps;
+            // the tested 3D box geometry and 2048 session are untouched.
+            if(referencePortraitLayout&&theme==0){
+                p.setShader(null);p.setStyle(Paint.Style.FILL);
+                p.setColor(0x42fff9c8);
+                c.drawRoundRect(cx-size*.31f+1.1f,top+2f,
+                    cx-size*.31f+size*.035f,top+height-2.5f,
+                    1.5f,1.5f,p);
+                c.drawRoundRect(cx+size*.17f+1.1f,top+2f,
+                    cx+size*.17f+size*.035f,top+height-2.5f,
+                    1.5f,1.5f,p);
+            }
             // Raised purple lid, with golden horizontal band.
             gradient(left-size*.025f,top-size*.075f,
                 width+size*.05f,size*.23f,7,
@@ -6258,6 +6272,18 @@ public final class MainActivity extends ComponentActivity {
                     }
                     fitted(Integer.toString(i+1),x+(barSlot-6)/2,478,
                         10,barSlot-4,muted,false);
+                }
+                // The original 941x1672 chart includes a thin grey
+                // horizontal baseline immediately below all real columns.
+                // Unlike phase 142's trial, draw it AFTER the columns so
+                // it remains visible across their lower edges. Use the
+                // original's x33..847 span instead of an over-wide line.
+                // A chart with no scores/empty history is never decorated.
+                if(sourceLightChart){
+                    p.clearShadowLayer();p.setShader(null);
+                    p.setStyle(Paint.Style.FILL);
+                    p.setColor(0xffe2dfd9);
+                    c.drawRect(14f,464.35f,360f,465.55f,p);
                 }
             }
             // One visual history panel as in the reference; row cards are flat,

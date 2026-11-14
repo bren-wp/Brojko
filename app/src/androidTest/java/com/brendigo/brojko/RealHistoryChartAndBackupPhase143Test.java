@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.View;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -82,6 +83,14 @@ public final class RealHistoryChartAndBackupPhase143Test {
                     Bitmap bmp=render(screen);
                     try{
                         assertTrue(screen.referencePortraitLayout);
+                        // The reference graph uses a subtle line below the
+                        // ten *actual* bars. Check it on both score and
+                        // largest-tile tabs at the owner's native resolution.
+                        int baseline=bmp.getPixel(50,1094);
+                        assertTrue("Owner chart axis is visible under real history",
+                            Color.red(baseline)<250 &&
+                            Color.green(baseline)<247 &&
+                            Color.blue(baseline)<245);
                         assertEquals(10,screen.history().length());
                         assertEquals(metric==0?12560:2048,
                             screen.statisticsChartMaximum(
@@ -129,6 +138,52 @@ public final class RealHistoryChartAndBackupPhase143Test {
                 activity.theme=originalTheme;
                 activity.chartMetric=originalChart;
                 assertTrue(isolated.edit().clear().commit());
+                activity.updateBars();activity.screen.invalidate();
+            }
+        });
+    }
+
+    @Test public void emptyHistoryHasNoChartAxisOrInventedScores(){
+        rule.getScenario().onActivity(activity -> {
+            SharedPreferences originalPrefs=activity.prefs;
+            SharedPreferences qa=activity.getSharedPreferences(
+                "brojko-phase144-empty-chart",Context.MODE_PRIVATE);
+            String originalPage=activity.page;
+            int originalTheme=activity.theme;
+            int originalMetric=activity.chartMetric;
+            TileGame existingGame=activity.game;
+            String json=existingGame==null?null:
+                existingGame.toJson().toString();
+            try{
+                assertTrue(qa.edit().clear()
+                    .putString("history","[]").commit());
+                activity.prefs=qa;activity.page="stats";
+                activity.theme=0;
+                for(int metric=0;metric<2;metric++){
+                    activity.chartMetric=metric;
+                    MainActivity.BoardScreen screen=
+                        activity.new BoardScreen(activity);
+                    Bitmap png=render(screen);
+                    try{
+                        assertEquals(0,screen.history().length());
+                        int blank=png.getPixel(50,1094);
+                        assertTrue("No false axis for an empty archive",
+                            Color.red(blank)>247&&
+                            Color.green(blank)>245&&
+                            Color.blue(blank)>240);
+                        assertEquals("No sample or demo scores inserted",
+                            "[]",qa.getString("history",null));
+                    }finally{png.recycle();}
+                }
+                if(existingGame!=null)assertEquals(
+                    "Empty chart must never touch active 2048 session",
+                    json,existingGame.toJson().toString());
+            }finally{
+                activity.prefs=originalPrefs;
+                activity.page=originalPage;
+                activity.theme=originalTheme;
+                activity.chartMetric=originalMetric;
+                assertTrue(qa.edit().clear().commit());
                 activity.updateBars();activity.screen.invalidate();
             }
         });
