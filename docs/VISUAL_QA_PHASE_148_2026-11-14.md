@@ -60,6 +60,39 @@ Canvas prijevod, položaj 2×2 ilustracije, znamenke i natpis.
 stvarni TileGame, 4×4 i 5×5 gameplay, spremanje i povijest
 ostaju nepromijenjeni.**
 
+## Stvarni rezultat prve iteracije i druga korekcija
+
+Prvi PR HEAD `a5843b2033eea1278d1dbe3ee6fc983e19196a76`
+prošao je sve tri CI provjere, uključujući [Android UI emulator
+run #43551860979](https://github.com/bren-wp/Brojko/actions/runs/43551860979).
+Stvarni artefakt `Brojko-real-device-UI` ID `14096479474`
+uspoređen je s **istim** privatnim vlasničkim PNG-om, bez
+pomicanja/slikanja/ponovnog skaliranja.
+
+| ROI | v1.12.247 | Prvi PR #148 HEAD | Δ MAE |
+| --- | ---: | ---: | ---: |
+| Cijele Teme i izgled | 13.159406 | **13.023565** | **−0.135840** |
+| Tri kartice | 18.637423 | **18.054528** | **−0.582895** |
+| Živopisna kartica | 19.982854 | **17.763387** | **−2.219468** |
+| 2×2 Živopisna | 20.420049 | **17.951072** | **−2.468977** |
+| Natpis Živopisna | 21.249572 | **16.667299** | **−4.582273** |
+| Lijeva pozadina | 16.782433 | **13.272233** | **−3.510200** |
+| **Desna pozadina** | 17.526945 | **20.101391** | **+2.574446 (regresija)** |
+
+Potvrđeno je da je osnovna korekcija korisna, ali je desni
+ljubičasti rub odmaknut ulijevo više nego u izvoru. **Ne
+prihvatiti prvu iteraciju** kao potpuno ispravljenu. Drugi
+zahvat povećava isključivo širinu pozadinskog Canvas površinskog
+sloja za 1.25 logičkih jedinica (~2.94 px pri 941), bez
+promjene položaja četiriju uzoraka, teksta i dodirnih zona.
+
+**Rezultat drugog zahvata tek treba ponovno potvrditi** na
+novom stvarnom emulatorskom PNG-u aktualnog SHA-a. Ako se
+desni rub ili cjelokupni ekran pogorša, promjenu vratiti.
+Mala promjena na Misijama i Postavkama u prvom QA artefaktu
+potječe iz neizmijenjenog render puta; ne prikazivati je
+kao UI poboljšanje ni garantiranu identičnost ostalih stanja.
+
 ## Provjera novog SHA-a — obvezno prije spajanja
 
 1. `Android pull request validation` mora proći build, Lint,
