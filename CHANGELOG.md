@@ -3,17 +3,20 @@
 ## Unreleased — zaštita lokalne povijesti (PR #147)
 
 ### Ispravci
-- Arhiviranje više ne zamjenjuje nečitljiv JSON povijesti praznim
-  nizom, čime je prije mogao nestati izvorni lokalni zapis.
-- Ako je sadržaj nečitljiv, transakcija se odbija bez izmjene
-  spremljene sesije, povijesti ili posljednjeg rezultata.
+- Nečitljivi stari JSON povijesti čuva se pod `historyRecovery` u istoj
+  atomarnoj transakciji u kojoj se arhivira nova dovršena partija.
+- Uz očuvanje izvorne nečitljive vrijednosti igra nastavlja raditi,
+  bez gubitka zadnjeg rezultata i bez dupliranja zapisa.
+- Sprečava se prepisivanje drugačijeg već spremljenog oporavka.
+- Lokalna sigurnosna kopija uključuje oporavljivi zapis; uvoz starijih
+  potpunih kopija ne briše kasnije nastalu povijest za oporavak.
 
 - Nakon uspješnog vraćanja lokalne kopije ponovno stvaranje Activityja više
   ne prenosi zastarjelu ploču i stranice preko uvezene sesije.
 
 ### QA i dokumentacija
-- Proširen Android instrumentacijski regresijski test za nečitljive
-  vrijednosti i ponovno arhiviranje nakon popravka.
+- Prošireni Android instrumentacijski regresijski testovi za nečitljive
+  vrijednosti, atomarno očuvanje, sigurno arhiviranje i oporavak kroz kopiju.
 - Dodan instrumentacijski test stvarnog `ActivityScenario.recreate()`
   nakon uvoza spremljene partije.
 - Dodane korisničke upute za očuvanje podataka
