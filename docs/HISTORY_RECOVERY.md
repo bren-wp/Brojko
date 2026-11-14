@@ -1,41 +1,48 @@
 # BROJKO — očuvanje oštećene povijesti partija
 
-## Pozadina
+## Zašto je važna ova zaštita
 
-Stariji kod u `LocalHistoryRepository.archiveSnapshot()` na nečitljiv
-JSON iz postavke `history` reagirao je stvaranjem novog praznog
-`JSONArray`. Sljedeći `commit()` trajno je zamijenio izvorni sadržaj
-i time otežao oporavak starih rezultata.
+Starija implementacija na oštećeni zapis `history` reagirala je
+praznim nizom i njegovim upisivanjem, čime je mogla trajno prebrisati
+izvorni zapis. Prva zaštita u PR-u #147 blokirala je arhiviranje, ali je
+regresijski UI test ispravno zahtijevao da igra i dalje radi.
 
-## Nova zaštita (PR #147)
+## Kako sada radi oporavak
 
-- Ako `history` nije valjani JSON niz, arhiviranje vraća `false`
-  prije izmjene `session`, `history` ili `lastScore`.
-- Trenutačna partija i originalan nečitljiv zapis ostaju sačuvani.
-- UI prikazuje postojeću poruku da partija nije spremljena.
-- Ispravna povijest i dalje se arhivira s dosadašnjim ograničenjem
-  od 20 zapisa; ne mijenjaju se `applicationId`, Android dozvole,
-  shema podataka ni izgledi zaslona.
+- Ako `history` nije valjani JSON niz, izvorna sirova vrijednost
+  sprema se u zasebni lokalni ključ `historyRecovery`.
+- U **istoj atomarnoj transakciji** spremaju se nova povijest s
+  dovršenom partijom, arhivirana sesija i najnoviji rezultat.
+- `historyRecovery` ostaje dostupan u ručno izvezenoj lokalnoj
+  sigurnosnoj kopiji. Prilikom uvoza novih/ranijih kopija čuva se
+  postojeći zapis za oporavak ako ga stara potpuna kopija nije sadržavala.
+- Ako već postoji **drugačiji** zapis `historyRecovery`, novi se
+  ne smije prepisati: arhiviranje se tada odbija dok se slučaj ne
+  razriješi, kako se ne bi izgubila ranija potencijalno oporavljiva
+  povijest.
+- Normalna ispravna povijest zadržava prethodni redoslijed, arhiviranje
+  bez duplikata i limit od 20 zapisa. Nema promjena UI-a, pravila igre,
+  `applicationId` ni Android dozvola.
 
-## Postupak za korisnika
+## Koraci za korisnika
 
-1. Nemojte brisati podatke aplikacije ili je ponovno instalirati.
-2. U Postavkama izvezite lokalnu sigurnosnu kopiju kroz Androidov odabir
-   datoteka i sačuvajte original.
-3. Ako imate prethodnu **provjerenu** sigurnosnu kopiju, možete razmotriti
-   njezino vraćanje. Stari zapis nemojte prepisati bez posebne kopije.
-4. Ako problem ostane, sačuvajte izvoz za daljnju dijagnostiku.
+1. Ne brišite podatke aplikacije i nemojte je ponovno instalirati.
+2. U Postavkama izvezite lokalnu sigurnosnu kopiju kroz Androidov
+   sustav za odabir datoteka. Ta kopija uključuje i `historyRecovery`.
+3. Spremite izvezenu datoteku na sigurno mjesto prije mogućeg vraćanja
+   starije sigurnosne kopije.
+4. Nečitljivi sadržaj nije automatski popravljen, ali je sačuvan za
+   kasniju dijagnostiku. Opseg ručnog popravka ovisi o sadržaju.
 
-**Ograničenje:** nečitljiv JSON ne popravlja se automatski. Korisnik
-može nastaviti postojeću partiju, ali novu partiju nakon arhiviranja
-nije moguće pokrenuti dok povijest ne bude popravljena ili vraćena
-iz ispravne sigurnosne kopije. Nije dodan destruktivan “reset”.
+## Testiranje
 
-## QA
+- `LocalHistoryRepositoryTest`: nevaljane JSON vrijednosti, arhiviranje
+  bez gubitka izvornika, ponovni pokušaji i zaštita već postojećeg
+  drugačijeg sadržaja `historyRecovery`.
+- `ScreensSmokeTest`: stvarna dovršena partija ostaje arhivirana i
+  nečitljivi ulaz očuvan u oporavku.
+- `BackupValidationWorkerTest`: lokalni izvoz/uvoz oporavljivih
+  podataka, uključujući stare kompletne kopije bez novog ključa.
 
-Instrumentacijski test `LocalHistoryRepositoryTest` provjerava
-nevaljane JSON ulaze, netaknutu izvornu povijest, aktivnu sesiju i
-`lastScore`; nakon popravka provjerava uspješno arhiviranje.
-
-Ova dokumentacija opisuje namjeravano ponašanje promjene; uspjeh
-Android instrumentacijskih testova utvrđuje se zasebno u CI-u.
+Kod i testovi opisuju očekivano ponašanje; uspješno izvršavanje
+potvrđuje se tek rezultatima GitHub Actions instrumentacije.
