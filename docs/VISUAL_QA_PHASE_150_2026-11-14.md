@@ -68,6 +68,32 @@ Samo za `page=home`, `theme=0`,
   animacija, tamna/živopisna tema, dnevni izazov, pobjeda,
   TileGame, arhiva ni backup shema.
 
+## Zaštita svih 254 stvarnih screenshot stanja
+
+Referentni GitHub Actions ZIP sadrži **254** PNG-ova, uključujući
+različite teme, sekundarne zaslone, modale, veći i manji viewport.
+Novi skript `scripts/compare-emulator-galleries.py` uspoređuje
+**svaku** PNG datoteku iz prethodnog i novog stvarnog
+`Brojko-real-device-UI` artefakta. Usporedba provjerava
+postojanje, izvorne dimenzije, SHA-256 i izravni RGB MAE.
+Nikada ne uklanja stvarne razlike pomicanjem/slikanjem.
+
+```sh
+python3 scripts/compare-emulator-galleries.py \
+  --baseline "/private/BROJKO-v249-emulator.zip" \
+  --candidate "/private/BROJKO-pr150-emulator.zip" \
+  --report "/private/BROJKO-pr150-galleries.json"
+```
+
+Usporedba dva **različita** emulator QA pokretanja za
+potpuno isti PR #149 kod pokazala je 200 byte-identičnih
+od 254 PNG-ova; 54 se razlikuju zbog vremenskih/testnih
+stanja i stvarnih podataka. Takva varijabilnost
+**nije razlog za fabriciranje** rezultata ili prikrivanje
+prave regresije; dodatno ručno pregledati sve razlike
+izvan ciljane Home ilustracije i odvojiti dinamičke
+od stvarnih vizualnih odstupanja.
+
 ## Obvezno potvrditi na novom PR SHA-u
 
 1. Android Gradle build, Lint, unit testovi, CVE/SBOM.
