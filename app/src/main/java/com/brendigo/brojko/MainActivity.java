@@ -4398,11 +4398,25 @@ public final class MainActivity extends ComponentActivity {
                 9.0f,9.0f,p);
             p.clearShadowLayer();
             p.setColor(WHITE); // gradient() retains the Paint alpha
-            gradient(left,top,width,height,9,
-                0xffba82ff,0xff7034d3);
+            // The owner's light portrait contains a deeper violet middle
+            // and a softened lower face. Calibrate only the static reward
+            // illustration: prior geometry changes raised pixel error.
+            boolean ownerGiftFace=referencePortraitLayout&&theme==0;
+            if(ownerGiftFace){
+                p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
+                p.setShader(new LinearGradient(left,top,left,top+height,
+                    new int[]{0xffad72f5,0xff8952dc,0xff8050d8},
+                    new float[]{0f,.62f,1f},Shader.TileMode.CLAMP));
+                c.drawRoundRect(left,top,left+width,top+height,9f,9f,p);
+                p.setShader(null);
+            }else{
+                gradient(left,top,width,height,9,
+                    0xffba82ff,0xff7034d3);
+            }
             // Side wall and inset highlight give the box a rounded body.
             gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
-                8,0xff995ae3,0xff6330bf);
+                8,ownerGiftFace?0xffa66df1:0xff995ae3,
+                ownerGiftFace?0xff8150d4:0xff6330bf);
             // Phase 142 measurement: extra spotlight and lid seam
             // worsened gift-body MAE 24.3818 -> 26.9210. Revert them,
             // retain the improved curved gold-bow rim below.
@@ -5341,14 +5355,19 @@ public final class MainActivity extends ComponentActivity {
         // no-merge session), or legacy negative values from an old backup.
         // Do not render an apparently empty axis as a positive chart.
         // Compute the maximum once for either renderer, without altering data.
+        // A chart is always derived from the *real* archived row.
+        // Normalizing impossible negative legacy values to zero avoids
+        // fake columns and keeps max scaling consistent on both layouts.
+        int statisticsChartValue(JSONObject row){
+            if(row==null)return 0;
+            return Math.max(0,chartMetric==0?
+                row.optInt("score",0):row.optInt("peak",0));
+        }
         int statisticsChartMaximum(JSONArray rows,int count){
             int maximum=0;
-            for(int i=0;i<count;i++){
-                JSONObject row=rows.optJSONObject(i);
-                if(row==null)continue;
-                int value=chartMetric==0?row.optInt("score"):row.optInt("peak");
-                maximum=Math.max(maximum,value);
-            }
+            for(int i=0;i<count;i++)
+                maximum=Math.max(maximum,
+                    statisticsChartValue(rows.optJSONObject(i)));
             return maximum;
         }
         void statistics(){
@@ -5386,8 +5405,7 @@ public final class MainActivity extends ComponentActivity {
                 float chartLeft=42,barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
-                    int val=row==null?0:(chartMetric==0?
-                        row.optInt("score"):row.optInt("peak"));
+                    int val=statisticsChartValue(row);
                     float x=chartLeft+i*barSlot+2;
                     if(val>0){
                         float height=Math.max(4f,112f*val/ceiling);
@@ -6198,8 +6216,7 @@ public final class MainActivity extends ComponentActivity {
                 boolean markedMaximum=false;
                 for(int i=0;i<count;i++){
                     JSONObject row=data.optJSONObject(count-1-i);
-                    int val=row==null?0:(chartMetric==0?
-                        row.optInt("score"):row.optInt("peak"));
+                    int val=statisticsChartValue(row);
                     float x=(sourceLightChart?27f:40f)+i*barSlot+2f;
                     // A zero-value history row is not an earned bar. The
                     // former minimum 4-unit pillar falsely visualized 0.
@@ -6632,11 +6649,14 @@ public final class MainActivity extends ComponentActivity {
         // Screen 08 uses its own glossy material. This does not alter
         // gameplay tiles, the launcher, or icons on other screens.
         void settingsIconTile(float x,float y,float size,int color,String glyph){
-            shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
-                theme==1?0x66000000:0x26966c51);
-            p.setShader(null);p.setColor(WHITE);
             boolean ownerSettingsIcon=theme==0&&referencePortraitLayout&&
                 "settings".equals(page);
+            boolean ownerBackupIcon=ownerSettingsIcon&&
+                "cloud-backup".equals(glyph);
+            shape(x+.7f,y+3.1f,size-1.4f,size-.5f,12,
+                theme==1?0x66000000:
+                    (ownerBackupIcon?0x08966c51:0x26966c51));
+            p.setShader(null);p.setColor(WHITE);
             float shine=ownerSettingsIcon&&
                 ("sound".equals(glyph)||"shield".equals(glyph))?.05f:
                 ownerSettingsIcon&&"cloud-backup".equals(glyph)?.23f:.17f;
@@ -6648,7 +6668,8 @@ public final class MainActivity extends ComponentActivity {
             gradient(x,y,size,size-1.5f,12,lighten(color,shine),faceBottom);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(.8f);
-            p.setColor(ownerSettingsIcon?0x32ffffff:0x7bffffff);
+            p.setColor(ownerBackupIcon?0x12ffffff:
+                ownerSettingsIcon?0x32ffffff:0x7bffffff);
             c.drawRoundRect(x+1.1f,y+1.1f,x+size-1.1f,y+size-3.3f,11,11,p);
             p.setStyle(Paint.Style.FILL);
             float cx=x+size/2f,cy=y+size/2f;
@@ -6690,6 +6711,37 @@ public final class MainActivity extends ComponentActivity {
             c.scale(size/24f,size/24f);
             p.setShader(null);p.setStyle(Paint.Style.STROKE);
             p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
+            // The original purple card contains a filled ivory cloud
+            // with two violet refresh arrows, NOT a hollow white ring.
+            // Only the light owner portrait gets this local illustration;
+            // backup flow and all other theme icons stay untouched.
+            if(referencePortraitLayout&&theme==0&&"settings".equals(page)){
+                p.setColor(0xfffaf5ff);p.setStyle(Paint.Style.FILL);
+                c.drawRoundRect(2.5f,12.0f,21.5f,20.2f,3.8f,3.8f,p);
+                c.drawCircle(6.8f,13.9f,4.3f,p);
+                c.drawCircle(12.2f,11.7f,6.6f,p);
+                c.drawCircle(18.2f,13.8f,4.0f,p);
+                p.setColor(0xff9252e5);p.setStyle(Paint.Style.STROKE);
+                p.setStrokeWidth(2.4f);p.setStrokeCap(Paint.Cap.ROUND);
+                c.drawArc(new RectF(7.8f,8.5f,16.1f,16.9f),
+                    208f,142f,false,p);
+                c.drawArc(new RectF(7.8f,8.5f,16.1f,16.9f),
+                    24f,142f,false,p);
+                p.setStyle(Paint.Style.FILL);
+                Path heads=new Path();
+                heads.moveTo(16.2f,9.0f);
+                heads.lineTo(16.3f,13.2f);
+                heads.quadTo(16.1f,13.9f,15.4f,13.6f);
+                heads.lineTo(12.7f,11.6f);heads.close();
+                heads.moveTo(7.6f,16.3f);
+                heads.lineTo(7.7f,12.1f);
+                heads.quadTo(7.9f,11.4f,8.6f,11.7f);
+                heads.lineTo(11.3f,13.7f);heads.close();
+                c.drawPath(heads,p);
+                p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+                c.restore();
+                return;
+            }
             p.setStrokeWidth(3.2f);p.setColor(WHITE);
             Path cloud=new Path();
             cloud.moveTo(6.3f,18.2f);
