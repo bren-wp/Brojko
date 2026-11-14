@@ -63,7 +63,12 @@ final class LocalHistoryRepository {
 
             JSONArray previous;
             try{previous=new JSONArray(prefs.getString("history","[]"));}
-            catch(Exception invalidHistory){previous=new JSONArray();}
+            catch(Exception invalidHistory){
+                // Never silently replace potentially recoverable older history.
+                // Refuse the transition before any SharedPreferences mutation.
+                // The player can export the original data and repair/restore it.
+                return false;
+            }
             JSONArray recent=prepend(row,previous);
             // SharedPreferences writes all entries in one atomic file update.
             // Crucial: a crash between archive and the next newGame() cannot
