@@ -82,10 +82,10 @@ public final class RealHistoryChartAndBackupPhase143Test {
                     Bitmap bmp=render(screen);
                     try{
                         assertTrue(screen.referencePortraitLayout);
-                        assertEquals(10,activity.history().length());
+                        assertEquals(10,screen.history().length());
                         assertEquals(metric==0?12560:2048,
                             screen.statisticsChartMaximum(
-                                activity.history(),10));
+                                screen.history(),10));
                         int[] expectedValues=metric==0?scores:peaks;
                         int found=0;
                         float lastX=-1f;
@@ -96,7 +96,7 @@ public final class RealHistoryChartAndBackupPhase143Test {
                                     screen.textRegions){
                                 if(text.equals(region.text)&&
                                     region.bounds.centerY()>770f&&
-                                    region.bounds.centerY()<1130f){
+                                    region.bounds.centerY()<1100f){
                                     match=region;
                                     break;
                                 }
