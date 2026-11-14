@@ -94,7 +94,7 @@ BROJKO radi **bez računa, oglasa i obvezne internetske veze**. Napredak se čuv
 
 [Pravila privatnosti](PRIVACY.md) · [Web autora](https://brendigo.com)
 
-Ako aplikacija otkrije nečitljiv zapis povijesti, neće ga izbrisati radi pokretanja nove partije. Upute za očuvanje i oporavak podataka nalaze se u [vodiču za povijest partija](docs/HISTORY_RECOVERY.md).
+Ako aplikacija otkrije nečitljiv stari zapis povijesti, sačuvat će original u lokalnom podatku za oporavak, a novu partiju može normalno arhivirati. Zapis za oporavak uključen je u lokalni izvoz sigurnosne kopije. [Upute za očuvanje povijesti](docs/HISTORY_RECOVERY.md).
 
 ## 📸 Pogledaj BROJKO uživo
 
