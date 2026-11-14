@@ -6425,11 +6425,13 @@ public final class MainActivity extends ComponentActivity {
                     c.translate(i==0?.85f:i==2?.45f:1.65f,.85f);
                 if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
                 else if(i==2&&ownerPreview)
-                    // Source vivid panel is ~8 native pixels farther
-                    // right and extends ~10 pixels beyond the old
-                    // emulator surface. Only its painted background
-                    // changes; thumbnail tiles and touch areas stay put.
-                    themeChoiceSurface(x+1,y+5,111,115,i);
+                    // Phase 148 actual native-pixel remeasurement:
+                    // moving the entire illustration left improves the
+                    // whole card, but unnecessarily retracts its purple
+                    // right rim. Expand only this decorative backdrop
+                    // ~3 px to the right; preserve the newly aligned
+                    // tile faces, caption and unchanged touch targets.
+                    themeChoiceSurface(x+1,y+5,112.25f,115,i);
                 else themeChoiceSurface(x+(i==2?-2:0),y+5,110,115,i);
                 // Reference colour-sample calibration affects ONLY the
                 // three 2x2 picker previews, never real gameplay tiles.
