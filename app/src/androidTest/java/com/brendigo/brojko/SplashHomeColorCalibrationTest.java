@@ -65,6 +65,68 @@ public final class SplashHomeColorCalibrationTest {
         });
     }
 
+    @Test public void homeHeroBevelRetainsRealButtonActionsAndUnchangedGameState(){
+        rule.getScenario().onActivity(activity->{
+            String beforePage=activity.page;
+            int beforeTheme=activity.theme;
+            TileGame beforeGame=activity.game;
+            String serialized=beforeGame==null?null:beforeGame.toJson().toString();
+            int beforeBest=activity.best;
+            try{
+                for(int theme: new int[]{0,1,2}){
+                    for(int[] viewport:new int[][]{{941,1672},{360,800},
+                            {1080,2400}}){
+                        activity.page="home";
+                        activity.theme=theme;
+                        MainActivity.BoardScreen view=activity.new BoardScreen(activity);
+                        view.measure(View.MeasureSpec.makeMeasureSpec(viewport[0],
+                                View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(viewport[1],
+                                View.MeasureSpec.EXACTLY));
+                        view.layout(0,0,viewport[0],viewport[1]);
+                        Bitmap image=Bitmap.createBitmap(viewport[0],viewport[1],
+                            Bitmap.Config.ARGB_8888);
+                        try{
+                            view.draw(new Canvas(image));
+                            boolean livePlay=false;
+                            for(MainActivity.BoardScreen.Tap tap:view.taps)
+                                if(tap.label.contains("Nova igra")||
+                                        tap.label.contains("Nastavi igru")){
+                                    livePlay=tap.action!=null&&tap.left<=58.01f&&
+                                        tap.right>=341.99f;
+                                }
+                            assertTrue("Bevel must keep the real play hitbox in "+
+                                theme+" "+viewport[0]+"x"+viewport[1],livePlay);
+                            assertTrue("The illustrated button must still fit",
+                                view.offX+342f*view.scale<=viewport[0]+.1f);
+                            if(theme==0&&viewport[0]==941){
+                                int upper=image.getPixel(350,713);
+                                int face=image.getPixel(350,739);
+                                assertTrue("Source hero face keeps a warm top",
+                                    Color.red(upper)>245&&
+                                    Color.red(upper)>Color.green(upper)+95);
+                                assertTrue("Bevel fades to the darkened face",
+                                    Color.green(upper)>Color.green(face));
+                            }
+                        }finally{image.recycle();}
+                    }
+                }
+                assertEquals("Pure Canvas bevel must not change best",
+                    beforeBest,activity.best);
+                assertEquals("Pure Canvas bevel must not replace the TileGame",
+                    beforeGame,activity.game);
+                if(beforeGame!=null)
+                    assertEquals("No game JSON change during preview",
+                        serialized,activity.game.toJson().toString());
+            }finally{
+                activity.page=beforePage;
+                activity.theme=beforeTheme;
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void lightHomeScoreHeadingsRetainSourceSizedInkBounds(){
         rule.getScenario().onActivity(activity->{
             String oldPage=activity.page;

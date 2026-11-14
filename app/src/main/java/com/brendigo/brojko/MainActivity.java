@@ -822,6 +822,17 @@ public final class MainActivity extends ComponentActivity {
                 new float[]{0f,.35f,1f},Shader.TileMode.CLAMP));
             c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
             p.setShader(null);
+            // Native 941x1672 owner source: the upper orange bevel is
+            // a translucent warm highlight, not a thin bright-white
+            // contour. Its reflected band fades into the original
+            // (already calibrated) face within ~10 design pixels.
+            // Apply only to the Home reference hero; no gameplay change.
+            p.setColor(WHITE);p.setStyle(Paint.Style.FILL);
+            p.setShader(new LinearGradient(x,y,x,y+9f,
+                new int[]{0x34fff3dc,0x15ffe5c3,0x00ffe5c3},
+                new float[]{0f,.36f,1f},Shader.TileMode.CLAMP));
+            c.drawRoundRect(x,y,x+w,y+h,radius,radius,p);
+            p.setShader(null);
         }
         int lighten(int color,float amount) {
             int r=Color.red(color),g=Color.green(color),b=Color.blue(color);
@@ -1535,8 +1546,10 @@ public final class MainActivity extends ComponentActivity {
                 }
                 p.setStyle(Paint.Style.STROKE);
                 p.setStrokeWidth(flatDaily?.9f:
+                    homeHero&&theme==0&&referencePortraitLayout?.95f:
                     (victoryPrimary||victoryShare?.75f:1.2f));
                 p.setColor(ownerDailyStart?0x2dffffff:
+                    homeHero&&theme==0&&referencePortraitLayout?0x56ffffff:
                     flatDaily||victoryPrimary||victoryShare?
                     0x48ffffff:0x86ffffff);
                 c.drawRoundRect(x+3,y+2,x+w-3,
