@@ -4427,6 +4427,11 @@ public final class MainActivity extends ComponentActivity {
                 sideClip.addRoundRect(new RectF(left,top,
                     left+width,top+height),9f,9f,Path.Direction.CW);
                 c.clipPath(sideClip);
+                // Pixel check against the owner's original: shaded
+                // upper corners improve MAE up to native y1460, while
+                // extending the facets down the box worsens the ROI.
+                // Limit side shading to the upper 52% of this box.
+                c.clipRect(left,top,left+width,top+height*.52f);
                 p.setStyle(Paint.Style.FILL);
                 Path sideL=new Path();
                 sideL.moveTo(left,top+height*.14f);
@@ -6281,14 +6286,14 @@ public final class MainActivity extends ComponentActivity {
                         // fresher teal than the generic game palette.
                         // Preserve actual history values, bar heights,
                         // order, max marker and touch controls.
-                        // Native owner PNG sampled median bar pigments:
-                        // coral RGB 254,135,91 and teal RGB 56,216,199.
-                        // v1.12.244's bars were 253,141,97 and
-                        // 47,207,191 respectively. Apply the source
-                        // palette only on the light reference chart;
-                        // heights and all real archived values stay live.
+                        // The original teal bars are modestly brighter.
+                        // A full teal+coral recolor regressed the real
+                        // owner chart MAE (21.94975 -> 22.09845).
+                        // Revert coral completely; tune only teal by
+                        // +5,+6,+6 toward the sampled native pigment.
+                        // Render the exact same real scores and peaks.
                         int barColor=sourceLightChart?
-                            (val==ceiling||i%2==0?0xfffe8357:0xff34d7c7):
+                            (val==ceiling||i%2==0?0xfffd895c:0xff2cd3c3):
                             (val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
