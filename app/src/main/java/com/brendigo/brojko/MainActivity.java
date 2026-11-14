@@ -4417,6 +4417,40 @@ public final class MainActivity extends ComponentActivity {
             gradient(left+width*.74f,top+3.0f,width*.26f,height-4,
                 8,ownerGiftFace?0xffa66df1:0xff995ae3,
                 ownerGiftFace?0xff8150d4:0xff6330bf);
+            // Original reward art has softly shaded, convex violet
+            // side facets. Draw these *inside* the established box
+            // silhouette, before the preserved golden straps/lid.
+            // No position, reward, stored session, or hitbox changes.
+            if(ownerGiftFace){
+                c.save();
+                Path sideClip=new Path();
+                sideClip.addRoundRect(new RectF(left,top,
+                    left+width,top+height),9f,9f,Path.Direction.CW);
+                c.clipPath(sideClip);
+                p.setStyle(Paint.Style.FILL);
+                Path sideL=new Path();
+                sideL.moveTo(left,top+height*.14f);
+                sideL.quadTo(left+width*.08f,top+height*.23f,
+                    left+width*.12f,top+height*.41f);
+                sideL.lineTo(left+width*.12f,top+height*.86f);
+                sideL.quadTo(left+width*.07f,top+height*.98f,
+                    left,top+height);
+                sideL.close();
+                p.setColor(0x3e431478);
+                c.drawPath(sideL,p);
+                Path sideR=new Path();
+                sideR.moveTo(left+width,top+height*.15f);
+                sideR.quadTo(left+width*.94f,top+height*.23f,
+                    left+width*.89f,top+height*.40f);
+                sideR.lineTo(left+width*.89f,top+height*.86f);
+                sideR.quadTo(left+width*.94f,top+height*.99f,
+                    left+width,top+height);
+                sideR.close();
+                p.setColor(0x34431b83);
+                c.drawPath(sideR,p);
+                p.setColor(WHITE);
+                c.restore();
+            }
             // Phase 142 measurement: extra spotlight and lid seam
             // worsened gift-body MAE 24.3818 -> 26.9210. Revert them,
             // retain the improved curved gold-bow rim below.
@@ -6247,8 +6281,14 @@ public final class MainActivity extends ComponentActivity {
                         // fresher teal than the generic game palette.
                         // Preserve actual history values, bar heights,
                         // order, max marker and touch controls.
+                        // Native owner PNG sampled median bar pigments:
+                        // coral RGB 254,135,91 and teal RGB 56,216,199.
+                        // v1.12.244's bars were 253,141,97 and
+                        // 47,207,191 respectively. Apply the source
+                        // palette only on the light reference chart;
+                        // heights and all real archived values stay live.
                         int barColor=sourceLightChart?
-                            (val==ceiling||i%2==0?0xfffd895c:0xff27cdbd):
+                            (val==ceiling||i%2==0?0xfffe8357:0xff34d7c7):
                             (val==ceiling?CORAL:(i%2==0?CORAL:TEAL));
                         p.setShader(null);p.setColor(WHITE);
                         gradient(x,y,barSlot-6,barHeight,Math.min(5f,barHeight/2),
