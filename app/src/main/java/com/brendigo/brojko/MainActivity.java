@@ -6417,7 +6417,12 @@ public final class MainActivity extends ComponentActivity {
                 // stay exactly where they already worked.
                 boolean ownerPreview=theme==0&&referencePortraitLayout;
                 c.save();
-                if(ownerPreview)c.translate(i==0?.85f:1.65f,.85f);
+                // Measured on unchanged 941x1672 source/capture pixels:
+                // the Vivid artwork sits ~2-3 physical pixels too far
+                // right. Only move decorative Canvas content, never the
+                // selector, page layout or active hitbox.
+                if(ownerPreview)
+                    c.translate(i==0?.85f:i==2?.45f:1.65f,.85f);
                 if(i==0)themeChoiceSurface(x+7,y+14,102,107,i);
                 else if(i==2&&ownerPreview)
                     // Source vivid panel is ~8 native pixels farther
@@ -6448,16 +6453,25 @@ public final class MainActivity extends ComponentActivity {
                     // Owner 941x1672 source colour spans begin 12px
                     // below the earlier 2x2 previews on all three themes.
                     // Shift illustrations only: theme-card hitboxes stay put.
-                    themePreviewTile(x+15+xx*43,y+26+yy*41,40,40,colors[j],0);
+                    // The owner's vivid tile faces sit ~3 px higher
+                    // and their white numerals ~5 px higher than the
+                    // preceding Android screenshot. Scope the measured
+                    // offset to this fixed source portrait only.
+                    float tileRise=ownerPreview&&i==2?1.2f:0f;
+                    float glyphRise=ownerPreview&&i==2?2f:0f;
+                    themePreviewTile(x+15+xx*43,y+26+yy*41-tileRise,
+                        40,40,colors[j],0);
                     txt(Integer.toString(2<<j),
-                        x+35+xx*43,y+55+yy*41,19,WHITE,true);
+                        x+35+xx*43,y+55+yy*41-glyphRise,19,WHITE,true);
                 }
                 c.restore();
                 // Original swatch captions have equal vertical ink height
                 // but approximately 18% less horizontal ink than fallback
                 // Nunito. Keep height, optically narrow just these labels.
-                c.save();c.scale(.84f,1f,x+58,y+162);
-                fitted(names[i],x+58,y+162,16,108,ink,true);
+                float captionBaseline=y+162-
+                    (ownerPreview&&i==2?2.4f:0f);
+                c.save();c.scale(.84f,1f,x+58,captionBaseline);
+                fitted(names[i],x+58,captionBaseline,16,108,ink,true);
                 c.restore();
                 // Selector and caption must follow the same +5-unit
                 // alignment as the tiles; remain inside the live card.
