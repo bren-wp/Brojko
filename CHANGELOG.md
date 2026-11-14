@@ -8,9 +8,14 @@
 - Ako je sadržaj nečitljiv, transakcija se odbija bez izmjene
   spremljene sesije, povijesti ili posljednjeg rezultata.
 
+- Nakon uspješnog vraćanja lokalne kopije ponovno stvaranje Activityja više
+  ne prenosi zastarjelu ploču i stranice preko uvezene sesije.
+
 ### QA i dokumentacija
 - Proširen Android instrumentacijski regresijski test za nečitljive
   vrijednosti i ponovno arhiviranje nakon popravka.
+- Dodan instrumentacijski test stvarnog `ActivityScenario.recreate()`
+  nakon uvoza spremljene partije.
 - Dodane korisničke upute za očuvanje podataka
   (`docs/HISTORY_RECOVERY.md`).
 
