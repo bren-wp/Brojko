@@ -15,9 +15,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.Assert.*;
 
 /**
@@ -54,7 +51,7 @@ public final class RealHistoryChartAndBackupPhase143Test {
                 originalGame.toJson().toString();
             int[] scores={2560,6144,3072,8192,1024,4608,
                 12560,5120,3840,6400};
-            int[] peaks={16,32,64,128,256,512,1024,2048,128,64};
+            int[] peaks={2,4,8,16,32,64,128,256,512,2048};
             try {
                 assertTrue(isolated.edit().clear().commit());
                 JSONArray recentFirst=new JSONArray();
