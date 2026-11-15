@@ -26,7 +26,7 @@ Referenca: vlasnikova izvorna slika `Slika ChatGPT 24. lis 2026. 22_15_14-5(2026
 - Pozadinska ploča za stvarnog korisnika prikazuje njegove stvarne pločice.
 - Snapshot fixture `originalPixelReferencesUseIdenticalRepresentativeGameData` privremeno postavlja demonstracijsku 4×4 ploču iz referentnog PNG-a samo u testnoj aktivnosti: `2,4,8,16 / 4,8,16,32 / 8,16,32,64 / 128,256,512,1024`. Usluga i stvarni podaci igre ne mijenjaju se.
 
-## Iteracija u postojećem PR-u #28
+## Povijesna iteracija: PR #28 (već spojen)
 
 - Tipografija `Bravo!`: korigirana pretjerana visina, smanjen bijeli obrub; zadržana blaga rotacija pojedinih znakova.
 - Glavni CTA: jači koraljni gradijent, ublažen tvrdi bijeli obrub i debeli tamnocrveni rub.
