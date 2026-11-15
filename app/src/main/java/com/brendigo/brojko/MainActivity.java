@@ -3557,10 +3557,32 @@ public final class MainActivity extends ComponentActivity {
                 ownerGold?0xffffbe37:0xffffb324,Shader.TileMode.CLAMP));
             c.drawPath(crown,p);
             p.setShader(null);
-            p.setColor(0xffff8f16);
-            c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
-            p.setColor(0xffffce46);
-            c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
+            if(ownerGold){
+                // In the 941x1672 owner PNG the crown face brightens to
+                // the left and darkens toward the right. Restrict the
+                // translucent layer to the existing real vector silhouette.
+                c.save();
+                c.clipPath(crown);
+                p.setShader(new LinearGradient(4.5f,0f,19.5f,0f,
+                    0x3bffe476,0x3bff870a,Shader.TileMode.CLAMP));
+                c.drawPath(crown,p);
+                c.restore();
+                p.setShader(null);
+                // Native owner base: orange, not a flat bright yellow band.
+                // Keep all other themes and viewport renderings unchanged.
+                p.setShader(new LinearGradient(5.1f,0f,19.5f,0f,
+                    0xffffaf43,0xffff8320,Shader.TileMode.CLAMP));
+                c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
+                p.setShader(new LinearGradient(5.5f,0f,19.1f,0f,
+                    0xffffa93e,0xffff861b,Shader.TileMode.CLAMP));
+                c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
+                p.setShader(null);
+            }else{
+                p.setColor(0xffff8f16);
+                c.drawRoundRect(5.1f,17.3f,19.5f,19.9f,1.2f,1.2f,p);
+                p.setColor(0xffffce46);
+                c.drawRoundRect(5.5f,16.8f,19.1f,18.4f,.8f,.8f,p);
+            }
             c.restore();
         }
         // Three isolated gold accent strokes measured from the owner's
