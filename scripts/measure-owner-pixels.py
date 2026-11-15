@@ -40,6 +40,16 @@ SCREENS = {
     10: ("Postavke", "settings-phase08-source-on-941x1672.png"),
 }
 REGIONS = {
+    # Measured directly against the unmodified 941×1672 owner victory PNG.
+    # Each named region is a native pixel ROI; never shift or resize either image.
+    5: {
+        "3D kruna": (300, 340, 630, 520),
+        "Vrh i gornji rub krune": (370, 365, 565, 455),
+        "Zlatne zrake krune": (330, 485, 615, 570),
+        "Natpis Bravo": (210, 525, 700, 770),
+        "Kartice rezultata": (160, 795, 760, 974),
+        "Tri aktivne akcije": (160, 965, 790, 1390),
+    },
     6: {"3D poklon": (90, 1300, 290, 1510)},
     8: {"Grafikon": (55, 790, 880, 1100)},
     9: {
@@ -103,6 +113,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--references", type=Path, required=True)
     parser.add_argument("--capture-zip", type=Path, required=True)
+    parser.add_argument(
+        "--screen", type=int, choices=tuple(SCREENS), default=None,
+        help="Audit one owner screen by its -N source suffix (5 = Victory); "
+             "otherwise require all nine original owner PNGs",
+    )
     parser.add_argument("--report", type=Path, help="Write audit JSON outside the repo")
     args = parser.parse_args()
 
@@ -110,9 +125,11 @@ def main() -> None:
         "comparison": "unaligned native 941x1672 owner vs genuine Android emulator",
         "reference_board_1": "landscape brand sheet (excluded)",
         "screens": [],
+        "screen_filter": args.screen,
     }
     with ZipFile(args.capture_zip) as archive:
-        for number, (name, capture_name) in SCREENS.items():
+        for number in ([args.screen] if args.screen is not None else SCREENS):
+            name, capture_name = SCREENS[number]
             source_file, owner = load_reference(args.references, number)
             emulator = load_capture(archive, capture_name)
             entry = {

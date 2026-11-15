@@ -204,3 +204,26 @@ jobs:
               exit 1
             fi
           done
+
+      # An image-only upload must not leave an unsigned preview classified
+      # as a stable release. Do not touch the classification of signed builds.
+      - name: Verify unsigned preview classification after gallery upload
+        if: steps.verified_release.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v1.12.${{ github.event.workflow_run.run_number }}
+        run: |
+          set -euo pipefail
+          names="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          if grep -Fxq 'app-release-unsigned.apk' <<< "$names" &&
+             grep -Fxq 'app-debug.apk' <<< "$names"; then
+            preview="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')"
+            if [[ "$preview" != "true" ]]; then
+              echo "::warning::Unsigned preview incorrectly marked stable; correcting metadata."
+              gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --prerelease
+            fi
+            [[ "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')" == "true" ]] || {
+              echo "::error::Unsigned gallery must belong to a prerelease"
+              exit 1
+            }
+          fi

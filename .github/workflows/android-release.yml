@@ -279,3 +279,24 @@ jobs:
             app/build/outputs/apk/release/app-release-unsigned.apk
             app/build/outputs/bundle/release/app-release.aab
             marketing-screenshots/*.png
+
+      # A previously existing GitHub tag/release can retain stale metadata even
+      # when the upload action succeeds. Verify the published API state, not
+      # merely the requested softprops/action-gh-release input.
+      - name: Enforce unsigned preview GitHub release classification
+        if: steps.signing.outputs.enabled == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.12.{0}', github.run_number) }}
+        run: |
+          set -euo pipefail
+          actual="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')"
+          if [[ "$actual" != "true" ]]; then
+            echo "::warning::Unsigned preview $RELEASE_TAG has prerelease=$actual; correcting it."
+            gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --prerelease
+          fi
+          final="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')"
+          if [[ "$final" != "true" ]]; then
+            echo "::error::Unsigned preview must remain a GitHub prerelease."
+            exit 1
+          fi
