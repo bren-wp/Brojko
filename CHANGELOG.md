@@ -6,7 +6,7 @@
 - Pixel audit podržava `--screen 5` za samostalnu provjeru Pobjede bez svih devet privatnih referenci, uz automatizirane sintetičke testove metrike (ne vlasničkih slika).
 - README galerija povezana je s 28 stvarnih PNG-ova provjerenog v1.12.250 izdanja.
 - Release QA štiti GitHub prerelease metapodatke za nepotpisane preview pakete; bez izmjene gameplaya ili korisničkih podataka.
-- Izmjene Canvas krune nisu provedene bez novih usporedivih referenci i mjerenja; 1:1 nije potvrđen.
+- Nakon pronalaska izvornog vlasničkog PNG-a i usporedbe s v1.12.250 stvarnim emulatorom napravljena je ograničena korekcija vodoravnog zlatnog gradijenta i narančastog podnožja krune samo na svijetlom referentnom portretu; novi PR MAE još mora potvrditi poboljšanje. 1:1 nije potvrđen.
 
 ## v1.12.250 — 14. studenoga 2026.
 
