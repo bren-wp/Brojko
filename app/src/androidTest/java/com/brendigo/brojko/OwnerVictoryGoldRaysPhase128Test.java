@@ -59,6 +59,15 @@ public class OwnerVictoryGoldRaysPhase128Test {
                     assertSourceGold(image,596,505);
                     assertSourceGold(image,560,539);
                     assertSourceGold(image,473,550);
+                    int goldLeft=image.getPixel(425,465);
+                    int goldRight=image.getPixel(525,465);
+                    assertTrue("Owner 3D crown gold must darken towards right",
+                        Color.green(goldLeft)>Color.green(goldRight)+10 &&
+                        Color.blue(goldLeft)>Color.blue(goldRight)+10);
+                    int upperGold=image.getPixel(470,480);
+                    int orangeBase=image.getPixel(470,500);
+                    assertTrue("Orange base must be deeper than upper gold face",
+                        Color.green(orangeBase)+25<Color.green(upperGold));
                     assertEquals("Victory retains all three actions",3,
                         screen.taps.size());
                     assertEquals("Nastavi igrati",screen.taps.get(0).label);
