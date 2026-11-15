@@ -9,7 +9,8 @@ Provedena je inspekcija aktualnog Java Canvas koda, instr. testova i zadnjih QA 
 - `victoryCrownGoldRays()` dodaje tri zlatne zrake izvan siluete u izvornom svijetlom portretu.
 - `compactVictoryCard()` zadržava žive gumbe Nastavi igrati, Nova igra i Podijeli rezultat.
 - Testovi `OwnerVictoryGoldRaysPhase128Test` i `OwnerStatsVictoryPhase130Test` osiguravaju nativne uzorke piksela i funkcionalne akcije.
-- Prethodno prijavljeni RGB MAE područja krune: **24,1629** (povijesno mjerenje, drukčiji run).\n- **Ponovno izmjereni baseline `main` v1.12.250** na originalu `Slika ChatGPT 24. lis 2026. 22_15_14-5(20261111-200412).png` i stvarnom `golden-state-win-941x1672.png` iz runa `43641352379`, artefakt ID `14132541634`: cijela Pobjeda **13,7220** MAE, 3D kruna (300,340,630,520) **23,5472** MAE, gornji rub **31,4070** MAE; kruna **0,1380 %** RGB-identičnih piksela. Nije izmjeren PR kandidat.
+- Prethodno prijavljeni RGB MAE područja krune: **24,1629** (povijesno mjerenje, drukčiji run).
+- **Ponovno izmjereni baseline `main` v1.12.250** na originalu `Slika ChatGPT 24. lis 2026. 22_15_14-5(20261111-200412).png` i stvarnom `golden-state-win-941x1672.png` iz runa `43641352379`, artefakt ID `14132541634`: cijela Pobjeda **13,7220** MAE, 3D kruna (300,340,630,520) **23,5472** MAE, gornji rub **31,4070** MAE; kruna **0,1380 %** RGB-identičnih piksela. Nije izmjeren PR kandidat.
 - Izvorni vlasnički PNG iz listopada pronađen je u korisničkoj Library, nije dodan u javni repozitorij. Sintetički testni PNG nije vlasnička referenca.
 
 ## Novo mjerljivo poboljšanje QA alata
