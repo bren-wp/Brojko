@@ -1,7 +1,7 @@
 # BROJKO — faza 151: 3D kruna Pobjede i poštena mjerna osnova
 
 Datum: 15. studenoga 2026. Polazište `main`: `efe62fea18951d4c553ba0d1e59c18e30f68334c`.
-Provedena je inspekcija aktualnog Java Canvas koda, instr. testova i zadnjih QA workflowa. Promjene u ovoj fazi **ne precrtavaju krunu** i ne modificiraju gameplay.
+Provedena je inspekcija aktualnog Java Canvas koda, instr. testova i zadnjih QA workflowa. U prvoj fazi pripremljeni su mjeriteljski alati; nakon pronalaska vlasničkog PNG-a napravljena je ograničena Canvas korekcija površine krune. Gameplay, spremljeni podaci i akcije nisu namjerno mijenjani.
 
 ## Zatečeno
 
@@ -9,8 +9,8 @@ Provedena je inspekcija aktualnog Java Canvas koda, instr. testova i zadnjih QA 
 - `victoryCrownGoldRays()` dodaje tri zlatne zrake izvan siluete u izvornom svijetlom portretu.
 - `compactVictoryCard()` zadržava žive gumbe Nastavi igrati, Nova igra i Podijeli rezultat.
 - Testovi `OwnerVictoryGoldRaysPhase128Test` i `OwnerStatsVictoryPhase130Test` osiguravaju nativne uzorke piksela i funkcionalne akcije.
-- Prethodno prijavljeni RGB MAE područja krune: **24,1629** (povijesna vrijednost iz prethodne korisnikove provjere, **nije ponovno izmjerena na ovom PR-u**).
-- Izvorni vlasnički PNG iz listopada nije među datotekama izvornog repozitorija; ne smije se zamijeniti umjetno generiranom referencom.
+- Prethodno prijavljeni RGB MAE područja krune: **24,1629** (povijesno mjerenje, drukčiji run).\n- **Ponovno izmjereni baseline `main` v1.12.250** na originalu `Slika ChatGPT 24. lis 2026. 22_15_14-5(20261111-200412).png` i stvarnom `golden-state-win-941x1672.png` iz runa `43641352379`, artefakt ID `14132541634`: cijela Pobjeda **13,7220** MAE, 3D kruna (300,340,630,520) **23,5472** MAE, gornji rub **31,4070** MAE; kruna **0,1380 %** RGB-identičnih piksela. Nije izmjeren PR kandidat.
+- Izvorni vlasnički PNG iz listopada pronađen je u korisničkoj Library, nije dodan u javni repozitorij. Sintetički testni PNG nije vlasnička referenca.
 
 ## Novo mjerljivo poboljšanje QA alata
 
@@ -45,3 +45,9 @@ Nakon nove provjere treba usporediti s istom vlasničkom referencom i istim ROI-
 Zadnji provjereni `main` emulator workflow: https://github.com/bren-wp/Brojko/actions/runs/43641352379. Usporedba svih **254** screenshot stanja između **novog PR artefakta** i starog ZIP-a nije dovršena ovom statičkom izmjenom. Ne postoji verificirana nova MAE vrijednost niti se može potvrditi 1:1.
 
 GitHub `v1.12.250` release sadrži 28 stvarnih PNG-ova i unsigned preview pakete, ali je `prerelease=false`; workflow je dobio eksplicitnu provjeru i korekciju ove klasifikacije za buduća izdanja.
+
+## Canvas kalibracija krune u istom Draft PR-u
+
+Na `MainActivity.BoardScreen.victoryCrown()` samo kada je `ownerGold` (`theme==0`, `referencePortraitLayout`, `page==win`) dodano je tanko vodoravno gradijentno sjenčanje unutar postojećeg vektorskog `Path`, a žuti plosnati donji sloj zamijenjen je narančastim gradijentima. Tri akcije, starovi, score, engine i SharedPreferences nisu mijenjani. `OwnerVictoryGoldRaysPhase128Test` sada provjerava tonalni smjer krune i tamniji donji rub, uz postojeće tri zrake i akcije.
+
+**Kandidat još nije izmjeren.** Tek novi stvarni Android PR artefakt može utvrditi je li 3D crown ROI MAE ispod 23,5472, a full-screen MAE ispod 13,7220 bez regresija. Bez izmjena drugih boja/tema ili umjetnog poravnanja izvornika.
