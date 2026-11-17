@@ -30,6 +30,42 @@ U `MainActivity.BoardScreen.dailyRewardGift()` uveden je `Path sourceBody` samo 
 
 Instrumentacijski `OwnerGiftAndChartPigmentsPhase145Test` dodatno provjerava da na (300,1480) i (300,1500) postoji pozadina umjesto preširoke ljubičaste plohe, da ljubičasta sredina ostaje nacrtana te da samo iscrtavanje ne mijenja postojeću `TileGame` sesiju.
 
+## Prvi stvarni kandidat (PR #152, prije lokalne korekcije mašne)
+
+Workflow https://github.com/bren-wp/Brojko/actions/runs/44193623356 završio je
+s **231 uspješnim emulatorskim testom**, a 254-state usporedba s verzijom
+v1.12.251 nije izgubila nijedan PNG niti promijenila dimenzije.
+Stvarni kandidat je `daily-refined-board-gift-941x1672.png` iz
+`Brojko-real-device-UI` artefakta **#14378572169**.
+
+| ROI | Baseline MAE | Prvi kandidat MAE | Razlika |
+|---|---:|---:|---:|
+| Cijeli Daily | 13.657163 | 13.599435 | −0.057728 |
+| 3D poklon | 19.220079 | 17.520033 | −1.700046 |
+| Tijelo i vrpce | 25.279065 | 22.103297 | −3.175768 |
+| Donji desni rub | 30.694706 | 19.411471 | −11.283235 |
+| Donji lijevi rub | 26.005804 | 18.646510 | −7.359294 |
+| Mašna / gornji rub | 18.846171 | 19.103265 | **+0.257094 regresija** |
+
+Unatoč poboljšanju tijela, lokalna mašna s gornjim rubom blago se
+pogoršala. Analiza po redovima pokazuje da su svi pikseli y1310–1379
+nepromijenjeni; lokalni rast MAE-a nalazi se pretežno oko y1390–1409,
+tj. iza petlji mašne na gornjem dijelu kutije.
+
+**Druga, još neprovjerena korekcija:** izvorna metoda
+`dailyRewardGift()` zadržava prethodni široki, mekani rub sjene na
+gornjem dijelu poklona, ali i dalje koristi novu suženu Canvas siluetu
+ispod njega. To se provodi dvama strogo odijeljenim `clipRect`
+područjima za istu sjenu, bez promjene nagrade, ciljeva ili game enginea.
+Promjena se neće prihvatiti ako novi emulatorski ROI pokaže štetnu
+regresiju.
+
+254-state usporedba prvog kandidata: **254/254 PNG, nijedan nestao,
+nijedna dimenzija promijenjena, 160 byte-identičnih, 94 različita**.
+Više razlika dolazi od stvarnih RNG i vremenskih stanja igre; isto
+ne znači 94 vizualne regresije. Konkretnu promjenu treba pregledati
+prema poznatom području Dnevnog poklona.
+
 ## Kriterij prihvaćanja (još nije ispunjen)
 
 - [ ] Android PR validation: Gradle build/Lint/unit/SBOM/High-Critical runtime CVE.
