@@ -1,5 +1,12 @@
 # BROJKO — Changelog
 
+## Unreleased — faza 152: izvorna 3D silueta poklona na Dnevnom izazovu
+
+- Na svijetlom izvornom portretu Dnevnog izazova prilagođena je nativna Canvas silueta tijela poklona: donji rub i bočne stranice sužavaju se prema izvorniku, uz očuvanje postojećih boja, zlatnih vrpci, mašne i poklopca. Tamna, živopisna i drugi rasporedi zadržavaju prethodni renderer.
+- Dodan instrumentacijski test za bočnu pozadinu, ljubičasto tijelo i očuvanje stanja aktivne partije; uspostavljene zasebne ROI metrike za osam dijelova nagrade. Pixel 1:1 ostaje neprovjeren do stvarne usporedbe PR emulatorskog artefakta s originalom.
+- README sada prikazuje 28 provjerenih stvarnih Android PNG datoteka iz izdanja v1.12.251.
+
+
 ## Unreleased — faza 151: mjerljiva QA priprema Pobjede
 
 - Dodano zasebno RGB MAE i exact-RGB mjerenje 3D krune, zlatnih zraka, natpisa i akcija Pobjede na izvornom viewportu 941×1672.

@@ -68,6 +68,50 @@ public final class OwnerGiftAndChartPigmentsPhase145Test {
         });
     }
 
+    @Test public void ownerGiftParcelTapersWithoutPaintingPurpleOverLilacMargin(){
+        rule.getScenario().onActivity(activity->{
+            String oldPage=activity.page;
+            int oldTheme=activity.theme;
+            TileGame original=activity.game;
+            String gameBefore=original==null?null:original.toJson().toString();
+            try{
+                activity.page="daily";
+                activity.theme=0;
+                MainActivity.BoardScreen screen=
+                    activity.new BoardScreen(activity);
+                Bitmap image=screenshot(screen);
+                try{
+                    assertTrue(screen.referencePortraitLayout);
+                    // Unmodified owner's native 941x1672 Daily PNG:
+                    // x300/y1480..1500 is lilac backdrop, not the wide
+                    // full-height purple rectangle painted by older code.
+                    for(int y:new int[]{1480,1500}){
+                        int background=image.getPixel(300,y);
+                        assertTrue("Gift side must clear owner lilac margin y="+y,
+                            Color.red(background)>170 &&
+                            Color.green(background)>155 &&
+                            Color.blue(background)>200);
+                    }
+                    // Preserve the central purple face and live reward UI.
+                    int parcel=image.getPixel(220,1480);
+                    assertTrue("Gift must retain purple body",
+                        Color.blue(parcel)>Color.red(parcel)+35);
+                    if(original!=null)
+                        assertEquals("Rendering cannot change active game",
+                            gameBefore,original.toJson().toString());
+                }finally{
+                    image.recycle();
+                }
+            }finally{
+                activity.game=original;
+                activity.page=oldPage;
+                activity.theme=oldTheme;
+                activity.updateBars();
+                activity.screen.invalidate();
+            }
+        });
+    }
+
     @Test public void chartTintsAreDrawnOnlyForRealArchivedRows(){
         rule.getScenario().onActivity(activity->{
             SharedPreferences real=activity.prefs;

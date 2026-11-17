@@ -250,9 +250,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p baseline
-          # Immutable main SHA efe62fea... / run 43641352379, not a
-          # random latest-success that could change while PR QA is running.
-          gh run download 43641352379 --repo "$GITHUB_REPOSITORY" \
+          # Immutable verified v1.12.251 main SHA 7f39f429...,
+          # screenshot run 43769914306, artifact ID 14183598418.
+          # Compare to the actual preceding release, not to older v1.12.250
+          # or a moving latest-success reference.
+          gh run download 43769914306 --repo "$GITHUB_REPOSITORY" \
             --name Brojko-real-device-UI --dir baseline
           test -d baseline/android-screenshots/screenshots
           test -d candidate/android-screenshots/screenshots
