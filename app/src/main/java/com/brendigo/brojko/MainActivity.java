@@ -4434,17 +4434,51 @@ public final class MainActivity extends ComponentActivity {
             float left=cx-size*.47f;
             float width=size*.94f;
             float height=size*.64f;
+            boolean ownerGiftFace=referencePortraitLayout&&theme==0;
+            // The original reward is a three-dimensional parcel. On its
+            // native light portrait the lower body narrows at the sides;
+            // a full-height round rectangle painted unwanted purple into
+            // the reference's lilac background (x300/y1480..1510).
+            // Clip only the body and vertical ribbons, not the raised lid
+            // or bow, to the owner silhouette. Leave all other layouts
+            // on their established renderer.
+            Path sourceBody=null;
+            if(ownerGiftFace){
+                sourceBody=new Path();
+                sourceBody.moveTo(left+size*.10f,top);
+                sourceBody.lineTo(left+width-size*.10f,top);
+                sourceBody.quadTo(left+width,top,
+                    left+width,top+size*.12f);
+                sourceBody.lineTo(left+width,top+height*.32f);
+                sourceBody.cubicTo(left+width,top+height*.46f,
+                    left+width-size*.09f,top+height*.53f,
+                    left+width-size*.10f,top+height*.69f);
+                sourceBody.lineTo(left+width-size*.10f,top+height*.83f);
+                sourceBody.quadTo(left+width-size*.11f,top+height*.94f,
+                    left+width-size*.25f,top+height*.98f);
+                sourceBody.lineTo(left+size*.24f,top+height*.98f);
+                sourceBody.quadTo(left+size*.10f,top+height*.94f,
+                    left+size*.09f,top+height*.82f);
+                sourceBody.cubicTo(left+size*.07f,top+height*.65f,
+                    left,top+height*.43f,
+                    left,top+height*.31f);
+                sourceBody.lineTo(left,top+size*.12f);
+                sourceBody.quadTo(left,top,
+                    left+size*.10f,top);
+                sourceBody.close();
+            }
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
-            c.drawRoundRect(left,top+3f,left+width,top+height+3f,
+            if(ownerGiftFace)c.drawPath(sourceBody,p);
+            else c.drawRoundRect(left,top+3f,left+width,top+height+3f,
                 9.0f,9.0f,p);
             p.clearShadowLayer();
+            if(ownerGiftFace){c.save();c.clipPath(sourceBody);}
             p.setColor(WHITE); // gradient() retains the Paint alpha
             // The owner's light portrait contains a deeper violet middle
             // and a softened lower face. Calibrate only the static reward
             // illustration: prior geometry changes raised pixel error.
-            boolean ownerGiftFace=referencePortraitLayout&&theme==0;
             if(ownerGiftFace){
                 p.setStyle(Paint.Style.FILL);p.setColor(WHITE);
                 p.setShader(new LinearGradient(left,top,left,top+height,
@@ -4530,6 +4564,9 @@ public final class MainActivity extends ComponentActivity {
                     cx+size*.17f+size*.035f,top+height-2.5f,
                     1.5f,1.5f,p);
             }
+            // Restore before painting the lid and bow: these elements
+            // intentionally project beyond the narrower box silhouette.
+            if(ownerGiftFace)c.restore();
             // Raised purple lid, with golden horizontal band.
             gradient(left-size*.025f,top-size*.075f,
                 width+size*.05f,size*.23f,7,
