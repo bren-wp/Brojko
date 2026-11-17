@@ -50,7 +50,17 @@ REGIONS = {
         "Kartice rezultata": (160, 795, 760, 974),
         "Tri aktivne akcije": (160, 965, 790, 1390),
     },
-    6: {"3D poklon": (90, 1300, 290, 1510)},
+    6: {
+        "3D poklon": (90, 1300, 290, 1510),
+        "Kartica nagrade": (40, 1315, 899, 1512),
+        "Poklon cijela ilustracija": (100, 1310, 320, 1540),
+        "Masna i cvor": (115, 1310, 310, 1410),
+        "Tijelo i vrpce": (120, 1400, 302, 1530),
+        "Donji desni rub": (270, 1440, 310, 1525),
+        "Donji lijevi rub": (110, 1440, 160, 1525),
+        "Sredina tijela": (185, 1425, 247, 1512),
+        "Donja akcija": (105, 1530, 840, 1660),
+    },
     8: {"Grafikon": (55, 790, 880, 1100)},
     9: {
         "Sve tri kartice": (32, 370, 905, 790),
