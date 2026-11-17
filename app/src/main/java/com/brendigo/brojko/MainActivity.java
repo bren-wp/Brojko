@@ -4470,9 +4470,27 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setColor(0xff885fc0);p.setStyle(Paint.Style.FILL);
             p.setShadowLayer(7f,0f,4.5f,0x559875a9);
-            if(ownerGiftFace)c.drawPath(sourceBody,p);
-            else c.drawRoundRect(left,top+3f,left+width,top+height+3f,
-                9.0f,9.0f,p);
+            if(ownerGiftFace){
+                // Preserve the previously measured soft upper-lid shadow:
+                // replacing it across the whole gift slightly increased
+                // the owner's bow ROI MAE (18.846171 -> 19.103265).
+                // Only the lower body gets the tapered source shadow.
+                float shadowSplit=top+size*.065f;
+                c.save();
+                c.clipRect(left-12f,top-15f,
+                    left+width+12f,shadowSplit);
+                c.drawRoundRect(left,top+3f,
+                    left+width,top+height+3f,9f,9f,p);
+                c.restore();
+                c.save();
+                c.clipRect(left-12f,shadowSplit,
+                    left+width+12f,top+height+15f);
+                c.drawPath(sourceBody,p);
+                c.restore();
+            }else{
+                c.drawRoundRect(left,top+3f,left+width,top+height+3f,
+                    9.0f,9.0f,p);
+            }
             p.clearShadowLayer();
             if(ownerGiftFace){c.save();c.clipPath(sourceBody);}
             p.setColor(WHITE); // gradient() retains the Paint alpha
