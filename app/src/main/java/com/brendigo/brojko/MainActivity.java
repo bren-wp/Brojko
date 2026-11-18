@@ -5422,8 +5422,8 @@ public final class MainActivity extends ComponentActivity {
             // the filled bar consistent with its 0/1 or 1/1 counter:
             // a previous 512 tile must not display a fake 50% unlock.
             boolean binaryMilestone=name.startsWith("Majstor");
-            float fraction=binaryMilestone?(value>=target?1f:0f):
-                Math.max(0,Math.min(1,(float)value/target));
+            float fraction=MissionProgress.completionFraction(
+                value,target,binaryMilestone);
             // The owner's light-theme source uses a blue first daily
             // progress bar and a violet score-record bar. Keep their real
             // fraction/counter and the pictogram color independent; never
@@ -5436,8 +5436,9 @@ public final class MainActivity extends ComponentActivity {
             if(fraction>0)shape(trackX,progressY,
                 barWidth*fraction,trackHeight,trackHeight/2f,
                 progressAccent);
-            int displayValue=binaryMilestone?(value>=1024?1:0):Math.min(value,target);
-            int displayTarget=binaryMilestone?1:target;
+            int displayValue=MissionProgress.displayValue(
+                value,target,binaryMilestone);
+            int displayTarget=MissionProgress.displayTarget(target,binaryMilestone);
             fitted(fmt(displayValue)+"/"+fmt(displayTarget),
                 portrait&&theme==0?(target>=10000?284:294):270,
                 y+(portrait?59:68)+(twoLineWeeklyScore?10f:0f),11,
