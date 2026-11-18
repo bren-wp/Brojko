@@ -1,6 +1,18 @@
 # BROJKO — Changelog
 
-## Unreleased — faza 152: izvorna 3D silueta poklona na Dnevnom izazovu
+## Unreleased — faza 153: Misije i postignuća
+
+- Izdvojena čista prezentacijska normalizacija brojača misija u `MissionProgress`. Ispravna stvarna stanja zadržavaju iste brojke, širinu napretka i logiku; eventualno negativne vrijednosti iz neispravnog lokalnog/uvezenog stanja više se ne prikazuju kao negativan napredak. Vrijednosti u igri i spremljenim podacima ne mijenjaju se.
+- Dodano pet JVM testova za dnevni i tjedni napredak, ograničenja, nevaljane ciljeve i binarno postignuće 1024, te dva Android instrumentacijska testa za tri teme, četiri veličine zaslona, očuvanje podataka, zlatnu površinu i reljef svih šest zvjezdica.
+- Ažurirane poveznice README galerije na provjerenih 28 PNG-ova iz izdanja v1.12.252. Početni QA artefakt za Misije identificiran je, ali originalni vlasnički PNG nije dostupan za novu strogu usporedbu.
+- Nije promijenjen Canvas izgled zvjezdica dok ne postoji mjerljiva vlasnička usporedba; nema tvrdnje o 1:1, završenom QA ili novom izdanju prije uspješnog CI-ja i reviewa.
+
+## v1.12.252 — 17. studenoga 2026.
+
+- Spojeni PR #152: korekcija Native Canvas 3D siluete poklona na svijetlom portretu Dnevnog izazova uz prethodno dokumentirana, stvarna RGB ROI poboljšanja.
+- Izdanje objavljeno kao unsigned preview i GitHub `prerelease: true`: debug APK, unsigned APK, AAB, kontrolne sume, dva SBOM-a i 28 stvarnih PNG-ova; dodatni Android UI post-release QA #44198775951 završio je uspješno.
+
+## Povijesna faza 152: izvorna 3D silueta poklona na Dnevnom izazovu
 
 - Na svijetlom izvornom portretu Dnevnog izazova prilagođena je nativna Canvas silueta tijela poklona: donji rub i bočne stranice sužavaju se prema izvorniku, uz očuvanje postojećih boja, zlatnih vrpci, mašne i poklopca. Tamna, živopisna i drugi rasporedi zadržavaju prethodni renderer.
 - Dodan instrumentacijski test za bočnu pozadinu, ljubičasto tijelo i očuvanje stanja aktivne partije; uspostavljene zasebne ROI metrike za osam dijelova nagrade. Pixel 1:1 ostaje neprovjeren do stvarne usporedbe PR emulatorskog artefakta s originalom.
