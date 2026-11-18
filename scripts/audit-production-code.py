@@ -50,7 +50,7 @@ java = {p.name: p.read_text(encoding="utf-8") for p in sorted(SRC.glob("*.java")
 expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
-    "MainActivity.java", "TileGame.java", "TileLineMerger.java",
+    "MainActivity.java", "MissionProgress.java", "TileGame.java", "TileLineMerger.java",
     "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
     "GameArchiveCoordinator.java",
@@ -168,6 +168,10 @@ assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
 assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
 assert "GameCalendar.today()" in java["MainActivity.java"]
 assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]
+assert "MissionProgress.completionFraction(" in java["MainActivity.java"]
+assert "MissionProgress.displayValue(" in java["MainActivity.java"]
+assert "Math.max(0, Math.min(value, target))" in java["MissionProgress.java"]
+assert "value >= target ? 1f : 0f" in java["MissionProgress.java"]
 
 # Test-only compatibility helpers stay out of the shipping APK.
 bridge=(ROOT/"app/src/androidTest/java/com/brendigo/brojko/BackupTestBridge.java").read_text(encoding="utf-8")
