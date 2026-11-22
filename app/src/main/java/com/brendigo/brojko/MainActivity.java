@@ -208,19 +208,23 @@ public final class MainActivity extends ComponentActivity {
             if(old.isEmpty())return;
             JSONObject s=new JSONObject(old);
             JSONArray arr=s.getJSONArray("cells");
-            int n=s.getInt("n");
+            // Legacy JSON is untrusted persisted state; getInt() silently
+            // truncates decimals and accepts numeric strings on Android.
+            int n=TileGame.sessionInt(s,"n");
             if(n!=4&&n!=5||arr.length()!=n*n)return;
             // The pre-v1 legacy board is untrusted persisted state: never
             // instantiate a playable session containing invalid tiles,
             // negative scores or integer-overflowing powers of two.
             int[] restored=new int[n*n];
             for(int i=0;i<restored.length;i++){
-                int tile=arr.getInt(i);
+                int tile=TileGame.sessionTile(arr,i);
                 if(tile!=0&&(tile<2||(tile&(tile-1))!=0||
                     tile>1073741824))return;
                 restored[i]=tile;
             }
-            int legacyScore=s.optInt("score");
+            // Absent pre-v1 score retains its historical zero default, but
+            // an explicitly stored malformed score must never be coerced.
+            int legacyScore=s.has("score")?TileGame.sessionInt(s,"score"):0;
             if(legacyScore<0)return;
             TileGame imported=new TileGame(n==5?"relaxed":"classic","",
                 new java.util.Random().nextLong());

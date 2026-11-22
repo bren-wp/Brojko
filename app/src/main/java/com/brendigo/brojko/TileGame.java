@@ -159,7 +159,9 @@ public final class TileGame {
     // Do not use JSONObject.getInt/optInt here: Android may truncate 4.9 to 4
     // or coerce a string into a valid score. Saved user progress must round-trip
     // exactly and backups must reject malformed session values.
-    private static int sessionInt(JSONObject object,String key) throws Exception {
+    // Package-visible for the pre-v1 local migration: it must enforce the same
+    // exact integer type and range rules as current saved sessions.
+    static int sessionInt(JSONObject object,String key) throws Exception {
         Object raw=object.get(key);
         if(!(raw instanceof Integer)&&!(raw instanceof Long))
             throw new IllegalArgumentException("Invalid integer: "+key);
@@ -172,7 +174,8 @@ public final class TileGame {
             throws Exception{
         return object.has(key)?sessionInt(object,key):fallback;
     }
-    private static int sessionTile(JSONArray values,int index) throws Exception{
+    // The legacy board importer must not coerce decimals or numeric strings.
+    static int sessionTile(JSONArray values,int index) throws Exception{
         Object raw=values.get(index);
         if(!(raw instanceof Integer)&&!(raw instanceof Long))
             throw new IllegalArgumentException("Invalid tile type");

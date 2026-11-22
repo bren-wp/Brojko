@@ -52,9 +52,13 @@ Grype kontrolu; uspjeh tog testa bit će potvrđen tek kad CI prođe.
 - Sva četiri GitHub Actions workflowa koriste provjerene fiksne commit SHA
   vrijednosti za vanjske akcije. Posebni PR gate i testovi odbijaju nove
   promjenjive oznake ili nepinnane Docker akcije.
-- Release više ne objavljuje nepodpisani APK: konfigurirani postojeći upload
-  keystore je obvezan, a APK i AAB moraju proći provjeru digitalnog potpisa.
-  Zbrojevi SHA-256 obuhvaćaju samo potpisane datoteke za objavu.
+- Aktualni release workflow ima dvije jasno odvojene putanje: kada su
+  dostupna sva četiri signing secreta, verificira potpisani APK i AAB i
+  objavljuje stabilno izdanje; bez produkcijskog ključa objavljuje isključivo
+  **unsigned preview** s nepodpisanim release APK/AAB, debug APK-om za testiranje
+  i SHA-256 sumama. Preview mora imati GitHub `prerelease: true` i **nije**
+  pogodan za Google Play nadogradnju. Provjera da se upload certifikat podudara
+  s Play Consoleom ostaje zaseban, neispunjen zahtjev.
 
 **Preostali rizici:** V1 JSON sigurnosne kopije i dalje nemaju
 kriptografski dokaz autentičnosti; korisnik ih uvozi po izboru i može
@@ -64,3 +68,20 @@ identičan certifikatu registriranom u Google Play Consoleu.
 Nalazi za build-toolchain GHSA i neovisni Android runtime/pixel audit nisu
 ovime automatski zatvoreni. CI rezultat PR-a i stvarni signing ostaju
 obvezni dokazi prije spajanja i objave.
+
+## Dodatna provjera 22. 11. 2026. — strogi uvoz pre-v1 partija (PR na provjeri)
+
+`MainActivity.migrateLegacy()` na početnom commitu `eb72e9d` koristio je
+`JSONObject.getInt()/optInt()` i `JSONArray.getInt()`: na Androidu takve
+metode mogu pretvoriti decimalan broj ili broj spremljen kao tekst u cijeli
+broj bez odbijanja nevaljane izvorne vrijednosti. To je rizik neprimjetnog
+mijenjanja lokalnog napretka tijekom migracije starog ključa `board`.
+
+Predložena korekcija koristi postojeće stroge provjere u `TileGame`
+za dimenziju ploče, svaku pločicu i postojeći score; odsutan stari
+`score` i dalje ima zadanu vrijednost 0. Nevaljan unos mora ostaviti
+izvorni `board` ključ netaknut i ne smije stvoriti novu sesiju.
+Android instrumentacijski testovi pokrivaju decimalne, tekstualne,
+izvanrasponske i valjane pre-v1 vrijednosti. Rezultati testova i release
+status moraju se provjeriti na stvarnom PR head commitu: ovaj odjeljak
+ne tvrdi da je Android emulator već prošao provjeru.

@@ -86,6 +86,11 @@ assert "packageName.equals(root.optString(\"package\",\"\")" in java["LocalBacku
 assert "size>MAX_BYTES" in java["BackupDocumentIo.java"]
 assert "bytes.length>512000" in java["LocalBackupRepository.java"]
 assert "onActivityResult" in java["MainActivity.java"]
+# A malformed pre-v1 board must never reach the current persisted format
+# through Android org.json's lossy getInt()/optInt() coercions.
+assert 'TileGame.sessionInt(s,"n")' in java["MainActivity.java"]
+assert 'TileGame.sessionTile(arr,i)' in java["MainActivity.java"]
+assert 's.has("score")?TileGame.sessionInt(s,"score"):0' in java["MainActivity.java"]
 assert "legacyScore<0" in java["MainActivity.java"]
 assert "imported.toJson().toString()" in java["MainActivity.java"]
 assert "older.peak>game.peak" in java["TileGame.java"]
