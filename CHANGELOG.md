@@ -1,5 +1,20 @@
 # BROJKO — Changelog
 
+## Unreleased — 22. studenoga 2026. — stroga migracija pre-v1 podataka
+
+- Ispravljena tiha pretvorba decimalnih ili tekstualnih JSON vrijednosti u
+  cijele brojeve pri uvozu starog `board` zapisa. `migrateLegacy()`
+  sada koristi iste stroge provjere tipa i granica kao aktualne sesije.
+- Očuvano ponašanje valjane stare pohrane, uključujući rezultat 0 kada
+  nekadašnji `score` nije prisutan; nevaljan zapis se ne prepisuje.
+- Dodani Android instrumentacijski regresijski testovi i statička zaštita
+  da se ne vrate `getInt()/optInt()` pretvorbe.
+- U sigurnosnom auditu usklađen opis signing putanja s aktualnim
+  unsigned-preview workflowom.
+- Status: čeka stvarne GitHub Actions rezultate i pregled PR-a;
+  nije potvrđena nova produkcijska objava.
+
+
 ## Unreleased — faza 153: Misije i postignuća
 
 - Izdvojena čista prezentacijska normalizacija brojača misija u `MissionProgress`. Ispravna stvarna stanja zadržavaju iste brojke, širinu napretka i logiku; eventualno negativne vrijednosti iz neispravnog lokalnog/uvezenog stanja više se ne prikazuju kao negativan napredak. Vrijednosti u igri i spremljenim podacima ne mijenjaju se.
