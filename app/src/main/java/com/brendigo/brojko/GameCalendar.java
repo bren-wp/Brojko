@@ -62,7 +62,21 @@ final class GameCalendar {
     }
 
     /** Render new invariant dates and old v1 Croatian display strings without rewriting backups. */
+    // Do not render bidi overrides or control characters from imported legacy data.
+    static String safeHistoryLabel(String value){
+        if(value==null)return "";
+        StringBuilder safe=new StringBuilder(Math.min(64,value.length()));
+        for(int i=0;i<value.length()&&safe.length()<64;){
+            int cp=value.codePointAt(i);i+=Character.charCount(cp);
+            if(Character.isISOControl(cp)||Character.getType(cp)==Character.FORMAT)continue;
+            if(safe.length()+Character.charCount(cp)>64)break;
+            safe.appendCodePoint(cp);
+        }
+        return safe.toString();
+    }
+
     static String displayHistoryDate(String value,Locale locale){
+        value=safeHistoryLabel(value);
         if(value==null||value.isEmpty())return "";
         Date parsed=parseExact(value,"yyyy-MM-dd",Locale.ROOT);
         if(parsed!=null)return historyDate(parsed,locale);
@@ -74,6 +88,7 @@ final class GameCalendar {
     }
 
     static String displayHistoryTime(String value,Locale locale){
+        value=safeHistoryLabel(value);
         if(value==null||value.isEmpty())return "";
         if("hr".equals(locale.getLanguage()))return value;
         Date parsed=parseExact(value,"HH:mm",Locale.ROOT);

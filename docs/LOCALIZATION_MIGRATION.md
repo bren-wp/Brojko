@@ -1,18 +1,20 @@
-# Localization migration
+# Global locale support and verification
 
-English is the explicit product default. English, Croatian, German and French have
-complete string-key inventories for the current migrated UI and are offered
-in the functional Canvas language picker and Android 13+ app language settings.
-Android 24–32 uses a separate private language preference. Android 13+ uses the
-framework LocaleManager, with migration of older explicit preferences.
+English is the explicit default. Seven locales are implemented: en, hr, de, fr,
+ar, es, he. Each has the same 247 string keys and two plural resources.
+Arabic and Hebrew use RTL Canvas navigation and mirrored hit/accessibility
+bounds. The puzzle's physical direction and wordmark remain intrinsic artwork.
+Mixed scripts use Android StaticLayout and system-font fallback when necessary.
 
-The existing Croatian reference suite uses a test-only runner selecting Croatian.
-Production does not read test arguments. Croatian fixed artwork is used only
-for Croatian; other languages use localized Canvas text. New history dates are
-stored as ISO values; old v1 dates are displayed without rewriting backup data.
+Android 24–32 uses a separate private language preference; Android 13+ uses the
+platform LocaleManager. Search and pagination are functional. Legacy backup
+data stays compatible; new history dates are invariant ISO values. Display
+only strips imported control/format characters from legacy history labels.
 
-Static inventory parity is not native visual QA. Each language still requires
-real-device review, layout/accessibility and lifecycle testing. Remaining 26
-languages and full Arabic/Hebrew RTL mirroring and complex-script validation
-are not advertised yet. English Fastlane copy is a draft; no Play Console
-publication has been performed.
+Existing owner screenshot assertions stay Croatian. Separate locale-matrix
+instrumentation and capture workflows exercise supported languages across
+platform boundaries. The captured PNGs are actual production Canvas output,
+not mockups or resized reference screenshots. Their presence alone does not
+certify visual equivalence, translation accuracy or all-device verification.
+Remaining 23 languages are not exposed yet. Full audit and native sign-off
+remain release gates.

@@ -1,0 +1,21 @@
+Brojko ist ein farbenfrohes Zahlenpuzzle, das du in deinem eigenen Tempo spielen kannst.
+
+Wische über das Spielfeld, verbinde gleiche Kacheln und erreiche immer größere Zahlen. Schaffe 2048, verbessere deinen Rekord und verfolge deinen Fortschritt.
+
+SPIELMODI
+• Klassisch 4×4: Plane deine Züge und erreiche 2048.
+• Entspannt 5×5: Mehr Platz für längere Spiele.
+• Tagesaufgabe: Erreiche 256 und 3.000 Punkte in höchstens 80 Zügen.
+
+WARUM BROJKO?
+• Farbige Designs und verschiedene Kachelstile.
+• Sterne für Missionen und Tagesaufgaben.
+• Statistik, Rekorde und Spielverlauf.
+• Letzten Zug rückgängig machen.
+• Offline spielen, ohne Konto, Werbung oder In-App-Käufe.
+• Lokaler Fortschritt mit exportierbarer Sicherung.
+
+Verbinde Zahlen. Schlage Rekorde.
+
+Brojko by Brendigo
+brendigo.com

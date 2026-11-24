@@ -111,7 +111,7 @@ public final class MainActivity extends ComponentActivity {
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
-    NumberFormat number;
+    NumberFormat number,tileNumber;
     LocaleManager.Language uiLanguage;
     Locale uiLocale;
 
@@ -121,6 +121,8 @@ public final class MainActivity extends ComponentActivity {
         uiLanguage=LocaleManager.selected(this);
         uiLocale=uiLanguage.locale();
         number=NumberFormat.getIntegerInstance(uiLocale);
+        tileNumber=NumberFormat.getIntegerInstance(uiLocale);
+        tileNumber.setGroupingUsed(false);
         activityResources=LocaleManager.resourcesFor(this,uiLocale);
         // Draw behind both system bars on API 24-36. Use the manual
         // edge-to-edge contract instead of WindowCompat.enableEdgeToEdge():
@@ -343,39 +345,13 @@ public final class MainActivity extends ComponentActivity {
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();
-        String pageTitle=activityText(pageTitleResource(target));
+        String pageTitle=activityText(PageLabels.resource(target,game));
         screen.setContentDescription(game==null
             ?activityText(R.string.accessibility_page,pageTitle)
             :activityText(R.string.accessibility_page_score,pageTitle,fmt(game.score)));
         screen.invalidate();
         screen.accessibilityHelper.invalidateRoot();
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
-    }
-    private int pageTitleResource(String target){
-        switch(target){
-            case "game": return game==null?R.string.mode_classic:
-                "daily".equals(game.mode)?R.string.mode_daily:
-                "relaxed".equals(game.mode)?R.string.mode_relaxed:R.string.mode_classic;
-            case "pause": return R.string.pause_title;
-            case "win": return R.string.victory_bravo;
-            case "over": return R.string.game_over_title;
-            case "dailyWin": return R.string.daily_success;
-            case "dailyFail": return R.string.daily_failure;
-            case "confirm": return R.string.confirm_new;
-            case "confirmEnd": return R.string.confirm_end;
-            case "daily": return R.string.mode_daily;
-            case "missions": return R.string.home_missions;
-            case "stats": return R.string.home_statistics;
-            case "historyDetail": return R.string.history_detail;
-            case "themes": return R.string.themes_heading;
-            case "settings": return R.string.settings_title;
-            case "language": return R.string.settings_language;
-            case "backup": return R.string.backup_title;
-            case "help": return R.string.help_title;
-            case "about": return R.string.about_title;
-            case "privacy": return R.string.privacy_title;
-            default: return R.string.home_title;
-        }
     }
     void requestNew(String mode){
         if(gameTransitionBusy)return;
@@ -3543,8 +3519,8 @@ public final class MainActivity extends ComponentActivity {
                     else
                         glossyTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);
-                    String str=rtlLayout()?fmt(value).replace("٬",""):Integer.toString(value);
-                    int digits=str.length();
+                    String str=tileNumber.format(value);
+                    int digits=Integer.toString(value).length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
                         relaxedSource?Math.max(11f,(digits>=3?31.5f:34f)-
@@ -5644,7 +5620,7 @@ public final class MainActivity extends ComponentActivity {
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
             statCell(StatMetric.BEST,fmt(best),20,151,114,112,CORAL);
             statCell(StatMetric.TOTAL,fmt(plays),143,151,114,112,TEAL);
-            statCell(StatMetric.PEAK,Integer.toString(recordTile),266,151,114,112,0xffffb431);
+            statCell(StatMetric.PEAK,tileNumber.format(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
             statCell(StatMetric.AVERAGE,fmt(average),21,276,174,102,0xff478df4);
             statCell(StatMetric.STREAK,fmt(consecutiveWins()),205,276,174,102,0xffa657de);
@@ -6417,7 +6393,7 @@ public final class MainActivity extends ComponentActivity {
             // All labels and scores remain sourced from local state.
             statCell(StatMetric.BEST,fmt(best),14,132,123,94,CORAL);
             statCell(StatMetric.TOTAL,fmt(plays),146,132,114,94,TEAL);
-            statCell(StatMetric.PEAK,Integer.toString(recordTile),267,132,114,94,0xffffb431);
+            statCell(StatMetric.PEAK,tileNumber.format(recordTile),267,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
             // Source lower cards start at x~35 and x~489, with a
             // slightly flatter 193px height than the former native pair.
@@ -6572,7 +6548,7 @@ public final class MainActivity extends ComponentActivity {
                     int tagFg=peak>=1024?0xff078e77:
                         peak>=512?0xff2167c8:peak>=128?0xff9443bd:0xffc67914;
                     shape(282,y+4,59,23,10,theme==1?0xff46416b:tagBg);
-                    fitted(Integer.toString(peak),311.5f,y+21,14,54,
+                    fitted(tileNumber.format(peak),311.5f,y+21,14,54,
                         theme==1?WHITE:tagFg,true);
                 }
                 icon("chevron-right",366,y+15,15,muted);
@@ -7272,37 +7248,8 @@ public final class MainActivity extends ComponentActivity {
             button(uiText(R.string.settings_title),"back",24,755,352,63,card,false,()->navigate("settings"));
             bottomBrand();
         }
-        int languagePageIndex=0;
-        void languagePage(){
-            title(uiText(R.string.settings_language));
-            fitted(uiText(R.string.language_interface),200,174,21,340,muted,true);
-            fitted(uiLanguage.nativeName,200,204,22,340,ink,true);
-            button(uiText(R.string.language_search),"globe",25,222,350,49,card,false,
-                ()->LanguageSearchDialog.show(MainActivity.this,localizedResources,language->selectLanguage(language)));
-            LocaleManager.Language[] languages=LocaleManager.Language.values();
-            final int perPage=4;
-            int pages=(languages.length+perPage-1)/perPage;
-            languagePageIndex=Math.max(0,Math.min(languagePageIndex,pages-1));
-            int first=languagePageIndex*perPage;
-            for(int i=first;i<Math.min(first+perPage,languages.length);i++){
-                LocaleManager.Language language=languages[i];
-                float y=286+(i-first)*79;
-                boolean selected=language==uiLanguage;
-                card(25,y,350,68,20,card);
-                if(selected)icon("check",62,y+34,27,TEAL);
-                else icon("globe",62,y+34,23,muted);
-                leftFitted(language.nativeName,101,y+42,23,225,ink,true);
-                String label=selected?localizedResources.getString(R.string.language_selected,language.nativeName):language.nativeName;
-                taps.add(new Tap(25,y,375,y+68,label,()->selectLanguage(language)));
-            }
-            if(pages>1){
-                if(languagePageIndex>0)
-                    button(uiText(R.string.language_previous),"back",25,624,165,58,card,false,()->{languagePageIndex--;invalidate();});
-                if(languagePageIndex+1<pages)
-                    button(uiText(R.string.language_next),"chevron-right",210,624,165,58,card,false,()->{languagePageIndex++;invalidate();});
-            }
-            button(uiText(R.string.language_back),"back",25,720,350,70,CORAL,true,()->navigate("settings"));
-        }
+        final LanguagePickerRenderer languagePicker=new LanguagePickerRenderer();
+        void languagePage(){languagePicker.render(this,MainActivity.this);}
         void aboutPage(){
             textPage(uiText(R.string.about_title),new String[]{"Brojko "+appVersion()+" — by Brendigo",
                 uiText(R.string.about_goal),

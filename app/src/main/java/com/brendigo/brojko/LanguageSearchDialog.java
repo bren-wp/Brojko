@@ -3,6 +3,9 @@ package com.brendigo.brojko;
 import android.app.AlertDialog;
 import android.content.res.Resources;
 import android.text.Editable;
+import android.text.InputFilter;
+import android.view.View;
+import java.text.Normalizer;
 import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -18,13 +21,21 @@ final class LanguageSearchDialog {
 
     private LanguageSearchDialog() {}
 
+    static String normalized(String value){
+        return Normalizer.normalize(value,Normalizer.Form.NFD)
+            .replaceAll("\\p{M}+","").trim().toLowerCase(Locale.ROOT);
+    }
+
     static void show(MainActivity activity,Resources resources,Selection selection){
         LinearLayout content=new LinearLayout(activity);
         content.setOrientation(LinearLayout.VERTICAL);
+        content.setLayoutDirection(LocaleManager.isRtl(activity.uiLocale)?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
+        content.setTextDirection(View.TEXT_DIRECTION_LOCALE);
         int padding=(int)(16*resources.getDisplayMetrics().density);
         content.setPadding(padding,0,padding,padding);
         EditText search=new EditText(activity);
         search.setSingleLine(true);
+        search.setFilters(new InputFilter[]{new InputFilter.LengthFilter(80)});
         search.setHint(resources.getString(R.string.language_search));
         search.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
         content.addView(search,new LinearLayout.LayoutParams(-1,-2));
@@ -41,12 +52,12 @@ final class LanguageSearchDialog {
             android.R.layout.simple_list_item_1,new ArrayList<>());
         list.setAdapter(adapter);
         Runnable update=()->{
-            String term=search.getText().toString().trim().toLowerCase(Locale.ROOT);
+            String term=normalized(search.getText().toString());
             matches.clear();adapter.clear();
             for(LocaleManager.Language language:LocaleManager.Language.values()){
                 String translated=language.locale().getDisplayLanguage(activity.uiLocale);
-                if(language.nativeName.toLowerCase(Locale.ROOT).contains(term)||
-                    translated.toLowerCase(Locale.ROOT).contains(term)||language.tag.contains(term)){
+                if(normalized(language.nativeName).contains(term)||
+                    normalized(translated).contains(term)||language.tag.contains(term)){
                     matches.add(language);adapter.add(language.nativeName);
                 }
             }

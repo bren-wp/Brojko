@@ -14,7 +14,10 @@ final class CanvasTextLayout {
     private CanvasTextLayout(){}
 
     static boolean requiresLayout(String text,Locale locale){
-        if(LocaleManager.isRtl(locale))return true;
+        return LocaleManager.isRtl(locale)||requiresScriptFallback(text);
+    }
+
+    private static boolean requiresScriptFallback(String text){
         for(int i=0;i<text.length();){
             int cp=text.codePointAt(i);
             i+=Character.charCount(cp);
@@ -35,20 +38,20 @@ final class CanvasTextLayout {
         return false;
     }
 
-    private static TextPaint shapedPaint(Paint paint,Locale locale){
+    private static TextPaint shapedPaint(String text,Paint paint,Locale locale){
         TextPaint textPaint=new TextPaint(paint);
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setTextLocale(locale);
         Typeface current=paint.getTypeface();
         // Android's system family provides the script-specific font fallback.
-        textPaint.setTypeface(Typeface.create("sans-serif",
+        if(requiresScriptFallback(text))textPaint.setTypeface(Typeface.create("sans-serif",
             current!=null&&current.isBold()?Typeface.BOLD:Typeface.NORMAL));
         return textPaint;
     }
 
     static float measure(String text,Paint paint,Locale locale){
         if(!requiresLayout(text,locale))return paint.measureText(text);
-        return Layout.getDesiredWidth(text,shapedPaint(paint,locale));
+        return Layout.getDesiredWidth(text,shapedPaint(text,paint,locale));
     }
 
     static void draw(Canvas canvas,String text,float x,float baseline,Paint paint,Locale locale){
@@ -57,7 +60,7 @@ final class CanvasTextLayout {
             canvas.drawText(text,x,baseline,paint);
             return;
         }
-        TextPaint textPaint=shapedPaint(paint,locale);
+        TextPaint textPaint=shapedPaint(text,paint,locale);
         int width=Math.max(1,(int)Math.ceil(Layout.getDesiredWidth(text,textPaint))+2);
         StaticLayout layout=StaticLayout.Builder.obtain(text,0,text.length(),textPaint,width)
             .setAlignment(Layout.Alignment.ALIGN_NORMAL)
