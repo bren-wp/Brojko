@@ -1,0 +1,21 @@
+Brojko to kolorowa gra logiczna, w której łączysz liczby we własnym tempie.
+
+Przesuwaj palcem po planszy, łącz identyczne kafelki i twórz coraz większe liczby. Osiągnij 2048, pobij rekord i śledź swoje postępy.
+
+TRYBY GRY
+• Klasyczny 4×4: planuj ruchy i osiągnij 2048.
+• Relaks 5×5: więcej miejsca na dłuższe rozgrywki.
+• Codzienne wyzwanie: osiągnij 256 i zdobądź 3000 punktów w maksymalnie 80 ruchach.
+
+DLACZEGO BROJKO?
+• Kolorowe motywy i różne style kafelków.
+• Gwiazdki za misje i codzienne wyzwania.
+• Statystyki, rekordy i historia gier.
+• Cofanie ostatniego ruchu.
+• Gra offline, bez konta, reklam i zakupów w aplikacji.
+• Lokalne postępy i eksport kopii zapasowej.
+
+Łącz liczby. Bij rekordy.
+
+Brojko by Brendigo
+brendigo.com

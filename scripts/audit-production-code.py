@@ -248,7 +248,9 @@ assert set(base_plurals)=={"daily_moves_remaining","daily_streak"}
 required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many","other"},
                 "fr":{"one","many","other"},"de":{"one","other"},"en":{"one","other"},
                 "es":{"one","many","other"},"he":{"one","two","other"},
-                "it":{"one","many","other"},"pt-BR":{"one","many","other"}}
+                "it":{"one","many","other"},"pt-BR":{"one","many","other"},
+                "sl":{"one","two","few","other"},"pl":{"one","few","many","other"},
+                "cs":{"one","few","many","other"}}
 for tag in sorted(configured_tags):
     directory={"en":"values","he":"values-iw","pt-BR":"values-pt-rBR"}.get(tag,"values-"+tag)
     forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
