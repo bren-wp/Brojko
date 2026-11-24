@@ -4,4 +4,19 @@
     <string name="reminder_channel_description">Podsjetnik za dnevnu logičku igru Brojko.</string>
     <string name="reminder_title">Brojko — novi dnevni izazov</string>
     <string name="reminder_body">Spajaj brojeve, osvoji zvjezdice i postavi novi rekord!</string>
+    <string name="settings_title">Postavke</string>
+    <string name="settings_sound">Zvuk</string>
+    <string name="settings_vibration">Vibracija</string>
+    <string name="settings_language">Jezik</string>
+    <string name="settings_notifications">Obavijesti</string>
+    <string name="settings_progress_sync">Sinkronizacija napretka</string>
+    <string name="settings_local_backup">Lokalna kopija</string>
+    <string name="settings_privacy">Pravila privatnosti</string>
+    <string name="settings_about">O aplikaciji</string>
+    <string name="settings_switch_on">%1$s uključeno</string>
+    <string name="settings_switch_off">%1$s isključeno</string>
+    <string name="language_interface">Jezik sučelja</string>
+    <string name="language_croatian">Hrvatski</string>
+    <string name="language_unavailable">Ostali jezici nisu dostupni u ovoj verziji.</string>
+    <string name="language_back">Natrag na postavke</string>
 </resources>

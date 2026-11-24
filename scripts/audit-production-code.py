@@ -204,4 +204,11 @@ reminder_keys = {"reminder_channel_name", "reminder_channel_description", "remin
 assert reminder_keys <= base_strings.keys()
 for key in reminder_keys:
     assert "R.string." + key in java["AppReminder.java"], "Reminder bypasses resource: " + key
-print("Localization foundation: migrated notification resources present in English and Croatian.")
+# Check positional format placeholders in the migrated strings. The gate
+# intentionally rejects mismatched argument positions and conversion types.
+for key in base_strings:
+    signature = lambda value: sorted(re.findall(r"%(?:\d+\$)?[sdif]", value))
+    assert signature(base_strings[key]) == signature(hr_strings[key]), "Format signature mismatch: " + key
+assert '"Jezik".equals(caption)' not in java["MainActivity.java"]
+assert '"Sinkronizacija napretka".equals(caption)' not in java["MainActivity.java"]
+print("Localization foundation: migrated notification and settings resources present in English and Croatian.")

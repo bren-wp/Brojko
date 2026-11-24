@@ -40,7 +40,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
 import java.text.NumberFormat;
-import java.util.Locale;
+import android.content.res.Resources;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -107,7 +107,7 @@ public final class MainActivity extends ComponentActivity {
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
-    final NumberFormat number=NumberFormat.getIntegerInstance(new Locale("hr","HR"));
+    final NumberFormat number=NumberFormat.getIntegerInstance(LocaleManager.legacyUiLocale());
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -690,6 +690,7 @@ public final class MainActivity extends ComponentActivity {
 
     final class BoardScreen extends View {
         final BoardAccessibilityDelegate accessibilityHelper;
+        final Resources localizedResources;
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         // Optional instrumentation-only ink bounds: no production text
@@ -747,6 +748,7 @@ public final class MainActivity extends ComponentActivity {
         }
         BoardScreen(Context context){
             super(context);
+            localizedResources=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
             accessibilityHelper=new BoardAccessibilityDelegate(this);
             ViewCompat.setAccessibilityDelegate(this,accessibilityHelper);
             Typeface base;
@@ -771,6 +773,7 @@ public final class MainActivity extends ComponentActivity {
                 displayFont=makeTypeface(base,900);
             }
         }
+        String uiText(int id){return localizedResources.getString(id);}
         void palette() {
             boolean dark=theme==1;
             // The very light canvas matches the user-provided nine portrait
@@ -7030,30 +7033,30 @@ public final class MainActivity extends ComponentActivity {
                 // outline and holes, not a screenshot or fake gameplay UI.
                 ownerHeadline(OwnerHeadlineContours.SETTINGS_NAVY,
                     0xff152444,0xff121c37,87f,183f);
-            }else illustratedTitle("Postavke",200,compact?75:108,
+            }else illustratedTitle(uiText(R.string.settings_title),200,compact?75:108,
                 compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
             else {
                 rays(74,97,29,CORAL);
                 rays(331,97,29,CORAL);
             }
-            settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
+            settingsSwitch(uiText(R.string.settings_sound),"sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
-            settingsSwitch("Vibracija","phone-vibrate",TEAL,rowY[1],vibration,()->{
+            settingsSwitch(uiText(R.string.settings_vibration),"phone-vibrate",TEAL,rowY[1],vibration,()->{
                 vibration=!vibration;persist();invalidate();
             });
-            settingsAction("Jezik","Hrvatski","globe",0xff378ef6,rowY[2],
+            settingsAction(uiText(R.string.settings_language),uiText(R.string.language_croatian),"globe",0xff378ef6,rowY[2],
                 ()->navigate("language"));
-            settingsSwitch("Obavijesti","bell",0xffffb630,rowY[3],
+            settingsSwitch(uiText(R.string.settings_notifications),"bell",0xffffb630,rowY[3],
                 notifications,()->toggleNotifications());
             // No cloud service is connected: show honest local backup navigation,
             // not the fictional enabled sync switch in the supplied illustration.
-            settingsAction("Sinkronizacija napretka","Lokalna kopija",
+            settingsAction(uiText(R.string.settings_progress_sync),uiText(R.string.settings_local_backup),
                 "cloud-backup",0xffa55efe,rowY[4],()->navigate("backup"));
-            settingsAction("Pravila privatnosti","›","shield",0xffff7969,
+            settingsAction(uiText(R.string.settings_privacy),"›","shield",0xffff7969,
                 rowY[5],()->navigate("privacy"));
-            settingsAction("O aplikaciji","›","info",0xff378ef6,
+            settingsAction(uiText(R.string.settings_about),"›","info",0xff378ef6,
                 rowY[6],()->navigate("about"));
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
@@ -7082,7 +7085,7 @@ public final class MainActivity extends ComponentActivity {
             float switchY=y+(height-32)/2f;
             settingsToggle(313,switchY,on);
             taps.add(new Tap(18,y,382,y+height,
-                caption+(on?" uključeno":" isključeno"),action));
+                localizedResources.getString(on?R.string.settings_switch_on:R.string.settings_switch_off,caption),action));
         }
         void settingsAction(String caption,String value,String glyph,
                             int accent,int y,Runnable action){
@@ -7093,7 +7096,7 @@ public final class MainActivity extends ComponentActivity {
             float iconX=compact?29:31;
             settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
             boolean hasValue=!"›".equals(value);
-            if(hasValue&&caption.length()>16){
+            if(hasValue&&"cloud-backup".equals(glyph)){
                 // Reference 941x1672: progress-backup title ink starts
                 // ink x215..628/y899..937. The old true Android
                 // screenshot measured x216..642/y873..909, approximately
@@ -7103,7 +7106,7 @@ public final class MainActivity extends ComponentActivity {
                 // Keep the honest local-backup subtitle and navigation;
                 // this is not a functional cloud-sync toggle.
                 boolean ownerBackup=compact&&theme==0&&
-                    "Sinkronizacija napretka".equals(caption);
+                    "cloud-backup".equals(glyph);
                 float titleBaseline=y+(ownerBackup?36:compact?24:31);
                 float subtitleBaseline=y+(ownerBackup?53:compact?45:55);
                 leftFitted(caption,compact?91:97,titleBaseline,
@@ -7115,8 +7118,8 @@ public final class MainActivity extends ComponentActivity {
             }else{
                 leftFitted(caption,compact?91:97,y+(compact?36:43),
                     compact?18.8f:20,
-                    "Jezik".equals(caption)?145:215,ink,true);
-                if("Jezik".equals(caption)){
+                    "globe".equals(glyph)?145:215,ink,true);
+                if("globe".equals(glyph)){
                     float pillY=y+(compact?9:14),pillH=compact?39:44;
                     gradient(245,pillY,124,pillH,19,
                         theme==1?0xff4b5971:0xfffffaf1,
@@ -7171,13 +7174,13 @@ public final class MainActivity extends ComponentActivity {
             bottomBrand();
         }
         void languagePage(){
-            title("Jezik");
-            txt("Jezik sučelja",200,181,21,muted,true);
+            title(uiText(R.string.settings_language));
+            txt(uiText(R.string.language_interface),200,181,21,muted,true);
             card(25,223,350,95,20,card);
             icon("check",67,269,28,TEAL);
-            txt("Hrvatski",208,278,25,ink,true);
-            txt("Ostali jezici nisu dostupni u ovoj verziji.",200,369,15,muted,false);
-            button("Natrag na postavke","back",25,720,350,70,CORAL,true,()->navigate("settings"));
+            txt(uiText(R.string.language_croatian),208,278,25,ink,true);
+            txt(uiText(R.string.language_unavailable),200,369,15,muted,false);
+            button(uiText(R.string.language_back),"back",25,720,350,70,CORAL,true,()->navigate("settings"));
         }
         void aboutPage(){
             textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",

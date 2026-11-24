@@ -18,6 +18,10 @@ public final class LocaleResourcesTest {
         Resources hr=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
         assertEquals("Brojko — new daily challenge",en.getString(R.string.reminder_title));
         assertEquals("Brojko — novi dnevni izazov",hr.getString(R.string.reminder_title));
+        assertEquals("Language",en.getString(R.string.settings_language));
+        assertEquals("Jezik",hr.getString(R.string.settings_language));
+        assertEquals("Sound on",en.getString(R.string.settings_switch_on,"Sound"));
+        assertEquals("Zvuk uključeno",hr.getString(R.string.settings_switch_on,"Zvuk"));
         assertEquals(before,context.getResources().getConfiguration().getLocales().toLanguageTags());
     }
 }
