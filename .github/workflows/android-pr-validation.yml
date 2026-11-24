@@ -47,7 +47,13 @@ jobs:
       - name: Structural Java clone candidate report
         run: |
           python3 -m unittest discover -s tools -p 'test_structural_clones.py' -v
-          python3 scripts/scan-structural-clones.py
+          python3 scripts/scan-structural-clones.py --report structural-clone-candidates.json
+      - name: Archive complete structural clone candidates
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: brojko-structural-clone-candidates
+          path: structural-clone-candidates.json
+          if-no-files-found: error
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin

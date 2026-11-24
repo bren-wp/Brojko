@@ -112,3 +112,7 @@ funkcionalan; novi JVM regresijski test pokriva oba slučaja.
 ## Mission threshold policy
 
 `RewardPolicy` extracts the six existing threshold/amount decisions from `MainActivity` into a pure Java component. The original reward bits, order, thresholds, amounts, saturation and once-only persistence are retained; `MainActivity.reward` still owns mutation. Boundary and undo regression tests are included. This is a bounded extraction, not completion of the Activity/renderer refactor.
+
+## Session transition policy
+
+The confirmation and archive predicates are extracted to `SessionTransitionPolicy` and used by `requestNew`, `newGame` and `endSession`. Finished games still require archiving without confirmation; archived or unused games cannot be archived again. Four JVM tests cover these branches. The durable asynchronous archive coordinator and Canvas renderer are unchanged. This is a bounded refactoring, not completion of MainActivity modularization.

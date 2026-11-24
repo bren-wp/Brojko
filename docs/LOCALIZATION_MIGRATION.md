@@ -35,3 +35,7 @@ PR #160 corrects selected backup, no-cloud, daily reward and undo mission messag
 ## English-first release evidence
 
 The production default remains English, regardless of device locale when no app language is saved. The new instrumentation test clears the dedicated locale preferences and API 33+ platform app locale, launches the real Activity, checks English navigation, mode labels, reminder text, LTR layout and recreation, then restores the Croatian test runner state. The release UI workflow captures 23 separate English states from the real production Canvas at 941×1672, decodes and hashes the PNGs, and publishes them separately from the unchanged 28 Croatian owner-reference gallery images. This preserves the original screenshot regression baseline and avoids pretending translated text is RGB-identical. Fresh CI and release publication are required.
+
+## Shared locale test APKs
+
+Run 45509800848 had two verified failures from Maven Central HTTP 429 while resolving httpmime 4.5.14, which disabled the repository and prevented Guava and other modules resolving. The next revision builds debug/test APKs once, publishes a checkout-SHA and SHA256-verified pair, and reuses the identical bytes in all 13 API jobs and six capture jobs. It limits emulator matrix concurrency and retries only the observed Maven resolution rate limit, at most twice. No test cases or locale/viewport coverage are removed. Fresh CI required.

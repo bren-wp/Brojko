@@ -351,13 +351,13 @@ public final class MainActivity extends ComponentActivity {
     }
     void requestNew(String mode){
         if(gameTransitionBusy)return;
-        if(game!=null&&!game.gameOver&&!game.archived&&game.moves>0){
+        if(SessionTransitionPolicy.needsConfirmation(game)){
             pendingMode=mode;navigate("confirm");
         }else newGame(mode);
     }
     void newGame(String mode) {
         if(gameTransitionBusy||backupImportBusy)return;
-        if(game!=null&&!game.archived&&game.moves>0){
+        if(SessionTransitionPolicy.needsArchive(game)){
             beginGameArchive(mode,false);
             return;
         }
@@ -473,7 +473,7 @@ public final class MainActivity extends ComponentActivity {
     }
     void endSession(){
         if(gameTransitionBusy||backupImportBusy)return;
-        if(game!=null&&!game.archived&&game.moves>0){
+        if(SessionTransitionPolicy.needsArchive(game)){
             beginGameArchive(null,true);
             return;
         }
