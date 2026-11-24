@@ -67,6 +67,8 @@ public final class MainActivity extends ComponentActivity {
     private static final float[][] MISSION_CORAL_RAYS=GameArtworkData.MISSION_CORAL_RAYS;
     private static final float[][] MISSION_HEADER_RAYS=GameArtworkData.MISSION_HEADER_RAYS;
     SharedPreferences prefs;
+    private Resources activityResources;
+    String activityText(int id,Object... args){return args.length==0?activityResources.getString(id):activityResources.getString(id,args);}
     TileGame game;
     BoardScreen screen;
     // Keep the supplied full-screen branding visible for 2–3 seconds,
@@ -111,6 +113,7 @@ public final class MainActivity extends ComponentActivity {
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+        activityResources=LocaleManager.resourcesFor(this,LocaleManager.legacyUiLocale());
         // Draw behind both system bars on API 24-36. Use the manual
         // edge-to-edge contract instead of WindowCompat.enableEdgeToEdge():
         // AndroidX's setup helper can invoke deprecated Window bar-color
@@ -189,7 +192,7 @@ public final class MainActivity extends ComponentActivity {
         }
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
-        screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
+        screen.setContentDescription(activityText(R.string.accessibility_board));
         ViewCompat.setOnApplyWindowInsetsListener(screen,(v,insets)->{
             androidx.core.graphics.Insets safe=insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()|
@@ -272,7 +275,7 @@ public final class MainActivity extends ComponentActivity {
     String dailyLongDate(){return GameCalendar.dailyLongDate();}
     String fmt(int x){return number.format(x);}
     String labelMode(String m) {
-        return "relaxed".equals(m)?"Opušteno 5×5":"daily".equals(m)?"Dnevni izazov":"Klasično 4×4";
+        return activityText("relaxed".equals(m)?R.string.mode_relaxed:"daily".equals(m)?R.string.mode_daily:R.string.mode_classic);
     }
     void updateBars() {
         // Never call deprecated Window.setStatusBarColor/NavigationBarColor.
@@ -377,7 +380,7 @@ public final class MainActivity extends ComponentActivity {
             AppReminder.configure(this,notifications);
             persist();screen.invalidate();
             if(!notifications)Toast.makeText(this,
-                "Obavijesti nisu dopuštene u postavkama Androida.",
+                activityText(R.string.notification_denied),
                 Toast.LENGTH_LONG).show();
         }
     }
@@ -425,8 +428,7 @@ public final class MainActivity extends ComponentActivity {
             dailyBonusGrantedThisAttempt=true;
         }
         soundEffect();
-        screen.setContentDescription("Brojko, rezultat "+fmt(game.score)+
-            ", najveća pločica "+fmt(game.peak)+", potez "+game.moves);
+        screen.setContentDescription(activityText(R.string.accessibility_progress,fmt(game.score),fmt(game.peak),game.moves));
         if(dailyComplete && !dailyWasComplete) {
             page="dailyWin";
         }else if(daily && game.isDailyOutOfMoves()){
@@ -435,10 +437,8 @@ public final class MainActivity extends ComponentActivity {
         }else if(result.first2048)page="win";
         else if(result.lost){page="daily".equals(game.mode)?"dailyFail":"over";}
         if("win".equals(page)){
-            String announcement="Bravo! Dosegnuli ste pločicu 2048. "
-                +"Tvoj rezultat je "+fmt(game.score)+".";
-            screen.setContentDescription(announcement+
-                " Nastavi igrati, Nova igra ili Podijeli rezultat.");
+            String announcement=activityText(R.string.accessibility_victory,fmt(game.score));
+            screen.setContentDescription(activityText(R.string.accessibility_victory_actions,announcement));
             screen.announceForAccessibility(announcement);
         }
         persist();animate();
@@ -460,13 +460,13 @@ public final class MainActivity extends ComponentActivity {
     private void beginGameArchive(String nextMode,boolean ending){
         if(!GameArchiveCoordinator.start(this,prefs,game,historyDate(),
             compactTime(),nextMode,ending)){
-            Toast.makeText(this,"Spremanje partije nije moguće.",
+            Toast.makeText(this,activityText(R.string.archive_unavailable),
                 Toast.LENGTH_LONG).show();
             return;
         }
         gameTransitionBusy=true;
         screen.setEnabled(false);
-        screen.announceForAccessibility("Spremanje partije.");
+        screen.announceForAccessibility(activityText(R.string.archive_saving));
     }
 
     /** Invoked on main after a worker commit; it also survives rotation. */
@@ -475,7 +475,7 @@ public final class MainActivity extends ComponentActivity {
         gameTransitionBusy=false;
         if(screen!=null)screen.setEnabled(true);
         if(!saved){
-            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+            Toast.makeText(this,activityText(R.string.archive_failed),
                 Toast.LENGTH_LONG).show();
             return;
         }
@@ -523,9 +523,8 @@ public final class MainActivity extends ComponentActivity {
         String value=game==null?fmt(best):fmt(game.score);
         Intent i=new Intent(Intent.ACTION_SEND);
         i.setType("text/plain");
-        i.putExtra(Intent.EXTRA_TEXT,"U igri Brojko osvojio/la sam "+value
-            +" bodova! Spajaj brojeve. Ruši rekorde. — Brojko by Brendigo");
-        startActivity(Intent.createChooser(i,"Podijeli rezultat"));
+        i.putExtra(Intent.EXTRA_TEXT,activityText(R.string.share_message,value));
+        startActivity(Intent.createChooser(i,activityText(R.string.action_share_score)));
     }
 
     /** External author website only: no user data or gameplay is uploaded. */
@@ -537,7 +536,7 @@ public final class MainActivity extends ComponentActivity {
         try{
             startActivity(brendigoWebsiteIntent());
         }catch(android.content.ActivityNotFoundException notAvailable){
-            Toast.makeText(this,"Nema dostupnog web preglednika.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.browser_unavailable),Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -548,7 +547,7 @@ public final class MainActivity extends ComponentActivity {
     }
     void chooseBackupFile(boolean exporting){
         if(backupDocumentBusy||gameTransitionBusy){
-            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
             return;
         }
         Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
@@ -556,14 +555,14 @@ public final class MainActivity extends ComponentActivity {
         i.addCategory(Intent.CATEGORY_OPENABLE);
         if(exporting)i.putExtra(Intent.EXTRA_TITLE,"Brojko-backup-"+today()+".json");
         try{startActivityForResult(i,exporting?EXPORT_BACKUP:IMPORT_BACKUP);}
-        catch(Exception ex){Toast.makeText(this,"Nije moguće otvoriti datoteke.",Toast.LENGTH_LONG).show();}
+        catch(Exception ex){Toast.makeText(this,activityText(R.string.storage_open_failed),Toast.LENGTH_LONG).show();}
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
         if(requestCode!=EXPORT_BACKUP&&requestCode!=IMPORT_BACKUP)return;
         if(backupDocumentBusy||gameTransitionBusy){
-            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -600,12 +599,12 @@ public final class MainActivity extends ComponentActivity {
                     backupImportBusy=false;
                     if(screen!=null)screen.setEnabled(true);
                     if(failed!=null){
-                        Toast.makeText(this,"Pogreška: "+failed.getMessage(),
+                        Toast.makeText(this,activityText(importing?R.string.backup_import_failed:R.string.backup_export_failed),
                             Toast.LENGTH_LONG).show();
                         return;
                     }
                     if(!importing){
-                        Toast.makeText(this,"Sigurnosna kopija spremljena.",
+                        Toast.makeText(this,activityText(R.string.backup_saved),
                             Toast.LENGTH_LONG).show();
                         return;
                     }
@@ -614,11 +613,11 @@ public final class MainActivity extends ComponentActivity {
                         // with gameplay and onPause on the main thread.
                         LocalBackupRepository.apply(prefs,validated);
                         skipPersistOnPauseAfterImport=true;
-                        Toast.makeText(this,"Sigurnosna kopija vraćena.",
+                        Toast.makeText(this,activityText(R.string.backup_restored),
                             Toast.LENGTH_LONG).show();
                         recreate();
                     }catch(Exception error){
-                        Toast.makeText(this,"Pogreška: "+error.getMessage(),
+                        Toast.makeText(this,activityText(R.string.backup_import_failed),
                             Toast.LENGTH_LONG).show();
                     }
                 });
@@ -627,7 +626,7 @@ public final class MainActivity extends ComponentActivity {
             backupDocumentBusy=false;
             backupImportBusy=false;
             if(importing)screen.setEnabled(true);
-            Toast.makeText(this,"Sigurnosna kopija trenutačno nije dostupna.",
+            Toast.makeText(this,activityText(R.string.backup_unavailable),
                 Toast.LENGTH_LONG).show();
         }
     }
@@ -1922,10 +1921,10 @@ public final class MainActivity extends ComponentActivity {
                 case "language":languagePage();break;
                 case "backup":backupPage();break;
                 case "help":helpPage();break;
-                case "privacy":textPage("Privatnost",new String[]{"Brojko čuva rezultate i postavke",
-                    "samo na vašem uređaju.","Igra radi bez interneta i računa.",
-                    "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
-                    "analitiku na poslužitelje."});break;
+                case "privacy":textPage(uiText(R.string.privacy_title),new String[]{uiText(R.string.privacy_local_1),
+                    uiText(R.string.privacy_local_2),uiText(R.string.privacy_offline),
+                    uiText(R.string.privacy_no_data),uiText(R.string.privacy_no_ads),
+                    uiText(R.string.privacy_no_analytics)});break;
                 case "about":aboutPage();break;
                 default:home();
             }
@@ -3480,16 +3479,16 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
             icon("pause",200,286,29,WHITE);
-            illustratedTitle("Igra je pauzirana",200,364,30,321,ink);
-            fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
+            illustratedTitle(uiText(R.string.pause_title),200,364,30,321,ink);
+            fitted(uiText(R.string.pause_ready),200,391,14,308,muted,false);
             card(62,406,276,55,17,
                 theme==1?card:0xfffff8ef);
             icon("stats",91,433,22,muted);
-            leftFitted("Rezultat",114,429,14,110,muted,false);
+            leftFitted(uiText(R.string.score_label),114,429,14,110,muted,false);
             fitted(fmt(game.score),271,443,25,119,ink,true);
-            button("Nastavi","play",52,483,296,66,CORAL,true,
+            button(uiText(R.string.action_resume),"play",52,483,296,66,CORAL,true,
                 ()->navigate("game"));
-            button("Izbornik","home",52,561,296,61,card,false,
+            button(uiText(R.string.action_menu),"home",52,561,296,61,card,false,
                 ()->navigate("home"));
         }
         // Source artwork uses a quiet post-game summary behind the modal:
@@ -3812,9 +3811,9 @@ public final class MainActivity extends ComponentActivity {
                 fitted(fmt(game.score),136,392,35,113,ink,true);
                 c.restore();
             }else{
-                txt("Tvoj rezultat",136,356,12,muted,false);
+                txt(uiText(R.string.score_yours),136,356,12,muted,false);
                 fitted(fmt(game.score),136,392,35,113,ink,true);
-                txt("Osvojene zvjezdice",264,356,11,muted,false);
+                txt(uiText(R.string.stars_earned),264,356,11,muted,false);
             }
             // Real reference star mask ~66×66 px; old 32-unit stars
             // rasterized to only ~58×60 px at the 941×1672 viewport.
@@ -3825,12 +3824,12 @@ public final class MainActivity extends ComponentActivity {
             // action bands: coral y~994..1120, cream y~1122..1267,
             // blue y~1269..1377. Old native buttons floated too high,
             // especially the short cream row; keep every action live.
-            button("Nastavi igrati","play",74,422,252,53,CORAL,true,()->{
+            button(uiText(R.string.action_continue_playing),"play",74,422,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
-            button("Nova igra","refresh",74,478,252,60,card,false,
+            button(uiText(R.string.action_new_game),"refresh",74,478,252,60,card,false,
                 ()->newGame(game.mode));
-            button("Podijeli rezultat","share",74,539,252,49,
+            button(uiText(R.string.action_share_score),"share",74,539,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // There is no separately supplied owner's Game Over PNG. Keep the
@@ -3843,20 +3842,20 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
             icon("target",200,224,31,WHITE);
-            illustratedTitle("Kraj igre",200,308,39,294,ink);
-            fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
+            illustratedTitle(uiText(R.string.game_over_title),200,308,39,294,ink);
+            fitted(uiText(R.string.game_no_moves),200,340,17,287,muted,false);
             // Warm, raised status panels are not fake reward counters.
             victorySummaryCard(59,358,135,107);
             victorySummaryCard(206,358,135,107);
-            fitted("Tvoj rezultat",126.5f,383,14,123,muted,false);
+            fitted(uiText(R.string.score_yours),126.5f,383,14,123,muted,false);
             fitted(fmt(game.score),126.5f,440,31,123,ink,true);
-            fitted("Najveća pločica",273.5f,383,13.5f,128,muted,false);
+            fitted(uiText(R.string.game_peak_tile),273.5f,383,13.5f,128,muted,false);
             fitted(fmt(game.maxTile()),273.5f,440,30,119,TEAL,true);
-            button("Nova igra","refresh",54,483,292,64,CORAL,true,
+            button(uiText(R.string.action_new_game),"refresh",54,483,292,64,CORAL,true,
                 ()->newGame(game.mode));
-            button("Povratak","home",54,559,292,56,card,false,
+            button(uiText(R.string.action_return),"home",54,559,292,56,card,false,
                 ()->navigate("home"));
-            button("Podijeli rezultat","share",54,624,292,52,
+            button(uiText(R.string.action_share_score),"share",54,624,292,52,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         void resultOverlay(boolean winning){
@@ -3889,36 +3888,36 @@ public final class MainActivity extends ComponentActivity {
             overlayBox(panelTop,narrow?503:(winning?577:528));
             if(winning){
                 icon("crown",200,narrow?177:160,91,0xffffba38);
-                txt("Bravo!",200,narrow?267:279,44,ink,true);
+                txt(uiText(R.string.victory_bravo),200,narrow?267:279,44,ink,true);
                 card(71,narrow?282:300,258,43,21,
                     theme==1?card:0xffffeddb);
-                fitted("Dosegnuli ste 2048!",200,narrow?310:329,
+                fitted(uiText(R.string.victory_goal),200,narrow?310:329,
                     23,245,CORAL,true);
             }else{
                 icon("target",200,narrow?211:205,68,CORAL);
-                illustratedTitle("Kraj igre",200,narrow?276:291,42,330,ink);
-                fitted("Nema više mogućih poteza.",200,narrow?316:335,
+                illustratedTitle(uiText(R.string.game_over_title),200,narrow?276:291,42,330,ink);
+                fitted(uiText(R.string.game_no_moves),200,narrow?316:335,
                     18,310,muted,false);
             }
             float summary=narrow?336:365;
             card(52,summary,145,99,21,card);
             card(208,summary,145,99,21,card);
-            txt("Tvoj rezultat",124,summary+28,15,muted,false);
+            txt(uiText(R.string.score_yours),124,summary+28,15,muted,false);
             fitted(fmt(game.score),124,summary+81,35,132,ink,true);
-            txt(winning?"Zvjezdice":"Najveća pločica",
+            txt(winning?uiText(R.string.stars_label):uiText(R.string.game_peak_tile),
                 280,summary+28,15,muted,false);
             if(winning)fitted("★ ★ ★",280,summary+79,28,125,
                 0xffffaf25,true);
             else fitted(fmt(game.maxTile()),280,summary+81,31,125,TEAL,true);
-            button(winning?"Nastavi igrati":"Nova igra","play",
+            button(winning?uiText(R.string.action_continue_playing):uiText(R.string.action_new_game),"play",
                 54,narrow?454:491,292,67,CORAL,true,()->{
                     if(winning){game.winAcknowledged=true;persist();navigate("game");}
                     else newGame(game.mode);
                 });
-            button(winning?"Nova igra":"Povratak",winning?"undo":"home",
+            button(winning?uiText(R.string.action_new_game):uiText(R.string.action_return),winning?"undo":"home",
                 54,narrow?532:576,292,64,card,false,
                 ()->{if(winning)newGame(game.mode);else navigate("home");});
-            button("Podijeli rezultat","share",54,narrow?606:657,292,57,
+            button(uiText(R.string.action_share_score),"share",54,narrow?606:657,292,57,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // Daily result is a stateful gameplay overlay, not a static reward
@@ -3933,17 +3932,17 @@ public final class MainActivity extends ComponentActivity {
             int accent=success?TEAL:CORAL;
             gradient(173,208,54,52,17,lighten(accent,.16f),accent);
             icon(success?"star":"target",200,234,31,WHITE);
-            illustratedTitle(success?"Dnevni izazov riješen!":
-                "Izazov nije uspio",200,315,success?28:30,321,ink);
-            fitted(success?"Sva 3 zadatka su ostvarena!":
-                (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
-                "Nema više mogućih poteza."),200,345,16,319,muted,false);
+            illustratedTitle(success?uiText(R.string.daily_success):
+                uiText(R.string.daily_failure),200,315,success?28:30,321,ink);
+            fitted(success?uiText(R.string.daily_all_goals):
+                (game.moves>=80?uiText(R.string.daily_limit):
+                uiText(R.string.game_no_moves)),200,345,16,319,muted,false);
 
             victorySummaryCard(59,366,135,99);
             victorySummaryCard(206,366,135,99);
-            fitted("Tvoj rezultat",126.5f,390,13.6f,126,muted,false);
+            fitted(uiText(R.string.score_yours),126.5f,390,13.6f,126,muted,false);
             fitted(fmt(game.score),126.5f,444,29,124,ink,true);
-            fitted("Najveća pločica",273.5f,390,13.1f,127,muted,false);
+            fitted(uiText(R.string.game_peak_tile),273.5f,390,13.1f,127,muted,false);
             fitted(fmt(game.maxTile()),273.5f,444,28,118,TEAL,true);
 
             card(59,476,282,54,18,theme==1?0xff32445c:
@@ -3954,16 +3953,16 @@ public final class MainActivity extends ComponentActivity {
             // transient UI flag is only needed to distinguish first win.
             String message=success?
                 (dailyBonusGrantedThisAttempt?
-                    "+250 zvjezdica osvojeno!":
+                    uiText(R.string.daily_stars):
                     (today().equals(dailyRewardDate)?
-                        "Današnja nagrada je preuzeta.":
-                        "Dnevni izazov dovršen.")):
-                "Pokušaj ponovno ostvariti ciljeve.";
+                        uiText(R.string.daily_reward_claimed):
+                        uiText(R.string.daily_complete))):
+                uiText(R.string.daily_retry_goals);
             leftFitted(message,108,508,15,216,
                 success?0xff078e77:ink,true);
-            button("Igraj ponovno","refresh",53,543,294,61,CORAL,true,
+            button(uiText(R.string.action_replay),"refresh",53,543,294,61,CORAL,true,
                 ()->newGame("daily"));
-            button("Izbornik","home",53,615,294,55,card,false,
+            button(uiText(R.string.action_menu),"home",53,615,294,55,card,false,
                 ()->navigate("home"));
         }
         void dailyResultOverlay(boolean success){
@@ -3975,24 +3974,24 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
-            illustratedTitle(success?"Dnevni izazov riješen!":
-                "Izazov nije uspio",200,329,success?28:31,332,ink);
-            fitted(success?"Sva 3 zadatka su ostvarena!":
-                (game.moves>=80?"Potrošeno je 80 dopuštenih poteza.":
-                "Nema više mogućih poteza."),200,369,17,316,muted,false);
+            illustratedTitle(success?uiText(R.string.daily_success):
+                uiText(R.string.daily_failure),200,329,success?28:31,332,ink);
+            fitted(success?uiText(R.string.daily_all_goals):
+                (game.moves>=80?uiText(R.string.daily_moves_used):
+                uiText(R.string.game_no_moves)),200,369,17,316,muted,false);
             card(65,401,270,98,20,card);
-            txt("TVOJ REZULTAT",200,432,15,muted,true);
+            txt(uiText(R.string.score_yours_upper),200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
             fitted(success?(dailyBonusGrantedThisAttempt?
-                "+250 zvjezdica osvojeno!":
+                uiText(R.string.daily_stars):
                 today().equals(dailyRewardDate)?
-                    "Današnja nagrada je preuzeta.":
-                    "Dnevni izazov dovršen."):
-                "Pokušaj ponovno ostvariti sve ciljeve.",200,534,17,310,
+                    uiText(R.string.daily_reward_claimed):
+                    uiText(R.string.daily_complete)):
+                uiText(R.string.daily_retry_all),200,534,17,310,
                 success?0xff259d85:muted,true);
-            button("Igraj ponovno","refresh",53,546,294,62,CORAL,true,
+            button(uiText(R.string.action_replay),"refresh",53,546,294,62,CORAL,true,
                 ()->newGame("daily"));
-            button("Izbornik","home",53,621,294,55,card,false,
+            button(uiText(R.string.action_menu),"home",53,621,294,55,card,false,
                 ()->navigate("home"));
         }
         // These confirmation screens are functional modals, not independent
@@ -4007,36 +4006,35 @@ public final class MainActivity extends ComponentActivity {
         void confirmSessionSummary(float y){
             card(60,y,280,57,18,theme==1?card:0xfffff7ed);
             icon("stats",91,y+27,22,muted);
-            leftFitted("Rezultat",115,y+25,14,98,muted,false);
+            leftFitted(uiText(R.string.score_label),115,y+25,14,98,muted,false);
             fitted(game==null?"0":fmt(game.score),273,y+38,24,118,ink,true);
         }
         void confirmEndOverlay(){
             dim();
             overlayBox(226,421);
             confirmModalBadge("check",TEAL);
-            illustratedTitle("Završiti partiju?",200,362,29,316,ink);
-            fitted("Rezultat se sprema u povijest partija.",
+            illustratedTitle(uiText(R.string.confirm_end),200,362,29,316,ink);
+            fitted(uiText(R.string.confirm_archive_score),
                 200,393,15.5f,317,muted,false);
             confirmSessionSummary(411);
-            button("Završi i spremi","check",52,488,296,65,CORAL,true,
+            button(uiText(R.string.confirm_end_save),"check",52,488,296,65,CORAL,true,
                 ()->endSession());
-            button("Nastavi igrati","play",52,570,296,59,card,false,
+            button(uiText(R.string.action_continue_playing),"play",52,570,296,59,card,false,
                 ()->navigate("game"));
         }
         void confirmOverlay() {
             dim();
             overlayBox(226,421);
             confirmModalBadge("refresh",CORAL);
-            illustratedTitle("Nova partija?",200,362,30,318,ink);
-            fitted("Trenutačni napredak sprema se u povijest.",
+            illustratedTitle(uiText(R.string.confirm_new),200,362,30,318,ink);
+            fitted(uiText(R.string.confirm_archive_progress),
                 200,393,15.1f,316,muted,false);
             confirmSessionSummary(411);
-            String modeLabel="relaxed".equals(pendingMode)?"Opušteno 5×5":
-                "daily".equals(pendingMode)?"Dnevni izazov":"Klasično 4×4";
-            fitted("Novi način: "+modeLabel,200,482,14,310,muted,true);
-            button("Započni novo","play",52,500,296,60,CORAL,true,
+            String modeLabel=labelMode(pendingMode);
+            fitted(localizedResources.getString(R.string.confirm_mode,modeLabel),200,482,14,310,muted,true);
+            button(uiText(R.string.action_start_new),"play",52,500,296,60,CORAL,true,
                 ()->newGame(pendingMode));
-            button("Odustani","back",52,578,296,54,card,false,
+            button(uiText(R.string.action_cancel),"back",52,578,296,54,card,false,
                 ()->navigate("game"));
         }
         void dailyPlayGlyph(float cx,float cy,float size,int color){
@@ -7133,8 +7131,8 @@ public final class MainActivity extends ComponentActivity {
             taps.add(new Tap(18,y,382,y+height,caption,action));
         }
         void helpPage(){
-            title("Kako igrati");
-            txt("Spajaj jednake pločice",200,170,24,ink,true);
+            title(uiText(R.string.help_title));
+            txt(uiText(R.string.help_merge),200,170,24,ink,true);
             card(42,202,316,139,22,card);
             // Readable visual equation; neither operator overlaps its tiles.
             glossyTile(58,235,70,70,15,TILES[1]);
@@ -7146,31 +7144,31 @@ public final class MainActivity extends ComponentActivity {
             txt("→",250,280,29,CORAL,true);
             txt("4",309,283,36,WHITE,true);
             card(29,381,342,196,20,card);
-            txt("1. Povuci prstom",200,424,23,ink,true);
-            fitted("Sve pločice pomiču se u istom smjeru.",200,461,17,314,muted,false);
-            fitted("Dvije jednake spajaju se u jednu veću.",200,495,17,314,muted,false);
-            fitted("Pokušaj dosegnuti 2048 i oboriti rekord!",200,529,16,314,muted,false);
+            txt(uiText(R.string.help_swipe),200,424,23,ink,true);
+            fitted(uiText(R.string.help_move),200,461,17,314,muted,false);
+            fitted(uiText(R.string.help_pair),200,495,17,314,muted,false);
+            fitted(uiText(R.string.help_goal),200,529,16,314,muted,false);
             card(29,594,342,89,20,theme==1?card:0xffe5f7f3);
-            fitted("2. Igraj svojim tempom",200,630,21,310,ink,true);
-            fitted("4×4, 5×5 ili dnevni izazov od 80 poteza.",200,658,15,312,muted,false);
-            button("Započni klasičnu igru","play",29,727,342,73,CORAL,true,
+            fitted(uiText(R.string.help_pace),200,630,21,310,ink,true);
+            fitted(uiText(R.string.help_modes),200,658,15,312,muted,false);
+            button(uiText(R.string.help_start),"play",29,727,342,73,CORAL,true,
                 ()->requestNew("classic"));
             bottomBrand();
         }
         void backupPage(){
-            title("Sigurnosna kopija");
+            title(uiText(R.string.backup_title));
             card(24,161,352,206,22,card);
             icon("shield",200,214,45,TEAL);
-            txt("Spremi svoj napredak",200,270,23,ink,true);
-            txt("Izvezi rezultate i postavke u JSON.",200,305,16,muted,false);
-            txt("Datoteka ostaje pod tvojom kontrolom.",200,335,15,muted,false);
-            button("Izvezi kopiju","share",24,404,352,79,CORAL,true,
+            txt(uiText(R.string.backup_save_progress),200,270,23,ink,true);
+            txt(uiText(R.string.backup_export_description),200,305,16,muted,false);
+            txt(uiText(R.string.backup_control),200,335,15,muted,false);
+            button(uiText(R.string.backup_export),"share",24,404,352,79,CORAL,true,
                 ()->chooseBackupFile(true));
-            button("Vrati kopiju","undo",24,507,352,79,card,false,
+            button(uiText(R.string.backup_restore),"undo",24,507,352,79,card,false,
                 ()->chooseBackupFile(false));
-            txt("Vraćanje zamjenjuje lokalni napredak.",200,649,16,muted,false);
-            txt("Cloud sinkronizacija nije uključena.",200,684,16,muted,false);
-            button("Postavke","back",24,755,352,63,card,false,()->navigate("settings"));
+            txt(uiText(R.string.backup_replace),200,649,16,muted,false);
+            txt(uiText(R.string.backup_no_cloud),200,684,16,muted,false);
+            button(uiText(R.string.settings_title),"back",24,755,352,63,card,false,()->navigate("settings"));
             bottomBrand();
         }
         void languagePage(){
@@ -7183,23 +7181,23 @@ public final class MainActivity extends ComponentActivity {
             button(uiText(R.string.language_back),"back",25,720,350,70,CORAL,true,()->navigate("settings"));
         }
         void aboutPage(){
-            textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",
-                "Spajaj jednake pločice i osvoji 2048.",
-                "Povuci gore, dolje, lijevo ili desno.",
-                "Dostupni su način 4×4, 5×5",
-                "te poseban dnevni izazov.","brendigo.com"});
+            textPage(uiText(R.string.about_title),new String[]{"Brojko "+appVersion()+" — by Brendigo",
+                uiText(R.string.about_goal),
+                uiText(R.string.about_swipe),
+                uiText(R.string.about_modes),
+                uiText(R.string.about_daily),"brendigo.com"});
             // Keep the existing About layout and Back control while making
             // the previously decorative website address genuinely actionable.
-            button("Posjeti Brendigo web","globe",24,529,352,69,card,false,
+            button(uiText(R.string.about_website),"globe",24,529,352,69,card,false,
                 ()->openBrendigoWebsite());
-            fitted("Otvara se u vanjskom pregledniku.",200,644,15,344,muted,false);
+            fitted(uiText(R.string.about_browser),200,644,15,344,muted,false);
         }
         void textPage(String heading,String[] lines){
             title(heading);
             card(24,170,352,Math.max(290,lines.length*50),25,card);
             for(int i=0;i<lines.length;i++)
                 fitted(lines[i],200,219+i*48,17,330,ink,false);
-            button("Nazad","back",25,722,350,72,CORAL,true,()->navigate("settings"));
+            button(uiText(R.string.action_back),"back",25,722,350,72,CORAL,true,()->navigate("settings"));
         }
         @Override public boolean dispatchHoverEvent(MotionEvent event){
             return accessibilityHelper.dispatchHoverEvent(event)||
@@ -7227,7 +7225,7 @@ public final class MainActivity extends ComponentActivity {
                     ACTION_TAP_BASE+i,tap.label));
             }
             if("game".equals(page)){
-                String[] directions={"Pomiči lijevo","Pomiči desno","Pomiči gore","Pomiči dolje"};
+                String[] directions={uiText(R.string.accessibility_left),uiText(R.string.accessibility_right),uiText(R.string.accessibility_up),uiText(R.string.accessibility_down)};
                 for(int i=0;i<4;i++)
                     info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
                         ACTION_DIRECTION_BASE+i,directions[i]));
