@@ -5529,35 +5529,35 @@ public final class MainActivity extends ComponentActivity {
         }
         void statistics(){
             if(referencePortraitLayout){statisticsCompact();return;}
-            title("Statistika");
+            title(uiText(R.string.home_statistics));
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
-            statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,151,114,112,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),266,151,114,112,0xffffb431);
+            statCell(StatMetric.BEST,fmt(best),20,151,114,112,CORAL);
+            statCell(StatMetric.TOTAL,fmt(plays),143,151,114,112,TEAL);
+            statCell(StatMetric.PEAK,Integer.toString(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
+            statCell(StatMetric.AVERAGE,fmt(average),21,276,174,102,0xff478df4);
+            statCell(StatMetric.STREAK,fmt(consecutiveWins()),205,276,174,102,0xffa657de);
             statsSoftCard(22,399,356,219,24,card);
-            txt("Zadnjih 10 partija",114,432,19,ink,true);
+            txt(uiText(R.string.stats_recent),114,432,19,ink,true);
             card(213,411,157,33,17,theme==1?0xff34445f:0xfff4ebdf);
             shape(215+(chartMetric==0?0:77),413,77,29,15,CORAL);
-            fitted("Bodovi",253,434,13,71,chartMetric==0?WHITE:ink,true);
-            fitted("Pločica",330,434,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,405,291,453,"Grafikon bodova",()->{
+            fitted(uiText(R.string.stats_points),253,434,13,71,chartMetric==0?WHITE:ink,true);
+            fitted(uiText(R.string.stats_tile),330,434,13,71,chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(214,405,291,453,uiText(R.string.stats_chart_points),()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,405,371,453,"Grafikon pločica",()->{
+            taps.add(new Tap(292,405,371,453,uiText(R.string.stats_chart_tiles),()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
             int ceiling=statisticsChartMaximum(data,count);
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,519,16,muted,false);
-                txt("prve završene partije.",200,545,16,muted,false);
+                txt(uiText(R.string.stats_empty_1),200,519,16,muted,false);
+                txt(uiText(R.string.stats_empty_2),200,545,16,muted,false);
             }else if(ceiling==0){
-                txt(chartMetric==0?"Nema zabilježenih bodova.":
-                    "Nema zabilježenih pločica.",200,532,16,muted,false);
+                txt(chartMetric==0?uiText(R.string.stats_no_points):
+                    uiText(R.string.stats_no_tiles),200,532,16,muted,false);
             }else{
                 float chartLeft=42,barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
@@ -5575,11 +5575,11 @@ public final class MainActivity extends ComponentActivity {
                         muted,false);
                 }
             }
-            txt("Povijest partija",109,652,22,ink,true);
+            txt(uiText(R.string.stats_history),109,652,22,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
                 card(22,673,356,75,17,card);
-                txt("Još nema dovršenih partija.",200,719,16,muted,false);
+                txt(uiText(R.string.stats_no_history),200,719,16,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
@@ -5735,18 +5735,18 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);
             c.restore();
         }
-        void statCell(String caption,String value,int x,int y,int width,int h,int accent){
+        void statCell(StatMetric metric,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             // Sample the owner's real 941px pastel background at unobstructed
             // corners. The old generic tint was grayish for teal, too pale
             // for gold and blue, and slightly dull for the purple streak.
             // Keep the already close coral card and every other theme unchanged.
             if(theme==0&&referencePortraitLayout&&"stats".equals(page)){
-                switch(caption){
-                    case "Ukupno partija":bg=0xffcffcef;break;
-                    case "Najveća pločica":bg=0xfffef1cd;break;
-                    case "Prosjek bodova":bg=0xffdceefd;break;
-                    case "Niz pobjeda":bg=0xfff3e6fd;break;
+                switch(metric){
+                    case TOTAL:bg=0xffcffcef;break;
+                    case PEAK:bg=0xfffef1cd;break;
+                    case AVERAGE:bg=0xffdceefd;break;
+                    case STREAK:bg=0xfff3e6fd;break;
                     default:break;
                 }
             }
@@ -5757,31 +5757,20 @@ public final class MainActivity extends ComponentActivity {
             // content, not the frame or the real numeric values below.
             boolean sourceInset=(theme==0&&referencePortraitLayout&&
                 "stats".equals(page)&&
-                ("Najbolji rezultat".equals(caption)||
-                 "Prosjek bodova".equals(caption)));
+                (metric==StatMetric.BEST||
+                 metric==StatMetric.AVERAGE));
             if(sourceInset){c.save();c.translate(6f,0f);}
-            String symbol=caption.contains("Najbolji")?"crown":
-                caption.contains("partija")?"gamepad":
-                caption.contains("pločica")?"grid":
-                caption.contains("Prosjek")?"star":"flame";
-            String top,bottom;
-            switch(caption){
-                case "Najbolji rezultat":top="Najbolji";bottom="rezultat";break;
-                case "Ukupno partija":top="Ukupno";bottom="partija";break;
-                case "Najveća pločica":top="Najveća";bottom="pločica";break;
-                case "Prosjek bodova":top="Prosjek";bottom="bodova";break;
-                case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
-                default:top="Niz dana";bottom="igranja";
-            }
+            String symbol=metric.symbol;
+            String top=uiText(metric.topResource),bottom=uiText(metric.bottomResource);
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
-            if(referenceStats&&theme==0&&"Najbolji rezultat".equals(caption)){
+            if(referenceStats&&theme==0&&metric==StatMetric.BEST){
                 // Source orange ink centroid y≈385; before correction
                 // it sat near y≈400 on the same 941x1672 emulator.
                 statsReferenceCrown(x+27f,y+31.5f,34f);
-            }else if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
+            }else if(referenceStats&&theme==0&&metric==StatMetric.AVERAGE){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
                 // The original star has roughly 10% more colored area
@@ -5829,8 +5818,8 @@ public final class MainActivity extends ComponentActivity {
             // After restoring the full-sized pad, the source
             // "Ukupno partija" caption begins farther right.
             float labelX=x+(width<=125?77:98)+
-                (referenceStats&&theme==0&&"Ukupno partija".equals(caption)?7.2f:
-                 referenceStats&&theme==0&&"Najveća pločica".equals(caption)?6f:0f);
+                (referenceStats&&theme==0&&metric==StatMetric.TOTAL?7.2f:
+                 referenceStats&&theme==0&&metric==StatMetric.PEAK?6f:0f);
             float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
@@ -5842,13 +5831,13 @@ public final class MainActivity extends ComponentActivity {
             // the surface, icon, score and real statistics unchanged.
             boolean sourceTopLabel=referenceStats&&theme==0&&h>=90;
             if(sourceTopLabel){
-                float labelScale="Ukupno partija".equals(caption)?.84f:.86f;
-                float labelDx="Ukupno partija".equals(caption)?-1.7f:.85f;
+                float labelScale=metric==StatMetric.TOTAL?.84f:.86f;
+                float labelDx=metric==StatMetric.TOTAL?-1.7f:.85f;
                 c.save();c.translate(labelDx,-3.7f);
                 c.scale(labelScale,1f,labelX,y+31);
             }
-            if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
-                leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
+            if(referencePortraitLayout&&metric==StatMetric.STREAK){
+                leftFitted(uiText(R.string.stats_streak),x+82,y+34,15,width-84,ink,true);
             }else{
                 fitted(top,labelX,y+(dense?24:31),
                     width<=125?13:16,labelWidth,ink,true);
@@ -5861,19 +5850,19 @@ public final class MainActivity extends ComponentActivity {
             // the owner's 941px KPI card. Other values retain their
             // original centered positions.
             float valueX=referenceStats&&theme==0&&
-                "Prosjek bodova".equals(caption)?
+                metric==StatMetric.AVERAGE?
                 x+width/2f+28f:x+width/2f;
             // Source typography uses stronger pigment than the pastel
             // card surfaces. Never reuse the saturated label color for
             // the background, and never recolor actual gameplay tiles.
             int valuePigment=accent;
             if(referenceStats&&theme==0){
-                switch(caption){
-                    case "Najbolji rezultat":valuePigment=0xfffc4930;break;
-                    case "Ukupno partija":valuePigment=0xff04a2b2;break;
-                    case "Najveća pločica":valuePigment=0xffed7514;break;
-                    case "Prosjek bodova":valuePigment=0xff0c66e5;break;
-                    case "Niz pobjeda":valuePigment=0xff862ad1;break;
+                switch(metric){
+                    case BEST:valuePigment=0xfffc4930;break;
+                    case TOTAL:valuePigment=0xff04a2b2;break;
+                    case PEAK:valuePigment=0xffed7514;break;
+                    case AVERAGE:valuePigment=0xff0c66e5;break;
+                    case STREAK:valuePigment=0xff862ad1;break;
                     default:break;
                 }
             }
@@ -5884,10 +5873,10 @@ public final class MainActivity extends ComponentActivity {
             // portrait glyph geometry gets a local X transform.
             boolean sourceTopValue=referenceStats&&theme==0&&h>=90;
             if(sourceTopValue){
-                float numberScale="Najveća pločica".equals(caption)?
+                float numberScale=metric==StatMetric.PEAK?
                     .865f:.92f;
-                float numberShift="Najbolji rezultat".equals(caption)?
-                    1.7f:"Ukupno partija".equals(caption)?4.25f:5.1f;
+                float numberShift=metric==StatMetric.BEST?
+                    1.7f:metric==StatMetric.TOTAL?4.25f:5.1f;
                 c.save();c.translate(numberShift,0f);
                 c.scale(numberScale,1f,valueX,y+h-14);
             }
@@ -6309,20 +6298,20 @@ public final class MainActivity extends ComponentActivity {
                 ownerHeadline(OwnerHeadlineContours.STATS_NAVY,
                     0xff1a2948,0xff141f3a,184f,286f);
                 c.restore();
-            }else illustratedTitle("Statistika",200,116,43,325,ink);
+            }else illustratedTitle(uiText(R.string.home_statistics),200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
             statsHeaderBurst(354,104,true);
             // Owner 941x1672 KPI surfaces: three edge-aligned pastel
             // cards, native x~33..323,345..612,630..896.
             // All labels and scores remain sourced from local state.
-            statCell("Najbolji rezultat",fmt(best),14,132,123,94,CORAL);
-            statCell("Ukupno partija",fmt(plays),146,132,114,94,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),267,132,114,94,0xffffb431);
+            statCell(StatMetric.BEST,fmt(best),14,132,123,94,CORAL);
+            statCell(StatMetric.TOTAL,fmt(plays),146,132,114,94,TEAL);
+            statCell(StatMetric.PEAK,Integer.toString(recordTile),267,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
             // Source lower cards start at x~35 and x~489, with a
             // slightly flatter 193px height than the former native pair.
-            statCell("Prosjek bodova",fmt(average),15,234,185,81,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),207,234,174,81,0xffa657de);
+            statCell(StatMetric.AVERAGE,fmt(average),15,234,185,81,0xff478df4);
+            statCell(StatMetric.STREAK,fmt(consecutiveWins()),207,234,174,81,0xffa657de);
             statsSoftCard(16,329,368,158,23,card);
             // The owner heading has tighter typographic bounds than the
             // previously oversized native chart title.
@@ -6335,17 +6324,17 @@ public final class MainActivity extends ComponentActivity {
                 ownerHeadline(OwnerHeadlineContours.STATS_CHART,
                     0xff192c51,0xff101e3b,808f,843f);
             }else{
-                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+                leftFitted(uiText(R.string.stats_recent),27,357,18.5f,199,ink,true);
             }
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
-            fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
-            fitted("Najveća pločica",334,354,9.5f,73,
+            fitted(uiText(R.string.stats_points),261,354,11,67,chartMetric==0?WHITE:ink,true);
+            fitted(uiText(R.string.game_peak_tile),334,354,9.5f,73,
                 chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(223,324,297,372,"Grafikon bodova",()->{
+            taps.add(new Tap(223,324,297,372,uiText(R.string.stats_chart_points),()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(297,324,374,372,"Grafikon pločica",()->{
+            taps.add(new Tap(297,324,374,372,uiText(R.string.stats_chart_tiles),()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
@@ -6355,11 +6344,11 @@ public final class MainActivity extends ComponentActivity {
             // keep the previous history-derived columns and zero-state
             // without decorative data or a second axis.
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
-                txt("prve završene partije.",200,436,15,muted,false);
+                txt(uiText(R.string.stats_empty_1),200,412,15,muted,false);
+                txt(uiText(R.string.stats_empty_2),200,436,15,muted,false);
             }else if(ceiling==0){
-                txt(chartMetric==0?"Nema zabilježenih bodova.":
-                    "Nema zabilježenih pločica.",200,429,15,muted,false);
+                txt(chartMetric==0?uiText(R.string.stats_no_points):
+                    uiText(R.string.stats_no_tiles),200,429,15,muted,false);
             }else{
                 // Reference 941px chart bars start near x69 and end
                 // near x871. The previous 315-wide band was over-inset:
@@ -6439,11 +6428,11 @@ public final class MainActivity extends ComponentActivity {
             // separated by a 4-unit gap, never five heavy elevated panels.
             final boolean accessibleRows=statsTouchExploration();
             statsSoftCard(16,497,368,accessibleRows?273:204,23,card);
-            leftFitted("Povijest partija",30,522,19,250,ink,true);
+            leftFitted(uiText(R.string.stats_history),30,522,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
                 shape(25,529,350,32,13,theme==1?0xff34445f:0xfffaf5ee);
-                txt("Još nema dovršenih partija.",200,552,15,muted,false);
+                txt(uiText(R.string.stats_no_history),200,552,15,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
