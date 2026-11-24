@@ -35,7 +35,7 @@
     <string name="backup_replace">Restaurarea înlocuiește progresul local.</string>
     <string name="backup_no_cloud">Sincronizarea în cloud este dezactivată.</string>
     <string name="about_title">Despre joc</string>
-    <string name="about_goal">Combină piese identice și ajungi la 2048.</string>
+    <string name="about_goal">Combină piese identice și atinge 2048.</string>
     <string name="about_swipe">Glisează în sus, jos, stânga sau dreapta.</string>
     <string name="about_modes">Joacă în modurile 4×4 și 5×5</string>
     <string name="about_daily">sau încearcă o provocare zilnică specială.</string>

@@ -12,7 +12,7 @@ LOCALES={"en":"en-US","hr":"hr-HR","de":"de-DE","fr":"fr-FR",
          "es":"es-ES","ar":"ar","he":"iw-IL","it":"it-IT","pt-BR":"pt-BR","sl":"sl","pl":"pl-PL","cs":"cs-CZ","ja":"ja-JP","ko":"ko-KR","zh-Hans":"zh-CN","sk":"sk","nl":"nl-NL","uk":"uk","sv":"sv-SE","da":"da-DK","nb":"no-NO","fi":"fi-FI","hu":"hu-HU","ro":"ro","bg":"bg","el":"el-GR","tr":"tr-TR","hi":"hi-IN","id":"id","vi":"vi"}
 PAGES=("splash","home","game","pause","win","over","confirm","confirmEnd",
        "dailyWin","dailyFail","daily","missions","stats","historyDetail",
-       "themes","settings","language","backup","help","privacy","about")
+       "themes","settings","language","backup","help","privacy","about","gameRelaxed","gameDaily")
 STORE_PAGES=("home","game","daily","missions","stats","themes","settings","language")
 SIZES=("320x480","360x800","941x1672","1080x2400")
 

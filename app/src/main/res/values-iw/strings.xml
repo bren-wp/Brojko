@@ -228,7 +228,7 @@
     <string name="animation_medium">בינונית</string>
     <string name="animation_high">גבוהה</string>
     <string name="themes_heading">ערכות נושא ומראה</string>
-    <string name="theme_preview_tile">כך ייראו האריחים בערכה שבחרתם.</string>
+    <string name="theme_preview_tile">האריחים בערכה שבחרתם.</string>
     <string name="accessibility_back">חזרה</string>
     <string name="accessibility_pause">השהיית המשחק</string>
     <string name="accessibility_undo">ביטול המהלך</string>

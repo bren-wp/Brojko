@@ -3,6 +3,7 @@ package com.brendigo.brojko;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import java.util.Arrays;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.test.core.app.ActivityScenario;
@@ -20,7 +21,8 @@ import static org.junit.Assert.*;
 public final class LocaleMatrixTest {
     private static final String[] PAGES={"splash","home","game","pause","win","over",
         "confirm","confirmEnd","dailyWin","dailyFail","daily","missions","stats",
-        "historyDetail","themes","settings","language","backup","help","privacy","about"};
+        "historyDetail","themes","settings","language","backup","help","privacy","about",
+        "gameRelaxed","gameDaily"};
 
     private void choose(Context context,LocaleManager.Language language){
         InstrumentationRegistry.getInstrumentation().runOnMainSync(
@@ -66,6 +68,68 @@ public final class LocaleMatrixTest {
         }finally{choose(context,LocaleManager.Language.CROATIAN);}
     }
 
+    @Test public void rtlPhysicalSwipesAndVirtualControlsUseAttachedView(){
+        Context context=ApplicationProvider.getApplicationContext();
+        try{
+            for(LocaleManager.Language language:new LocaleManager.Language[]{
+                LocaleManager.Language.ARABIC,LocaleManager.Language.HEBREW}){
+                choose(context,language);
+                try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+                    scenario.onActivity(activity->{
+                        MainActivity.BoardScreen board=activity.screen;
+                        assertTrue(board.isAttachedToWindow());
+                        assertEquals(View.LAYOUT_DIRECTION_RTL,board.getLayoutDirection());
+                        activity.navigate("home");
+                        drawAttached(board);
+                        MainActivity.BoardScreen.Tap settings=null;
+                        int settingsIndex=-1;
+                        for(int i=0;i<board.taps.size();i++){
+                            if(board.uiText(R.string.settings_title).equals(board.taps.get(i).label)){
+                                settings=board.taps.get(i);settingsIndex=i;break;
+                            }
+                        }
+                        assertNotNull(settings);
+                        float x=board.physicalX((settings.left+settings.right)/2f);
+                        float y=board.offY+(settings.top+settings.bottom)/2f*board.scale;
+                        // The virtual accessibility child resolves the same mirrored point.
+                        int virtualId=board.accessibilityHelper.getVirtualViewAt(x,y);
+                        assertEquals(settingsIndex+1,virtualId);
+                        assertTrue(board.accessibilityHelper.onPerformActionForVirtualView(
+                            virtualId,android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+                        assertEquals("settings",activity.page);
+                        TileGame expected=new TileGame("classic","",941L);
+                        Arrays.fill(expected.cells,0);expected.cells[1]=2;expected.cells[2]=2;
+                        activity.game=new TileGame("classic","",941L);
+                        activity.game.cells=expected.cells.clone();
+                        activity.sound=false;activity.vibration=false;
+                        activity.navigate("game");drawAttached(board);
+                        float middle=board.physicalX(200f);
+                        float boardY=board.offY+(board.gridY+120f)*board.scale;
+                        expected.move(TileGame.LEFT);
+                        sendSwipe(board,middle,boardY,middle-50f*board.scale,boardY);
+                        assertArrayEquals(language.tag+": physical left swipe",expected.cells,activity.game.cells);
+                        assertEquals(expected.score,activity.game.score);
+                        assertEquals(expected.moves,activity.game.moves);
+                    });
+                }
+            }
+        }finally{choose(context,LocaleManager.Language.CROATIAN);}
+    }
+
+    private static void drawAttached(MainActivity.BoardScreen board){
+        assertTrue(board.getWidth()>0&&board.getHeight()>0);
+        Bitmap bitmap=Bitmap.createBitmap(board.getWidth(),board.getHeight(),Bitmap.Config.ARGB_8888);
+        try{board.draw(new Canvas(bitmap));}finally{bitmap.recycle();}
+    }
+
+    private static void sendSwipe(MainActivity.BoardScreen board,float x,float y,float endX,float endY){
+        long now=android.os.SystemClock.uptimeMillis();
+        MotionEvent down=MotionEvent.obtain(now,now,MotionEvent.ACTION_DOWN,x,y,0);
+        MotionEvent up=MotionEvent.obtain(now,now+60,MotionEvent.ACTION_UP,endX,endY,0);
+        try{assertTrue(board.dispatchTouchEvent(down));assertTrue(board.dispatchTouchEvent(up));}
+        finally{down.recycle();up.recycle();}
+    }
+
     @Test public void captureEveryLocalizedScreenAtRequestedViewports(){
         String capture=InstrumentationRegistry.getArguments().getString("captureLocales","false");
         if(!"true".equals(capture))return;
@@ -88,7 +152,7 @@ public final class LocaleMatrixTest {
                         for(int[] size:sizes){
                             MainActivity.BoardScreen board=activity.new BoardScreen(activity);
                             for(String page:PAGES){
-                                activity.page=page;
+                                prepareCapture(activity,page);
                                 Bitmap bitmap=render(board,size[0],size[1]);
                                 try{
                                     File root=activity.getExternalFilesDir("locale-screenshots");
@@ -108,6 +172,42 @@ public final class LocaleMatrixTest {
                 }
             }
         }finally{choose(context,LocaleManager.Language.CROATIAN);}
+    }
+
+    // Test-only deterministic scenarios; no fixture values ship in the app.
+    private static void prepareCapture(MainActivity activity,String page){
+        String mode="gameRelaxed".equals(page)?"relaxed":
+            ("gameDaily".equals(page)||"dailyWin".equals(page)||"dailyFail".equals(page))?"daily":"classic";
+        TileGame game=new TileGame(mode,"daily".equals(mode)?activity.today():"",521L);
+        for(int i=0;i<12;i++)game.move(i%4);
+        if("win".equals(page)){
+            Arrays.fill(game.cells,0);game.cells[0]=1024;game.cells[1]=1024;
+            game.peak=1024;game.move(TileGame.LEFT);
+        }else if("dailyWin".equals(page)||"dailyFail".equals(page)){
+            Arrays.fill(game.cells,0);game.cells[0]=2;game.cells[1]=2;
+            game.moves=79;game.score="dailyWin".equals(page)?2996:0;
+            game.peak="dailyWin".equals(page)?256:2;
+            game.move(TileGame.LEFT);
+            activity.dailyBonusGrantedThisAttempt="dailyWin".equals(page);
+            if("dailyFail".equals(page))game.gameOver=true;
+        }else if("over".equals(page)){
+            for(int i=0;i<16;i++)game.cells[i]=(i/4+i%4)%2==0?2:4;
+            game.move(TileGame.LEFT);
+        }
+        activity.game=game;
+        activity.page=page.startsWith("game")?"game":page;
+        if("historyDetail".equals(page)||"stats".equals(page)){
+            try{
+                org.json.JSONObject row=new org.json.JSONObject()
+                    .put("score",game.score).put("moves",game.moves)
+                    .put("peak",game.maxTile()).put("mode",game.mode)
+                    .put("day","2026-11-24").put("time","12:00")
+                    .put("won",game.reached2048);
+                assertTrue(activity.prefs.edit().putString("history",
+                    new org.json.JSONArray().put(row).toString()).commit());
+                activity.selectedHistoryIndex=0;
+            }catch(org.json.JSONException invalid){throw new AssertionError(invalid);}
+        }
     }
 
     private static Bitmap render(MainActivity.BoardScreen board,int width,int height){

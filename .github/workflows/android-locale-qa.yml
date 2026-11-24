@@ -53,7 +53,7 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w -e class 'com.brendigo.brojko.LocaleMatrixTest#allLanguagesSurviveLaunchAndExposeLocalizedNavigation,com.brendigo.brojko.LanguagePickerTest,com.brendigo.brojko.LocaleResourcesTest,com.brendigo.brojko.CanvasDirectionTest,com.brendigo.brojko.CanvasTextLayoutTest,com.brendigo.brojko.LocaleSecurityTest' com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-results.txt
+            adb shell am instrument -w -e class 'com.brendigo.brojko.LocaleMatrixTest#allLanguagesSurviveLaunchAndExposeLocalizedNavigation,com.brendigo.brojko.LocaleMatrixTest#rtlPhysicalSwipesAndVirtualControlsUseAttachedView,com.brendigo.brojko.LanguagePickerTest,com.brendigo.brojko.LocaleResourcesTest,com.brendigo.brojko.CanvasDirectionTest,com.brendigo.brojko.CanvasTextLayoutTest,com.brendigo.brojko.LocaleSecurityTest' com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-results.txt
             grep -Eq '^OK [(][0-9]+ tests?[)]$' locale-results.txt
       - name: Upload locale test results
         if: always()

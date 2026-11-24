@@ -67,7 +67,7 @@
     <string name="victory_goal">Tu as atteint 2048 !</string>
     <string name="stars_label">Étoiles</string>
     <string name="daily_success">Défi quotidien réussi !</string>
-    <string name="daily_failure">Défi échoué</string>
+    <string name="daily_failure">Défi non réussi</string>
     <string name="daily_all_goals">Les 3 objectifs sont atteints !</string>
     <string name="daily_limit">Tu as atteint la limite de 80 coups.</string>
     <string name="daily_stars">+250 étoiles gagnées !</string>

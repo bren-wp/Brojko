@@ -251,6 +251,6 @@
         <item quantity="other">每日挑战 • 剩余%1$d步</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="other">%1$s\n天连续</item>
+        <item quantity="other">%1$s\n天连胜</item>
     </plurals>
 </resources>

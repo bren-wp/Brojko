@@ -1659,6 +1659,7 @@ public final class MainActivity extends ComponentActivity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=280;
+                float paintedIconRight=x;
                 if(hasSymbol){
                     boolean winSecondary=page.equals("win")&&
                         uiText(R.string.action_new_game).equals(label);
@@ -1671,6 +1672,14 @@ public final class MainActivity extends ComponentActivity {
                             49f:page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
                         Math.min(58f,w*.21f)):25f);
+                    float paintedIconWidth=winSecondary?29f:
+                        page.equals("daily")&&prominent&&"play".equals(symbol)?32f:
+                        homeHero&&referencePortraitLayout&&theme==0&&"play".equals(symbol)?43f:
+                        page.equals("missions")&&referencePortraitLayout&&theme==0&&"back".equals(symbol)?20f:
+                        Math.min(prominent?(page.equals("daily")?34:homeHero?43:33):23,
+                            h*(page.equals("win")&&referencePortraitLayout&&theme==0?.66f:
+                                page.equals("daily")?.65f:homeHero?.57f:.52f));
+                    paintedIconRight=iconX+paintedIconWidth/2f;
                     if(winSecondary)
                         victoryRestartIcon(iconX,y+h/2f,29f,iconColor);
                     else if(page.equals("daily")&&prominent&&
@@ -1683,12 +1692,7 @@ public final class MainActivity extends ComponentActivity {
                             referencePortraitLayout&&theme==0&&
                             "back".equals(symbol))
                         missionSourceBackGlyph(iconX,y+h/2);
-                    else icon(symbol,iconX,y+h/2,
-                        Math.min(prominent?
-                            (page.equals("daily")?34:homeHero?43:33):23,
-                            h*(page.equals("win")&&referencePortraitLayout
-                                &&theme==0?.66f:page.equals("daily")?.65f:
-                                homeHero?.57f:.52f)),iconColor);
+                    else icon(symbol,iconX,y+h/2,paintedIconWidth,iconColor);
                 }
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&referencePortraitLayout&&theme==0&&
@@ -1700,6 +1704,14 @@ public final class MainActivity extends ComponentActivity {
                     (page.equals("win")&&uiText(R.string.action_new_game).equals(label)?
                         (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
                         (w+38f)/2f)):w/2f);
+                float labelWidth=hasSymbol?(prominent?w*.76f:w-52):w-20;
+                // For every localized label except the calibrated Croatian artwork,
+                // fit inside the remaining icon-free interval. Canvas mirrors the
+                // same interval for RTL, leaving identical logical clearances.
+                if(hasSymbol&&!croatianArtwork()){
+                    ButtonLabelGeometry geometry=ButtonLabelGeometry.calculate(x,w,paintedIconRight);
+                    textCenter=geometry.center;labelWidth=geometry.width;
+                }
                 int labelColor=prominent?WHITE:ink;
                 // Pixel-measured 941×1672 owner Victory: native action text
                 // was 20–25% smaller than the real screenshot. Limit the
@@ -1735,8 +1747,7 @@ public final class MainActivity extends ComponentActivity {
                     ownerHeadline(OwnerHeadlineContours.DAILY_START,
                         0xffffffff,0xfff9f9f8,1572f,1622f);
                 }else{
-                    fitted(label,textCenter,y+h/2+font*.35f,font,
-                        hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                    fitted(label,textCenter,y+h/2+font*.35f,font,labelWidth,labelColor,true);
                 }
                 if(sourceHomeCTA)c.restore();
             }
