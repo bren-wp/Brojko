@@ -7,7 +7,7 @@ android {
   // Google Play automatic protection requires API 24 or higher.
   minSdk 24
   targetSdk 36
-  testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+  testInstrumentationRunner 'com.brendigo.brojko.BrojkoTestRunner'
   // QA uses the release workflow's run number, not its own run number.
   def releaseBuildNumber = System.getenv('BROJKO_BUILD_NUMBER') ?: System.getenv('GITHUB_RUN_NUMBER')
   versionCode (releaseBuildNumber?.toInteger() ?: 2)

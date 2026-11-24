@@ -26,9 +26,10 @@ final class BoardAccessibilityDelegate extends ExploreByTouchHelper {
 
     private Rect boundsFor(MainActivity.BoardScreen.Tap tap){
         float scale=Math.max(0.01f,view.scale);
-        int left=Math.round(view.offX+tap.left*scale);
+        float first=view.physicalX(tap.left),second=view.physicalX(tap.right);
+        int left=Math.round(Math.min(first,second));
         int top=Math.round(view.offY+tap.top*scale);
-        int right=Math.max(left+1,Math.round(view.offX+tap.right*scale));
+        int right=Math.max(left+1,Math.round(Math.max(first,second)));
         int bottom=Math.max(top+1,Math.round(view.offY+tap.bottom*scale));
         return new Rect(left,top,right,bottom);
     }

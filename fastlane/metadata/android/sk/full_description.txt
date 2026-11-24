@@ -1,0 +1,21 @@
+Brojko je farebná logická hra, v ktorej spájaš čísla vlastným tempom.
+
+Potiahni po hracej ploche, spoj rovnaké dlaždice a vytváraj väčšie čísla. Dosiahni 2048, prekonaj rekord a sleduj svoj pokrok.
+
+HERNÉ REŽIMY
+• Klasický 4×4: plánuj ťahy a dosiahni 2048.
+• Relax 5×5: viac priestoru na dlhšie hry.
+• Denná výzva: dosiahni 256 a získaj 3000 bodov najviac za 80 ťahov.
+
+PREČO BROJKO?
+• Farebné motívy a rôzne štýly dlaždíc.
+• Hviezdy za misie a denné výzvy.
+• Štatistiky, rekordy a história hier.
+• Vrátenie posledného ťahu.
+• Hraj offline, bez účtu, reklám a nákupov v aplikácii.
+• Lokálny pokrok a export zálohy.
+
+Spájaj čísla. Prekonávaj rekordy.
+
+Brojko by Brendigo
+brendigo.com

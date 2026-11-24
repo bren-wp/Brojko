@@ -1,0 +1,21 @@
+Brojko on värikäs pulmapeli, jossa yhdistät lukuja omaan tahtiisi.
+
+Pyyhkäise pelilaudalla, yhdistä samanlaisia laattoja ja luo suurempia lukuja. Saavuta 2048, riko ennätyksesi ja seuraa edistymistäsi.
+
+PELITILAT
+• Klassinen 4×4: suunnittele siirtosi ja saavuta 2048.
+• Rento 5×5: enemmän tilaa pidempiin peleihin.
+• Päivittäinen haaste: saavuta 256 ja 3 000 pistettä enintään 80 siirrolla.
+
+MIKSI BROJKO?
+• Värikkäät teemat ja laattatyylit.
+• Tähtiä tehtävistä ja päivittäisistä haasteista.
+• Tilastot, ennätykset ja pelihistoria.
+• Viimeisen siirron kumoaminen.
+• Pelaa offline-tilassa ilman tiliä, mainoksia tai sovellusostoja.
+• Paikallinen edistyminen ja varmuuskopion vienti.
+
+Yhdistä lukuja. Riko ennätyksiä.
+
+Brojko by Brendigo
+brendigo.com

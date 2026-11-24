@@ -1,0 +1,21 @@
+Brojko je barvita logična igra, v kateri združuješ števila v svojem ritmu.
+
+Podrsaj po plošči, združi enake ploščice in ustvari vedno večja števila. Dosezi 2048, izboljšaj rekord in spremljaj napredek.
+
+NAČINI IGRE
+• Klasično 4×4: načrtuj poteze in dosezi 2048.
+• Sproščeno 5×5: več prostora za daljše igre.
+• Dnevni izziv: dosezi 256 in 3000 točk v največ 80 potezah.
+
+ZAKAJ BROJKO?
+• Barvite teme in različni slogi ploščic.
+• Zvezdice za naloge in dnevne izzive.
+• Statistika, rekordi in zgodovina iger.
+• Razveljavitev zadnje poteze.
+• Igra brez interneta, računa, oglasov ali nakupov v aplikaciji.
+• Lokalni napredek in izvoz varnostne kopije.
+
+Združuj števila. Podiraj rekorde.
+
+Brojko by Brendigo
+brendigo.com

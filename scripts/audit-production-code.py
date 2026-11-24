@@ -57,7 +57,7 @@ expected_sources = {
     "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
-    "BoardAccessibilityDelegate.java",
+    "BoardAccessibilityDelegate.java", "LocaleManager.java", "StatMetric.java", "MissionKind.java", "DailyGoal.java", "LanguageSearchDialog.java", "CanvasTextLayout.java", "CanvasDirection.java", "LanguagePickerRenderer.java", "PageLabels.java", "BoardViewport.java", "ButtonLabelGeometry.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
@@ -172,7 +172,7 @@ assert "gameTransitionBusy" in flow_test
 assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
 assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
 assert "GameCalendar.today()" in java["MainActivity.java"]
-assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]
+assert "GameCalendar.remainingMinutes(week)" in java["MainActivity.java"]
 assert "MissionProgress.completionFraction(" in java["MainActivity.java"]
 assert "MissionProgress.displayValue(" in java["MainActivity.java"]
 assert "Math.max(0, Math.min(value, target))" in java["MissionProgress.java"]
@@ -184,3 +184,84 @@ assert "LocalBackupRepository.export(" in bridge
 assert "LocalBackupRepository.validate(" in bridge
 assert "LocalBackupRepository.apply(" in bridge
 assert "skipPersistOnPauseAfterImport=true" in bridge
+
+# Initial localization resource gate. This covers migrated resources only,
+# not the still untranslated Canvas renderer or the planned 30 languages.
+def localized_strings(path):
+    result = {}
+    for item in ET.parse(path).getroot().findall("string"):
+        key = item.get("name")
+        assert key and key not in result, "Duplicate or unnamed string: " + str(path)
+        value = "".join(item.itertext()).strip()
+        assert value, "Empty translation: " + key
+        result[key] = value
+    return result
+
+base_strings = localized_strings(APP / "res/values/strings.xml")
+hr_strings = localized_strings(APP / "res/values-hr/strings.xml")
+assert base_strings.keys() == hr_strings.keys(), "English/Croatian string inventory differs"
+reminder_keys = {"reminder_channel_name", "reminder_channel_description", "reminder_title", "reminder_body"}
+assert reminder_keys <= base_strings.keys()
+for key in reminder_keys:
+    assert "R.string." + key in java["AppReminder.java"], "Reminder bypasses resource: " + key
+# Check positional format placeholders in the migrated strings. The gate
+# intentionally rejects mismatched argument positions and conversion types.
+for key in base_strings:
+    signature = lambda value: sorted(re.findall(r"%(?:\d+\$)?[sdif]", value))
+    assert signature(base_strings[key]) == signature(hr_strings[key]), "Format signature mismatch: " + key
+assert '"Jezik".equals(caption)' not in java["MainActivity.java"]
+assert '"Sinkronizacija napretka".equals(caption)' not in java["MainActivity.java"]
+print("Localization foundation: migrated notification and settings resources present in English and Croatian.")
+
+# Every advertised language must have a complete explicit resource set.
+locale_config=ET.parse(APP / "res/xml/locales_config.xml").getroot()
+configured_tags={node.get(ANDROID+"name") for node in locale_config.findall("locale")}
+assert "en" in configured_tags
+locale_tags=set(re.findall(r'\b[A-Z_]+\("([a-zA-Z-]+)","[^"]+"\)',java["LocaleManager.java"]))
+assert [node.get(ANDROID+"name") for node in locale_config.findall("locale")] == re.findall(r'\b[A-Z_]+\("([a-zA-Z-]+)","[^"]+"\)',java["LocaleManager.java"]), "Locale capture order differs"
+assert locale_tags == configured_tags, "Language picker and Android per-app language config differ"
+for tag in sorted(configured_tags-{"en"}):
+    directory={"he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans","id":"values-in"}.get(tag,"values-"+tag)
+    translated=localized_strings(APP / ("res/"+directory+"/strings.xml"))
+    assert base_strings.keys()==translated.keys(), "Incomplete locale: "+tag
+    for key in base_strings:
+        assert signature(base_strings[key])==signature(translated[key]), "Format signature mismatch: "+tag+":"+key
+print("Configured locale resource coverage verified: "+", ".join(sorted(configured_tags)))
+
+def plural_resources(path):
+    result={}
+    for node in ET.parse(path).getroot().findall("plurals"):
+        name=node.get("name")
+        assert name and name not in result, "Duplicate plural: "+str(path)
+        forms={}
+        for item in node.findall("item"):
+            quantity=item.get("quantity")
+            value="".join(item.itertext()).strip()
+            assert quantity not in forms and value, "Invalid plural: "+name
+            assert quantity in {"zero","one","two","few","many","other"}
+            forms[quantity]=value
+        assert "other" in forms, "Missing other plural: "+name
+        result[name]=forms
+    return result
+
+base_plurals=plural_resources(APP / "res/values/strings.xml")
+assert set(base_plurals)=={"daily_moves_remaining","daily_streak"}
+required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many","other"},
+                "fr":{"one","many","other"},"de":{"one","other"},"en":{"one","other"},
+                "es":{"one","many","other"},"he":{"one","two","other"},
+                "it":{"one","many","other"},"pt-BR":{"one","many","other"},
+                "sl":{"one","two","few","other"},"pl":{"one","few","many","other"},
+                "cs":{"one","few","many","other"},"sk":{"one","few","many","other"},
+                "nl":{"one","other"},"uk":{"one","few","many","other"},
+                "sv":{"one","other"},"da":{"one","other"},"nb":{"one","other"},"fi":{"one","other"},
+                "hu":{"one","other"},"ro":{"one","few","other"},"bg":{"one","other"},"el":{"one","other"},
+                "tr":{"one","other"},"hi":{"one","other"}}
+for tag in sorted(configured_tags):
+    directory={"en":"values","he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans","id":"values-in"}.get(tag,"values-"+tag)
+    forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
+    assert forms.keys()==base_plurals.keys(), "Incomplete plurals: "+tag
+    for key, quantities in forms.items():
+        assert required_forms.get(tag,{"other"}) <= quantities.keys(), "Missing plural forms: "+tag+":"+key
+        for value in quantities.values():
+            assert signature(value)==signature(base_plurals[key]["other"]), "Plural placeholder mismatch: "+tag+":"+key
+print("Plural inventory and format contracts verified.")

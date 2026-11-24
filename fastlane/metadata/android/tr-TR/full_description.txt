@@ -1,0 +1,21 @@
+Brojko, kendi hızında sayıları birleştirebileceğin renkli bir bulmaca oyunudur.
+
+Tahtada kaydır, aynı taşları birleştir ve daha büyük sayılar oluştur. 2048’e ulaş, rekorunu kır ve ilerlemeni takip et.
+
+OYUN MODLARI
+• Klasik 4×4: hamlelerini planla ve 2048’e ulaş.
+• Rahat 5×5: daha uzun oyunlar için daha geniş tahta.
+• Günlük meydan okuma: en fazla 80 hamlede 256 taşına ulaş ve 3.000 puan kazan.
+
+NEDEN BROJKO?
+• Renkli temalar ve taş stilleri.
+• Görevler ve günlük meydan okumalar için yıldızlar.
+• İstatistikler, rekorlar ve oyun geçmişi.
+• Son hamleyi geri alma.
+• Çevrimdışı oyna; hesap, reklam veya uygulama içi satın alma yok.
+• Yerel ilerleme ve dışa aktarılabilir yedek.
+
+Sayıları birleştir. Rekorları kır.
+
+Brojko by Brendigo
+brendigo.com

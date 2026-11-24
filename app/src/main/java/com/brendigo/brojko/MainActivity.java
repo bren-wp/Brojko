@@ -41,6 +41,8 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.Date;
+import android.content.res.Resources;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -67,6 +69,8 @@ public final class MainActivity extends ComponentActivity {
     private static final float[][] MISSION_CORAL_RAYS=GameArtworkData.MISSION_CORAL_RAYS;
     private static final float[][] MISSION_HEADER_RAYS=GameArtworkData.MISSION_HEADER_RAYS;
     SharedPreferences prefs;
+    private Resources activityResources;
+    String activityText(int id,Object... args){return args.length==0?activityResources.getString(id):activityResources.getString(id,args);}
     TileGame game;
     BoardScreen screen;
     // Keep the supplied full-screen branding visible for 2–3 seconds,
@@ -107,10 +111,19 @@ public final class MainActivity extends ComponentActivity {
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
-    final NumberFormat number=NumberFormat.getIntegerInstance(new Locale("hr","HR"));
+    NumberFormat number,tileNumber;
+    LocaleManager.Language uiLanguage;
+    Locale uiLocale;
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+        LocaleManager.migratePlatformPreference(this);
+        uiLanguage=LocaleManager.selected(this);
+        uiLocale=uiLanguage.locale();
+        number=NumberFormat.getIntegerInstance(uiLocale);
+        tileNumber=NumberFormat.getIntegerInstance(uiLocale);
+        tileNumber.setGroupingUsed(false);
+        activityResources=LocaleManager.resourcesFor(this,uiLocale);
         // Draw behind both system bars on API 24-36. Use the manual
         // edge-to-edge contract instead of WindowCompat.enableEdgeToEdge():
         // AndroidX's setup helper can invoke deprecated Window bar-color
@@ -189,7 +202,7 @@ public final class MainActivity extends ComponentActivity {
         }
         screen.setFocusable(true);
         screen.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
-        screen.setContentDescription("Brojko, igra spajanja brojeva. Povucite prstom po ploči ili koristite strelice na tipkovnici.");
+        screen.setContentDescription(activityText(R.string.accessibility_board));
         ViewCompat.setOnApplyWindowInsetsListener(screen,(v,insets)->{
             androidx.core.graphics.Insets safe=insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()|
@@ -265,14 +278,34 @@ public final class MainActivity extends ComponentActivity {
         reward(16,1000,best>=50000);
         reward(32,200,weekPoints>=10000);
     }
-    String timeRemainingInPeriod(boolean week){return GameCalendar.timeRemainingInPeriod(week);}
+    String timeRemainingInPeriod(boolean week){
+        long minutes=GameCalendar.remainingMinutes(week);
+        if(week)return minutes<1440
+            ?activityText(R.string.countdown_hours,minutes/60)
+            :activityText(R.string.countdown_days_hours,minutes/1440,(minutes%1440)/60);
+        return activityText(R.string.countdown_hours_minutes,minutes/60,minutes%60);
+    }
     String yesterday(){return GameCalendar.yesterday();}
     String compactTime(){return GameCalendar.compactTime();}
     String historyDate(){return GameCalendar.historyDate();}
-    String dailyLongDate(){return GameCalendar.dailyLongDate();}
+    String dailyLongDate(){return GameCalendar.dailyLongDate(new Date(),uiLocale);}
+    void selectLanguage(LocaleManager.Language language){
+        if(language==uiLanguage)return;
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(!LocaleManager.select(this,language)){
+            Toast.makeText(this,activityText(R.string.language_change_failed),Toast.LENGTH_LONG).show();
+            return;
+        }
+        // API 33+ automatically recreates the Activity on app-locale change.
+        // Older versions use the same saved-instance-state recovery path.
+        if(Build.VERSION.SDK_INT<33)recreate();
+    }
     String fmt(int x){return number.format(x);}
     String labelMode(String m) {
-        return "relaxed".equals(m)?"Opušteno 5×5":"daily".equals(m)?"Dnevni izazov":"Klasično 4×4";
+        return activityText("relaxed".equals(m)?R.string.mode_relaxed:"daily".equals(m)?R.string.mode_daily:R.string.mode_classic);
     }
     void updateBars() {
         // Never call deprecated Window.setStatusBarColor/NavigationBarColor.
@@ -312,8 +345,10 @@ public final class MainActivity extends ComponentActivity {
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();
-        screen.setContentDescription("Brojko — "+target+
-            (game==null?"":". Rezultat "+fmt(game.score)));
+        String pageTitle=activityText(PageLabels.resource(target,game));
+        screen.setContentDescription(game==null
+            ?activityText(R.string.accessibility_page,pageTitle)
+            :activityText(R.string.accessibility_page_score,pageTitle,fmt(game.score)));
         screen.invalidate();
         screen.accessibilityHelper.invalidateRoot();
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
@@ -377,7 +412,7 @@ public final class MainActivity extends ComponentActivity {
             AppReminder.configure(this,notifications);
             persist();screen.invalidate();
             if(!notifications)Toast.makeText(this,
-                "Obavijesti nisu dopuštene u postavkama Androida.",
+                activityText(R.string.notification_denied),
                 Toast.LENGTH_LONG).show();
         }
     }
@@ -425,8 +460,7 @@ public final class MainActivity extends ComponentActivity {
             dailyBonusGrantedThisAttempt=true;
         }
         soundEffect();
-        screen.setContentDescription("Brojko, rezultat "+fmt(game.score)+
-            ", najveća pločica "+fmt(game.peak)+", potez "+game.moves);
+        screen.setContentDescription(activityText(R.string.accessibility_progress,fmt(game.score),fmt(game.peak),game.moves));
         if(dailyComplete && !dailyWasComplete) {
             page="dailyWin";
         }else if(daily && game.isDailyOutOfMoves()){
@@ -435,10 +469,8 @@ public final class MainActivity extends ComponentActivity {
         }else if(result.first2048)page="win";
         else if(result.lost){page="daily".equals(game.mode)?"dailyFail":"over";}
         if("win".equals(page)){
-            String announcement="Bravo! Dosegnuli ste pločicu 2048. "
-                +"Tvoj rezultat je "+fmt(game.score)+".";
-            screen.setContentDescription(announcement+
-                " Nastavi igrati, Nova igra ili Podijeli rezultat.");
+            String announcement=activityText(R.string.accessibility_victory,fmt(game.score));
+            screen.setContentDescription(activityText(R.string.accessibility_victory_actions,announcement));
             screen.announceForAccessibility(announcement);
         }
         persist();animate();
@@ -458,15 +490,15 @@ public final class MainActivity extends ComponentActivity {
 
     /** Start one durable archive with immutable game data. */
     private void beginGameArchive(String nextMode,boolean ending){
-        if(!GameArchiveCoordinator.start(this,prefs,game,historyDate(),
+        if(!GameArchiveCoordinator.start(this,prefs,game,today(),
             compactTime(),nextMode,ending)){
-            Toast.makeText(this,"Spremanje partije nije moguće.",
+            Toast.makeText(this,activityText(R.string.archive_unavailable),
                 Toast.LENGTH_LONG).show();
             return;
         }
         gameTransitionBusy=true;
         screen.setEnabled(false);
-        screen.announceForAccessibility("Spremanje partije.");
+        screen.announceForAccessibility(activityText(R.string.archive_saving));
     }
 
     /** Invoked on main after a worker commit; it also survives rotation. */
@@ -475,7 +507,7 @@ public final class MainActivity extends ComponentActivity {
         gameTransitionBusy=false;
         if(screen!=null)screen.setEnabled(true);
         if(!saved){
-            Toast.makeText(this,"Partija nije spremljena. Pokušajte ponovno.",
+            Toast.makeText(this,activityText(R.string.archive_failed),
                 Toast.LENGTH_LONG).show();
             return;
         }
@@ -523,9 +555,8 @@ public final class MainActivity extends ComponentActivity {
         String value=game==null?fmt(best):fmt(game.score);
         Intent i=new Intent(Intent.ACTION_SEND);
         i.setType("text/plain");
-        i.putExtra(Intent.EXTRA_TEXT,"U igri Brojko osvojio/la sam "+value
-            +" bodova! Spajaj brojeve. Ruši rekorde. — Brojko by Brendigo");
-        startActivity(Intent.createChooser(i,"Podijeli rezultat"));
+        i.putExtra(Intent.EXTRA_TEXT,activityText(R.string.share_message,value));
+        startActivity(Intent.createChooser(i,activityText(R.string.action_share_score)));
     }
 
     /** External author website only: no user data or gameplay is uploaded. */
@@ -537,7 +568,7 @@ public final class MainActivity extends ComponentActivity {
         try{
             startActivity(brendigoWebsiteIntent());
         }catch(android.content.ActivityNotFoundException notAvailable){
-            Toast.makeText(this,"Nema dostupnog web preglednika.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.browser_unavailable),Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -548,7 +579,7 @@ public final class MainActivity extends ComponentActivity {
     }
     void chooseBackupFile(boolean exporting){
         if(backupDocumentBusy||gameTransitionBusy){
-            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
             return;
         }
         Intent i=new Intent(exporting?Intent.ACTION_CREATE_DOCUMENT:Intent.ACTION_OPEN_DOCUMENT);
@@ -556,14 +587,14 @@ public final class MainActivity extends ComponentActivity {
         i.addCategory(Intent.CATEGORY_OPENABLE);
         if(exporting)i.putExtra(Intent.EXTRA_TITLE,"Brojko-backup-"+today()+".json");
         try{startActivityForResult(i,exporting?EXPORT_BACKUP:IMPORT_BACKUP);}
-        catch(Exception ex){Toast.makeText(this,"Nije moguće otvoriti datoteke.",Toast.LENGTH_LONG).show();}
+        catch(Exception ex){Toast.makeText(this,activityText(R.string.storage_open_failed),Toast.LENGTH_LONG).show();}
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK||data==null||data.getData()==null)return;
         if(requestCode!=EXPORT_BACKUP&&requestCode!=IMPORT_BACKUP)return;
         if(backupDocumentBusy||gameTransitionBusy){
-            Toast.makeText(this,"Spremanje je u tijeku.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -600,12 +631,12 @@ public final class MainActivity extends ComponentActivity {
                     backupImportBusy=false;
                     if(screen!=null)screen.setEnabled(true);
                     if(failed!=null){
-                        Toast.makeText(this,"Pogreška: "+failed.getMessage(),
+                        Toast.makeText(this,activityText(importing?R.string.backup_import_failed:R.string.backup_export_failed),
                             Toast.LENGTH_LONG).show();
                         return;
                     }
                     if(!importing){
-                        Toast.makeText(this,"Sigurnosna kopija spremljena.",
+                        Toast.makeText(this,activityText(R.string.backup_saved),
                             Toast.LENGTH_LONG).show();
                         return;
                     }
@@ -614,11 +645,11 @@ public final class MainActivity extends ComponentActivity {
                         // with gameplay and onPause on the main thread.
                         LocalBackupRepository.apply(prefs,validated);
                         skipPersistOnPauseAfterImport=true;
-                        Toast.makeText(this,"Sigurnosna kopija vraćena.",
+                        Toast.makeText(this,activityText(R.string.backup_restored),
                             Toast.LENGTH_LONG).show();
                         recreate();
                     }catch(Exception error){
-                        Toast.makeText(this,"Pogreška: "+error.getMessage(),
+                        Toast.makeText(this,activityText(R.string.backup_import_failed),
                             Toast.LENGTH_LONG).show();
                     }
                 });
@@ -627,7 +658,7 @@ public final class MainActivity extends ComponentActivity {
             backupDocumentBusy=false;
             backupImportBusy=false;
             if(importing)screen.setEnabled(true);
-            Toast.makeText(this,"Sigurnosna kopija trenutačno nije dostupna.",
+            Toast.makeText(this,activityText(R.string.backup_unavailable),
                 Toast.LENGTH_LONG).show();
         }
     }
@@ -690,6 +721,7 @@ public final class MainActivity extends ComponentActivity {
 
     final class BoardScreen extends View {
         final BoardAccessibilityDelegate accessibilityHelper;
+        final Resources localizedResources;
         final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
         final ArrayList<Tap> taps=new ArrayList<>();
         // Optional instrumentation-only ink bounds: no production text
@@ -705,7 +737,7 @@ public final class MainActivity extends ComponentActivity {
             android.graphics.Rect ink=new android.graphics.Rect();
             p.getTextBounds(content,0,content.length(),ink);
             if(ink.isEmpty())return;
-            float advance=p.measureText(content);
+            float advance=measureUiText(content);
             float alignX=p.getTextAlign()==Paint.Align.CENTER?
                 x-advance/2f:p.getTextAlign()==Paint.Align.RIGHT?
                 x-advance:x;
@@ -738,15 +770,19 @@ public final class MainActivity extends ComponentActivity {
         class Tap {
             float left,top,right,bottom;Runnable action;String label;
             Tap(float l,float t,float r,float b,Runnable a) {
-                this(l,t,r,b,"Aktiviraj",a);
+                this(l,t,r,b,uiText(R.string.accessibility_activate),a);
             }
             Tap(float l,float t,float r,float b,String caption,Runnable a){
                 left=l;top=t;right=r;bottom=b;action=a;
-                label=caption==null||caption.isEmpty()?"Akcija":caption;
+                label=caption==null||caption.isEmpty()?uiText(R.string.accessibility_action):caption;
             }
         }
         BoardScreen(Context context){
             super(context);
+            localizedResources=LocaleManager.resourcesFor(context,uiLocale);
+            setLayoutDirection(LocaleManager.isRtl(uiLocale)?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
+            setTextDirection(View.TEXT_DIRECTION_LOCALE);
+            p.setTextLocale(localizedResources.getConfiguration().getLocales().get(0));
             accessibilityHelper=new BoardAccessibilityDelegate(this);
             ViewCompat.setAccessibilityDelegate(this,accessibilityHelper);
             Typeface base;
@@ -771,6 +807,44 @@ public final class MainActivity extends ComponentActivity {
                 displayFont=makeTypeface(base,900);
             }
         }
+        String uiText(int id){return localizedResources.getString(id);}
+        float measureUiText(String text){return CanvasTextLayout.measure(text,p,uiLocale);}
+        boolean mirroredDrawing;
+        boolean rtlLayout(){return LocaleManager.isRtl(uiLocale);}
+        float screenLogicalX(float screenX){
+            return CanvasDirection.logicalX(screenX,offX,scale,rtlLayout());
+        }
+        float physicalX(float logicalX){
+            return CanvasDirection.physicalX(logicalX,offX,scale,rtlLayout());
+        }
+        void drawUiText(String text,float x,float baseline){
+            if(!mirroredDrawing){
+                CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);
+                return;
+            }
+            Paint.Align align=p.getTextAlign();
+            c.save();
+            try{
+                c.scale(-1f,1f,x,baseline);
+                p.setTextAlign(CanvasDirection.opposite(align));
+                CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);
+            }finally{
+                p.setTextAlign(align);
+                c.restore();
+            }
+        }
+        // Brand and puzzle board retain their intrinsic left-to-right artwork
+        // and physical movement, even when surrounding UI is mirrored.
+        void intrinsicArtwork(Runnable renderer){
+            if(!mirroredDrawing){renderer.run();return;}
+            c.save();
+            mirroredDrawing=false;
+            try{
+                c.scale(-1f,1f,200f,0f);
+                renderer.run();
+            }finally{mirroredDrawing=true;c.restore();}
+        }
+        boolean croatianArtwork(){return LocaleManager.usesCroatianArtwork(localizedResources.getConfiguration().getLocales().get(0));}
         void palette() {
             boolean dark=theme==1;
             // The very light canvas matches the user-provided nine portrait
@@ -928,7 +1002,7 @@ public final class MainActivity extends ComponentActivity {
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
             recordTextInk(content,x,baseline);
-            c.drawText(content,x,baseline,p);
+            drawUiText(content,x,baseline);
             p.clearShadowLayer();p.setFakeBoldText(false);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
@@ -938,7 +1012,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setFakeBoldText(false);
             p.setTextSize(size);
-            while(p.measureText(content)>maxWidth && size>10){
+            while(measureUiText(content)>maxWidth && size>10){
                 size=Math.max(10,size-1);
                 p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
                 p.setTextSize(size);
@@ -946,7 +1020,7 @@ public final class MainActivity extends ComponentActivity {
             // Extremely long localized values can still exceed their card at
             // 10 units. Scale ONLY the text's x axis instead of drawing over
             // adjacent buttons or changing responsive hit areas.
-            float width=p.measureText(content);
+            float width=measureUiText(content);
             if(width>maxWidth){
                 c.save();c.translate(x,baseline);
                 c.scale(maxWidth/width,1f);
@@ -964,7 +1038,7 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            while(p.measureText(label)>maxWidth&&size>10f){
+            while(measureUiText(label)>maxWidth&&size>10f){
                 size=Math.max(10f,size-.5f);p.setTextSize(size);
             }
             p.setTextAlign(Paint.Align.CENTER);p.setColor(color);
@@ -977,17 +1051,17 @@ public final class MainActivity extends ComponentActivity {
                 p.setStrokeWidth("daily".equals(page)&&
                     referencePortraitLayout?1.55f:
                     ("themes".equals(page)&&referencePortraitLayout&&
-                     ("Teme i".equals(label)||"izgled".equals(label))?
+                     (uiText(R.string.themes_heading_first).equals(label)||uiText(R.string.themes_heading_second).equals(label))?
                      1.55f:
                     ("stats".equals(page)&&referencePortraitLayout&&
-                     "Statistika".equals(label)?0.95f:0.7f)));
+                     uiText(R.string.home_statistics).equals(label)?0.95f:0.7f)));
                 p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
                 p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
                     lighten(color,.075f),darken(color,.045f),
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(label,x,baseline);
-            c.drawText(label,x,baseline,p);
+            drawUiText(label,x,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
@@ -998,7 +1072,7 @@ public final class MainActivity extends ComponentActivity {
                            float size,float maxWidth,int color){
             p.setTypeface(regularFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            float actualWidth=p.measureText(content);
+            float actualWidth=measureUiText(content);
             if(actualWidth>maxWidth){
                 c.save();c.translate(x,baseline);
                 c.scale(maxWidth/actualWidth,1f);
@@ -1014,7 +1088,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            while(p.measureText(content)>maxWidth&&size>10){
+            while(measureUiText(content)>maxWidth&&size>10){
                 size=Math.max(10,size-.5f);
                 p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
                 p.setTextSize(size);
@@ -1022,14 +1096,14 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);p.setTextAlign(Paint.Align.LEFT);
             p.setStrokeWidth(0);
-            float drawnWidth=p.measureText(content);
+            float drawnWidth=measureUiText(content);
             if(drawnWidth>maxWidth){
                 c.save();c.translate(left,baseline);c.scale(maxWidth/drawnWidth,1f);
                 recordTextInk(content,0,0);
-                c.drawText(content,0,0,p);c.restore();
+                drawUiText(content,0,0);c.restore();
             }else{
                 recordTextInk(content,left,baseline);
-                c.drawText(content,left,baseline,p);
+                drawUiText(content,left,baseline);
             }
             p.setTextAlign(Paint.Align.CENTER);
         }
@@ -1498,7 +1572,7 @@ public final class MainActivity extends ComponentActivity {
                 // higher raised game buttons. Change ONLY this one CTA.
                 boolean flatDaily=page.equals("daily");
                 boolean ownerDailyStart=flatDaily&&theme==0&&
-                    referencePortraitLayout&&"Započni izazov".equals(label);
+                    referencePortraitLayout&&uiText(R.string.daily_start).equals(label);
                 // The owner's pill is 110px high. The previous native
                 // face extended 9px below it (119px), but its 49-unit
                 // touch target must remain unchanged for accessibility.
@@ -1508,9 +1582,9 @@ public final class MainActivity extends ComponentActivity {
                 // accessibility and click rectangle unchanged.
                 boolean homeHero=page.equals("home")&&w>=280;
                 boolean victoryPrimary=page.equals("win")&&
-                    "Nastavi igrati".equals(label);
+                    uiText(R.string.action_continue_playing).equals(label);
                 boolean victoryShare=page.equals("win")&&
-                    "Podijeli rezultat".equals(label);
+                    uiText(R.string.action_share_score).equals(label);
                 boolean ownerVictoryShare=victoryShare&&theme==0&&
                     referencePortraitLayout;
                 float visualHeight=ownerDailyStart?h-3.8f:
@@ -1566,7 +1640,7 @@ public final class MainActivity extends ComponentActivity {
                 // every other screen unchanged.
                 boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
                 boolean victorySecondary=page.equals("win")&&
-                    "Nova igra".equals(label)&&theme!=1;
+                    uiText(R.string.action_new_game).equals(label)&&theme!=1;
                 if(victorySecondary){
                     // A warm, raised but borderless reference pill. Do not
                     // alter the same shared component outside the win modal.
@@ -1585,11 +1659,12 @@ public final class MainActivity extends ComponentActivity {
                 fitted(label,x+w/2,y+h*.78f,21,w-14,prominent?WHITE:ink,true);
             }else{
                 boolean homeHero=page.equals("home")&&prominent&&w>=280;
+                float paintedIconRight=x;
                 if(hasSymbol){
                     boolean winSecondary=page.equals("win")&&
-                        "Nova igra".equals(label);
+                        uiText(R.string.action_new_game).equals(label);
                     boolean winShare=page.equals("win")&&
-                        "Podijeli rezultat".equals(label);
+                        uiText(R.string.action_share_score).equals(label);
                     float iconX=x+(winSecondary?78f:
                         winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
@@ -1597,6 +1672,14 @@ public final class MainActivity extends ComponentActivity {
                             49f:page.equals("daily")&&
                         referencePortraitLayout&&w>=300?80f:
                         Math.min(58f,w*.21f)):25f);
+                    float paintedIconWidth=winSecondary?29f:
+                        page.equals("daily")&&prominent&&"play".equals(symbol)?32f:
+                        homeHero&&referencePortraitLayout&&theme==0&&"play".equals(symbol)?43f:
+                        page.equals("missions")&&referencePortraitLayout&&theme==0&&"back".equals(symbol)?20f:
+                        Math.min(prominent?(page.equals("daily")?34:homeHero?43:33):23,
+                            h*(page.equals("win")&&referencePortraitLayout&&theme==0?.66f:
+                                page.equals("daily")?.65f:homeHero?.57f:.52f));
+                    paintedIconRight=iconX+paintedIconWidth/2f;
                     if(winSecondary)
                         victoryRestartIcon(iconX,y+h/2f,29f,iconColor);
                     else if(page.equals("daily")&&prominent&&
@@ -1609,23 +1692,26 @@ public final class MainActivity extends ComponentActivity {
                             referencePortraitLayout&&theme==0&&
                             "back".equals(symbol))
                         missionSourceBackGlyph(iconX,y+h/2);
-                    else icon(symbol,iconX,y+h/2,
-                        Math.min(prominent?
-                            (page.equals("daily")?34:homeHero?43:33):23,
-                            h*(page.equals("win")&&referencePortraitLayout
-                                &&theme==0?.66f:page.equals("daily")?.65f:
-                                homeHero?.57f:.52f)),iconColor);
+                    else icon(symbol,iconX,y+h/2,paintedIconWidth,iconColor);
                 }
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&referencePortraitLayout&&theme==0&&
-                        "Nova igra".equals(label)?w*.60f:
+                        uiText(R.string.action_new_game).equals(label)?w*.60f:
                         homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
-                            ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
+                            ?(uiText(R.string.action_share_score).equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
-                    (page.equals("win")&&"Nova igra".equals(label)?
+                    (page.equals("win")&&uiText(R.string.action_new_game).equals(label)?
                         (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
                         (w+38f)/2f)):w/2f);
+                float labelWidth=hasSymbol?(prominent?w*.76f:w-52):w-20;
+                // For every localized label except the calibrated Croatian artwork,
+                // fit inside the remaining icon-free interval. Canvas mirrors the
+                // same interval for RTL, leaving identical logical clearances.
+                if(hasSymbol&&!croatianArtwork()){
+                    ButtonLabelGeometry geometry=ButtonLabelGeometry.calculate(x,w,paintedIconRight);
+                    textCenter=geometry.center;labelWidth=geometry.width;
+                }
                 int labelColor=prominent?WHITE:ink;
                 // Pixel-measured 941×1672 owner Victory: native action text
                 // was 20–25% smaller than the real screenshot. Limit the
@@ -1633,9 +1719,9 @@ public final class MainActivity extends ComponentActivity {
                 boolean ownerWinLabel=page.equals("win")&&
                     referencePortraitLayout&&theme==0;
                 float font=ownerWinLabel?
-                    ("Nastavi igrati".equals(label)?22.5f:
-                     "Nova igra".equals(label)?20.5f:
-                     "Podijeli rezultat".equals(label)?20.5f:16f):
+                    (uiText(R.string.action_continue_playing).equals(label)?22.5f:
+                     uiText(R.string.action_new_game).equals(label)?20.5f:
+                     uiText(R.string.action_share_score).equals(label)?20.5f:16f):
                     prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
@@ -1646,14 +1732,14 @@ public final class MainActivity extends ComponentActivity {
                 // PR43 was x335..716, similar width but 14 px left.
                 // Its letter tops must rise about 7 px without widening.
                 boolean sourceHomeCTA=homeHero&&referencePortraitLayout&&
-                    theme==0&&"Nova igra".equals(label);
+                    theme==0&&uiText(R.string.action_new_game).equals(label);
                 if(sourceHomeCTA){
                     c.save();
                     c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
                 }
-                boolean ownerDailyCta=page.equals("daily")&&prominent&&
+                boolean ownerDailyCta=croatianArtwork()&&page.equals("daily")&&prominent&&
                     theme==0&&referencePortraitLayout&&
-                    "Započni izazov".equals(label);
+                    uiText(R.string.daily_start).equals(label);
                 if(ownerDailyCta){
                     // Exact source label x351..704/y1572..1622.
                     // Dynamic states ('Nastavi izazov', 'Igraj ponovno')
@@ -1661,8 +1747,7 @@ public final class MainActivity extends ComponentActivity {
                     ownerHeadline(OwnerHeadlineContours.DAILY_START,
                         0xffffffff,0xfff9f9f8,1572f,1622f);
                 }else{
-                    fitted(label,textCenter,y+h/2+font*.35f,font,
-                        hasSymbol?(prominent?w*.76f:w-52):w-20,labelColor,true);
+                    fitted(label,textCenter,y+h/2+font*.35f,font,labelWidth,labelColor,true);
                 }
                 if(sourceHomeCTA)c.restore();
             }
@@ -1670,10 +1755,10 @@ public final class MainActivity extends ComponentActivity {
             boolean iconOnly=label==null||label.isEmpty();
             String accessibleLabel=label;
             if(iconOnly) {
-                if("back".equals(symbol))accessibleLabel="Natrag";
-                else if("pause".equals(symbol))accessibleLabel="Pauziraj igru";
-                else if("undo".equals(symbol))accessibleLabel="Poništi potez";
-                else accessibleLabel=symbol==null?"Akcija":symbol;
+                if("back".equals(symbol))accessibleLabel=uiText(R.string.accessibility_back);
+                else if("pause".equals(symbol))accessibleLabel=uiText(R.string.accessibility_pause);
+                else if("undo".equals(symbol))accessibleLabel=uiText(R.string.accessibility_undo);
+                else accessibleLabel=uiText(R.string.accessibility_action);
             }
             float extraX=iconOnly?Math.max(0,(54f-w)/2):0;
             float extraY=iconOnly?Math.max(0,(54f-h)/2):0;
@@ -1683,7 +1768,7 @@ public final class MainActivity extends ComponentActivity {
         void title(String name) {
             back();
             brand(64,38);
-            if("Statistika".equals(name))
+            if(uiText(R.string.home_statistics).equals(name))
                 illustratedTitle(name,200,127,34f,356f,ink);
             else fitted(name,200,127,name.length()>18?28:34,356,ink,true);
         }
@@ -1754,6 +1839,9 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void brand(float y,float size,boolean includeByline) {
+            intrinsicArtwork(()->drawBrand(y,size,includeByline));
+        }
+        private void drawBrand(float y,float size,boolean includeByline) {
             if(includeByline&&theme==0&&referencePortraitLayout&&
                 ("missions".equals(page)||"themes".equals(page)||
                  "stats".equals(page))){
@@ -1781,120 +1869,18 @@ public final class MainActivity extends ComponentActivity {
             if(auditTextLayout)textRegions.clear();
             float usableWidth=Math.max(1,getWidth()-getPaddingLeft()-getPaddingRight());
             float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
-            boolean inGame=page.equals("game")||page.equals("pause")||
-                page.equals("win")||page.equals("over")||page.equals("confirm")||
-                page.equals("confirmEnd")||page.equals("dailyWin")||page.equals("dailyFail");
-            // Themes has a compact bottom navigation within the 880-unit design.
-            // Fit it to the available window INCLUDING system bar insets; only
-            // genuinely taller content (statistics/history) must always scroll.
-            // These four screens have supplied, distinct owner reference
-            // compositions at 941x1672 (400x710 design units). Tall portrait
-            // phones must not switch to the unrelated 880-unit arrangement:
-            // it substantially changes the Stats chart/history geometry and
-            // Themes cards. Preserve the source Canvas composition and
-            // center it on the available viewport, without stretching.
-            // All other pages retain their own existing breakpoints.
-            // Three additional supplied owner references are fully drawn
-            // on the 400x710 portrait plane. Tall phones previously
-            // switched them to an unrelated 880-unit layout, changing
-            // the Missions cards, Daily challenge and Classic gameplay.
-            // Scope Classic to the actual 4x4 mode: 5x5 and Daily gameplay
-            // keep their own independent responsive behavior.
-            boolean ownerClassicGame=page.equals("game")&&game!=null&&
-                "classic".equals(game.mode)&&game.size==4;
-            boolean tallOwnerPortrait=(page.equals("splash")||
-                page.equals("home")||page.equals("themes")||
-                page.equals("stats")||page.equals("missions")||
-                page.equals("daily")||ownerClassicGame)&&
-                usableHeight>usableWidth&&usableHeight/usableWidth>=1.85f;
-            referencePortraitLayout=
-                usableHeight/usableWidth<1.85f||tallOwnerPortrait;
-            compactBoardLayout=inGame&&referencePortraitLayout;
-            gridY=compactBoardLayout&&game!=null&&game.size==4?159:(compactBoardLayout?171:222);
-            boolean extended=page.equals("stats");
-            // Keep buttons touch-sized on 16:9 screens; permit scrolling
-            // outside the board rather than scaling the whole game to tiny size.
-            // Splash uses its own width-fitted short-portrait arrangement.
-            // Using the 880-unit tall layout shrank the reference by ~19%.
-            // Decorative edge tiles may be cropped, but logo/slogan must fit.
-            boolean compact=referencePortraitLayout||
-                (!page.equals("splash")&&extended);
-            // Landscape phones and resizable tablets must keep the whole
-            // interaction region reachable; portrait stays pixel-identical.
-            boolean landscape=usableWidth>usableHeight;
-            // Landscape Splash must fit the complete 880-unit scene.
-            // Other landscape screens retain touch-sized controls and scroll
-            // if their 880-unit content is taller than the available window.
-            // Landscape Home uses larger touch-friendly shortcut cards.
-            // It can scroll vertically instead of shrinking the buttons.
-            float landscapeScale=Math.min(usableWidth/400f,
-                usableHeight/(page.equals("splash")?880f:
-                    page.equals("home")?580f:720f));
-            if(landscape&&page.equals("home")){
-                // Very short split-screen and foldable windows previously made
-                // all four 88-unit Home shortcuts too small to touch. Grow
-                // them toward 48 dp, but never crop the 400-unit canvas or
-                // make the 120-unit shortcut card taller than the viewport.
-                // Vertical scrolling, not horizontal clipping, absorbs the
-                // extra height. Portrait reference pixels are unchanged.
-                float desiredTouchScale=48f*getResources()
-                    .getDisplayMetrics().density/88f;
-                landscapeScale=Math.min(usableWidth/400f,
-                    Math.min(usableHeight/120f,
-                        Math.max(landscapeScale,desiredTouchScale)));
-            }
-            scale=landscape?landscapeScale:
-                (compact?usableWidth/400f:
-                    Math.min(usableWidth/400f,usableHeight/880f));
-            // A 320x480 compact phone cannot fit the 628-unit slogan with
-            // pure width scaling. Cap only Splash; the 941x1672 design
-            // reference and its native positions remain unchanged.
-            if(page.equals("splash")&&compact)
-                scale=Math.min(scale,usableHeight/640f);
-            float contentHeight=page.equals("stats")?
-                (referencePortraitLayout?
-                    (statsTouchExploration()?
-                        Math.max(710f,545f+Math.min(5,history().length())*48f):
-                        710f)
-                    :1120f):
-                // All Home shortcuts end at y=690 plus their card shadows.
-                // The old 880-unit height caused ~170 units of empty scrolling
-                // at the original 941x1672 reference viewport. Preserve real
-                // scrolling on shorter devices without cropping any shortcut.
-                ((page.equals("pause")||page.equals("confirm")||
-                    page.equals("confirmEnd"))&&referencePortraitLayout?654f:
-                (page.equals("over")&&referencePortraitLayout?705f:
-                ((page.equals("dailyWin")||page.equals("dailyFail"))&&
-                    referencePortraitLayout?700f:
-                (page.equals("home")&&referencePortraitLayout?710f:
-                ((page.equals("settings")||page.equals("themes")||
-                    page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f)))));
-            // The owner Classic 4x4 artwork ends at y~671 of its
-            // 710-unit reference scene. The inherited 880-unit content
-            // height caused a phantom 169-unit scroll on 941x1672,
-            // despite all gameplay actions already fitting. Keep real
-            // overflow scroll on genuinely short screens.
-            if(ownerClassicGame&&referencePortraitLayout)
-                contentHeight=710f;
-            // Splash must never scroll; its compact lettering fits a 360x600
-            // viewport while longer non-splash pages still scroll as needed.
-            maxScroll=page.equals("splash")?0:
-                ((compact||landscape)?
-                    Math.max(0,contentHeight-usableHeight/scale):0);
-            if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
-            scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
-            offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
-            offY=(compact||landscape&&!page.equals("splash"))?
-                getPaddingTop()-scrollOffset*scale:
-                getPaddingTop()+(usableHeight-880*scale)/2f;
-            // Reference 941x1672 is unchanged (tallOwnerPortrait=false).
-            // On taller portrait phones, center the full 710-unit source
-            // scene when it fits. Compact split-screen and short windows
-            // continue to scroll instead of clipping interactive controls.
-            if(tallOwnerPortrait&&maxScroll==0f)
-                offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
+            boolean accessibleHistory="stats".equals(page)&&statsTouchExploration();
+            BoardViewport viewport=BoardViewport.calculate(page,game==null?"":game.mode,
+                game==null?0:game.size,usableWidth,usableHeight,getPaddingLeft(),getPaddingTop(),
+                getResources().getDisplayMetrics().density,accessibleHistory,
+                accessibleHistory?history().length():0,scrollOffset,!page.equals(renderedPage));
+            referencePortraitLayout=viewport.referencePortraitLayout;
+            compactBoardLayout=viewport.compactBoardLayout;gridY=viewport.gridY;
+            scale=viewport.scale;maxScroll=viewport.maxScroll;scrollOffset=viewport.scrollOffset;
+            offX=viewport.offX;offY=viewport.offY;renderedPage=page;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
+            mirroredDrawing=rtlLayout();
+            if(mirroredDrawing)c.scale(-1f,1f,200f,0f);
             taps.clear();
             switch(page) {
                 case "splash":splashPage();break;
@@ -1919,10 +1905,10 @@ public final class MainActivity extends ComponentActivity {
                 case "language":languagePage();break;
                 case "backup":backupPage();break;
                 case "help":helpPage();break;
-                case "privacy":textPage("Privatnost",new String[]{"Brojko čuva rezultate i postavke",
-                    "samo na vašem uređaju.","Igra radi bez interneta i računa.",
-                    "Ne prikupljamo osobne podatke,","ne prikazujemo oglase i ne šaljemo",
-                    "analitiku na poslužitelje."});break;
+                case "privacy":textPage(uiText(R.string.privacy_title),new String[]{uiText(R.string.privacy_local_1),
+                    uiText(R.string.privacy_local_2),uiText(R.string.privacy_offline),
+                    uiText(R.string.privacy_no_data),uiText(R.string.privacy_no_ads),
+                    uiText(R.string.privacy_no_analytics)});break;
                 case "about":aboutPage();break;
                 default:home();
             }
@@ -1937,6 +1923,7 @@ public final class MainActivity extends ComponentActivity {
                 }
             }
             c.restore();
+            mirroredDrawing=false;
         }
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
         void splashAmbient(float x,float y,float width,float height,
@@ -2046,7 +2033,7 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(0xd6ffffff);p.setTypeface(displayFont);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
             p.setShadowLayer(7f,0,0,0xaaffffff);
-            c.drawText("256",364,726,p);
+            drawUiText("256",364,726);
             p.clearShadowLayer();p.setMaskFilter(null);c.restore();
         }
         // Logo-specific, rounded fill+stroke reproduces the extra
@@ -2075,7 +2062,7 @@ public final class MainActivity extends ComponentActivity {
                     0xff263657,0xff1d2947,Shader.TileMode.CLAMP));
             }
             p.setColor(color);
-            c.drawText(letters,cx,baseline,p);
+            drawUiText(letters,cx,baseline);
             p.setShader(null);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
@@ -2083,7 +2070,8 @@ public final class MainActivity extends ComponentActivity {
         // a shorter coral number tile and three pronounced accent strokes.
         // Never substitute a reference bitmap: draw each part natively so
         // the screen remains responsive and the brand is theme-aware.
-        void splashWordmark(){
+        void splashWordmark(){intrinsicArtwork(this::drawSplashWordmark);}
+        private void drawSplashWordmark(){
             final float y=399f,size=116f;
             p.setTypeface(displayFont);
             p.setTextSize(size);
@@ -2164,7 +2152,8 @@ public final class MainActivity extends ComponentActivity {
         // Splash. The contour geometry is scalable native Canvas artwork,
         // not a screenshot. Home, the other themes and landscape retain the
         // separately responsive wordmark implementations.
-        void ownerSplashNavyWordmark(){
+        void ownerSplashNavyWordmark(){intrinsicArtwork(this::drawOwnerSplashNavyWordmark);}
+        private void drawOwnerSplashNavyWordmark(){
             if(ownerSplashNavyPath==null){
                 Path path=new Path();
                 path.setFillType(Path.FillType.EVEN_ODD);
@@ -2217,7 +2206,7 @@ public final class MainActivity extends ComponentActivity {
                     p.setTextSize(37f);p.setStyle(Paint.Style.FILL);
                     p.setColor(0x79ffffff);
                     p.setShadowLayer(8f,0,0,0x8bffffff);
-                    c.drawText("32",360.5f,499f,p);
+                    drawUiText("32",360.5f,499f);
                     p.clearShadowLayer();c.restore();
                 }
                 // Reference accents sit OUTSIDE raised tiles.
@@ -2294,11 +2283,11 @@ public final class MainActivity extends ComponentActivity {
                     c.save();
                     c.scale(1f,1.12f,127f,588f);
                     c.translate(0f,.5f);
-                    fitted("Spajaj brojeve.",127,594,24.2f,187,
+                    fitted(uiText(R.string.slogan_merge),127,594,24.2f,187,
                         0xfffd5a3e,true);
                     c.restore();
-                }else fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
-                fitted("Ruši rekorde.",287,594,23.8f,179,TEAL,true);
+                }else fitted(uiText(R.string.slogan_merge),127,594,24.2f,187,CORAL,true);
+                fitted(uiText(R.string.slogan_records),287,594,23.8f,179,TEAL,true);
                 return;
             }
             // Taller devices retain the full-height composition.
@@ -2334,8 +2323,8 @@ public final class MainActivity extends ComponentActivity {
                 txt("by Brendigo",284f,533f,19f,muted,true);
             }else brand(487,108);
             card(26,704,348,77,32,theme==1?card:0xfffff0db);
-            fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
-            fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
+            fitted(uiText(R.string.slogan_merge),128,751,22,192,CORAL,true);
+            fitted(uiText(R.string.slogan_records),290,751,22,182,TEAL,true);
         }
         // Home is a dedicated illustrated surface: softer cream cards and
         // ambient shadows belong here, not on shared in-game controls.
@@ -2423,7 +2412,8 @@ public final class MainActivity extends ComponentActivity {
         // decorative rays must remain one illustrated identity on tall as
         // well as reference-ratio portrait Android phones. Every Canvas
         // transform is local: touch targets, cards and scores are unaffected.
-        void homeIllustratedBrand(boolean tallPortrait){
+        void homeIllustratedBrand(boolean tallPortrait){intrinsicArtwork(()->drawHomeIllustratedBrand(tallPortrait));}
+        private void drawHomeIllustratedBrand(boolean tallPortrait){
             c.save();
             if(tallPortrait){
                 c.translate(0f,42f);
@@ -2486,7 +2476,7 @@ public final class MainActivity extends ComponentActivity {
                 homeIllustratedBrand(tallPortrait&&theme==0);
             else brand(197,72);
             if(!portrait&&!tallPortrait)
-                fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
+                fitted(uiText(R.string.home_slogan),200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
             homeSoftCard(21,scoresY,171,scoresH,19,
@@ -2505,7 +2495,7 @@ public final class MainActivity extends ComponentActivity {
             // previous 13-unit bold render occupied ~225x28. Confine
             // the owner typography correction to the light Home cards.
             boolean sourceScoreHeading=portrait&&theme==0;
-            fitted("Najbolji rezultat",sourceScoreHeading?115:132,
+            fitted(uiText(R.string.home_best),sourceScoreHeading?115:132,
                 scoresY+(sourceScoreHeading?24:29),
                 sourceScoreHeading?11:13,117,muted,!sourceScoreHeading);
             // Source-matched 12.560 remains clear of the three right-hand
@@ -2517,7 +2507,7 @@ public final class MainActivity extends ComponentActivity {
                 scoresY+(theme==0?53:58));
             icon("stats",236,
                 scoresY+(portrait&&theme==0?26:30),27,0xff63799d);
-            fitted("Zadnji rezultat",sourceScoreHeading?298:
+            fitted(uiText(R.string.home_last),sourceScoreHeading?298:
                     portrait?301:319,
                 scoresY+(sourceScoreHeading?24:29),
                 sourceScoreHeading?11:13,
@@ -2529,15 +2519,15 @@ public final class MainActivity extends ComponentActivity {
                 icon("chevron-right",365,scoresY+39,17,muted);
             // Source score cards are actual shortcuts, not dead display art.
             taps.add(new Tap(21,scoresY,192,scoresY+scoresH,
-                "Najbolji rezultat",()->navigate("stats")));
+                uiText(R.string.home_best),()->navigate("stats")));
             taps.add(new Tap(207,scoresY,378,scoresY+scoresH,
-                "Zadnji rezultat",()->navigate("stats")));
+                uiText(R.string.home_last),()->navigate("stats")));
             boolean resumable=game!=null&&!game.archived&&!game.gameOver;
             float playY=portrait?293:372;
             float playH=portrait?82:86;
             // Reference orange hero pill is about 285 design units wide,
             // leaving room for the large bursts on both sides.
-            button(resumable?"Nastavi igru":"Nova igra","play",
+            button(resumable?uiText(R.string.home_resume):uiText(R.string.action_new_game),"play",
                 portrait?58:43,playY,portrait?284:314,playH,CORAL,true,
                 ()->{if(resumable)navigate("game");else requestNew("classic");});
             if(portrait){
@@ -2549,21 +2539,21 @@ public final class MainActivity extends ComponentActivity {
             }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
-            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffef3e9,false,
+            modeCard(uiText(R.string.home_classic),"4 × 4",15,modeY,117,modeH,0xfffef3e9,false,4,
                 ()->requestNew("classic"));
-            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe1fcf9,false,
+            modeCard(uiText(R.string.home_relaxed),"5 × 5",141,modeY,117,modeH,0xffe1fcf9,false,5,
                 ()->requestNew("relaxed"));
-            modeCard("Dnevni izazov","Novi izazov svaki dan!",
-                267,modeY,117,modeH,0xfffef6d6,true,()->navigate("daily"));
+            modeCard(uiText(R.string.mode_daily),uiText(R.string.home_daily_sub),
+                267,modeY,117,modeH,0xfffef6d6,true,0,()->navigate("daily"));
             float shortcutY=portrait?570:687;
             float shortcutH=portrait?120:144;
-            shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
+            shortcut(uiText(R.string.home_missions),"target",uiText(R.string.home_missions_1),uiText(R.string.home_missions_2),
                 16,shortcutY,88,shortcutH,card,()->navigate("missions"));
-            shortcut("Statistika","stats","Prati svoj","napredak.",
+            shortcut(uiText(R.string.home_statistics),"stats",uiText(R.string.home_stats_1),uiText(R.string.home_stats_2),
                 109,shortcutY,88,shortcutH,card,()->navigate("stats"));
-            shortcut("Teme","palette","Otkrij nove","izglede.",
+            shortcut(uiText(R.string.home_themes),"palette",uiText(R.string.home_themes_1),uiText(R.string.home_themes_2),
                 202,shortcutY,88,shortcutH,card,()->navigate("themes"));
-            shortcut("Postavke","settings","Prilagodi","igru sebi.",
+            shortcut(uiText(R.string.settings_title),"settings",uiText(R.string.home_settings_1),uiText(R.string.home_settings_2),
                 295,shortcutY,88,shortcutH,card,()->navigate("settings"));
         }
         void shortcut(String label,String glyph,String sub1,String sub2,
@@ -2705,7 +2695,7 @@ public final class MainActivity extends ComponentActivity {
             c.restore(); // complete Home calendar
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
-                      boolean daily,Runnable tap){
+                      boolean daily,int previewColumns,Runnable tap){
             boolean portrait=referencePortraitLayout;
             homeSoftCard(x,y,w,h,22,theme==1?card:fill);
             if(daily){
@@ -2734,7 +2724,7 @@ public final class MainActivity extends ComponentActivity {
                         y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
-                int cols="Opušteno".equals(name)?5:4;
+                int cols=previewColumns;
                 boolean sourceClassic=portrait&&theme==0&&cols==4;
                 // Match the reference's ~57px grid pitch instead of 59px;
                 // don't change 5x5, active gameplay, or other themes.
@@ -2792,8 +2782,8 @@ public final class MainActivity extends ComponentActivity {
                 c.restore();
             }else fitted(name,captionX,captionY,portrait?16:17,w-5,ink,true);
             if(daily){
-                fitted("Novi izazov",x+w/2,y+(portrait?143:169),12,w-5,muted,false);
-                fitted("svaki dan!",x+w/2,y+(portrait?157:182),12,w-5,muted,false);
+                fitted(uiText(R.string.home_new_challenge),x+w/2,y+(portrait?143:169),12,w-5,muted,false);
+                fitted(uiText(R.string.home_every_day),x+w/2,y+(portrait?157:182),12,w-5,muted,false);
             }else fitted(sub,x+w/2,y+(portrait?155:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }
@@ -2809,7 +2799,7 @@ public final class MainActivity extends ComponentActivity {
             boolean relaxedArtwork=relaxed&&"game".equals(page)&&
                 theme==0&&tileStyle==0&&getHeight()>=getWidth();
             if(narrow&&!daily&&!relaxed){
-                if(theme==0&&"game".equals(page)&&referencePortraitLayout)
+                if(croatianArtwork()&&theme==0&&"game".equals(page)&&referencePortraitLayout)
                     ownerClassicVectorHeading();
                 else {
                     // Preserve the existing adaptive font title on dark,
@@ -2820,11 +2810,11 @@ public final class MainActivity extends ComponentActivity {
                     float headingSize=43f;
                     p.setTextScaleX(1f);p.setTypeface(displayFont);
                     p.setTextSize(headingSize);
-                    while(p.measureText("Klasično")>201f&&headingSize>10f){
+                    while(measureUiText(uiText(R.string.home_classic))>201f&&headingSize>10f){
                         headingSize=Math.max(10f,headingSize-1f);
                         p.setTextSize(headingSize);
                     }
-                    raisedWordmarkLetters("Klasično",105,89,headingSize,ink);
+                    raisedWordmarkLetters(uiText(R.string.home_classic),105,89,headingSize,ink);
                     c.restore();
                 }
                 // Thick coral rays in the owner reference are distinct
@@ -2835,7 +2825,7 @@ public final class MainActivity extends ComponentActivity {
                 if(relaxed&&theme==0&&"game".equals(page))
                     relaxedGameplayHeading();
                 else
-                    fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
+                    fitted(daily?uiText(R.string.daily_title_first):relaxed?uiText(R.string.home_relaxed):uiText(R.string.home_classic),
                         105,89,daily?32:43,201,ink,true);
             }
             if(!daily) {
@@ -2854,12 +2844,12 @@ public final class MainActivity extends ComponentActivity {
                     }
                 }
             }else{
-                fitted("izazov",103,135,36,195,CORAL,true);
+                fitted(uiText(R.string.daily_title_second),103,135,36,195,CORAL,true);
             }
             // Both score labels have independent, non-overlapping bounds even
             // for 5+ digit values shown in the original populated 4x4 artwork.
             icon("crown",narrow?231:224,70,24,0xffffb43d);
-            fitted("Najbolji",narrow?230:255,100,12,narrow?66:70,muted,true);
+            fitted(uiText(R.string.stats_best_top),narrow?230:255,100,12,narrow?66:70,muted,true);
             // Owner Classic 941x1672 HUD ink is ~107x34px for best and
             // ~100x34px for score; older wide Nunito figures measured
             // ~129x40px and ~132x38px, also ~10px too low.
@@ -2877,7 +2867,7 @@ public final class MainActivity extends ComponentActivity {
                 sourceClassicHud?19.7f:24,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             icon("stats",narrow?299:313,69,23,muted);
-            fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
+            fitted(uiText(R.string.score_label),narrow?301:334,101,12,narrow?65:70,muted,true);
             float scoreHudX=narrow?301:334;
             if(sourceClassicHud){c.save();c.scale(.86f,1f,scoreHudX,125f);}
             // Source score column already matches horizontally, but its
@@ -2913,7 +2903,7 @@ public final class MainActivity extends ComponentActivity {
             drawGrid();
             if(daily){
                 int remaining=Math.max(0,80-game.moves);
-                fitted("DNEVNI IZAZOV • "+remaining+" POTEZA PREOSTALO",
+                fitted(localizedResources.getQuantityString(R.plurals.daily_moves_remaining,remaining,remaining),
                     200,narrow?561:624,15,351,remaining<=10?CORAL:muted,true);
             }
             boolean portraitFour=compactBoardLayout&&game.size==4;
@@ -2932,17 +2922,17 @@ public final class MainActivity extends ComponentActivity {
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
             if(classicArtwork||relaxedArtwork)
-                classicBottomControl("Novo","refresh",firstX,actionsY,
+                classicBottomControl(uiText(R.string.action_new_short),"refresh",firstX,actionsY,
                     113,actionsH,()->requestNew(game.mode));
             else
-                button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
+                button(uiText(R.string.action_new_short),"refresh",firstX,actionsY,113,actionsH,card,false,
                     ()->requestNew(game.mode));
             if(game.canUndo()){
                 if(classicArtwork||relaxedArtwork)
-                    classicBottomControl("Poništi","undo",undoX,actionsY,
+                    classicBottomControl(uiText(R.string.action_undo),"undo",undoX,actionsY,
                         112,actionsH,()->undo());
                 else
-                    button("Poništi","undo",undoX,actionsY,112,actionsH,
+                    button(uiText(R.string.action_undo),"undo",undoX,actionsY,112,actionsH,
                         card,false,()->undo());
             }else{
                 if(relaxedArtwork)
@@ -2951,18 +2941,18 @@ public final class MainActivity extends ComponentActivity {
                     card(undoX,actionsY,112,actionsH,20,
                         theme==1?0xff29364a:0xffeae5de);
                 icon("undo",undoX+56,actionsY+27,25,muted);
-                txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
+                txt(uiText(R.string.action_undo),undoX+56,actionsY+actionsH-15,17,muted,true);
             }
             if(portraitFour&&theme==0)
                 portraitClassicFinish(finishX,actionsY,120,actionsH,
                     ()->navigate("confirmEnd"));
             else
-                button("Završi","check",finishX,actionsY,portraitFour?120:113,
+                button(uiText(R.string.action_finish),"check",finishX,actionsY,portraitFour?120:113,
                     actionsH,CORAL,true,()->navigate("confirmEnd"));
             if(!narrow){
-                button("Izbornik","home",22,757,171,64,card,false,
+                button(uiText(R.string.action_menu),"home",22,757,171,64,card,false,
                     ()->navigate("home"));
-                button("Podijeli","share",207,757,171,64,card,false,()->share());
+                button(uiText(R.string.action_share),"share",207,757,171,64,card,false,()->share());
                 bottomBrand();
             }
         }
@@ -2970,12 +2960,12 @@ public final class MainActivity extends ComponentActivity {
         // language as Classic, without stretching or overlapping the crown.
         // Keep one measured baseline on short and tall phones.
         void relaxedGameplayHeading(){
-            final String label="Opušteno";
+            final String label=uiText(R.string.home_relaxed);
             float size=43f;
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            while(p.measureText(label)>199f&&size>28f){
+            while(measureUiText(label)>199f&&size>28f){
                 size-=.5f;p.setTextSize(size);
             }
             p.setTextAlign(Paint.Align.CENTER);
@@ -2988,7 +2978,7 @@ public final class MainActivity extends ComponentActivity {
                 new int[]{0xff344563,0xff263758,0xff1b2947},
                 new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
             recordTextInk(label,105f,89f);
-            c.drawText(label,105f,89f,p);
+            drawUiText(label,105f,89f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
@@ -2996,7 +2986,7 @@ public final class MainActivity extends ComponentActivity {
         // view. Do not change achievements, tile values, scoring, gameplay
         // physics, other themes, 5x5, or any modal/backdrop rendering.
         // Pixel-derived 941x1672 owner title. Maintain the visible
-        // "Klasično" ink bounds for QA using the *real vector path*, not
+        // uiText(R.string.home_classic) ink bounds for QA using the *real vector path*, not
         // separate font glyphs placed over the illustration.
         void ownerClassicVectorHeading(){
             if(ownerClassicVectorPath==null){
@@ -3019,7 +3009,7 @@ public final class MainActivity extends ComponentActivity {
                 ownerClassicVectorPath.computeBounds(realInk,true);
                 android.graphics.Matrix transform=new android.graphics.Matrix();
                 c.getMatrix(transform);transform.mapRect(realInk);
-                textRegions.add(new TextRegion("Klasično",realInk));
+                textRegions.add(new TextRegion(uiText(R.string.home_classic),realInk));
             }
             p.setStyle(Paint.Style.FILL);
             p.clearShadowLayer();p.setShader(null);p.setColor(ink);
@@ -3118,7 +3108,7 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeWidth(4.0f);
             if("refresh".equals(glyph)){
                 // Broad clockwise ring plus a separate filled, rounded
-                // forward arrow, matching the visible "Novo" source glyph.
+                // forward arrow, matching the visible uiText(R.string.action_new_short) source glyph.
                 Path ring=new Path();
                 ring.arcTo(new RectF(4.1f,4.1f,19.9f,19.9f),
                     40f,288f,false);
@@ -3213,7 +3203,7 @@ public final class MainActivity extends ComponentActivity {
                 float extraY=Math.max(0,(54f-h)/2f);
                 taps.add(new Tap(Math.max(0,x-extraX),Math.max(0,y-extraY),
                     Math.min(400,x+w+extraX),y+h+extraY,
-                    glyph.equals("pause")?"Pauziraj igru":"Poništi potez",
+                    glyph.equals("pause")?uiText(R.string.accessibility_pause):uiText(R.string.accessibility_undo),
                     action));
             }
         }
@@ -3355,9 +3345,9 @@ public final class MainActivity extends ComponentActivity {
             float center=x+width/2f;
             icon("check",center,y+height*.37f-(ownerFrame?3.5f:0f),
                 39f,WHITE);
-            fitted("Završi",center,y+height*.81f+(ownerFrame?8.5f:0f),
+            fitted(uiText(R.string.action_finish),center,y+height*.81f+(ownerFrame?8.5f:0f),
                 ownerFrame?16f:18.5f,width-10,WHITE,true);
-            taps.add(new Tap(x,y,x+width,y+height,"Završi",action));
+            taps.add(new Tap(x,y,x+width,y+height,uiText(R.string.action_finish),action));
         }
         void headerUndo(float x,float y,float w,float h){
             if(game!=null && game.canUndo()){
@@ -3369,7 +3359,8 @@ public final class MainActivity extends ComponentActivity {
                 icon("undo",x+w/2,y+h/2,Math.min(23,h*.52f),muted);
             }
         }
-        void drawGrid(){
+        void drawGrid(){intrinsicArtwork(this::drawIntrinsicGrid);}
+        private void drawIntrinsicGrid(){
             if(game==null)return;
             int n=game.size;
             boolean tallFour=compactBoardLayout&&n==4;
@@ -3435,8 +3426,8 @@ public final class MainActivity extends ComponentActivity {
                     else
                         glossyTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);
-                    String str=Integer.toString(value);
-                    int digits=str.length();
+                    String str=tileNumber.format(value);
+                    int digits=Integer.toString(value).length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
                         relaxedSource?Math.max(11f,(digits>=3?31.5f:34f)-
@@ -3477,16 +3468,16 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(175,262,50,49,16,lighten(CORAL,.13f),CORAL);
             icon("pause",200,286,29,WHITE);
-            illustratedTitle("Igra je pauzirana",200,364,30,321,ink);
-            fitted("Nastavi kad budeš spreman.",200,391,14,308,muted,false);
+            illustratedTitle(uiText(R.string.pause_title),200,364,30,321,ink);
+            fitted(uiText(R.string.pause_ready),200,391,14,308,muted,false);
             card(62,406,276,55,17,
                 theme==1?card:0xfffff8ef);
             icon("stats",91,433,22,muted);
-            leftFitted("Rezultat",114,429,14,110,muted,false);
+            leftFitted(uiText(R.string.score_label),114,429,14,110,muted,false);
             fitted(fmt(game.score),271,443,25,119,ink,true);
-            button("Nastavi","play",52,483,296,66,CORAL,true,
+            button(uiText(R.string.action_resume),"play",52,483,296,66,CORAL,true,
                 ()->navigate("game"));
-            button("Izbornik","home",52,561,296,61,card,false,
+            button(uiText(R.string.action_menu),"home",52,561,296,61,card,false,
                 ()->navigate("home"));
         }
         // Source artwork uses a quiet post-game summary behind the modal:
@@ -3499,10 +3490,10 @@ public final class MainActivity extends ComponentActivity {
             card(205,18,81,78,15,card);
             card(297,18,81,78,15,card);
             icon("crown",245,37,24,0xffffb52b);
-            fitted("Najbolji",245,56,12,78,muted,true);
+            fitted(uiText(R.string.stats_best_top),245,56,12,78,muted,true);
             fitted(fmt(best),245,79,20,75,ink,true);
             icon("stats",335,37,23,muted);
-            fitted("Rezultat",335,56,12,77,muted,true);
+            fitted(uiText(R.string.score_label),335,56,12,77,muted,true);
             fitted(fmt(game.score),335,79,20,75,ink,true);
             float prevGridY=gridY;
             // The illustrated post-win board begins 10 units above the
@@ -3516,9 +3507,9 @@ public final class MainActivity extends ComponentActivity {
             icon("refresh",75,645,33,ink);
             icon("crown",200,645,31,ink);
             icon("settings",325,645,30,ink);
-            fitted("Novo",75,685,15,105,muted,true);
-            fitted("Rekordi",200,685,15,105,muted,true);
-            fitted("Postavke",325,685,15,105,muted,true);
+            fitted(uiText(R.string.action_new_short),75,685,15,105,muted,true);
+            fitted(uiText(R.string.nav_records),200,685,15,105,muted,true);
+            fitted(uiText(R.string.settings_title),325,685,15,105,muted,true);
         }
         void victoryCrown(float cx,float cy,float size){
             // Soft three-peak silhouette with an ivory outline, in real Canvas
@@ -3660,6 +3651,10 @@ public final class MainActivity extends ComponentActivity {
         void victoryHeading(){ 
             // Source lettering only on the supplied light portrait modal.
             // All other responsive themes retain the existing Nunito path.
+            if(!croatianArtwork()){
+                illustratedTitle(uiText(R.string.victory_bravo),200,287,53,285,ink);
+                return;
+            }
             if(theme==0&&referencePortraitLayout){
                 ownerBravoVectorHeading();
                 return;
@@ -3790,7 +3785,7 @@ public final class MainActivity extends ComponentActivity {
             if(theme==1)card(95,299,210,30,17,card);
             else gradient(95,299,210,30,17,
                 0xfffff5e7,0xffffeedb);
-            fitted("Dosegnuli ste",161,323,20,133,0xffff5537,true);
+            fitted(uiText(R.string.victory_reached),161,323,20,133,0xffff5537,true);
             fitted("2048!",258,323,21,88,0xff008d83,true);
             // Measured reference card interior averages RGB(249,237,221);
             // the generic nearly-white card was RGB(255,253,250).
@@ -3799,8 +3794,8 @@ public final class MainActivity extends ComponentActivity {
             if(theme==0&&referencePortraitLayout){
                 // Owner score labels occupy native y828..850; old emulator
                 // was y817..841, too wide and 10px too high.
-                txt("Tvoj rezultat",138f,360f,10.5f,muted,false);
-                txt("Osvojene zvjezdice",265f,360f,10f,muted,false);
+                txt(uiText(R.string.score_yours),138f,360f,10.5f,muted,false);
+                txt(uiText(R.string.stars_earned),265f,360f,10f,muted,false);
                 // Owner 2.048 ink x217..433/y870..935; the old emulator
                 // was x213..427/y863..922. Scale about the text baseline,
                 // then move down/right without changing the game score.
@@ -3809,9 +3804,9 @@ public final class MainActivity extends ComponentActivity {
                 fitted(fmt(game.score),136,392,35,113,ink,true);
                 c.restore();
             }else{
-                txt("Tvoj rezultat",136,356,12,muted,false);
+                txt(uiText(R.string.score_yours),136,356,12,muted,false);
                 fitted(fmt(game.score),136,392,35,113,ink,true);
-                txt("Osvojene zvjezdice",264,356,11,muted,false);
+                txt(uiText(R.string.stars_earned),264,356,11,muted,false);
             }
             // Real reference star mask ~66×66 px; old 32-unit stars
             // rasterized to only ~58×60 px at the 941×1672 viewport.
@@ -3822,12 +3817,12 @@ public final class MainActivity extends ComponentActivity {
             // action bands: coral y~994..1120, cream y~1122..1267,
             // blue y~1269..1377. Old native buttons floated too high,
             // especially the short cream row; keep every action live.
-            button("Nastavi igrati","play",74,422,252,53,CORAL,true,()->{
+            button(uiText(R.string.action_continue_playing),"play",74,422,252,53,CORAL,true,()->{
                 game.winAcknowledged=true;persist();navigate("game");
             });
-            button("Nova igra","refresh",74,478,252,60,card,false,
+            button(uiText(R.string.action_new_game),"refresh",74,478,252,60,card,false,
                 ()->newGame(game.mode));
-            button("Podijeli rezultat","share",74,539,252,49,
+            button(uiText(R.string.action_share_score),"share",74,539,252,49,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // There is no separately supplied owner's Game Over PNG. Keep the
@@ -3840,20 +3835,20 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.setColor(WHITE);
             gradient(174,199,52,50,17,lighten(CORAL,.16f),CORAL);
             icon("target",200,224,31,WHITE);
-            illustratedTitle("Kraj igre",200,308,39,294,ink);
-            fitted("Nema više mogućih poteza.",200,340,17,287,muted,false);
+            illustratedTitle(uiText(R.string.game_over_title),200,308,39,294,ink);
+            fitted(uiText(R.string.game_no_moves),200,340,17,287,muted,false);
             // Warm, raised status panels are not fake reward counters.
             victorySummaryCard(59,358,135,107);
             victorySummaryCard(206,358,135,107);
-            fitted("Tvoj rezultat",126.5f,383,14,123,muted,false);
+            fitted(uiText(R.string.score_yours),126.5f,383,14,123,muted,false);
             fitted(fmt(game.score),126.5f,440,31,123,ink,true);
-            fitted("Najveća pločica",273.5f,383,13.5f,128,muted,false);
+            fitted(uiText(R.string.game_peak_tile),273.5f,383,13.5f,128,muted,false);
             fitted(fmt(game.maxTile()),273.5f,440,30,119,TEAL,true);
-            button("Nova igra","refresh",54,483,292,64,CORAL,true,
+            button(uiText(R.string.action_new_game),"refresh",54,483,292,64,CORAL,true,
                 ()->newGame(game.mode));
-            button("Povratak","home",54,559,292,56,card,false,
+            button(uiText(R.string.action_return),"home",54,559,292,56,card,false,
                 ()->navigate("home"));
-            button("Podijeli rezultat","share",54,624,292,52,
+            button(uiText(R.string.action_share_score),"share",54,624,292,52,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         void resultOverlay(boolean winning){
@@ -3886,36 +3881,36 @@ public final class MainActivity extends ComponentActivity {
             overlayBox(panelTop,narrow?503:(winning?577:528));
             if(winning){
                 icon("crown",200,narrow?177:160,91,0xffffba38);
-                txt("Bravo!",200,narrow?267:279,44,ink,true);
+                txt(uiText(R.string.victory_bravo),200,narrow?267:279,44,ink,true);
                 card(71,narrow?282:300,258,43,21,
                     theme==1?card:0xffffeddb);
-                fitted("Dosegnuli ste 2048!",200,narrow?310:329,
+                fitted(uiText(R.string.victory_goal),200,narrow?310:329,
                     23,245,CORAL,true);
             }else{
                 icon("target",200,narrow?211:205,68,CORAL);
-                illustratedTitle("Kraj igre",200,narrow?276:291,42,330,ink);
-                fitted("Nema više mogućih poteza.",200,narrow?316:335,
+                illustratedTitle(uiText(R.string.game_over_title),200,narrow?276:291,42,330,ink);
+                fitted(uiText(R.string.game_no_moves),200,narrow?316:335,
                     18,310,muted,false);
             }
             float summary=narrow?336:365;
             card(52,summary,145,99,21,card);
             card(208,summary,145,99,21,card);
-            txt("Tvoj rezultat",124,summary+28,15,muted,false);
+            txt(uiText(R.string.score_yours),124,summary+28,15,muted,false);
             fitted(fmt(game.score),124,summary+81,35,132,ink,true);
-            txt(winning?"Zvjezdice":"Najveća pločica",
+            txt(winning?uiText(R.string.stars_label):uiText(R.string.game_peak_tile),
                 280,summary+28,15,muted,false);
             if(winning)fitted("★ ★ ★",280,summary+79,28,125,
                 0xffffaf25,true);
             else fitted(fmt(game.maxTile()),280,summary+81,31,125,TEAL,true);
-            button(winning?"Nastavi igrati":"Nova igra","play",
+            button(winning?uiText(R.string.action_continue_playing):uiText(R.string.action_new_game),"play",
                 54,narrow?454:491,292,67,CORAL,true,()->{
                     if(winning){game.winAcknowledged=true;persist();navigate("game");}
                     else newGame(game.mode);
                 });
-            button(winning?"Nova igra":"Povratak",winning?"undo":"home",
+            button(winning?uiText(R.string.action_new_game):uiText(R.string.action_return),winning?"undo":"home",
                 54,narrow?532:576,292,64,card,false,
                 ()->{if(winning)newGame(game.mode);else navigate("home");});
-            button("Podijeli rezultat","share",54,narrow?606:657,292,57,
+            button(uiText(R.string.action_share_score),"share",54,narrow?606:657,292,57,
                 theme==1?0xff3269b5:0xff3b95ee,true,()->share());
         }
         // Daily result is a stateful gameplay overlay, not a static reward
@@ -3930,17 +3925,17 @@ public final class MainActivity extends ComponentActivity {
             int accent=success?TEAL:CORAL;
             gradient(173,208,54,52,17,lighten(accent,.16f),accent);
             icon(success?"star":"target",200,234,31,WHITE);
-            illustratedTitle(success?"Dnevni izazov riješen!":
-                "Izazov nije uspio",200,315,success?28:30,321,ink);
-            fitted(success?"Sva 3 zadatka su ostvarena!":
-                (game.moves>=80?"Dosegnuto je ograničenje od 80 poteza.":
-                "Nema više mogućih poteza."),200,345,16,319,muted,false);
+            illustratedTitle(success?uiText(R.string.daily_success):
+                uiText(R.string.daily_failure),200,315,success?28:30,321,ink);
+            fitted(success?uiText(R.string.daily_all_goals):
+                (game.moves>=80?uiText(R.string.daily_limit):
+                uiText(R.string.game_no_moves)),200,345,16,319,muted,false);
 
             victorySummaryCard(59,366,135,99);
             victorySummaryCard(206,366,135,99);
-            fitted("Tvoj rezultat",126.5f,390,13.6f,126,muted,false);
+            fitted(uiText(R.string.score_yours),126.5f,390,13.6f,126,muted,false);
             fitted(fmt(game.score),126.5f,444,29,124,ink,true);
-            fitted("Najveća pločica",273.5f,390,13.1f,127,muted,false);
+            fitted(uiText(R.string.game_peak_tile),273.5f,390,13.1f,127,muted,false);
             fitted(fmt(game.maxTile()),273.5f,444,28,118,TEAL,true);
 
             card(59,476,282,54,18,theme==1?0xff32445c:
@@ -3951,16 +3946,16 @@ public final class MainActivity extends ComponentActivity {
             // transient UI flag is only needed to distinguish first win.
             String message=success?
                 (dailyBonusGrantedThisAttempt?
-                    "+250 zvjezdica osvojeno!":
+                    uiText(R.string.daily_stars):
                     (today().equals(dailyRewardDate)?
-                        "Današnja nagrada je preuzeta.":
-                        "Dnevni izazov dovršen.")):
-                "Pokušaj ponovno ostvariti ciljeve.";
+                        uiText(R.string.daily_reward_claimed):
+                        uiText(R.string.daily_complete))):
+                uiText(R.string.daily_retry_goals);
             leftFitted(message,108,508,15,216,
                 success?0xff078e77:ink,true);
-            button("Igraj ponovno","refresh",53,543,294,61,CORAL,true,
+            button(uiText(R.string.action_replay),"refresh",53,543,294,61,CORAL,true,
                 ()->newGame("daily"));
-            button("Izbornik","home",53,615,294,55,card,false,
+            button(uiText(R.string.action_menu),"home",53,615,294,55,card,false,
                 ()->navigate("home"));
         }
         void dailyResultOverlay(boolean success){
@@ -3972,24 +3967,24 @@ public final class MainActivity extends ComponentActivity {
             dim();
             overlayBox(193,501);
             icon(success?"crown":"target",200,256,52,success?0xffffb829:CORAL);
-            illustratedTitle(success?"Dnevni izazov riješen!":
-                "Izazov nije uspio",200,329,success?28:31,332,ink);
-            fitted(success?"Sva 3 zadatka su ostvarena!":
-                (game.moves>=80?"Potrošeno je 80 dopuštenih poteza.":
-                "Nema više mogućih poteza."),200,369,17,316,muted,false);
+            illustratedTitle(success?uiText(R.string.daily_success):
+                uiText(R.string.daily_failure),200,329,success?28:31,332,ink);
+            fitted(success?uiText(R.string.daily_all_goals):
+                (game.moves>=80?uiText(R.string.daily_moves_used):
+                uiText(R.string.game_no_moves)),200,369,17,316,muted,false);
             card(65,401,270,98,20,card);
-            txt("TVOJ REZULTAT",200,432,15,muted,true);
+            txt(uiText(R.string.score_yours_upper),200,432,15,muted,true);
             txt(fmt(game.score),200,472,36,ink,true);
             fitted(success?(dailyBonusGrantedThisAttempt?
-                "+250 zvjezdica osvojeno!":
+                uiText(R.string.daily_stars):
                 today().equals(dailyRewardDate)?
-                    "Današnja nagrada je preuzeta.":
-                    "Dnevni izazov dovršen."):
-                "Pokušaj ponovno ostvariti sve ciljeve.",200,534,17,310,
+                    uiText(R.string.daily_reward_claimed):
+                    uiText(R.string.daily_complete)):
+                uiText(R.string.daily_retry_all),200,534,17,310,
                 success?0xff259d85:muted,true);
-            button("Igraj ponovno","refresh",53,546,294,62,CORAL,true,
+            button(uiText(R.string.action_replay),"refresh",53,546,294,62,CORAL,true,
                 ()->newGame("daily"));
-            button("Izbornik","home",53,621,294,55,card,false,
+            button(uiText(R.string.action_menu),"home",53,621,294,55,card,false,
                 ()->navigate("home"));
         }
         // These confirmation screens are functional modals, not independent
@@ -4004,36 +3999,35 @@ public final class MainActivity extends ComponentActivity {
         void confirmSessionSummary(float y){
             card(60,y,280,57,18,theme==1?card:0xfffff7ed);
             icon("stats",91,y+27,22,muted);
-            leftFitted("Rezultat",115,y+25,14,98,muted,false);
+            leftFitted(uiText(R.string.score_label),115,y+25,14,98,muted,false);
             fitted(game==null?"0":fmt(game.score),273,y+38,24,118,ink,true);
         }
         void confirmEndOverlay(){
             dim();
             overlayBox(226,421);
             confirmModalBadge("check",TEAL);
-            illustratedTitle("Završiti partiju?",200,362,29,316,ink);
-            fitted("Rezultat se sprema u povijest partija.",
+            illustratedTitle(uiText(R.string.confirm_end),200,362,29,316,ink);
+            fitted(uiText(R.string.confirm_archive_score),
                 200,393,15.5f,317,muted,false);
             confirmSessionSummary(411);
-            button("Završi i spremi","check",52,488,296,65,CORAL,true,
+            button(uiText(R.string.confirm_end_save),"check",52,488,296,65,CORAL,true,
                 ()->endSession());
-            button("Nastavi igrati","play",52,570,296,59,card,false,
+            button(uiText(R.string.action_continue_playing),"play",52,570,296,59,card,false,
                 ()->navigate("game"));
         }
         void confirmOverlay() {
             dim();
             overlayBox(226,421);
             confirmModalBadge("refresh",CORAL);
-            illustratedTitle("Nova partija?",200,362,30,318,ink);
-            fitted("Trenutačni napredak sprema se u povijest.",
+            illustratedTitle(uiText(R.string.confirm_new),200,362,30,318,ink);
+            fitted(uiText(R.string.confirm_archive_progress),
                 200,393,15.1f,316,muted,false);
             confirmSessionSummary(411);
-            String modeLabel="relaxed".equals(pendingMode)?"Opušteno 5×5":
-                "daily".equals(pendingMode)?"Dnevni izazov":"Klasično 4×4";
-            fitted("Novi način: "+modeLabel,200,482,14,310,muted,true);
-            button("Započni novo","play",52,500,296,60,CORAL,true,
+            String modeLabel=labelMode(pendingMode);
+            fitted(localizedResources.getString(R.string.confirm_mode,modeLabel),200,482,14,310,muted,true);
+            button(uiText(R.string.action_start_new),"play",52,500,296,60,CORAL,true,
                 ()->newGame(pendingMode));
-            button("Odustani","back",52,578,296,54,card,false,
+            button(uiText(R.string.action_cancel),"back",52,578,296,54,card,false,
                 ()->navigate("game"));
         }
         void dailyPlayGlyph(float cx,float cy,float size,int color){
@@ -4210,18 +4204,18 @@ public final class MainActivity extends ComponentActivity {
                 c.translate(2f,8f);
                 c.scale(1f,1.07f,196f,54f);
                 // Source navy median RGB ~25/43/79.
-                illustratedTitle("Dnevni",196,54,51,240,0xff16284e);
+                illustratedTitle(uiText(R.string.daily_title_first),196,54,51,240,0xff16284e);
                 c.restore();
                 c.save();
                 c.translate(0f,-5f);
                 c.scale(.95f,.93f,205f,99f);
                 // Source coral median RGB ~253/101/59.
-                illustratedTitle("izazov",205,99,49,234,0xffff663d);
+                illustratedTitle(uiText(R.string.daily_title_second),205,99,49,234,0xffff663d);
                 c.restore();
             }else{
-                illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
+                illustratedTitle(uiText(R.string.daily_title_first),portrait?196:184,portrait?54:90,
                     portrait?51:48,portrait?240:223,ink);
-                illustratedTitle("izazov",portrait?205:199,portrait?99:141,
+                illustratedTitle(uiText(R.string.daily_title_second),portrait?205:199,portrait?99:141,
                     portrait?49:48,234,CORAL);
             }
             dailyHeaderAccents(154,portrait?16:39);
@@ -4248,22 +4242,25 @@ public final class MainActivity extends ComponentActivity {
             else card(portrait?302:291,streakTop,portrait?80:87,
                 portrait?72:83,18,theme==1?card:0xffffebd4);
             icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
-            fitted(Integer.toString(streak),portrait?358:351,streakTop+40,
+            String[] streakLines=localizedResources.getQuantityString(
+                R.plurals.daily_streak,streak,fmt(streak)).split("\n",2);
+            fitted(streakLines[0],portrait?358:351,streakTop+40,
                 25,46,CORAL,true);
-            fitted("dana zaredom",portrait?344:335,streakTop+
-                (portrait?60:65),12,83,muted,true);
+            if(streakLines.length==2)
+                fitted(streakLines[1],portrait?344:335,streakTop+
+                    (portrait?60:65),12,83,muted,true);
             if(portrait&&theme==0)dailyIntroMarks();
             if(portrait){
                 // The original portrait artwork has two subtitle lines,
                 // spaced between the date pill and the illustrative board.
-                fitted("Riješi današnji izazov i osvoji posebnu nagradu.",
+                fitted(uiText(R.string.daily_intro_special),
                     200,145,13,350,muted,false);
-                fitted("Pokaži koliko daleko možeš stići!",
+                fitted(uiText(R.string.daily_motivation),
                     200,159,13,338,muted,false);
             }else{
-                fitted("Riješi današnji izazov i osvoji nagradu!",
+                fitted(uiText(R.string.daily_intro),
                     200,218,17,337,muted,false);
-                fitted("Pokaži koliko daleko možeš stići!",
+                fitted(uiText(R.string.daily_motivation),
                     200,237,16,337,muted,false);
             }
             float boardY=portrait?167:250;
@@ -4313,11 +4310,11 @@ public final class MainActivity extends ComponentActivity {
             boolean active=game!=null&&"daily".equals(game.mode)&&
                 today().equals(game.day);
             boolean finished=today().equals(lastDaily);
-            dailyGoalRow("Dosegni 256","Spoji brojeve i dosegni pločicu 256.",
+            dailyGoalRow(DailyGoal.TILE,
                 portrait?417:511,finished||(active&&game.peak>=256));
-            dailyGoalRow("Ostvari 3000 bodova","Skupi najmanje 3000 bodova.",
+            dailyGoalRow(DailyGoal.POINTS,
                 portrait?465:589,finished||(active&&game.score>=3000));
-            dailyGoalRow("Završi u 80 poteza","Riješi izazov u najviše 80 poteza.",
+            dailyGoalRow(DailyGoal.MOVES,
                 portrait?513:667,finished);
             float rewardY=portrait?569:744;
             if(portrait&&theme!=1)
@@ -4331,32 +4328,32 @@ public final class MainActivity extends ComponentActivity {
                 portrait?80:37);
             if(portrait&&theme!=1)dailyGiftBursts(91,rewardY+40f);
             if(portrait){
-                leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
+                leftFitted(finished?uiText(R.string.daily_reward_won):uiText(R.string.daily_reward_today),
                     158,rewardY+17,12,190,muted,true);
                 // Owner's portrait reference has a heavier, wider
                 // reward heading and NO +250 badge in this card.
                 // The 250-star reward is still real and disclosed in
                 // the success/result overlay; no gameplay logic changes.
-                leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
+                leftFitted(finished?uiText(R.string.daily_reward_congrats):uiText(R.string.daily_reward_special),
                     158,rewardY+40,theme==0?19.5f:18f,
                     theme==0?200f:157f,ink,true);
                 if(theme!=0)
                     fitted("+250",346,rewardY+41,14,52,0xffa65be2,true);
-                leftFitted(finished?"Današnja nagrada već je preuzeta.":
-                    "Dovrši sve ciljeve i osvoji",158,rewardY+57,10.5f,
+                leftFitted(finished?uiText(R.string.daily_reward_already):
+                    uiText(R.string.daily_reward_finish),158,rewardY+57,10.5f,
                     198,muted,false);
                 if(!finished)
-                    leftFitted("jedinstvenu nagradu!",158,rewardY+69,
+                    leftFitted(uiText(R.string.daily_reward_unique),158,rewardY+69,
                         10.5f,194,muted,false);
             }else{
-                leftFitted(finished?"NAGRADA OSVOJENA":"DANAŠNJA NAGRADA",
+                leftFitted(finished?uiText(R.string.daily_reward_won):uiText(R.string.daily_reward_today),
                     100,rewardY+17,12,197,muted,true);
-                leftFitted(finished?"Bravo, osvojeno!":"Posebna nagrada",
+                leftFitted(finished?uiText(R.string.daily_reward_congrats):uiText(R.string.daily_reward_special),
                     100,rewardY+34,16,185,ink,true);
                 fitted("+250",335,rewardY+30,18,69,0xffa65be2,true);
             }
-            button(active&&!game.gameOver?"Nastavi izazov":
-                finished?"Igraj ponovno":"Započni izazov","play",
+            button(active&&!game.gameOver?uiText(R.string.daily_resume):
+                finished?uiText(R.string.action_replay):uiText(R.string.daily_start),"play",
                 portrait?43:25,portrait?655:802,portrait?314:350,
                 portrait?49:58,0xffff684f,true,()->{
                     if(active&&!game.gameOver)navigate("game");
@@ -4370,20 +4367,21 @@ public final class MainActivity extends ComponentActivity {
                 rays(384,831,16,CORAL);
             }
         }
-        void dailyGoalRow(String name,String description,int y,boolean done){
+        void dailyGoalRow(DailyGoal goal,int y,boolean done){
+            String name=uiText(goal.titleResource),description=uiText(goal.descriptionResource);
             boolean portrait=referencePortraitLayout;
             int height=portrait?45:72;
             missionSurface(28,y,344,height,18,card);
             float iconSize=portrait?41:46;
             float tileY=y+(height-iconSize)/2f;
-            int goalColor=name.startsWith("Dosegni")?0xffff6f96:
-                name.startsWith("Ostvari")?0xffffb541:0xff3d98f0;
+            int goalColor=goal==DailyGoal.TILE?0xffff6f96:
+                goal==DailyGoal.POINTS?0xffffb541:0xff3d98f0;
             float glyphCenter=40+iconSize/2f;
             if(done){
                 // Completed challenges communicate state, not a decorative star.
                 shape(40,tileY,iconSize,iconSize,12,TEAL);
                 icon("check",glyphCenter,y+height/2f,portrait?25:28,WHITE);
-            }else if(name.startsWith("Dosegni")){
+            }else if(goal==DailyGoal.TILE){
                 // Only the numeric 256 pictogram is a numbered game tile.
                 styledTile(40,tileY,iconSize,iconSize,12,goalColor,0);
                 // The owner's reference uses a compact white numeral
@@ -4393,7 +4391,7 @@ public final class MainActivity extends ComponentActivity {
                     portrait?20f:22f;
                 fitted("256",glyphCenter,y+height/2f+6,
                     goalNumberSize,iconSize-3,WHITE,true);
-            }else if(name.startsWith("Ostvari")){
+            }else if(goal==DailyGoal.POINTS){
                 // The reference draws the earned-star symbol on the white card,
                 // not a separate orange square tile.
                 // The owner reference star is plumper and slightly right
@@ -4421,7 +4419,7 @@ public final class MainActivity extends ComponentActivity {
             fitted("?",353,helpCenterY+7,17,23,muted,true);
             // The tighter visual card must not shrink the 48-unit help target.
             taps.add(new Tap(322,y,376,y+(portrait?48:height),
-                "Pomoć za cilj: "+name,
+                localizedResources.getString(R.string.daily_goal_help,name),
                 ()->Toast.makeText(MainActivity.this,description,Toast.LENGTH_LONG).show()));
         }
         void dailyRewardGift(float cx,float cy,float size){
@@ -4873,7 +4871,7 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);p.clearShadowLayer();
             c.restore();
         }
-        void missionIllustration(String name,float y,boolean portrait,
+        void missionIllustration(MissionKind kind,float y,boolean portrait,
                                 int accent){
             if(!portrait){
                 return;
@@ -4884,10 +4882,10 @@ public final class MainActivity extends ComponentActivity {
             // square started at x89 and left a visible empty strip.
             // This is decorative only: progress, row captions and tap
             // geometry remain unchanged on every device.
-            if(theme==0&&!name.startsWith("Kralj"))missionSoftIconBackground(27,y+6,65f);
+            if(theme==0&&kind!=MissionKind.KING)missionSoftIconBackground(27,y+6,65f);
             else missionSoftIconBackground(38,y+7,51f);
             boolean ownerArtwork=theme==0&&referencePortraitLayout;
-            if(name.startsWith("Spoji 20")){
+            if(kind==MissionKind.MERGE){
                 // Owner PNG's coral/teal ink is about 19px left and
                 // 14px below the older native thumbnail. Keep untouched
                 // dark/vivid and non-reference layouts.
@@ -4906,16 +4904,16 @@ public final class MainActivity extends ComponentActivity {
                 // Shift only the picture, not any interaction target.
                 missionHand(ownerArtwork?54.5f:54,
                     y+(ownerArtwork?38.6f:29));
-            }else if(name.startsWith("Dosegni 512")){
+            }else if(kind==MissionKind.NO_UNDO){
                 // Native source silhouette is shifted ~9px downward,
                 // narrower by ~5px, never a playable tile or touch target.
                 missionRaisedNumber(ownerArtwork?34:35,
                     y+(ownerArtwork?15:11),ownerArtwork?43f:45f,
                     0xffb45bf6,"512",-9f);
                 missionOrangeRays(84,y+17);
-            }else if(name.startsWith("Igraj 7")){
+            }else if(kind==MissionKind.STREAK){
                 missionCalendarSeven(cx,cy);
-            }else if(name.startsWith("Ostvari 10.000")){
+            }else if(kind==MissionKind.WEEK_SCORE){
                 // Native 941x1672 source bullseye: red mask x77..185,
                 // centre x130/y1132. The prior emulator was x97..193,
                 // centre x145/y1126: too small, right-shifted and high.
@@ -4923,7 +4921,7 @@ public final class MainActivity extends ComponentActivity {
                 missionTarget(ownerArtwork?cx-6f:cx,
                     ownerArtwork?cy+2.4f:cy,
                     ownerArtwork?49f:44f);
-            }else if(name.startsWith("Majstor")){
+            }else if(kind==MissionKind.MASTER){
                 // Reference 2x2 emblem starts roughly 16px left of the
                 // old native arrangement; enlarge the icons slightly.
                 // Original 941px Majstor emblems are independently
@@ -4946,7 +4944,7 @@ public final class MainActivity extends ComponentActivity {
                         ownerArtwork?24f:22f,TILES[i+1],
                         Integer.toString(MISSION_TILE_VALUES[i]),tilt);
                 }
-            }else if(name.startsWith("Kralj")){
+            }else if(kind==MissionKind.KING){
                 if(theme==0)missionRoyalCrown(cx,cy+2);
                 else icon("crown",cx,cy+2,48,0xffffaf25);
             }else{
@@ -5078,12 +5076,12 @@ public final class MainActivity extends ComponentActivity {
         void missionSectionTitle(String title,float baseline,float textSize){
             // Exact source letter shapes for three static Croatian section
             // captions. No dynamic target, progress or reward data stored.
-            if(theme==0&&referencePortraitLayout&&"missions".equals(page)){
-                int key="Dnevne".equals(title)?
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout&&"missions".equals(page)){
+                int key=uiText(R.string.missions_daily).equals(title)?
                     OwnerHeadlineContours.MISSIONS_DAILY:
-                    "Tjedne".equals(title)?
+                    uiText(R.string.missions_weekly).equals(title)?
                     OwnerHeadlineContours.MISSIONS_WEEKLY:
-                    "Postignuća".equals(title)?
+                    uiText(R.string.missions_achievements).equals(title)?
                     OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS:-1;
                 if(key>=0){
                     float y1=key==OwnerHeadlineContours.MISSIONS_DAILY?330f:
@@ -5109,7 +5107,7 @@ public final class MainActivity extends ComponentActivity {
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(title,63f,baseline);
-            c.drawText(title,63f,baseline,p);
+            drawUiText(title,63f,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
             p.setTextAlign(Paint.Align.CENTER);
@@ -5134,7 +5132,7 @@ public final class MainActivity extends ComponentActivity {
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(label,left,baseline);
-            c.drawText(label,left,baseline,p);
+            drawUiText(label,left,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
             p.setTextAlign(Paint.Align.CENTER);
@@ -5168,17 +5166,17 @@ public final class MainActivity extends ComponentActivity {
                 c.getMatrix(transform);
                 transform.mapRect(realInk);
                 String title=key==OwnerHeadlineContours.MISSIONS_NAVY?
-                    "Misije i":key==OwnerHeadlineContours.MISSIONS_CORAL?
-                    "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
-                    "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
-                    "izgled":key==OwnerHeadlineContours.SETTINGS_NAVY?
-                    "Postavke":key==OwnerHeadlineContours.STATS_CHART?
-                    "Zadnjih 10 partija":key==OwnerHeadlineContours.THEMES_STYLE?
-                    "Stil pločica":key==OwnerHeadlineContours.MISSIONS_DAILY?
-                    "Dnevne":key==OwnerHeadlineContours.MISSIONS_WEEKLY?
-                    "Tjedne":key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
-                    "Postignuća":key==OwnerHeadlineContours.DAILY_START?
-                    "Započni izazov":"Statistika";
+                    uiText(R.string.missions_heading_first):key==OwnerHeadlineContours.MISSIONS_CORAL?
+                    uiText(R.string.missions_heading_second):key==OwnerHeadlineContours.THEMES_NAVY?
+                    uiText(R.string.themes_heading_first):key==OwnerHeadlineContours.THEMES_CORAL?
+                    uiText(R.string.themes_heading_second):key==OwnerHeadlineContours.SETTINGS_NAVY?
+                    uiText(R.string.settings_title):key==OwnerHeadlineContours.STATS_CHART?
+                    uiText(R.string.stats_recent):key==OwnerHeadlineContours.THEMES_STYLE?
+                    uiText(R.string.themes_tile_style):key==OwnerHeadlineContours.MISSIONS_DAILY?
+                    uiText(R.string.missions_daily):key==OwnerHeadlineContours.MISSIONS_WEEKLY?
+                    uiText(R.string.missions_weekly):key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
+                    uiText(R.string.missions_achievements):key==OwnerHeadlineContours.DAILY_START?
+                    uiText(R.string.daily_start):uiText(R.string.home_statistics);
                 textRegions.add(new TextRegion(title,realInk));
             }
             c.drawPath(shapePath,p);
@@ -5186,26 +5184,26 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
         }
         void missionMeasuredHeadline(boolean portrait){
-            if(portrait&&theme==0){
+            if(croatianArtwork()&&portrait&&theme==0){
                 ownerHeadline(OwnerHeadlineContours.MISSIONS_NAVY,
                     0xff1a2a4c,0xff182647,190f,278f);
                 ownerHeadline(OwnerHeadlineContours.MISSIONS_CORAL,
                     0xfffb5534,0xfffc5734,190f,279f);
                 return;
             }
-            final String navy="Misije i",coral="postignuća";
+            final String navy=uiText(R.string.missions_heading_first),coral=uiText(R.string.missions_heading_second);
             float size=portrait?36f:33f;
             float gap=portrait?10f:11f;
             // Leave the owner's orange rays outside the heading ink.
             float maxWidth=portrait?312f:338f;
             p.setTypeface(displayFont);p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            float initialWidth=p.measureText(navy)+p.measureText(coral);
+            float initialWidth=measureUiText(navy)+measureUiText(coral);
             if(initialWidth+gap>maxWidth)
                 size*=Math.max(.7f,(maxWidth-gap)/initialWidth);
             p.setTextSize(size);
-            float navyWidth=p.measureText(navy);
-            float coralWidth=p.measureText(coral);
+            float navyWidth=measureUiText(navy);
+            float coralWidth=measureUiText(coral);
             float left=(400f-navyWidth-gap-coralWidth)/2f;
             float baseline=portrait?105f:128f;
             if(portrait&&theme==0){
@@ -5275,8 +5273,8 @@ public final class MainActivity extends ComponentActivity {
                 p.setShader(null);p.setColor(0xffffb431);
                 p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
             }
-            if(portrait&&theme==0)missionSectionTitle("Dnevne",155f,20.5f);
-            else txt("Dnevne",110,portrait?150:204,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_daily),155f,20.5f);
+            else txt(uiText(R.string.missions_daily),110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
             if(portrait&&theme!=1)
                 missionWeeklyHeaderIcon(43,portrait?346:420);
@@ -5291,24 +5289,23 @@ public final class MainActivity extends ComponentActivity {
                 theme==1?card:0xfffff5e5);
             fitted(completedAchievements()+"/2",337,countTop+18,
                 13,66,muted,true);
-            missionRow("Spoji 20 pločica","Spoji bilo koje pločice 20 puta.",
+            missionRow(MissionKind.MERGE,
                 todayMerges,20,50,portrait?160:212,TEAL);
             boolean noUndo512=(rewardFlags&2)!=0 ||
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
-            missionRow("Dosegni 512 bez poništavanja","Ostvari pločicu 512 bez poništavanja",
+            missionRow(MissionKind.NO_UNDO,
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
-            if(portrait&&theme==0)missionSectionTitle("Tjedne",352f,20.5f);
-            else txt("Tjedne",105,portrait?348:422,23,ink,true);
-            missionRow("Igraj 7 dana zaredom","Pokreni igru 7 uzastopnih dana.",
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_weekly),352f,20.5f);
+            else txt(uiText(R.string.missions_weekly),105,portrait?348:422,23,ink,true);
+            missionRow(MissionKind.STREAK,
                 playDayStreak,7,150,portrait&&theme==0?365:portrait?356:433,0xff3ecb8c);
-            missionRow("Ostvari 10.000 bodova ukupno",
-                "Skupi ukupno 10.000 bodova u svim igrama.",
+            missionRow(MissionKind.WEEK_SCORE,
                 weekPoints,10000,200,portrait&&theme==0?443:portrait?434:516,0xffff934b);
-            if(portrait&&theme==0)missionSectionTitle("Postignuća",560f,16.1f);
-            else txt("Postignuća",132,portrait?542:638,23,ink,true);
-            missionRow("Majstor spajanja","Ostvari pločicu 1024.",
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_achievements),560f,16.1f);
+            else txt(uiText(R.string.missions_achievements),132,portrait?542:638,23,ink,true);
+            missionRow(MissionKind.MASTER,
                 recordTile,1024,500,portrait&&theme==0?565:portrait?550:648,0xffa663e4);
-            missionRow("Kralj rezultata","Ostvari 50.000 bodova u jednoj igri.",
+            missionRow(MissionKind.KING,
                 best,50000,1000,portrait&&theme==0?636:portrait?627:741,0xffff934b);
         }
         void missionPeriodPill(String period,int y){
@@ -5320,11 +5317,12 @@ public final class MainActivity extends ComponentActivity {
             fitted(timeRemainingInPeriod(week),x+width/2+6,y+18,
                 11,width-32,muted,true);
         }
-        void missionRow(String name,String sub,int value,int target,int reward,int y,int accent){
+        void missionRow(MissionKind kind,int value,int target,int reward,int y,int accent){
+            String name=uiText(kind.titleResource),sub=uiText(kind.descriptionResource);
             boolean portrait=referencePortraitLayout;
             int height=portrait?
-                (theme==0&&name.startsWith("Majstor")?66:
-                 theme==0&&name.startsWith("Ostvari 10.000")?73:70):80;
+                (theme==0&&kind==MissionKind.MASTER?66:
+                 theme==0&&kind==MissionKind.WEEK_SCORE?73:70):80;
             // Light 941px source rows span about x44..896, not x61..879.
             // On the source reference only, keep a 6-unit inset from the
             // wider section frame and leave title/reward hit areas intact.
@@ -5335,21 +5333,21 @@ public final class MainActivity extends ComponentActivity {
                     portrait?50:58,15,
                     theme==1?0xff35435d:lighten(accent,.80f));
             String taskGlyph=value>=target?"check":
-                name.contains("Kralj")?"crown":
-                name.contains("Igraj")?"calendar":
-                name.contains("Majstor")?"grid":
-                name.contains("Spoji")?"grid":"target";
+                kind==MissionKind.KING?"crown":
+                kind==MissionKind.STREAK?"calendar":
+                kind==MissionKind.MASTER?"grid":
+                kind==MissionKind.MERGE?"grid":"target";
             if(portrait&&theme!=1){
-                missionIllustration(name,y,true,accent);
-            }else if(name.startsWith("Dosegni 512")){
+                missionIllustration(kind,y,true,accent);
+            }else if(kind==MissionKind.NO_UNDO){
                 styledTile(42,y+12,40,40,10,0xffa663e4,0);
                 fitted("512",62,y+40,18,39,WHITE,true);
-            }else if(name.startsWith("Spoji 20")){
+            }else if(kind==MissionKind.MERGE){
                 styledTile(42,y+15,21,24,6,CORAL,0);
                 styledTile(62,y+15,21,24,6,TEAL,0);
                 fitted("2",52,y+33,16,19,WHITE,true);
                 fitted("4",72,y+33,16,19,WHITE,true);
-            }else if(name.startsWith("Majstor")){
+            }else if(kind==MissionKind.MASTER){
                 int[] mini={2,4,8,16};
                 for(int index=0;index<4;index++){
                     float mx=41+(index%2)*22,my=y+10+(index/2)*22;
@@ -5357,7 +5355,7 @@ public final class MainActivity extends ComponentActivity {
                     fitted(Integer.toString(mini[index]),mx+10,my+14,
                         mini[index]>9?9:11,18,WHITE,true);
                 }
-            }else if(name.startsWith("Igraj 7")){
+            }else if(kind==MissionKind.STREAK){
                 // Original calendar pictogram shows a clearly readable 7.
                 shape(42,y+13,40,39,8,WHITE);
                 shape(42,y+13,40,13,7,CORAL);
@@ -5373,17 +5371,17 @@ public final class MainActivity extends ComponentActivity {
             float titleBaseline=y+(portrait?21:26);
             leftFitted(name,103,titleBaseline,portrait?15.5f:17.5f,
                 179,ink,true);
-            if(name.startsWith("Dosegni 512")){
-                leftFitted("Ostvari pločicu 512 bez korištenja",103,
+            if(kind==MissionKind.NO_UNDO){
+                leftFitted(uiText(R.string.mission_no_undo_line1),103,
                     y+(portrait?36:43),portrait?11:12,178,muted,false);
-                leftFitted("opcije poništi potez.",103,
+                leftFitted(uiText(R.string.mission_no_undo_line2),103,
                     y+(portrait?46:55),portrait?10:11,177,muted,false);
-            }else if(portrait&&name.startsWith("Ostvari 10.000")){
+            }else if(portrait&&kind==MissionKind.WEEK_SCORE){
                 // Two source lines avoid the previously shortened and
                 // misleading one-line mission subtitle.
-                leftFitted("Skupi ukupno 10.000 bodova u svim",103,
+                leftFitted(uiText(R.string.mission_week_line1),103,
                     y+38,11.5f,178,muted,false);
-                leftFitted("igrama.",103,y+50,11.5f,177,muted,false);
+                leftFitted(uiText(R.string.mission_week_line2),103,y+50,11.5f,177,muted,false);
             }else{
                 leftFitted(sub,103,y+(portrait?38:48),
                     portrait?11.5f:12.5f,177,muted,false);
@@ -5394,7 +5392,7 @@ public final class MainActivity extends ComponentActivity {
             // y=1169px; the previous one-line layout drew it at 1139px,
             // directly through the second description line.
             boolean twoLineWeeklyScore=portrait&&theme==0&&
-                name.startsWith("Ostvari 10.000");
+                kind==MissionKind.WEEK_SCORE;
             // Exact 941x1672 user-reference measurements show different
             // vertical baselines for the six mission rows. In the previous
             // emulator: daily blue y494 instead of y503; 10k orange y1191
@@ -5403,12 +5401,12 @@ public final class MainActivity extends ComponentActivity {
             float sourceProgressDelta=0f;
             boolean sourceLightMissionProgress=portrait&&theme==0;
             if(sourceLightMissionProgress){
-                if(name.startsWith("Spoji 20"))sourceProgressDelta=4f;
-                else if(name.startsWith("Dosegni 512"))sourceProgressDelta=8f;
-                else if(name.startsWith("Ostvari 10.000"))
+                if(kind==MissionKind.MERGE)sourceProgressDelta=4f;
+                else if(kind==MissionKind.NO_UNDO)sourceProgressDelta=8f;
+                else if(kind==MissionKind.WEEK_SCORE)
                     sourceProgressDelta=-9f;
-                else if(name.startsWith("Majstor")||
-                        name.startsWith("Kralj"))sourceProgressDelta=-4f;
+                else if(kind==MissionKind.MASTER||
+                        kind==MissionKind.KING)sourceProgressDelta=-4f;
             }
             float progressY=y+(portrait?50:59)+
                 (twoLineWeeklyScore?13f:0f)+sourceProgressDelta;
@@ -5425,7 +5423,7 @@ public final class MainActivity extends ComponentActivity {
             // "Majstor" is an unlock, not an incremental reward. Keep
             // the filled bar consistent with its 0/1 or 1/1 counter:
             // a previous 512 tile must not display a fake 50% unlock.
-            boolean binaryMilestone=name.startsWith("Majstor");
+            boolean binaryMilestone=kind==MissionKind.MASTER;
             float fraction=MissionProgress.completionFraction(
                 value,target,binaryMilestone);
             // The owner's light-theme source uses a blue first daily
@@ -5434,8 +5432,8 @@ public final class MainActivity extends ComponentActivity {
             // recolor progress in the dark theme or fabricate milestones.
             int progressAccent=accent;
             if(portrait&&theme==0){
-                if(name.startsWith("Spoji 20"))progressAccent=0xff2aa5ff;
-                else if(name.startsWith("Kralj"))progressAccent=0xffa16cfa;
+                if(kind==MissionKind.MERGE)progressAccent=0xff2aa5ff;
+                else if(kind==MissionKind.KING)progressAccent=0xffa16cfa;
             }
             if(fraction>0)shape(trackX,progressY,
                 barWidth*fraction,trackHeight,trackHeight/2f,
@@ -5469,12 +5467,12 @@ public final class MainActivity extends ComponentActivity {
             // interactive row remain in their original positions.
             float ownerRewardStarOffset=0f;
             if(sourceMissionStar){
-                if(name.startsWith("Spoji 20"))ownerRewardStarOffset=.17f;
-                else if(name.startsWith("Dosegni 512"))ownerRewardStarOffset=-2.44f;
-                else if(name.startsWith("Igraj 7"))ownerRewardStarOffset=-4.06f;
-                else if(name.startsWith("Ostvari 10.000"))ownerRewardStarOffset=-6.72f;
-                else if(name.startsWith("Majstor"))ownerRewardStarOffset=-7.69f;
-                else if(name.startsWith("Kralj"))ownerRewardStarOffset=-8.19f;
+                if(kind==MissionKind.MERGE)ownerRewardStarOffset=.17f;
+                else if(kind==MissionKind.NO_UNDO)ownerRewardStarOffset=-2.44f;
+                else if(kind==MissionKind.STREAK)ownerRewardStarOffset=-4.06f;
+                else if(kind==MissionKind.WEEK_SCORE)ownerRewardStarOffset=-6.72f;
+                else if(kind==MissionKind.MASTER)ownerRewardStarOffset=-7.69f;
+                else if(kind==MissionKind.KING)ownerRewardStarOffset=-8.19f;
             }
             icon("star",rewardCenter+(sourceMissionStar?.4f:0f),
                 y+(sourceMissionStar?33f+ownerRewardStarOffset:portrait?23:29),
@@ -5490,8 +5488,8 @@ public final class MainActivity extends ComponentActivity {
         }
         String historyTimestamp(JSONObject row){
             if(row==null)return "";
-            String day=row.optString("day","");
-            String time=row.optString("time","");
+            String day=GameCalendar.displayHistoryDate(row.optString("day",""),uiLocale);
+            String time=GameCalendar.displayHistoryTime(row.optString("time",""),uiLocale);
             return time.isEmpty()?day:day+" · "+time;
         }
         int consecutiveWins(){
@@ -5528,35 +5526,35 @@ public final class MainActivity extends ComponentActivity {
         }
         void statistics(){
             if(referencePortraitLayout){statisticsCompact();return;}
-            title("Statistika");
+            title(uiText(R.string.home_statistics));
             rays(52,122,18,CORAL);rays(352,122,18,CORAL);
-            statCell("Najbolji rezultat",fmt(best),20,151,114,112,CORAL);
-            statCell("Ukupno partija",fmt(plays),143,151,114,112,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),266,151,114,112,0xffffb431);
+            statCell(StatMetric.BEST,fmt(best),20,151,114,112,CORAL);
+            statCell(StatMetric.TOTAL,fmt(plays),143,151,114,112,TEAL);
+            statCell(StatMetric.PEAK,tileNumber.format(recordTile),266,151,114,112,0xffffb431);
             int average=plays==0?0:total/plays;
-            statCell("Prosjek bodova",fmt(average),21,276,174,102,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),205,276,174,102,0xffa657de);
+            statCell(StatMetric.AVERAGE,fmt(average),21,276,174,102,0xff478df4);
+            statCell(StatMetric.STREAK,fmt(consecutiveWins()),205,276,174,102,0xffa657de);
             statsSoftCard(22,399,356,219,24,card);
-            txt("Zadnjih 10 partija",114,432,19,ink,true);
+            txt(uiText(R.string.stats_recent),114,432,19,ink,true);
             card(213,411,157,33,17,theme==1?0xff34445f:0xfff4ebdf);
             shape(215+(chartMetric==0?0:77),413,77,29,15,CORAL);
-            fitted("Bodovi",253,434,13,71,chartMetric==0?WHITE:ink,true);
-            fitted("Pločica",330,434,13,71,chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(214,405,291,453,"Grafikon bodova",()->{
+            fitted(uiText(R.string.stats_points),253,434,13,71,chartMetric==0?WHITE:ink,true);
+            fitted(uiText(R.string.stats_tile),330,434,13,71,chartMetric==1?WHITE:ink,true);
+            taps.add(new Tap(214,405,291,453,uiText(R.string.stats_chart_points),()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(292,405,371,453,"Grafikon pločica",()->{
+            taps.add(new Tap(292,405,371,453,uiText(R.string.stats_chart_tiles),()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
             int count=Math.min(10,data.length());
             int ceiling=statisticsChartMaximum(data,count);
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,519,16,muted,false);
-                txt("prve završene partije.",200,545,16,muted,false);
+                txt(uiText(R.string.stats_empty_1),200,519,16,muted,false);
+                txt(uiText(R.string.stats_empty_2),200,545,16,muted,false);
             }else if(ceiling==0){
-                txt(chartMetric==0?"Nema zabilježenih bodova.":
-                    "Nema zabilježenih pločica.",200,532,16,muted,false);
+                txt(chartMetric==0?uiText(R.string.stats_no_points):
+                    uiText(R.string.stats_no_tiles),200,532,16,muted,false);
             }else{
                 float chartLeft=42,barSlot=315f/Math.max(10,count);
                 for(int i=0;i<count;i++){
@@ -5574,11 +5572,11 @@ public final class MainActivity extends ComponentActivity {
                         muted,false);
                 }
             }
-            txt("Povijest partija",109,652,22,ink,true);
+            txt(uiText(R.string.stats_history),109,652,22,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
                 card(22,673,356,75,17,card);
-                txt("Još nema dovršenih partija.",200,719,16,muted,false);
+                txt(uiText(R.string.stats_no_history),200,719,16,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
@@ -5596,7 +5594,7 @@ public final class MainActivity extends ComponentActivity {
                     fitted(fmt(peak),324,y+40,15,52,0xff8a41bc,true);
                 }
                 txt("›",367,y+48,25,muted,true);
-                taps.add(new Tap(22,y,378,y+70,"Detalji partije "+(i+1),()->{
+                taps.add(new Tap(22,y,378,y+70,localizedResources.getString(R.string.history_detail_index,i+1),()->{
                     selectedHistoryIndex=idx;
                     navigate("historyDetail");
                 }));
@@ -5734,18 +5732,18 @@ public final class MainActivity extends ComponentActivity {
             p.setShader(null);
             c.restore();
         }
-        void statCell(String caption,String value,int x,int y,int width,int h,int accent){
+        void statCell(StatMetric metric,String value,int x,int y,int width,int h,int accent){
             int bg=theme==1?card:lighten(accent,.84f);
             // Sample the owner's real 941px pastel background at unobstructed
             // corners. The old generic tint was grayish for teal, too pale
             // for gold and blue, and slightly dull for the purple streak.
             // Keep the already close coral card and every other theme unchanged.
             if(theme==0&&referencePortraitLayout&&"stats".equals(page)){
-                switch(caption){
-                    case "Ukupno partija":bg=0xffcffcef;break;
-                    case "Najveća pločica":bg=0xfffef1cd;break;
-                    case "Prosjek bodova":bg=0xffdceefd;break;
-                    case "Niz pobjeda":bg=0xfff3e6fd;break;
+                switch(metric){
+                    case TOTAL:bg=0xffcffcef;break;
+                    case PEAK:bg=0xfffef1cd;break;
+                    case AVERAGE:bg=0xffdceefd;break;
+                    case STREAK:bg=0xfff3e6fd;break;
                     default:break;
                 }
             }
@@ -5756,31 +5754,20 @@ public final class MainActivity extends ComponentActivity {
             // content, not the frame or the real numeric values below.
             boolean sourceInset=(theme==0&&referencePortraitLayout&&
                 "stats".equals(page)&&
-                ("Najbolji rezultat".equals(caption)||
-                 "Prosjek bodova".equals(caption)));
+                (metric==StatMetric.BEST||
+                 metric==StatMetric.AVERAGE));
             if(sourceInset){c.save();c.translate(6f,0f);}
-            String symbol=caption.contains("Najbolji")?"crown":
-                caption.contains("partija")?"gamepad":
-                caption.contains("pločica")?"grid":
-                caption.contains("Prosjek")?"star":"flame";
-            String top,bottom;
-            switch(caption){
-                case "Najbolji rezultat":top="Najbolji";bottom="rezultat";break;
-                case "Ukupno partija":top="Ukupno";bottom="partija";break;
-                case "Najveća pločica":top="Najveća";bottom="pločica";break;
-                case "Prosjek bodova":top="Prosjek";bottom="bodova";break;
-                case "Niz pobjeda":top="Niz";bottom="pobjeda";break;
-                default:top="Niz dana";bottom="igranja";
-            }
+            String symbol=metric.symbol;
+            String top=uiText(metric.topResource),bottom=uiText(metric.bottomResource);
             // Pixel comparison showed that the earlier native KPI scale
             // matches the owner reference better than enlarging everything.
             boolean referenceStats=referencePortraitLayout&&
                 "stats".equals(page)&&theme!=1;
-            if(referenceStats&&theme==0&&"Najbolji rezultat".equals(caption)){
+            if(referenceStats&&theme==0&&metric==StatMetric.BEST){
                 // Source orange ink centroid y≈385; before correction
                 // it sat near y≈400 on the same 941x1672 emulator.
                 statsReferenceCrown(x+27f,y+31.5f,34f);
-            }else if(referenceStats&&theme==0&&"Prosjek bodova".equals(caption)){
+            }else if(referenceStats&&theme==0&&metric==StatMetric.AVERAGE){
                 // Native 941px reference star: blue mass centroid
                 // approximately x138,y640, with no light interior void.
                 // The original star has roughly 10% more colored area
@@ -5828,8 +5815,8 @@ public final class MainActivity extends ComponentActivity {
             // After restoring the full-sized pad, the source
             // "Ukupno partija" caption begins farther right.
             float labelX=x+(width<=125?77:98)+
-                (referenceStats&&theme==0&&"Ukupno partija".equals(caption)?7.2f:
-                 referenceStats&&theme==0&&"Najveća pločica".equals(caption)?6f:0f);
+                (referenceStats&&theme==0&&metric==StatMetric.TOTAL?7.2f:
+                 referenceStats&&theme==0&&metric==StatMetric.PEAK?6f:0f);
             float labelWidth=width<=125?68:123;
             boolean dense=h<90;
             // The reference's wide streak KPI has a *single* heading.
@@ -5841,13 +5828,13 @@ public final class MainActivity extends ComponentActivity {
             // the surface, icon, score and real statistics unchanged.
             boolean sourceTopLabel=referenceStats&&theme==0&&h>=90;
             if(sourceTopLabel){
-                float labelScale="Ukupno partija".equals(caption)?.84f:.86f;
-                float labelDx="Ukupno partija".equals(caption)?-1.7f:.85f;
+                float labelScale=metric==StatMetric.TOTAL?.84f:.86f;
+                float labelDx=metric==StatMetric.TOTAL?-1.7f:.85f;
                 c.save();c.translate(labelDx,-3.7f);
                 c.scale(labelScale,1f,labelX,y+31);
             }
-            if(referencePortraitLayout&&"Niz pobjeda".equals(caption)){
-                leftFitted("Niz pobjeda",x+82,y+34,15,width-84,ink,true);
+            if(referencePortraitLayout&&metric==StatMetric.STREAK){
+                leftFitted(uiText(R.string.stats_streak),x+82,y+34,15,width-84,ink,true);
             }else{
                 fitted(top,labelX,y+(dense?24:31),
                     width<=125?13:16,labelWidth,ink,true);
@@ -5860,19 +5847,19 @@ public final class MainActivity extends ComponentActivity {
             // the owner's 941px KPI card. Other values retain their
             // original centered positions.
             float valueX=referenceStats&&theme==0&&
-                "Prosjek bodova".equals(caption)?
+                metric==StatMetric.AVERAGE?
                 x+width/2f+28f:x+width/2f;
             // Source typography uses stronger pigment than the pastel
             // card surfaces. Never reuse the saturated label color for
             // the background, and never recolor actual gameplay tiles.
             int valuePigment=accent;
             if(referenceStats&&theme==0){
-                switch(caption){
-                    case "Najbolji rezultat":valuePigment=0xfffc4930;break;
-                    case "Ukupno partija":valuePigment=0xff04a2b2;break;
-                    case "Najveća pločica":valuePigment=0xffed7514;break;
-                    case "Prosjek bodova":valuePigment=0xff0c66e5;break;
-                    case "Niz pobjeda":valuePigment=0xff862ad1;break;
+                switch(metric){
+                    case BEST:valuePigment=0xfffc4930;break;
+                    case TOTAL:valuePigment=0xff04a2b2;break;
+                    case PEAK:valuePigment=0xffed7514;break;
+                    case AVERAGE:valuePigment=0xff0c66e5;break;
+                    case STREAK:valuePigment=0xff862ad1;break;
                     default:break;
                 }
             }
@@ -5883,10 +5870,10 @@ public final class MainActivity extends ComponentActivity {
             // portrait glyph geometry gets a local X transform.
             boolean sourceTopValue=referenceStats&&theme==0&&h>=90;
             if(sourceTopValue){
-                float numberScale="Najveća pločica".equals(caption)?
+                float numberScale=metric==StatMetric.PEAK?
                     .865f:.92f;
-                float numberShift="Najbolji rezultat".equals(caption)?
-                    1.7f:"Ukupno partija".equals(caption)?4.25f:5.1f;
+                float numberShift=metric==StatMetric.BEST?
+                    1.7f:metric==StatMetric.TOTAL?4.25f:5.1f;
                 c.save();c.translate(numberShift,0f);
                 c.scale(numberScale,1f,valueX,y+h-14);
             }
@@ -5896,28 +5883,28 @@ public final class MainActivity extends ComponentActivity {
             if(sourceTopValue)c.restore();
         }
         void historyDetail(){
-            title("Detalji partije");
+            title(uiText(R.string.history_detail));
             JSONArray rows=history();
             JSONObject row=rows.optJSONObject(selectedHistoryIndex);
             if(row==null){
-                txt("Partija više nije dostupna.",200,273,19,muted,false);
-                button("Statistika","back",32,729,336,68,CORAL,true,
+                txt(uiText(R.string.history_missing),200,273,19,muted,false);
+                button(uiText(R.string.home_statistics),"back",32,referencePortraitLayout?630:729,336,68,CORAL,true,
                     ()->navigate("stats"));
                 return;
             }
             card(26,189,348,313,25,card);
             icon("crown",200,246,57,0xffffad27);
-            txt("Rezultat",200,293,23,ink,true);
+            txt(uiText(R.string.score_label),200,293,23,ink,true);
             fitted(fmt(row.optInt("score")),200,357,49,310,CORAL,true);
             fitted(labelMode(row.optString("mode","classic")),200,405,22,318,ink,true);
             fitted(historyTimestamp(row),200,448,17,318,muted,false);
-            card(26,523,165,121,20,card);
-            card(209,523,165,121,20,card);
-            txt("Najveća pločica",108,565,17,muted,true);
-            fitted(fmt(row.optInt("peak")),108,615,29,145,TEAL,true);
-            txt("Potezi",291,565,17,muted,true);
-            fitted(fmt(row.optInt("moves")),291,615,29,145,ink,true);
-            button("Natrag na statistiku","back",28,729,344,69,CORAL,true,
+            card(26,523,165,referencePortraitLayout?100:121,20,card);
+            card(209,523,165,referencePortraitLayout?100:121,20,card);
+            txt(uiText(R.string.game_peak_tile),108,565,17,muted,true);
+            fitted(fmt(row.optInt("peak")),108,referencePortraitLayout?602:615,29,145,TEAL,true);
+            txt(uiText(R.string.history_moves),291,565,17,muted,true);
+            fitted(fmt(row.optInt("moves")),291,referencePortraitLayout?602:615,29,145,ink,true);
+            button(uiText(R.string.history_back),"back",28,referencePortraitLayout?638:729,344,referencePortraitLayout?60:69,CORAL,true,
                 ()->navigate("stats"));
         }
         void themesTabIcon(String type,float cx,float cy,float width,int color){
@@ -5972,22 +5959,22 @@ public final class MainActivity extends ComponentActivity {
         // Previous separate fitted() boxes could touch at the "i/iz" seam
         // on narrow fonts or distort just one segment.
         void themesMeasuredHeading(float baseline,float proposedSize){
-            if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout&&"themes".equals(page)){
                 ownerHeadline(OwnerHeadlineContours.THEMES_NAVY,
                     0xff172c53,0xff122347,223f,307f);
                 ownerHeadline(OwnerHeadlineContours.THEMES_CORAL,
                     0xfffd663b,0xfffa552e,223f,323f);
                 return;
             }
-            final String navy="Teme i",coral="izgled";
+            final String navy=uiText(R.string.themes_heading_first),coral=uiText(R.string.themes_heading_second);
             float size=proposedSize,gap=8f,maxWidth=308f;
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            while(p.measureText(navy)+p.measureText(coral)+gap>maxWidth
+            while(measureUiText(navy)+measureUiText(coral)+gap>maxWidth
                     &&size>10f){
                 size=Math.max(10f,size-.5f);p.setTextSize(size);
             }
-            float w1=p.measureText(navy),w2=p.measureText(coral);
+            float w1=measureUiText(navy),w2=measureUiText(coral);
             float start=(400f-w1-w2-gap)*.5f;
             if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
                 // The owner's 941x1672 heading ink is materially taller
@@ -6149,8 +6136,8 @@ public final class MainActivity extends ComponentActivity {
             brand(61,38);
             themesTitlePill(99,53);
             themesMeasuredHeading(126,35f);
-            fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
-            String[] names={"Svijetla","Tamna","Živopisna"};
+            fitted(uiText(R.string.themes_intro),200,169,18,350,muted,false);
+            String[] names={uiText(R.string.theme_light),uiText(R.string.theme_dark),uiText(R.string.theme_vivid)};
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
@@ -6178,8 +6165,8 @@ public final class MainActivity extends ComponentActivity {
                 }));
             }
             card(20,395,360,405,28,card);
-            leftFitted("Pregled",30,434,24,167,ink,true);
-            leftFitted("Stil pločica",210,433,19,162,ink,true);
+            leftFitted(uiText(R.string.theme_preview),30,434,24,167,ink,true);
+            leftFitted(uiText(R.string.themes_tile_style),210,433,19,162,ink,true);
             shape(201,416,1,360,0,theme==1?0xff47536a:0xffebdfd0);
             // Real visual tile preview for all 16 values, independent of the game board.
             themeBoardTray(29,465,167,172);
@@ -6190,9 +6177,9 @@ public final class MainActivity extends ComponentActivity {
                 themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
                 fitted(Integer.toString(val),x+18,y+24,val>=1000?12:16,33,WHITE,true);
             }
-            txt("Ovako će izgledati",113,671,13,muted,false);
-            txt("tvoja ploča.",113,690,13,muted,false);
-            String[] styles={"Zaobljene","Ravne","Staklaste"};
+            txt(uiText(R.string.theme_preview_line1),113,671,13,muted,false);
+            txt(uiText(R.string.theme_preview_line2),113,690,13,muted,false);
+            String[] styles={uiText(R.string.tile_rounded),uiText(R.string.tile_flat),uiText(R.string.tile_glass)};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
                 card(x,456,51,93,15,card);
@@ -6218,29 +6205,29 @@ public final class MainActivity extends ComponentActivity {
             // Source shows labels, explanations and dividers, not bare toggles.
             shape(208,565,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",220,587,29,ink);
-            leftFitted("Vibracija",245,590,17,86,ink,true);
-            leftFitted("Kada spojiš brojeve.",245,610,10,86,muted,false);
+            leftFitted(uiText(R.string.settings_vibration),245,590,17,86,ink,true);
+            leftFitted(uiText(R.string.theme_vibration_help),245,610,10,86,muted,false);
             shape(337,570,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?355:339,572,23,23,12,WHITE);
-            taps.add(new Tap(205,564,378,615,"Vibracija",()->{
+            taps.add(new Tap(205,564,378,615,uiText(R.string.settings_vibration),()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,655,29,ink);
-            leftFitted("Zvukovi",245,658,17,86,ink,true);
-            leftFitted("Zvučni efekti u igri.",245,678,10,86,muted,false);
+            leftFitted(uiText(R.string.theme_sounds),245,658,17,86,ink,true);
+            leftFitted(uiText(R.string.theme_sounds_help),245,678,10,86,muted,false);
             shape(337,636,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?355:339,638,23,23,12,WHITE);
             shape(208,696,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,628,378,683,"Zvukovi",()->{
+            taps.add(new Tap(205,628,378,683,uiText(R.string.theme_sounds),()->{
                 sound=!sound;persist();invalidate();
             }));
-            leftFitted("Jačina animacija",208,720,18,162,ink,true);
-            leftFitted("Koliko su izražene animacije spajanja.",208,738,
+            leftFitted(uiText(R.string.theme_animation),208,720,18,162,ink,true);
+            leftFitted(uiText(R.string.theme_animation_help),208,738,
                 10,166,muted,false);
             shape(211,756,159,9,5,theme==1?0xff536078:0xffe8ded1);
             shape(211,756,11+animation*68,9,5,CORAL);
             shape(211+animation*68,748,23,23,12,CORAL);
-            String[] intensities={"Niska","Srednja","Visoka"};
+            String[] intensities={uiText(R.string.animation_low),uiText(R.string.animation_medium),uiText(R.string.animation_high)};
             for(int i=0;i<3;i++){
                 int pos=i;
                 fitted(intensities[i],236+i*54,791,12,62,muted,false);
@@ -6250,21 +6237,32 @@ public final class MainActivity extends ComponentActivity {
                     animation=pos;persist();invalidate();
                 }));
             }
-            card(20,805,360,72,29,card);
-            String[] tabs={"Novo","Rekordi","Teme","Postavke"};
+            themeBottomNavigation(false);
+        }
+
+
+        /** Shared functional theme navigation with the two original viewport profiles. */
+        void themeBottomNavigation(boolean compact){
+            card(20,compact?635:805,360,compact?69:72,compact?28:29,card);
+            int[] labels={R.string.action_new_short,R.string.nav_records,R.string.home_themes,R.string.settings_title};
             String[] glyphs={"home","crown","palette","settings"};
             String[] destinations={"home","stats","themes","settings"};
-            for(int i=0;i<4;i++){
-                int index=i;float cx=65+i*90;
-                if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
-                themesTabIcon(glyphs[i],cx,830,27,i==2?CORAL:muted);
-                fitted(i==2?"Teme i izgled":tabs[i],cx,863,
+            for(int i=0;i<labels.length;i++){
+                final int index=i;float cx=65+i*90;
+                if(i==2)shape(205,compact?639:809,90,compact?61:65,compact?25:27,
+                    theme==1?0xff453a48:0xffffecdf);
+                boolean sourceHome=compact&&theme==0&&i==0;
+                float iconX=sourceHome?59f:cx;
+                float iconY=compact?(sourceHome?665f:658f):830f;
+                themesTabIcon(glyphs[i],iconX,iconY,compact?(sourceHome?24:26):27,
+                    i==2?CORAL:muted);
+                String label=uiText(labels[i]);
+                fitted(i==2?uiText(R.string.themes_heading):label,iconX,compact?690:863,
                     i==2?10:13,86,i==2?CORAL:muted,true);
-                taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
+                taps.add(new Tap(22+i*89,compact?635:805,110+i*89,compact?704:877,label,
                     ()->navigate(destinations[index])));
             }
         }
-
 
         boolean statsTouchExploration(){
             // Keep the owner's dense five-row layout normally, but expand
@@ -6293,13 +6291,13 @@ public final class MainActivity extends ComponentActivity {
             // Use only this screen's native Canvas card and live Tap.
             card(13,12,42,42,17,card);
             icon("back",34,33,23,ink);
-            taps.add(new Tap(7,7,61,61,"Natrag",()->navigate("home")));
+            taps.add(new Tap(7,7,61,61,uiText(R.string.accessibility_back),()->navigate("home")));
             brand(40,35);
             // Owner's dark-navy Stats title raster is x238..714,
             // y184..285 at 941x1672. Preserve horizontal/vertical
             // position of the original word while restoring its tall
             // softly rounded lettering; other themes keep the fallback.
-            if(theme==0){
+            if(croatianArtwork()&&theme==0){
                 c.save();
                 // In the 941x1672 source the navy title ink spans
                 // x238..714/y184..285. The verified emulator span was
@@ -6308,43 +6306,43 @@ public final class MainActivity extends ComponentActivity {
                 ownerHeadline(OwnerHeadlineContours.STATS_NAVY,
                     0xff1a2948,0xff141f3a,184f,286f);
                 c.restore();
-            }else illustratedTitle("Statistika",200,116,43,325,ink);
+            }else illustratedTitle(uiText(R.string.home_statistics),200,116,43,325,ink);
             statsHeaderBurst(79,104,false);
             statsHeaderBurst(354,104,true);
             // Owner 941x1672 KPI surfaces: three edge-aligned pastel
             // cards, native x~33..323,345..612,630..896.
             // All labels and scores remain sourced from local state.
-            statCell("Najbolji rezultat",fmt(best),14,132,123,94,CORAL);
-            statCell("Ukupno partija",fmt(plays),146,132,114,94,TEAL);
-            statCell("Najveća pločica",Integer.toString(recordTile),267,132,114,94,0xffffb431);
+            statCell(StatMetric.BEST,fmt(best),14,132,123,94,CORAL);
+            statCell(StatMetric.TOTAL,fmt(plays),146,132,114,94,TEAL);
+            statCell(StatMetric.PEAK,tileNumber.format(recordTile),267,132,114,94,0xffffb431);
             int average=plays==0?0:total/plays;
             // Source lower cards start at x~35 and x~489, with a
             // slightly flatter 193px height than the former native pair.
-            statCell("Prosjek bodova",fmt(average),15,234,185,81,0xff478df4);
-            statCell("Niz pobjeda",fmt(consecutiveWins()),207,234,174,81,0xffa657de);
+            statCell(StatMetric.AVERAGE,fmt(average),15,234,185,81,0xff478df4);
+            statCell(StatMetric.STREAK,fmt(consecutiveWins()),207,234,174,81,0xffa657de);
             statsSoftCard(16,329,368,158,23,card);
             // The owner heading has tighter typographic bounds than the
             // previously oversized native chart title.
             // Owner source caption is optically narrower than Nunito Bold
             // while keeping the same baseline and left anchor. This local
             // x compression never changes chart tabs or history data.
-            if(theme==0&&referencePortraitLayout){
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout){
                 // Source title x67..354/y808..842 at 941px. Draw just
                 // static text contours; keep history points entirely live.
                 ownerHeadline(OwnerHeadlineContours.STATS_CHART,
                     0xff192c51,0xff101e3b,808f,843f);
             }else{
-                leftFitted("Zadnjih 10 partija",27,357,18.5f,199,ink,true);
+                leftFitted(uiText(R.string.stats_recent),27,357,18.5f,199,ink,true);
             }
             shape(223,337,149,25,14,theme==1?0xff34445f:0xfff4ebdf);
             shape(225+(chartMetric==0?0:72),339,72,21,12,CORAL);
-            fitted("Bodovi",261,354,11,67,chartMetric==0?WHITE:ink,true);
-            fitted("Najveća pločica",334,354,9.5f,73,
+            fitted(uiText(R.string.stats_points),261,354,11,67,chartMetric==0?WHITE:ink,true);
+            fitted(uiText(R.string.game_peak_tile),334,354,9.5f,73,
                 chartMetric==1?WHITE:ink,true);
-            taps.add(new Tap(223,324,297,372,"Grafikon bodova",()->{
+            taps.add(new Tap(223,324,297,372,uiText(R.string.stats_chart_points),()->{
                 chartMetric=0;invalidate();
             }));
-            taps.add(new Tap(297,324,374,372,"Grafikon pločica",()->{
+            taps.add(new Tap(297,324,374,372,uiText(R.string.stats_chart_tiles),()->{
                 chartMetric=1;invalidate();
             }));
             JSONArray data=history();
@@ -6354,11 +6352,11 @@ public final class MainActivity extends ComponentActivity {
             // keep the previous history-derived columns and zero-state
             // without decorative data or a second axis.
             if(count==0){
-                txt("Grafikon će se prikazati nakon",200,412,15,muted,false);
-                txt("prve završene partije.",200,436,15,muted,false);
+                txt(uiText(R.string.stats_empty_1),200,412,15,muted,false);
+                txt(uiText(R.string.stats_empty_2),200,436,15,muted,false);
             }else if(ceiling==0){
-                txt(chartMetric==0?"Nema zabilježenih bodova.":
-                    "Nema zabilježenih pločica.",200,429,15,muted,false);
+                txt(chartMetric==0?uiText(R.string.stats_no_points):
+                    uiText(R.string.stats_no_tiles),200,429,15,muted,false);
             }else{
                 // Reference 941px chart bars start near x69 and end
                 // near x871. The previous 315-wide band was over-inset:
@@ -6438,11 +6436,11 @@ public final class MainActivity extends ComponentActivity {
             // separated by a 4-unit gap, never five heavy elevated panels.
             final boolean accessibleRows=statsTouchExploration();
             statsSoftCard(16,497,368,accessibleRows?273:204,23,card);
-            leftFitted("Povijest partija",30,522,19,250,ink,true);
+            leftFitted(uiText(R.string.stats_history),30,522,19,250,ink,true);
             int visible=Math.min(5,data.length());
             if(visible==0){
                 shape(25,529,350,32,13,theme==1?0xff34445f:0xfffaf5ee);
-                txt("Još nema dovršenih partija.",200,552,15,muted,false);
+                txt(uiText(R.string.stats_no_history),200,552,15,muted,false);
             }
             for(int i=0;i<visible;i++){
                 JSONObject row=data.optJSONObject(i);
@@ -6453,8 +6451,8 @@ public final class MainActivity extends ComponentActivity {
                 boolean record=best>0&&score>=best;
                 shape(25,y,350,accessibleRows?44:30,12,
                     theme==1?0xff34445f:0xfffaf5ee);
-                leftFitted(row.optString("day",""),33,y+21,11.3f,83,muted,false);
-                String completedAt=row.optString("time","");
+                leftFitted(GameCalendar.displayHistoryDate(row.optString("day",""),uiLocale),33,y+21,11.3f,83,muted,false);
+                String completedAt=GameCalendar.displayHistoryTime(row.optString("time",""),uiLocale);
                 // Legacy archives have no time: keep the field empty, never
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())
@@ -6471,12 +6469,12 @@ public final class MainActivity extends ComponentActivity {
                     int tagFg=peak>=1024?0xff078e77:
                         peak>=512?0xff2167c8:peak>=128?0xff9443bd:0xffc67914;
                     shape(282,y+4,59,23,10,theme==1?0xff46416b:tagBg);
-                    fitted(Integer.toString(peak),311.5f,y+21,14,54,
+                    fitted(tileNumber.format(peak),311.5f,y+21,14,54,
                         theme==1?WHITE:tagFg,true);
                 }
                 icon("chevron-right",366,y+15,15,muted);
                 taps.add(new Tap(22,y-2,378,y+(accessibleRows?46:32),
-                    "Detalji partije "+(i+1),
+                    localizedResources.getString(R.string.history_detail_index,i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
@@ -6485,8 +6483,8 @@ public final class MainActivity extends ComponentActivity {
             brand(52,42);
             themesTitlePill(85,53);
             themesMeasuredHeading(125,36f);
-            fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
-            String[] names={"Svijetla","Tamna","Živopisna"};
+            fitted(uiText(R.string.themes_intro),200,154,16,344,muted,false);
+            String[] names={uiText(R.string.theme_light),uiText(R.string.theme_dark),uiText(R.string.theme_vivid)};
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
@@ -6612,11 +6610,11 @@ public final class MainActivity extends ComponentActivity {
                 gradient(15.6f,340.6f,368.8f,286.8f,25.4f,
                     0xfffdf9f1,0xfffefbf5);
             }
-            leftFitted("Pregled",26,373,22,167,ink,true);
-            if(theme==0&&referencePortraitLayout)
+            leftFitted(uiText(R.string.theme_preview),26,373,22,167,ink,true);
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout)
                 ownerHeadline(OwnerHeadlineContours.THEMES_STYLE,
                     0xff1b2c50,0xff0f1d3e,836f,870f);
-            else leftFitted("Stil pločica",201,369,18,172,ink,true);
+            else leftFitted(uiText(R.string.themes_tile_style),201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
             themeBoardTray(25,413,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
@@ -6654,9 +6652,9 @@ public final class MainActivity extends ComponentActivity {
                     y+(sourceTile?24.5f:25f),
                     val>=1000?11:15,side-3f,WHITE,true);
             }
-            leftFitted("Ovako će izgledati",26,389,12,159,muted,false);
-            leftFitted("pločica u odabranoj temi.",26,404,11,161,muted,false);
-            String[] styles={"Zaobljene","Ravne","Staklaste"};
+            leftFitted(uiText(R.string.theme_preview_line1),26,389,12,159,muted,false);
+            leftFitted(uiText(R.string.theme_preview_tile),26,404,11,161,muted,false);
+            String[] styles={uiText(R.string.tile_rounded),uiText(R.string.tile_flat),uiText(R.string.tile_glass)};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
                 // Selected Zaobljene frame is ~133px wide in the
@@ -6709,14 +6707,14 @@ public final class MainActivity extends ComponentActivity {
                 // x577..698/y1104..1134. Narrow, lower and move right
                 // only this painted title; tap switch and action unchanged.
                 c.save();c.scale(.85f,1f,249f,482f);
-                leftFitted("Vibracija",249,482,12.6f,86,ink,true);
+                leftFitted(uiText(R.string.settings_vibration),249,482,12.6f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,495f);
-                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_vibration_help),245,495,10,86,muted,false);
                 c.restore();
             }else{
-                leftFitted("Vibracija",245,480,15,86,ink,true);
-                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+                leftFitted(uiText(R.string.settings_vibration),245,480,15,86,ink,true);
+                leftFitted(uiText(R.string.theme_vibration_help),245,495,10,86,muted,false);
             }
             // Sampled owner mask: orange vibration switch is 89×51px
             // at native x798..886/y1112..1162, versus the former
@@ -6730,7 +6728,7 @@ public final class MainActivity extends ComponentActivity {
                 shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
                 shape(vibration?355:339,468,23,23,12,WHITE);
             }
-            taps.add(new Tap(205,461,378,509,"Vibracija",()->{
+            taps.add(new Tap(205,461,378,509,uiText(R.string.settings_vibration),()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
@@ -6738,14 +6736,14 @@ public final class MainActivity extends ComponentActivity {
                 // User source ink x586..678/y1212..1231;
                 // deployed ink x577..682/y1205..1229.
                 c.save();c.scale(.85f,1f,249f,524.5f);
-                leftFitted("Zvukovi",249,524.5f,13.2f,86,ink,true);
+                leftFitted(uiText(R.string.theme_sounds),249,524.5f,13.2f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,538f);
-                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_sounds_help),245,538,10,86,muted,false);
                 c.restore();
             }else{
-                leftFitted("Zvukovi",245,523,15,86,ink,true);
-                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_sounds),245,523,15,86,ink,true);
+                leftFitted(uiText(R.string.theme_sounds_help),245,538,10,86,muted,false);
             }
             // Native source sound toggle is also ~89×51px but needs
             // only a 3px vertical shift (unlike vibration's 16px).
@@ -6757,7 +6755,7 @@ public final class MainActivity extends ComponentActivity {
                 shape(sound?355:339,513,23,23,12,WHITE);
             }
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,509,378,557,"Zvukovi",()->{
+            taps.add(new Tap(205,509,378,557,uiText(R.string.theme_sounds),()->{
                 sound=!sound;persist();invalidate();
             }));
             if(theme==0&&referencePortraitLayout){
@@ -6766,15 +6764,15 @@ public final class MainActivity extends ComponentActivity {
                 // Shrink glyphs to owner dimensions and center on
                 // the existing visual section; keep slider geometry.
                 c.save();c.scale(.83f,1f,206f,569f);
-                leftFitted("Jačina animacija",206,569,13.7f,162,ink,true);
+                leftFitted(uiText(R.string.theme_animation),206,569,13.7f,162,ink,true);
                 c.restore();
                 c.save();c.scale(.92f,1f,208f,588f);
-                leftFitted("Koliko su izražene animacije spajanja.",
+                leftFitted(uiText(R.string.theme_animation_help),
                     208,588,9.5f,166,muted,false);
                 c.restore();
             }else{
-                leftFitted("Jačina animacija",208,570,17,162,ink,true);
-                leftFitted("Koliko su izražene animacije spajanja.",
+                leftFitted(uiText(R.string.theme_animation),208,570,17,162,ink,true);
+                leftFitted(uiText(R.string.theme_animation_help),
                     208,588,9.5f,166,muted,false);
             }
             // Source 941x1672: one pill-shaped selection per intensity,
@@ -6786,7 +6784,7 @@ public final class MainActivity extends ComponentActivity {
             shape(activeX-2,592,60,17,9,WHITE);
             gradient(activeX,594,56,13,7,
                 lighten(CORAL,.04f),CORAL);
-            String[] intensities={"Niska","Srednja","Visoka"};
+            String[] intensities={uiText(R.string.animation_low),uiText(R.string.animation_medium),uiText(R.string.animation_high)};
             for(int i=0;i<3;i++){
                 int pos=i;
                 fitted(intensities[i],236+i*54,619,11,62,muted,false);
@@ -6797,26 +6795,7 @@ public final class MainActivity extends ComponentActivity {
                         animation=pos;persist();invalidate();
                     }));
             }
-            card(20,635,360,69,28,card);
-            String[] tabs={"Novo","Rekordi","Teme","Postavke"};
-            String[] glyphs={"home","crown","palette","settings"};
-            String[] destinations={"home","stats","themes","settings"};
-            for(int i=0;i<4;i++){
-                final int index=i;float cx=65+i*90;
-                if(i==2)shape(205,639,90,61,25,
-                    theme==1?0xff453a48:0xffffecdf);
-                // Native 941px source home icon is 50px wide, centered
-                // around x139,y1564. The generic glyph was right/up.
-                boolean sourceHome=theme==0&&i==0;
-                float iconX=sourceHome?59f:cx;
-                float iconY=sourceHome?665f:658f;
-                themesTabIcon(glyphs[i],iconX,iconY,
-                    sourceHome?24:26,i==2?CORAL:muted);
-                fitted(i==2?"Teme i izgled":tabs[i],iconX,690,
-                    i==2?10:13,86,i==2?CORAL:muted,true);
-                taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
-                    ()->navigate(destinations[index])));
-            }
+            themeBottomNavigation(true);
         }
 
         // The reference settings screen has its own restrained cards/icons.
@@ -6968,7 +6947,8 @@ public final class MainActivity extends ComponentActivity {
         // contours as Home; its cropped source bounds differ, so place
         // the illustration with a local transform instead of replacing
         // a functional menu row or loading a bitmap screenshot.
-        void ownerSettingsFooterBrand(){
+        void ownerSettingsFooterBrand(){intrinsicArtwork(this::drawOwnerSettingsFooterBrand);}
+        private void drawOwnerSettingsFooterBrand(){
             c.save();
             c.translate(43.2f,528.5f);
             c.scale(.775f,.70f);
@@ -7023,37 +7003,37 @@ public final class MainActivity extends ComponentActivity {
             // Original 941x1672 Settings title is taller and ends farther
             // right than the previous native Nunito contour. Correct only
             // the light owner viewport; all other layouts remain unchanged.
-            if(compact&&theme==0){
+            if(croatianArtwork()&&compact&&theme==0){
                 // The real 941x1672 owner title spans native pixels
                 // x245..709/y87..183. A compressed vector contour of
                 // just the static text preserves its actual Nunito-style
                 // outline and holes, not a screenshot or fake gameplay UI.
                 ownerHeadline(OwnerHeadlineContours.SETTINGS_NAVY,
                     0xff152444,0xff121c37,87f,183f);
-            }else illustratedTitle("Postavke",200,compact?75:108,
+            }else illustratedTitle(uiText(R.string.settings_title),200,compact?75:108,
                 compact?45:47,330,ink);
             if(compact)settingsHeaderAccent();
             else {
                 rays(74,97,29,CORAL);
                 rays(331,97,29,CORAL);
             }
-            settingsSwitch("Zvuk","sound",CORAL,rowY[0],sound,()->{
+            settingsSwitch(uiText(R.string.settings_sound),"sound",CORAL,rowY[0],sound,()->{
                 sound=!sound;persist();invalidate();
             });
-            settingsSwitch("Vibracija","phone-vibrate",TEAL,rowY[1],vibration,()->{
+            settingsSwitch(uiText(R.string.settings_vibration),"phone-vibrate",TEAL,rowY[1],vibration,()->{
                 vibration=!vibration;persist();invalidate();
             });
-            settingsAction("Jezik","Hrvatski","globe",0xff378ef6,rowY[2],
+            settingsAction(uiText(R.string.settings_language),uiLanguage.nativeName,"globe",0xff378ef6,rowY[2],
                 ()->navigate("language"));
-            settingsSwitch("Obavijesti","bell",0xffffb630,rowY[3],
+            settingsSwitch(uiText(R.string.settings_notifications),"bell",0xffffb630,rowY[3],
                 notifications,()->toggleNotifications());
             // No cloud service is connected: show honest local backup navigation,
             // not the fictional enabled sync switch in the supplied illustration.
-            settingsAction("Sinkronizacija napretka","Lokalna kopija",
+            settingsAction(uiText(R.string.settings_progress_sync),uiText(R.string.settings_local_backup),
                 "cloud-backup",0xffa55efe,rowY[4],()->navigate("backup"));
-            settingsAction("Pravila privatnosti","›","shield",0xffff7969,
+            settingsAction(uiText(R.string.settings_privacy),"›","shield",0xffff7969,
                 rowY[5],()->navigate("privacy"));
-            settingsAction("O aplikaciji","›","info",0xff378ef6,
+            settingsAction(uiText(R.string.settings_about),"›","info",0xff378ef6,
                 rowY[6],()->navigate("about"));
             float footerY=compact?566:729;
             settingsPanel(18,footerY,364,compact?132:127,25,
@@ -7082,7 +7062,7 @@ public final class MainActivity extends ComponentActivity {
             float switchY=y+(height-32)/2f;
             settingsToggle(313,switchY,on);
             taps.add(new Tap(18,y,382,y+height,
-                caption+(on?" uključeno":" isključeno"),action));
+                localizedResources.getString(on?R.string.settings_switch_on:R.string.settings_switch_off,caption),action));
         }
         void settingsAction(String caption,String value,String glyph,
                             int accent,int y,Runnable action){
@@ -7093,7 +7073,7 @@ public final class MainActivity extends ComponentActivity {
             float iconX=compact?29:31;
             settingsIconTile(iconX,y+(height-iconSize)/2f,iconSize,accent,glyph);
             boolean hasValue=!"›".equals(value);
-            if(hasValue&&caption.length()>16){
+            if(hasValue&&"cloud-backup".equals(glyph)){
                 // Reference 941x1672: progress-backup title ink starts
                 // ink x215..628/y899..937. The old true Android
                 // screenshot measured x216..642/y873..909, approximately
@@ -7103,7 +7083,7 @@ public final class MainActivity extends ComponentActivity {
                 // Keep the honest local-backup subtitle and navigation;
                 // this is not a functional cloud-sync toggle.
                 boolean ownerBackup=compact&&theme==0&&
-                    "Sinkronizacija napretka".equals(caption);
+                    "cloud-backup".equals(glyph);
                 float titleBaseline=y+(ownerBackup?36:compact?24:31);
                 float subtitleBaseline=y+(ownerBackup?53:compact?45:55);
                 leftFitted(caption,compact?91:97,titleBaseline,
@@ -7115,8 +7095,8 @@ public final class MainActivity extends ComponentActivity {
             }else{
                 leftFitted(caption,compact?91:97,y+(compact?36:43),
                     compact?18.8f:20,
-                    "Jezik".equals(caption)?145:215,ink,true);
-                if("Jezik".equals(caption)){
+                    "globe".equals(glyph)?145:215,ink,true);
+                if("globe".equals(glyph)){
                     float pillY=y+(compact?9:14),pillH=compact?39:44;
                     gradient(245,pillY,124,pillH,19,
                         theme==1?0xff4b5971:0xfffffaf1,
@@ -7130,10 +7110,11 @@ public final class MainActivity extends ComponentActivity {
             taps.add(new Tap(18,y,382,y+height,caption,action));
         }
         void helpPage(){
-            title("Kako igrati");
-            txt("Spajaj jednake pločice",200,170,24,ink,true);
+            title(uiText(R.string.help_title));
+            txt(uiText(R.string.help_merge),200,170,24,ink,true);
             card(42,202,316,139,22,card);
             // Readable visual equation; neither operator overlaps its tiles.
+            intrinsicArtwork(()->{
             glossyTile(58,235,70,70,15,TILES[1]);
             glossyTile(156,235,70,70,15,TILES[1]);
             glossyTile(274,235,70,70,15,TILES[2]);
@@ -7142,61 +7123,57 @@ public final class MainActivity extends ComponentActivity {
             txt("2",191,283,36,WHITE,true);
             txt("→",250,280,29,CORAL,true);
             txt("4",309,283,36,WHITE,true);
-            card(29,381,342,196,20,card);
-            txt("1. Povuci prstom",200,424,23,ink,true);
-            fitted("Sve pločice pomiču se u istom smjeru.",200,461,17,314,muted,false);
-            fitted("Dvije jednake spajaju se u jednu veću.",200,495,17,314,muted,false);
-            fitted("Pokušaj dosegnuti 2048 i oboriti rekord!",200,529,16,314,muted,false);
-            card(29,594,342,89,20,theme==1?card:0xffe5f7f3);
-            fitted("2. Igraj svojim tempom",200,630,21,310,ink,true);
-            fitted("4×4, 5×5 ili dnevni izazov od 80 poteza.",200,658,15,312,muted,false);
-            button("Započni klasičnu igru","play",29,727,342,73,CORAL,true,
+            });
+            boolean compact=referencePortraitLayout;
+            card(29,compact?352:381,342,compact?168:196,20,card);
+            fitted(uiText(R.string.help_swipe),200,compact?388:424,23,314,ink,true);
+            fitted(uiText(R.string.help_move),200,compact?423:461,17,314,muted,false);
+            fitted(uiText(R.string.help_pair),200,compact?454:495,17,314,muted,false);
+            fitted(uiText(R.string.help_goal),200,compact?485:529,16,314,muted,false);
+            card(29,compact?531:594,342,compact?82:89,20,theme==1?card:0xffe5f7f3);
+            fitted(uiText(R.string.help_pace),200,compact?562:630,21,310,ink,true);
+            fitted(uiText(R.string.help_modes),200,compact?589:658,15,312,muted,false);
+            button(uiText(R.string.help_start),"play",29,compact?630:727,342,compact?66:73,CORAL,true,
                 ()->requestNew("classic"));
-            bottomBrand();
+            if(!compact)bottomBrand();
         }
         void backupPage(){
-            title("Sigurnosna kopija");
-            card(24,161,352,206,22,card);
+            title(uiText(R.string.backup_title));
+            boolean compact=referencePortraitLayout;
+            card(24,161,352,compact?188:206,22,card);
             icon("shield",200,214,45,TEAL);
-            txt("Spremi svoj napredak",200,270,23,ink,true);
-            txt("Izvezi rezultate i postavke u JSON.",200,305,16,muted,false);
-            txt("Datoteka ostaje pod tvojom kontrolom.",200,335,15,muted,false);
-            button("Izvezi kopiju","share",24,404,352,79,CORAL,true,
+            txt(uiText(R.string.backup_save_progress),200,270,23,ink,true);
+            fitted(uiText(R.string.backup_export_description),200,305,16,330,muted,false);
+            fitted(uiText(R.string.backup_control),200,335,15,330,muted,false);
+            button(uiText(R.string.backup_export),"share",24,compact?370:404,352,compact?70:79,CORAL,true,
                 ()->chooseBackupFile(true));
-            button("Vrati kopiju","undo",24,507,352,79,card,false,
+            button(uiText(R.string.backup_restore),"undo",24,compact?455:507,352,compact?70:79,card,false,
                 ()->chooseBackupFile(false));
-            txt("Vraćanje zamjenjuje lokalni napredak.",200,649,16,muted,false);
-            txt("Cloud sinkronizacija nije uključena.",200,684,16,muted,false);
-            button("Postavke","back",24,755,352,63,card,false,()->navigate("settings"));
-            bottomBrand();
+            fitted(uiText(R.string.backup_replace),200,compact?564:649,16,350,muted,false);
+            fitted(uiText(R.string.backup_no_cloud),200,compact?594:684,16,350,muted,false);
+            button(uiText(R.string.settings_title),"back",24,compact?630:755,352,63,card,false,()->navigate("settings"));
+            if(!compact)bottomBrand();
         }
-        void languagePage(){
-            title("Jezik");
-            txt("Jezik sučelja",200,181,21,muted,true);
-            card(25,223,350,95,20,card);
-            icon("check",67,269,28,TEAL);
-            txt("Hrvatski",208,278,25,ink,true);
-            txt("Ostali jezici nisu dostupni u ovoj verziji.",200,369,15,muted,false);
-            button("Natrag na postavke","back",25,720,350,70,CORAL,true,()->navigate("settings"));
-        }
+        final LanguagePickerRenderer languagePicker=new LanguagePickerRenderer();
+        void languagePage(){languagePicker.render(this,MainActivity.this);}
         void aboutPage(){
-            textPage("O igri",new String[]{"Brojko "+appVersion()+" — by Brendigo",
-                "Spajaj jednake pločice i osvoji 2048.",
-                "Povuci gore, dolje, lijevo ili desno.",
-                "Dostupni su način 4×4, 5×5",
-                "te poseban dnevni izazov.","brendigo.com"});
+            textPage(uiText(R.string.about_title),new String[]{"Brojko "+appVersion()+" — by Brendigo",
+                uiText(R.string.about_goal),
+                uiText(R.string.about_swipe),
+                uiText(R.string.about_modes),
+                uiText(R.string.about_daily),"brendigo.com"});
             // Keep the existing About layout and Back control while making
             // the previously decorative website address genuinely actionable.
-            button("Posjeti Brendigo web","globe",24,529,352,69,card,false,
+            button(uiText(R.string.about_website),"globe",24,529,352,69,card,false,
                 ()->openBrendigoWebsite());
-            fitted("Otvara se u vanjskom pregledniku.",200,644,15,344,muted,false);
+            fitted(uiText(R.string.about_browser),200,referencePortraitLayout?619:644,15,344,muted,false);
         }
         void textPage(String heading,String[] lines){
             title(heading);
             card(24,170,352,Math.max(290,lines.length*50),25,card);
             for(int i=0;i<lines.length;i++)
                 fitted(lines[i],200,219+i*48,17,330,ink,false);
-            button("Nazad","back",25,722,350,72,CORAL,true,()->navigate("settings"));
+            button(uiText(R.string.action_back),"back",25,referencePortraitLayout?638:722,350,referencePortraitLayout?60:72,CORAL,true,()->navigate("settings"));
         }
         @Override public boolean dispatchHoverEvent(MotionEvent event){
             return accessibilityHelper.dispatchHoverEvent(event)||
@@ -7224,7 +7201,7 @@ public final class MainActivity extends ComponentActivity {
                     ACTION_TAP_BASE+i,tap.label));
             }
             if("game".equals(page)){
-                String[] directions={"Pomiči lijevo","Pomiči desno","Pomiči gore","Pomiči dolje"};
+                String[] directions={uiText(R.string.accessibility_left),uiText(R.string.accessibility_right),uiText(R.string.accessibility_up),uiText(R.string.accessibility_down)};
                 for(int i=0;i<4;i++)
                     info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
                         ACTION_DIRECTION_BASE+i,directions[i]));
@@ -7243,7 +7220,7 @@ public final class MainActivity extends ComponentActivity {
         }
         @Override public boolean onTouchEvent(MotionEvent event){
             if(!isEnabled())return true;
-            float x=(event.getX()-offX)/Math.max(.1f,scale);
+            float x=screenLogicalX(event.getX());
             float y=(event.getY()-offY)/Math.max(.1f,scale);
             if(event.getActionMasked()==MotionEvent.ACTION_DOWN){
                 touchX=x;touchY=y;
@@ -7291,9 +7268,7 @@ public final class MainActivity extends ComponentActivity {
                 if(draggingScroll){draggingScroll=false;return true;}
                 float dx=x-touchX,dy=y-touchY;
                 if(pointerBoard&&Math.max(Math.abs(dx),Math.abs(dy))>=25) {
-                    move(Math.abs(dx)>Math.abs(dy)?
-                        (dx<0?TileGame.LEFT:TileGame.RIGHT):
-                        (dy<0?TileGame.UP:TileGame.DOWN));
+                    move(CanvasDirection.swipeDirection(dx,dy,rtlLayout()));
                     pointerBoard=false;return true;
                 }
                 pointerBoard=false;

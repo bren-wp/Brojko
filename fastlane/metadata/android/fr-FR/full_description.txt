@@ -1,0 +1,21 @@
+Brojko est un jeu de réflexion coloré où tu fusionnes des nombres à ton rythme.
+
+Balaye la grille pour combiner les tuiles identiques et obtenir des nombres toujours plus grands. Atteins 2048, bats tes records et suis ta progression.
+
+MODES DE JEU
+• Classique 4×4 : planifie tes coups et atteins 2048.
+• Détente 5×5 : profite de plus d’espace.
+• Défi quotidien : atteins 256 et 3 000 points en 80 coups maximum.
+
+POURQUOI BROJKO ?
+• Plusieurs thèmes et styles de tuiles.
+• Étoiles pour les missions et défis quotidiens.
+• Statistiques, records et historique.
+• Annulation du dernier coup.
+• Jeu hors ligne, sans compte, publicité ni achats intégrés.
+• Progression locale et sauvegarde exportable.
+
+Fusionne les nombres. Bats des records.
+
+Brojko by Brendigo
+brendigo.com

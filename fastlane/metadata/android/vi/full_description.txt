@@ -1,0 +1,21 @@
+Brojko là trò chơi giải đố đầy màu sắc, nơi bạn gộp số theo nhịp độ của mình.
+
+Vuốt trên bảng, gộp các ô giống nhau và tạo số lớn hơn. Đạt 2048, phá kỷ lục và theo dõi tiến độ.
+
+CHẾ ĐỘ CHƠI
+• Cổ điển 4×4: lên kế hoạch lượt đi và đạt 2048.
+• Thư giãn 5×5: bảng rộng hơn cho trò chơi dài hơn.
+• Thử thách hằng ngày: đạt ô 256 và 3.000 điểm trong tối đa 80 lượt.
+
+VÌ SAO CHỌN BROJKO?
+• Chủ đề đầy màu sắc và nhiều kiểu ô.
+• Sao cho nhiệm vụ và thử thách hằng ngày.
+• Thống kê, kỷ lục và lịch sử trò chơi.
+• Hoàn tác lượt đi cuối cùng.
+• Chơi ngoại tuyến, không cần tài khoản, không quảng cáo hay mua hàng trong ứng dụng.
+• Tiến độ lưu cục bộ và hỗ trợ xuất bản sao lưu.
+
+Gộp số. Phá kỷ lục.
+
+Brojko by Brendigo
+brendigo.com

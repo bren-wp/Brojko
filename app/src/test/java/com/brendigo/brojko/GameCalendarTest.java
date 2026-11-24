@@ -18,6 +18,38 @@ public final class GameCalendarTest {
         assertTrue(GameCalendar.yesterday().matches("\\d{4}-\\d{2}-\\d{2}"));
     }
 
+    @Test public void explicitDisplayLocaleDoesNotChangeDateIdentity(){
+        Date date=new Date(1705320000000L);
+        Locale en=Locale.US;
+        Locale hr=Locale.forLanguageTag("hr-HR");
+        assertEquals(java.text.DateFormat.getDateInstance(java.text.DateFormat.LONG,en)
+            .format(date),GameCalendar.dailyLongDate(date,en));
+        assertEquals(new SimpleDateFormat("d. MMMM yyyy.",hr).format(date),
+            GameCalendar.dailyLongDate(date,hr));
+        assertEquals(java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM,en)
+            .format(date),GameCalendar.historyDate(date,en));
+        assertEquals(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT,en)
+            .format(date),GameCalendar.compactTime(date,en));
+        assertEquals(new SimpleDateFormat("HH:mm",hr).format(date),
+            GameCalendar.compactTime(date,hr));
+        assertNotEquals(GameCalendar.dailyLongDate(date,en),GameCalendar.dailyLongDate(date,hr));
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date()),
+            GameCalendar.today());
+    }
+
+    @Test public void invariantAndLegacyHistoryDatesRemainReadable(){
+        Locale hr=Locale.forLanguageTag("hr-HR");
+        Locale en=Locale.US;
+        assertEquals("10.9.2026.",GameCalendar.displayHistoryDate("10.9.2026.",hr));
+        assertEquals(GameCalendar.displayHistoryDate("2026-09-10",en),
+            GameCalendar.displayHistoryDate("10.9.2026.",en));
+        assertEquals("unknown",GameCalendar.displayHistoryDate("unknown",en));
+        assertEquals("",GameCalendar.displayHistoryDate("",en));
+        assertEquals("14:32",GameCalendar.displayHistoryTime("14:32",hr));
+        assertEquals("",GameCalendar.displayHistoryTime("",en));
+        assertTrue(GameCalendar.remainingMinutes(false)>=0);
+    }
+
     @Test public void periodCountdownNeverDisplaysNegativeAmounts(){
         String daily=GameCalendar.timeRemainingInPeriod(false);
         String weekly=GameCalendar.timeRemainingInPeriod(true);

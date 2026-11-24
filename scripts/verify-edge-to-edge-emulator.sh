@@ -21,6 +21,6 @@ for mode in gestural threebutton; do
   log="edge-to-edge-$mode.txt"
   adb shell am instrument -w \
     -e class 'com.brendigo.brojko.ScreensSmokeTest#edgeToEdgeInsetsAreAppliedBeforeScreenControls,com.brendigo.brojko.ScreensSmokeTest#edgeToEdgeCriticalButtonsAreOutsideSystemBars' \
-    com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee "$log"
+    com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee "$log"
   grep -Eq '^OK [(]2 tests[)]$' "$log"
 done

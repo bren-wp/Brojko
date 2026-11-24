@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 import java.util.Calendar;
 
@@ -49,10 +50,11 @@ public final class AppReminder extends BroadcastReceiver {
         NotificationManager manager=(NotificationManager)context.getSystemService(
             Context.NOTIFICATION_SERVICE);
         if(manager==null)return;
+        Resources strings=LocaleManager.resourcesFor(context,LocaleManager.selected(context).locale());
         if(Build.VERSION.SDK_INT>=26){
             NotificationChannel channel=new NotificationChannel(CHANNEL,
-                "Brojko dnevni izazov",NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setDescription("Podsjetnik za dnevnu logičku igru Brojko.");
+                strings.getString(R.string.reminder_channel_name),NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription(strings.getString(R.string.reminder_channel_description));
             manager.createNotificationChannel(channel);
         }
         Intent open=new Intent(context,MainActivity.class);
@@ -62,8 +64,8 @@ public final class AppReminder extends BroadcastReceiver {
         Notification.Builder builder=Build.VERSION.SDK_INT>=26?
             new Notification.Builder(context,CHANNEL):new Notification.Builder(context);
         Notification notification=builder.setSmallIcon(R.drawable.ic_brojko)
-            .setContentTitle("Brojko — novi dnevni izazov")
-            .setContentText("Spajaj brojeve, osvoji zvjezdice i postavi novi rekord!")
+            .setContentTitle(strings.getString(R.string.reminder_title))
+            .setContentText(strings.getString(R.string.reminder_body))
             .setContentIntent(tap).setAutoCancel(true).build();
         manager.notify(REMINDER_ID,notification);
     }

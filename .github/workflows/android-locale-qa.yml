@@ -1,0 +1,122 @@
+name: Android locale and RTL QA
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  locale-matrix:
+    name: Locale lifecycle API ${{ matrix.api }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [24,25,26,27,28,29,30,31,32,33,34,35,36]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
+      - name: Prepare SDK and fonts
+        run: |
+          SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+          bash scripts/prepare-nunito.sh
+      - name: Build native test APKs
+        run: ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Verify locale persistence and real mirrored touch targets
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: ${{ matrix.api }}
+          # API 27 Google APIs has an x86 image, not x86_64.
+          # Keep API 27 in the matrix and execute the same instrumentation suite.
+          arch: ${{ matrix.api == 27 && 'x86' || 'x86_64' }}
+          profile: pixel_6
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w -e class 'com.brendigo.brojko.LocaleMatrixTest#allLanguagesSurviveLaunchAndExposeLocalizedNavigation,com.brendigo.brojko.LocaleMatrixTest#rtlPhysicalSwipesAndVirtualControlsUseAttachedView,com.brendigo.brojko.LanguagePickerTest,com.brendigo.brojko.LocaleResourcesTest,com.brendigo.brojko.CanvasDirectionTest,com.brendigo.brojko.CanvasTextLayoutTest,com.brendigo.brojko.LocaleSecurityTest' com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-results.txt
+            grep -Eq '^OK [(][0-9]+ tests?[)]$' locale-results.txt
+      - name: Upload locale test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: locale-api-${{ matrix.api }}
+          path: locale-results.txt
+          if-no-files-found: warn
+
+  localized-captures:
+    name: Localized captures (locale offset ${{ matrix.offset }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        offset: [0,5,10,15,20,25]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
+      - name: Prepare SDK and fonts
+        run: |
+          SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
+          test -n "$SDKMANAGER"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+          bash scripts/prepare-nunito.sh
+      - name: Build native test APKs
+        run: ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - name: Capture all pages from production Canvas renderer
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w -e class com.brendigo.brojko.LocaleMatrixTest#captureEveryLocalizedScreenAtRequestedViewports -e captureLocales true -e fullViewports true -e localeOffset ${{ matrix.offset }} -e localeCount 5 com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-capture-results.txt
+            grep -Eq '^OK [(]1 test[s]?[)]$' locale-capture-results.txt
+            adb pull /sdcard/Android/data/com.brendigo.brojko/files/locale-screenshots/ ./locale-screenshots
+            python3 scripts/stage-localized-store-assets.py --captures locale-screenshots --output localized-fastlane --full-viewports true --locale-offset ${{ matrix.offset }} --locale-count 5
+      - name: Upload native localized captures and staged metadata
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Brojko-localized-screenshots-${{ matrix.offset }}
+          path: |
+            locale-screenshots/
+            localized-fastlane/
+            locale-capture-results.txt
+          if-no-files-found: warn

@@ -1,0 +1,21 @@
+Brojko adalah permainan teka-teki penuh warna untuk menggabungkan angka sesuai ritmemu.
+
+Geser papan, gabungkan ubin yang sama, dan buat angka yang lebih besar. Capai 2048, pecahkan rekor, dan pantau progresmu.
+
+MODE PERMAINAN
+• Klasik 4×4: rencanakan langkah dan capai 2048.
+• Santai 5×5: papan lebih luas untuk permainan lebih lama.
+• Tantangan harian: capai ubin 256 dan 3.000 poin dalam maksimal 80 langkah.
+
+MENGAPA BROJKO?
+• Tema penuh warna dan gaya ubin yang beragam.
+• Bintang untuk misi dan tantangan harian.
+• Statistik, rekor, dan riwayat permainan.
+• Urungkan langkah terakhir.
+• Bermain offline tanpa akun, iklan, atau pembelian dalam aplikasi.
+• Progres lokal dan cadangan yang dapat diekspor.
+
+Gabungkan angka. Pecahkan rekor.
+
+Brojko by Brendigo
+brendigo.com

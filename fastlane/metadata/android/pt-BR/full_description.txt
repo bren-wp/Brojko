@@ -1,0 +1,21 @@
+Brojko é um jogo de lógica colorido para combinar números no seu ritmo.
+
+Deslize pelo tabuleiro para unir peças iguais e alcançar números cada vez maiores. Chegue a 2048, bata seus recordes e acompanhe seu progresso.
+
+MODOS DE JOGO
+• Clássico 4×4: planeje seus movimentos e chegue a 2048.
+• Relaxado 5×5: mais espaço para partidas longas.
+• Desafio diário: chegue a 256 e faça 3.000 pontos em até 80 movimentos.
+
+POR QUE BROJKO?
+• Temas coloridos e estilos de peças.
+• Estrelas por missões e desafios diários.
+• Estatísticas, recordes e histórico de partidas.
+• Desfaça o último movimento.
+• Jogue offline, sem conta, anúncios ou compras no aplicativo.
+• Progresso local e backup exportável.
+
+Combine números. Bata recordes.
+
+Brojko by Brendigo
+brendigo.com
