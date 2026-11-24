@@ -9,7 +9,7 @@
     <string name="settings_vibration">Titreşim</string>
     <string name="settings_language">Dil</string>
     <string name="settings_notifications">Bildirimler</string>
-    <string name="settings_progress_sync">İlerlemeyi eşitle</string>
+    <string name="settings_progress_sync">İlerlemeyi yedekle</string>
     <string name="settings_local_backup">Yerel yedekleme</string>
     <string name="settings_privacy">Gizlilik politikası</string>
     <string name="settings_about">Hakkında</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Yedeği dışa aktar</string>
     <string name="backup_restore">Yedeği geri yükle</string>
     <string name="backup_replace">Geri yükleme yerel ilerlemenin yerine geçer.</string>
-    <string name="backup_no_cloud">Bulut eşitleme kapalı.</string>
+    <string name="backup_no_cloud">Bulut eşitleme yok.</string>
     <string name="about_title">Oyun hakkında</string>
     <string name="about_goal">Aynı taşları birleştir ve 2048’e ulaş.</string>
     <string name="about_swipe">Yukarı, aşağı, sola veya sağa kaydır.</string>

@@ -9,7 +9,7 @@
     <string name="settings_vibration">振動</string>
     <string name="settings_language">言語</string>
     <string name="settings_notifications">通知</string>
-    <string name="settings_progress_sync">進行状況の同期</string>
+    <string name="settings_progress_sync">進行状況をバックアップ</string>
     <string name="settings_local_backup">ローカルバックアップ</string>
     <string name="settings_privacy">プライバシーポリシー</string>
     <string name="settings_about">アプリについて</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">バックアップを書き出す</string>
     <string name="backup_restore">バックアップを復元</string>
     <string name="backup_replace">復元すると端末の進行状況が置き換わります。</string>
-    <string name="backup_no_cloud">クラウド同期は無効です。</string>
+    <string name="backup_no_cloud">クラウド同期はありません。</string>
     <string name="about_title">ゲームについて</string>
     <string name="about_goal">同じタイルを合体させて2048を目指そう。</string>
     <string name="about_swipe">上下左右にスワイプします。</string>

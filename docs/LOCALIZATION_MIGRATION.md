@@ -39,3 +39,7 @@ The production default remains English, regardless of device locale when no app 
 ## Shared locale test APKs
 
 Run 45509800848 had two verified failures from Maven Central HTTP 429 while resolving httpmime 4.5.14, which disabled the repository and prevented Guava and other modules resolving. The next revision builds debug/test APKs once, publishes a checkout-SHA and SHA256-verified pair, and reuses the identical bytes in all 13 API jobs and six capture jobs. It limits emulator matrix concurrency and retries only the observed Maven resolution rate limit, at most twice. No test cases or locale/viewport coverage are removed. Fresh CI required.
+
+## Targeted 30-locale terminology review
+
+Reviewed the two backup/synchronization labels across all 30 locale inventories. English is primary. Replace misleading progress-sync wording with saving/backing up progress, and clarify that cloud sync is absent, not merely disabled. German already used appropriate wording and is unchanged. 29 locale XML files changed; resource keys, format placeholders, artwork, touch geometry and layout are unchanged. Croatian text deliberately changes to accurately describe the feature; fresh screenshot review is required. This is a targeted terminology review, not full linguistic sign-off.

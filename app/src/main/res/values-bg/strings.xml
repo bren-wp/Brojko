@@ -9,7 +9,7 @@
     <string name="settings_vibration">Вибрация</string>
     <string name="settings_language">Език</string>
     <string name="settings_notifications">Известия</string>
-    <string name="settings_progress_sync">Синхронизиране на напредъка</string>
+    <string name="settings_progress_sync">Запази напредъка</string>
     <string name="settings_local_backup">Локално резервно копие</string>
     <string name="settings_privacy">Политика за поверителност</string>
     <string name="settings_about">Относно</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Експортиране на копие</string>
     <string name="backup_restore">Възстановяване на копие</string>
     <string name="backup_replace">Възстановяването заменя локалния напредък.</string>
-    <string name="backup_no_cloud">Синхронизирането в облака е изключено.</string>
+    <string name="backup_no_cloud">Няма синхронизиране в облака.</string>
     <string name="about_title">За играта</string>
     <string name="about_goal">Сливай еднакви плочки и достигни 2048.</string>
     <string name="about_swipe">Плъзни нагоре, надолу, наляво или надясно.</string>

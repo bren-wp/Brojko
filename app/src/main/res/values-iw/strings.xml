@@ -9,7 +9,7 @@
     <string name="settings_vibration">רטט</string>
     <string name="settings_language">שפה</string>
     <string name="settings_notifications">התראות</string>
-    <string name="settings_progress_sync">סנכרון התקדמות</string>
+    <string name="settings_progress_sync">גיבוי ההתקדמות</string>
     <string name="settings_local_backup">גיבוי מקומי</string>
     <string name="settings_privacy">מדיניות פרטיות</string>
     <string name="settings_about">אודות</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">ייצוא גיבוי</string>
     <string name="backup_restore">שחזור גיבוי</string>
     <string name="backup_replace">השחזור מחליף את ההתקדמות המקומית.</string>
-    <string name="backup_no_cloud">סנכרון לענן אינו מופעל.</string>
+    <string name="backup_no_cloud">אין סנכרון בענן.</string>
     <string name="about_title">אודות המשחק</string>
     <string name="about_goal">מזגו אריחים תואמים והגיעו ל-2048.</string>
     <string name="about_swipe">החליקו למעלה, למטה, שמאלה או ימינה.</string>

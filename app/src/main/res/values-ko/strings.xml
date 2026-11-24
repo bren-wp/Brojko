@@ -9,7 +9,7 @@
     <string name="settings_vibration">진동</string>
     <string name="settings_language">언어</string>
     <string name="settings_notifications">알림</string>
-    <string name="settings_progress_sync">진행 상황 동기화</string>
+    <string name="settings_progress_sync">진행 상황 백업</string>
     <string name="settings_local_backup">로컬 백업</string>
     <string name="settings_privacy">개인정보 처리방침</string>
     <string name="settings_about">앱 정보</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">백업 내보내기</string>
     <string name="backup_restore">백업 복원</string>
     <string name="backup_replace">복원하면 로컬 진행 상황이 교체됩니다.</string>
-    <string name="backup_no_cloud">클라우드 동기화는 비활성화되어 있습니다.</string>
+    <string name="backup_no_cloud">클라우드 동기화는 없습니다.</string>
     <string name="about_title">게임 정보</string>
     <string name="about_goal">같은 타일을 합쳐 2048에 도달하세요.</string>
     <string name="about_swipe">위, 아래, 왼쪽 또는 오른쪽으로 미세요.</string>

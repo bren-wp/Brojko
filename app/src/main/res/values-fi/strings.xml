@@ -9,7 +9,7 @@
     <string name="settings_vibration">Värinä</string>
     <string name="settings_language">Kieli</string>
     <string name="settings_notifications">Ilmoitukset</string>
-    <string name="settings_progress_sync">Edistymisen synkronointi</string>
+    <string name="settings_progress_sync">Varmuuskopioi edistyminen</string>
     <string name="settings_local_backup">Paikallinen varmuuskopio</string>
     <string name="settings_privacy">Tietosuojakäytäntö</string>
     <string name="settings_about">Tietoja</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Vie varmuuskopio</string>
     <string name="backup_restore">Palauta varmuuskopio</string>
     <string name="backup_replace">Palautus korvaa paikallisen edistymisen.</string>
-    <string name="backup_no_cloud">Pilvisynkronointi ei ole käytössä.</string>
+    <string name="backup_no_cloud">Ei pilvisynkronointia.</string>
     <string name="about_title">Tietoja pelistä</string>
     <string name="about_goal">Yhdistä samanlaiset laatat ja saavuta 2048.</string>
     <string name="about_swipe">Pyyhkäise ylös, alas, vasemmalle tai oikealle.</string>

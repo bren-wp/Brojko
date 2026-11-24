@@ -5509,16 +5509,10 @@ public final class MainActivity extends ComponentActivity {
         // Normalizing impossible negative legacy values to zero avoids
         // fake columns and keeps max scaling consistent on both layouts.
         int statisticsChartValue(JSONObject row){
-            if(row==null)return 0;
-            return Math.max(0,chartMetric==0?
-                row.optInt("score",0):row.optInt("peak",0));
+            return StatisticsChartData.value(row,chartMetric);
         }
         int statisticsChartMaximum(JSONArray rows,int count){
-            int maximum=0;
-            for(int i=0;i<count;i++)
-                maximum=Math.max(maximum,
-                    statisticsChartValue(rows.optJSONObject(i)));
-            return maximum;
+            return StatisticsChartData.maximum(rows,count,chartMetric);
         }
         void statistics(){
             if(referencePortraitLayout){statisticsCompact();return;}

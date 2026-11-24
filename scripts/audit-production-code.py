@@ -50,7 +50,7 @@ java = {p.name: p.read_text(encoding="utf-8") for p in sorted(SRC.glob("*.java")
 expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
-    "MainActivity.java", "SessionTransitionPolicy.java", "RewardPolicy.java", "MissionProgress.java", "TileGame.java", "TileLineMerger.java",
+    "MainActivity.java", "StatisticsChartData.java", "SessionTransitionPolicy.java", "RewardPolicy.java", "MissionProgress.java", "TileGame.java", "TileLineMerger.java",
     "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
     "GameArchiveCoordinator.java",

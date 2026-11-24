@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibrace</string>
     <string name="settings_language">Jazyk</string>
     <string name="settings_notifications">Oznámení</string>
-    <string name="settings_progress_sync">Synchronizace postupu</string>
+    <string name="settings_progress_sync">Zálohovat postup</string>
     <string name="settings_local_backup">Místní záloha</string>
     <string name="settings_privacy">Zásady ochrany soukromí</string>
     <string name="settings_about">O aplikaci</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportovat zálohu</string>
     <string name="backup_restore">Obnovit zálohu</string>
     <string name="backup_replace">Obnovení nahradí místní postup.</string>
-    <string name="backup_no_cloud">Synchronizace s cloudem není povolena.</string>
+    <string name="backup_no_cloud">Bez synchronizace s cloudem.</string>
     <string name="about_title">O hře</string>
     <string name="about_goal">Spojuj stejné dlaždice a dosáhni 2048.</string>
     <string name="about_swipe">Přejeď nahoru, dolů, doleva nebo doprava.</string>

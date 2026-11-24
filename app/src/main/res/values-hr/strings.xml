@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibracija</string>
     <string name="settings_language">Jezik</string>
     <string name="settings_notifications">Obavijesti</string>
-    <string name="settings_progress_sync">Sinkronizacija napretka</string>
+    <string name="settings_progress_sync">Spremi napredak</string>
     <string name="settings_local_backup">Lokalna kopija</string>
     <string name="settings_privacy">Pravila privatnosti</string>
     <string name="settings_about">O aplikaciji</string>

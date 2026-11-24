@@ -15,6 +15,10 @@ OLD = {
     ("org.apache.httpcomponents", "httpclient", "4.5.6"),
     ("org.apache.httpcomponents", "httpmime", "4.5.6"),
     ("org.apache.commons", "commons-lang3", "3.16.0"),
+    ("org.jdom", "jdom2", "2.0.6"),
+    ("org.bitbucket.b_c", "jose4j", "0.9.5"),
+    ("com.fasterxml.jackson.core", "jackson-core", "2.22.2"),
+    ("com.fasterxml.jackson.core", "jackson-databind", "2.22.2"),
 }
 
 def coordinate(value):

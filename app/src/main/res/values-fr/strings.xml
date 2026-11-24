@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibration</string>
     <string name="settings_language">Langue</string>
     <string name="settings_notifications">Notifications</string>
-    <string name="settings_progress_sync">Synchroniser la progression</string>
+    <string name="settings_progress_sync">Sauvegarder la progression</string>
     <string name="settings_local_backup">Sauvegarde locale</string>
     <string name="settings_privacy">Politique de confidentialité</string>
     <string name="settings_about">À propos</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exporter la sauvegarde</string>
     <string name="backup_restore">Restaurer la sauvegarde</string>
     <string name="backup_replace">La restauration remplace la progression locale.</string>
-    <string name="backup_no_cloud">Pas de synchronisation cloud.</string>
+    <string name="backup_no_cloud">Pas de synchronisation dans le cloud.</string>
     <string name="about_title">À propos du jeu</string>
     <string name="about_goal">Fusionne les tuiles identiques et atteins 2048.</string>
     <string name="about_swipe">Balaye vers le haut, le bas, la gauche ou la droite.</string>

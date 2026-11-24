@@ -75,3 +75,17 @@ The referenced patched versions were checked against the GitHub advisory databas
 ## Independent verification of PR #160 head 579b9b2
 
 Run 45507848719 artifact 14974247877 contains 37 runtime and 137 app/build-configuration components (excluding BOM root) and zero findings in both SARIF files; all six previous advisories are absent. However artifact 14974092479 independently confirms root `buildEnvironment` still selects BC 1.80.2, Commons Lang 3.16.0 and Guava 33.7.1-jre. The app Lint upgrade alone therefore did not cover the plugin classpath. The next commit adds exact-version root classpath remediation, a resolved Gradle module graph export, and a build-only CycloneDX merge with validation of graph edges and known old coordinates. The high/critical build-tool SCA now blocks CI and release. The fresh combined graph/scan is pending, not presumed clean.
+
+## Expanded build SCA, run 45510192667 (head 4be843a)
+
+Original artifact 14974418289 contains runtime and expanded build SBOMs, resolved plugin classpath and both SARIF reports. Runtime: 0 findings. Build: 6 High + 1 Medium; previous six advisories absent. Shortest paths computed directly from the resolved plugin graph:
+
+| Module | Resolved | Advisory | Remediation candidate |
+|---|---|---|---|
+| JDOM2 via AGP -> jetifier-processor | 2.0.6 | GHSA-2363-cqg2-863c | 2.0.6.1 |
+| jose4j via AGP -> bundletool 1.18.3 | 0.9.5 | GHSA-3677-xxcr-wjqv | 0.9.7 (fixed since 0.9.6) |
+| Jackson Core via CycloneDX plugin -> core-java 13.2.0 -> jackson-dataformat-xml | 2.22.2 | GHSA-p6pp-m3f8-5c89 / GHSA-7hhh-6rmp-j9qf | 2.22.4 (fixed since 2.22.3) |
+| Jackson Databind via same CycloneDX path | 2.22.2 | GHSA-cxp5-3px4-pw24 / GHSA-wv8q-qhhj-9h54 | 2.22.4 (fixed since 2.22.3) |
+| Kotlin Gradle Plugin directly via AGP 9.5.2 | 2.2.10 | GHSA-r937-wjx7-w2jp | OPEN: fixed since 2.4.20-Beta1; compatible AGP/Gradle upgrade needs testing |
+
+Advisory details: https://github.com/advisories/GHSA-2363-cqg2-863c, https://github.com/advisories/GHSA-3677-xxcr-wjqv, https://github.com/advisories/GHSA-p6pp-m3f8-5c89, https://github.com/advisories/GHSA-7hhh-6rmp-j9qf, https://github.com/advisories/GHSA-cxp5-3px4-pw24, https://github.com/advisories/GHSA-wv8q-qhhj-9h54, https://github.com/advisories/GHSA-r937-wjx7-w2jp. Scoped exact-version plugin-classpath overrides align Jackson BOM, core, databind and XML/YAML modules without changing jackson-annotations 2.22. Runtime configurations unchanged. Kotlin 2.4.20 documents Gradle support only through 9.7.0; current wrapper is 9.8.2, so no blind Kotlin force is used. Explicitly disable Gradle task-output caching as defense in depth; this does not close the advisory. All overrides require fresh resolution and scans; no SCA suppression. Current High/Critical build SCA is blocking.

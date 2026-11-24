@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibração</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_notifications">Notificações</string>
-    <string name="settings_progress_sync">Sincronizar progresso</string>
+    <string name="settings_progress_sync">Salvar progresso</string>
     <string name="settings_local_backup">Backup local</string>
     <string name="settings_privacy">Política de privacidade</string>
     <string name="settings_about">Sobre</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportar backup</string>
     <string name="backup_restore">Restaurar backup</string>
     <string name="backup_replace">A restauração substitui o progresso local.</string>
-    <string name="backup_no_cloud">A sincronização em nuvem está desativada.</string>
+    <string name="backup_no_cloud">Sem sincronização na nuvem.</string>
     <string name="about_title">Sobre o jogo</string>
     <string name="about_goal">Combine peças iguais e chegue a 2048.</string>
     <string name="about_swipe">Deslize para cima, baixo, esquerda ou direita.</string>

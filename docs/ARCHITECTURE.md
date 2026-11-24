@@ -116,3 +116,7 @@ funkcionalan; novi JVM regresijski test pokriva oba slučaja.
 ## Session transition policy
 
 The confirmation and archive predicates are extracted to `SessionTransitionPolicy` and used by `requestNew`, `newGame` and `endSession`. Finished games still require archiving without confirmation; archived or unused games cannot be archived again. Four JVM tests cover these branches. The durable asynchronous archive coordinator and Canvas renderer are unchanged. This is a bounded refactoring, not completion of MainActivity modularization.
+
+## Statistics chart data
+
+`StatisticsChartData` extracts the shared score/tile metric lookup and maximum computation used by both compact and tall statistics layouts. The Activity delegates retain the original interfaces, history order and all drawing geometry. Four JVM regressions cover score/tile selection, null/negative values, malformed rows and the requested history window. Locale capture daily-win fixtures now contain the attained 256 tile and assert the genuine daily goal predicate, avoiding a contradictory success screenshot. Fresh native CI remains required.

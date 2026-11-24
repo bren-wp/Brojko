@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibration</string>
     <string name="settings_language">Language</string>
     <string name="settings_notifications">Notifications</string>
-    <string name="settings_progress_sync">Progress sync</string>
+    <string name="settings_progress_sync">Back up progress</string>
     <string name="settings_local_backup">Local backup</string>
     <string name="settings_privacy">Privacy policy</string>
     <string name="settings_about">About</string>

@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibration</string>
     <string name="settings_language">Sprog</string>
     <string name="settings_notifications">Notifikationer</string>
-    <string name="settings_progress_sync">Synkronisering af fremskridt</string>
+    <string name="settings_progress_sync">Gem fremskridt</string>
     <string name="settings_local_backup">Lokal sikkerhedskopi</string>
     <string name="settings_privacy">Privatlivspolitik</string>
     <string name="settings_about">Om</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Eksportér sikkerhedskopi</string>
     <string name="backup_restore">Gendan sikkerhedskopi</string>
     <string name="backup_replace">Gendannelse erstatter lokale fremskridt.</string>
-    <string name="backup_no_cloud">Synkronisering i skyen er slået fra.</string>
+    <string name="backup_no_cloud">Ingen synkronisering i skyen.</string>
     <string name="about_title">Om spillet</string>
     <string name="about_goal">Slå ens brikker sammen og nå 2048.</string>
     <string name="about_swipe">Stryg op, ned, til venstre eller højre.</string>

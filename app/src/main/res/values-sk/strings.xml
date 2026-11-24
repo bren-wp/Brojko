@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibrácie</string>
     <string name="settings_language">Jazyk</string>
     <string name="settings_notifications">Upozornenia</string>
-    <string name="settings_progress_sync">Synchronizácia pokroku</string>
+    <string name="settings_progress_sync">Zálohovať pokrok</string>
     <string name="settings_local_backup">Lokálna záloha</string>
     <string name="settings_privacy">Zásady ochrany súkromia</string>
     <string name="settings_about">O aplikácii</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportovať zálohu</string>
     <string name="backup_restore">Obnoviť zálohu</string>
     <string name="backup_replace">Obnovenie nahradí lokálny pokrok.</string>
-    <string name="backup_no_cloud">Synchronizácia s cloudom nie je povolená.</string>
+    <string name="backup_no_cloud">Bez synchronizácie s cloudom.</string>
     <string name="about_title">O hre</string>
     <string name="about_goal">Spájaj rovnaké dlaždice a dosiahni 2048.</string>
     <string name="about_swipe">Potiahni nahor, nadol, doľava alebo doprava.</string>

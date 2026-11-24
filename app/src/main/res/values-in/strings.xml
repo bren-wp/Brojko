@@ -9,7 +9,7 @@
     <string name="settings_vibration">Getaran</string>
     <string name="settings_language">Bahasa</string>
     <string name="settings_notifications">Notifikasi</string>
-    <string name="settings_progress_sync">Sinkronisasi progres</string>
+    <string name="settings_progress_sync">Cadangkan progres</string>
     <string name="settings_local_backup">Cadangan lokal</string>
     <string name="settings_privacy">Kebijakan privasi</string>
     <string name="settings_about">Tentang</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Ekspor cadangan</string>
     <string name="backup_restore">Pulihkan cadangan</string>
     <string name="backup_replace">Pemulihan menggantikan progres lokal.</string>
-    <string name="backup_no_cloud">Sinkronisasi cloud dinonaktifkan.</string>
+    <string name="backup_no_cloud">Tidak ada sinkronisasi cloud.</string>
     <string name="about_title">Tentang permainan</string>
     <string name="about_goal">Gabungkan ubin yang sama dan capai 2048.</string>
     <string name="about_swipe">Geser ke atas, bawah, kiri, atau kanan.</string>

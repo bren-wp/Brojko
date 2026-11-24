@@ -187,7 +187,14 @@ public final class LocaleMatrixTest {
             Arrays.fill(game.cells,0);game.cells[0]=2;game.cells[1]=2;
             game.moves=79;game.score="dailyWin".equals(page)?2996:0;
             game.peak="dailyWin".equals(page)?256:2;
+            // A successful capture must contain the reached tile, not just
+            // a manually seeded historical peak absent from the board.
+            if("dailyWin".equals(page))game.cells[4]=256;
             game.move(TileGame.LEFT);
+            if("dailyWin".equals(page)){
+                assertTrue(game.isDailyGoalComplete());
+                assertTrue(game.maxTile()>=256);
+            }
             activity.dailyBonusGrantedThisAttempt="dailyWin".equals(page);
             if("dailyFail".equals(page))game.gameOver=true;
         }else if("over".equals(page)){

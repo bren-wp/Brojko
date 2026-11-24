@@ -34,6 +34,25 @@ class PluginClasspathSBOMTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unpatched"):
             mod.merge(bom,graph)
 
+    def test_reject_new_high_severity_coordinates_in_either_scope(self):
+        for coordinate in (
+            ["org.jdom", "jdom2", "2.0.6"],
+            ["org.bitbucket.b_c", "jose4j", "0.9.5"],
+            ["com.fasterxml.jackson.core", "jackson-core", "2.22.2"],
+            ["com.fasterxml.jackson.core", "jackson-databind", "2.22.2"],
+        ):
+            with self.subTest(coordinate=coordinate):
+                bom, graph = self.fixture()
+                graph["components"][0]["dependencies"].append(coordinate)
+                graph["components"].append({"coordinate": coordinate, "dependencies": []})
+                with self.assertRaisesRegex(ValueError, "unpatched"):
+                    mod.merge(bom, graph)
+                bom, graph = self.fixture()
+                bom["components"].append({"group": coordinate[0], "name": coordinate[1],
+                    "version": coordinate[2], "bom-ref": "old"})
+                with self.assertRaisesRegex(ValueError, "unpatched"):
+                    mod.merge(bom, graph)
+
     def test_reject_missing_dependency(self):
         bom, graph = self.fixture()
         graph["components"].pop()

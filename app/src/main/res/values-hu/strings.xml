@@ -9,7 +9,7 @@
     <string name="settings_vibration">Rezgés</string>
     <string name="settings_language">Nyelv</string>
     <string name="settings_notifications">Értesítések</string>
-    <string name="settings_progress_sync">Haladás szinkronizálása</string>
+    <string name="settings_progress_sync">Haladás mentése</string>
     <string name="settings_local_backup">Helyi biztonsági mentés</string>
     <string name="settings_privacy">Adatvédelmi szabályzat</string>
     <string name="settings_about">Névjegy</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Mentés exportálása</string>
     <string name="backup_restore">Mentés visszaállítása</string>
     <string name="backup_replace">A visszaállítás felülírja a helyi haladást.</string>
-    <string name="backup_no_cloud">A felhőszinkronizálás ki van kapcsolva.</string>
+    <string name="backup_no_cloud">Nincs felhőszinkronizálás.</string>
     <string name="about_title">A játékról</string>
     <string name="about_goal">Egyesíts azonos lapkákat, és érd el a 2048-at.</string>
     <string name="about_swipe">Húzd fel, le, balra vagy jobbra.</string>

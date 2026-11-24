@@ -9,7 +9,7 @@
     <string name="settings_vibration">Trillen</string>
     <string name="settings_language">Taal</string>
     <string name="settings_notifications">Meldingen</string>
-    <string name="settings_progress_sync">Voortgang synchroniseren</string>
+    <string name="settings_progress_sync">Voortgang opslaan</string>
     <string name="settings_local_backup">Lokale back-up</string>
     <string name="settings_privacy">Privacybeleid</string>
     <string name="settings_about">Over</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Back-up exporteren</string>
     <string name="backup_restore">Back-up herstellen</string>
     <string name="backup_replace">Herstellen vervangt de lokale voortgang.</string>
-    <string name="backup_no_cloud">Cloudsynchronisatie is uitgeschakeld.</string>
+    <string name="backup_no_cloud">Geen cloudsynchronisatie.</string>
     <string name="about_title">Over het spel</string>
     <string name="about_goal">Voeg gelijke tegels samen en bereik 2048.</string>
     <string name="about_swipe">Veeg omhoog, omlaag, links of rechts.</string>

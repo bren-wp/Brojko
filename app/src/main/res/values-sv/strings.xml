@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibration</string>
     <string name="settings_language">Språk</string>
     <string name="settings_notifications">Aviseringar</string>
-    <string name="settings_progress_sync">Synkronisera framsteg</string>
+    <string name="settings_progress_sync">Spara framsteg</string>
     <string name="settings_local_backup">Lokal säkerhetskopia</string>
     <string name="settings_privacy">Integritetspolicy</string>
     <string name="settings_about">Om</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportera säkerhetskopia</string>
     <string name="backup_restore">Återställ säkerhetskopia</string>
     <string name="backup_replace">Återställning ersätter lokala framsteg.</string>
-    <string name="backup_no_cloud">Molnsynkronisering är avstängd.</string>
+    <string name="backup_no_cloud">Ingen molnsynkronisering.</string>
     <string name="about_title">Om spelet</string>
     <string name="about_goal">Slå ihop likadana brickor och nå 2048.</string>
     <string name="about_swipe">Svep uppåt, nedåt, åt vänster eller höger.</string>
