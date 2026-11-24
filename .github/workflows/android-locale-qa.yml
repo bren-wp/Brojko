@@ -45,7 +45,9 @@ jobs:
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         with:
           api-level: ${{ matrix.api }}
-          arch: x86_64
+          # API 27 Google APIs has an x86 image, not x86_64.
+          # Keep API 27 in the matrix and execute the same instrumentation suite.
+          arch: ${{ matrix.api == 27 && 'x86' || 'x86_64' }}
           profile: pixel_6
           target: google_apis
           disable-animations: true
