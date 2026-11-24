@@ -41,5 +41,28 @@ class LocalizedStoreAssetsTest(unittest.TestCase):
             with self.assertRaises((OSError,SyntaxError,AssertionError,ValueError)):
                 assets.validate_capture(png,(941,1672))
 
+    def test_english_gallery_rejects_incomplete_inventory(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError,"Incomplete English"):
+                assets.publish_english_gallery(Path(temp),Path(temp),[])
+
+    def test_english_gallery_copies_exact_verified_bytes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            captures=root/"captures"
+            records=[]
+            for page in assets.PAGES:
+                relative=f"en/941x1672/{page}.png"
+                path=captures/relative
+                path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_bytes(page.encode())
+                records.append({"path":relative,"sha256":assets.digest(path)})
+            assets.publish_english_gallery(captures,root/"output",records)
+            for page in assets.PAGES:
+                self.assertEqual(page.encode(),(root/"output"/"english-gallery"/("brojko-en-"+page+".png")).read_bytes())
+            (captures/"en/941x1672/home.png").write_bytes(b"changed")
+            with self.assertRaisesRegex(ValueError,"changed"):
+                assets.publish_english_gallery(captures,root/"output",records)
+
 if __name__=="__main__":
     unittest.main()

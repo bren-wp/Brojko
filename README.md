@@ -45,7 +45,7 @@ English · Hrvatski · Deutsch · Français · Español · Italiano · Portuguê
 
 ## Real Android screenshots
 
-Gallery uses verified captures from release **v1.12.256**. These are actual Android captures, not generated mockups.
+Gallery uses verified captures from release **v1.12.256**. These are actual Android captures, not generated mockups. This historical gallery uses the Croatian reference suite. English is the app's default language; new verified releases are configured to include a separate English gallery (`brojko-en-*.png`).
 
 <p align="center">
 <img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-icon.png" width="222" alt="Real Android screenshot of Brojko: Icon" />

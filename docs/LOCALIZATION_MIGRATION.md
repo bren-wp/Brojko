@@ -31,3 +31,7 @@ All six capture jobs in [PR #159 final locale run](https://github.com/bren-wp/Br
 ## Targeted copy review
 
 PR #160 corrects selected backup, no-cloud, daily reward and undo mission messages in English, Croatian, German and French. This is a targeted linguistic pass; no native-speaker sign-off or complete proofreading of 30 languages is claimed. The existing Croatian artwork and all format placeholders are preserved.
+
+## English-first release evidence
+
+The production default remains English, regardless of device locale when no app language is saved. The new instrumentation test clears the dedicated locale preferences and API 33+ platform app locale, launches the real Activity, checks English navigation, mode labels, reminder text, LTR layout and recreation, then restores the Croatian test runner state. The release UI workflow captures 23 separate English states from the real production Canvas at 941×1672, decodes and hashes the PNGs, and publishes them separately from the unchanged 28 Croatian owner-reference gallery images. This preserves the original screenshot regression baseline and avoids pretending translated text is RGB-identical. Fresh CI and release publication are required.

@@ -59,7 +59,7 @@ def capture_record(path, relative, dimensions):
     return {"path":relative,"width":dimensions[0],"height":dimensions[1],
             "sha256":digest(path),"bytes":path.stat().st_size}
 
-def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
+def stage(captures,output,full=False,root=ROOT,offset=0,count=30,english_gallery=False):
     validate_metadata(root)
     # The ADB destination varies depending on whether it already exists.
     if (captures/"locale-screenshots").is_dir():
@@ -69,6 +69,8 @@ def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
     order=[item.get(ANDROID+"name") for item in config.findall("locale")]
     assert 0<=offset<len(order) and count>0
     selected=order[offset:offset+count]
+    if english_gallery and (selected!=["en"] or full):
+        raise ValueError("English gallery requires only the 941x1672 English captures")
     records=[]
     store_records=[]
     for tag in selected:
@@ -95,6 +97,8 @@ def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
             width,height=png_dimensions(target)
             assert 320<=min(width,height)<=max(width,height)<=3840
             assert max(width,height)<=2*min(width,height)
+    if english_gallery:
+        publish_english_gallery(captures,output,records)
     revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()
     manifest={"schema":1,"checkout_sha":revision,"run_id":os.getenv("GITHUB_RUN_ID"),
               "run_attempt":os.getenv("GITHUB_RUN_ATTEMPT"),
@@ -104,6 +108,23 @@ def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
         json.dumps(manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(f"Verified {len(selected)*len(sizes)*len(PAGES)} native captures; staged {len(selected)*len(STORE_PAGES)} unmodified Play-size screenshots.")
 
+def publish_english_gallery(captures,output,records):
+    expected={f"en/941x1672/{page}.png" for page in PAGES}
+    if {r["path"] for r in records}!=expected or len(records)!=len(expected):
+        raise ValueError("Incomplete English capture evidence")
+    target=output/"english-gallery"
+    target.mkdir(parents=True,exist_ok=True)
+    for record in records:
+        source=captures/record["path"]
+        if digest(source)!=record["sha256"]:
+            raise ValueError("English capture changed after verification")
+        destination=target/("brojko-en-"+source.name)
+        shutil.copyfile(source,destination)
+        if digest(destination)!=record["sha256"]:
+            raise ValueError("English gallery copy differs from native capture")
+    if {p.name for p in target.glob("*.png")}!={"brojko-en-"+page+".png" for page in PAGES}:
+        raise ValueError("Unexpected English gallery inventory")
+
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--metadata-only",action="store_true")
@@ -112,8 +133,9 @@ if __name__=="__main__":
     parser.add_argument("--full-viewports",choices=("true","false"),default="false")
     parser.add_argument("--locale-offset",type=int,default=0)
     parser.add_argument("--locale-count",type=int,default=30)
+    parser.add_argument("--english-gallery",action="store_true")
     args=parser.parse_args()
     if args.metadata_only:
         validate_metadata()
     else:
-        stage(args.captures,args.output,args.full_viewports=="true",offset=args.locale_offset,count=args.locale_count)
+        stage(args.captures,args.output,args.full_viewports=="true",offset=args.locale_offset,count=args.locale_count,english_gallery=args.english_gallery)
