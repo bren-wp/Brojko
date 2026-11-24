@@ -982,7 +982,7 @@ public final class MainActivity extends ComponentActivity {
                      ("Teme i".equals(label)||"izgled".equals(label))?
                      1.55f:
                     ("stats".equals(page)&&referencePortraitLayout&&
-                     "Statistika".equals(label)?0.95f:0.7f)));
+                     uiText(R.string.home_statistics).equals(label)?0.95f:0.7f)));
                 p.setShadowLayer(.85f,0f,1.05f,0x251c2a3f);
                 p.setShader(new LinearGradient(0f,baseline-size,0f,baseline,
                     lighten(color,.075f),darken(color,.045f),
@@ -1510,9 +1510,9 @@ public final class MainActivity extends ComponentActivity {
                 // accessibility and click rectangle unchanged.
                 boolean homeHero=page.equals("home")&&w>=280;
                 boolean victoryPrimary=page.equals("win")&&
-                    "Nastavi igrati".equals(label);
+                    uiText(R.string.action_continue_playing).equals(label);
                 boolean victoryShare=page.equals("win")&&
-                    "Podijeli rezultat".equals(label);
+                    uiText(R.string.action_share_score).equals(label);
                 boolean ownerVictoryShare=victoryShare&&theme==0&&
                     referencePortraitLayout;
                 float visualHeight=ownerDailyStart?h-3.8f:
@@ -1568,7 +1568,7 @@ public final class MainActivity extends ComponentActivity {
                 // every other screen unchanged.
                 boolean raisedGameAction=page.equals("game")&&w>=100&&h>=77;
                 boolean victorySecondary=page.equals("win")&&
-                    "Nova igra".equals(label)&&theme!=1;
+                    uiText(R.string.action_new_game).equals(label)&&theme!=1;
                 if(victorySecondary){
                     // A warm, raised but borderless reference pill. Do not
                     // alter the same shared component outside the win modal.
@@ -1589,9 +1589,9 @@ public final class MainActivity extends ComponentActivity {
                 boolean homeHero=page.equals("home")&&prominent&&w>=280;
                 if(hasSymbol){
                     boolean winSecondary=page.equals("win")&&
-                        "Nova igra".equals(label);
+                        uiText(R.string.action_new_game).equals(label);
                     boolean winShare=page.equals("win")&&
-                        "Podijeli rezultat".equals(label);
+                        uiText(R.string.action_share_score).equals(label);
                     float iconX=x+(winSecondary?78f:
                         winShare&&referencePortraitLayout&&theme==0?57f:
                         winShare?69f:
@@ -1620,12 +1620,12 @@ public final class MainActivity extends ComponentActivity {
                 }
                 float textCenter=x+(hasSymbol?(prominent?
                     (homeHero&&referencePortraitLayout&&theme==0&&
-                        "Nova igra".equals(label)?w*.60f:
+                        uiText(R.string.action_new_game).equals(label)?w*.60f:
                         homeHero&&label.length()>10?w*.62f:
                         (page.equals("win")&&referencePortraitLayout&&theme==0
-                            ?("Podijeli rezultat".equals(label)?w*.635f:w*.595f)
+                            ?(uiText(R.string.action_share_score).equals(label)?w*.635f:w*.595f)
                             :w*.58f)):
-                    (page.equals("win")&&"Nova igra".equals(label)?
+                    (page.equals("win")&&uiText(R.string.action_new_game).equals(label)?
                         (referencePortraitLayout&&theme==0?w*.60f:w*.59f):
                         (w+38f)/2f)):w/2f);
                 int labelColor=prominent?WHITE:ink;
@@ -1635,9 +1635,9 @@ public final class MainActivity extends ComponentActivity {
                 boolean ownerWinLabel=page.equals("win")&&
                     referencePortraitLayout&&theme==0;
                 float font=ownerWinLabel?
-                    ("Nastavi igrati".equals(label)?22.5f:
-                     "Nova igra".equals(label)?20.5f:
-                     "Podijeli rezultat".equals(label)?20.5f:16f):
+                    (uiText(R.string.action_continue_playing).equals(label)?22.5f:
+                     uiText(R.string.action_new_game).equals(label)?20.5f:
+                     uiText(R.string.action_share_score).equals(label)?20.5f:16f):
                     prominent?
                     (page.equals("daily")?Math.min(24,h*.44f):
                         homeHero?(label.length()>10?
@@ -1648,7 +1648,7 @@ public final class MainActivity extends ComponentActivity {
                 // PR43 was x335..716, similar width but 14 px left.
                 // Its letter tops must rise about 7 px without widening.
                 boolean sourceHomeCTA=homeHero&&referencePortraitLayout&&
-                    theme==0&&"Nova igra".equals(label);
+                    theme==0&&uiText(R.string.action_new_game).equals(label);
                 if(sourceHomeCTA){
                     c.save();
                     c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
@@ -1685,7 +1685,7 @@ public final class MainActivity extends ComponentActivity {
         void title(String name) {
             back();
             brand(64,38);
-            if("Statistika".equals(name))
+            if(uiText(R.string.home_statistics).equals(name))
                 illustratedTitle(name,200,127,34f,356f,ink);
             else fitted(name,200,127,name.length()>18?28:34,356,ink,true);
         }
@@ -2488,7 +2488,7 @@ public final class MainActivity extends ComponentActivity {
                 homeIllustratedBrand(tallPortrait&&theme==0);
             else brand(197,72);
             if(!portrait&&!tallPortrait)
-                fitted("Spajaj brojeve. Ruši rekorde.",200,245,22,367,CORAL,true);
+                fitted(uiText(R.string.home_slogan),200,245,22,367,CORAL,true);
             float scoresY=portrait?205:269;
             float scoresH=portrait?74:80;
             homeSoftCard(21,scoresY,171,scoresH,19,
@@ -2507,7 +2507,7 @@ public final class MainActivity extends ComponentActivity {
             // previous 13-unit bold render occupied ~225x28. Confine
             // the owner typography correction to the light Home cards.
             boolean sourceScoreHeading=portrait&&theme==0;
-            fitted("Najbolji rezultat",sourceScoreHeading?115:132,
+            fitted(uiText(R.string.home_best),sourceScoreHeading?115:132,
                 scoresY+(sourceScoreHeading?24:29),
                 sourceScoreHeading?11:13,117,muted,!sourceScoreHeading);
             // Source-matched 12.560 remains clear of the three right-hand
@@ -2519,7 +2519,7 @@ public final class MainActivity extends ComponentActivity {
                 scoresY+(theme==0?53:58));
             icon("stats",236,
                 scoresY+(portrait&&theme==0?26:30),27,0xff63799d);
-            fitted("Zadnji rezultat",sourceScoreHeading?298:
+            fitted(uiText(R.string.home_last),sourceScoreHeading?298:
                     portrait?301:319,
                 scoresY+(sourceScoreHeading?24:29),
                 sourceScoreHeading?11:13,
@@ -2531,15 +2531,15 @@ public final class MainActivity extends ComponentActivity {
                 icon("chevron-right",365,scoresY+39,17,muted);
             // Source score cards are actual shortcuts, not dead display art.
             taps.add(new Tap(21,scoresY,192,scoresY+scoresH,
-                "Najbolji rezultat",()->navigate("stats")));
+                uiText(R.string.home_best),()->navigate("stats")));
             taps.add(new Tap(207,scoresY,378,scoresY+scoresH,
-                "Zadnji rezultat",()->navigate("stats")));
+                uiText(R.string.home_last),()->navigate("stats")));
             boolean resumable=game!=null&&!game.archived&&!game.gameOver;
             float playY=portrait?293:372;
             float playH=portrait?82:86;
             // Reference orange hero pill is about 285 design units wide,
             // leaving room for the large bursts on both sides.
-            button(resumable?"Nastavi igru":"Nova igra","play",
+            button(resumable?uiText(R.string.home_resume):uiText(R.string.action_new_game),"play",
                 portrait?58:43,playY,portrait?284:314,playH,CORAL,true,
                 ()->{if(resumable)navigate("game");else requestNew("classic");});
             if(portrait){
@@ -2551,21 +2551,21 @@ public final class MainActivity extends ComponentActivity {
             }
             float modeY=portrait?386:483;
             float modeH=portrait?171:187;
-            modeCard("Klasično","4 × 4",15,modeY,117,modeH,0xfffef3e9,false,
+            modeCard(uiText(R.string.home_classic),"4 × 4",15,modeY,117,modeH,0xfffef3e9,false,4,
                 ()->requestNew("classic"));
-            modeCard("Opušteno","5 × 5",141,modeY,117,modeH,0xffe1fcf9,false,
+            modeCard(uiText(R.string.home_relaxed),"5 × 5",141,modeY,117,modeH,0xffe1fcf9,false,5,
                 ()->requestNew("relaxed"));
-            modeCard("Dnevni izazov","Novi izazov svaki dan!",
-                267,modeY,117,modeH,0xfffef6d6,true,()->navigate("daily"));
+            modeCard(uiText(R.string.mode_daily),uiText(R.string.home_daily_sub),
+                267,modeY,117,modeH,0xfffef6d6,true,0,()->navigate("daily"));
             float shortcutY=portrait?570:687;
             float shortcutH=portrait?120:144;
-            shortcut("Misije","target","Ispuni ciljeve","i osvoji nagrade!",
+            shortcut(uiText(R.string.home_missions),"target",uiText(R.string.home_missions_1),uiText(R.string.home_missions_2),
                 16,shortcutY,88,shortcutH,card,()->navigate("missions"));
-            shortcut("Statistika","stats","Prati svoj","napredak.",
+            shortcut(uiText(R.string.home_statistics),"stats",uiText(R.string.home_stats_1),uiText(R.string.home_stats_2),
                 109,shortcutY,88,shortcutH,card,()->navigate("stats"));
-            shortcut("Teme","palette","Otkrij nove","izglede.",
+            shortcut(uiText(R.string.home_themes),"palette",uiText(R.string.home_themes_1),uiText(R.string.home_themes_2),
                 202,shortcutY,88,shortcutH,card,()->navigate("themes"));
-            shortcut("Postavke","settings","Prilagodi","igru sebi.",
+            shortcut(uiText(R.string.settings_title),"settings",uiText(R.string.home_settings_1),uiText(R.string.home_settings_2),
                 295,shortcutY,88,shortcutH,card,()->navigate("settings"));
         }
         void shortcut(String label,String glyph,String sub1,String sub2,
@@ -2707,7 +2707,7 @@ public final class MainActivity extends ComponentActivity {
             c.restore(); // complete Home calendar
         }
         void modeCard(String name,String sub,float x,float y,float w,float h,int fill,
-                      boolean daily,Runnable tap){
+                      boolean daily,int previewColumns,Runnable tap){
             boolean portrait=referencePortraitLayout;
             homeSoftCard(x,y,w,h,22,theme==1?card:fill);
             if(daily){
@@ -2736,7 +2736,7 @@ public final class MainActivity extends ComponentActivity {
                         y+(portrait?68:77),69,CORAL);
             }else{
                 int[] values={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
-                int cols="Opušteno".equals(name)?5:4;
+                int cols=previewColumns;
                 boolean sourceClassic=portrait&&theme==0&&cols==4;
                 // Match the reference's ~57px grid pitch instead of 59px;
                 // don't change 5x5, active gameplay, or other themes.
@@ -2794,8 +2794,8 @@ public final class MainActivity extends ComponentActivity {
                 c.restore();
             }else fitted(name,captionX,captionY,portrait?16:17,w-5,ink,true);
             if(daily){
-                fitted("Novi izazov",x+w/2,y+(portrait?143:169),12,w-5,muted,false);
-                fitted("svaki dan!",x+w/2,y+(portrait?157:182),12,w-5,muted,false);
+                fitted(uiText(R.string.home_new_challenge),x+w/2,y+(portrait?143:169),12,w-5,muted,false);
+                fitted(uiText(R.string.home_every_day),x+w/2,y+(portrait?157:182),12,w-5,muted,false);
             }else fitted(sub,x+w/2,y+(portrait?155:177),17,w-6,muted,false);
             taps.add(new Tap(x,y,x+w,y+h,name+" "+sub,tap));
         }

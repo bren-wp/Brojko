@@ -112,4 +112,24 @@
     <string name="accessibility_progress">Brojko, score %1$s, highest tile %2$s, move %3$d</string>
     <string name="accessibility_victory">Well done! You reached tile 2048. Your score is %1$s.</string>
     <string name="accessibility_victory_actions">%1$s Keep playing, New game or Share score.</string>
+    <string name="home_slogan">Merge numbers. Beat records.</string>
+    <string name="home_best">Best score</string>
+    <string name="home_last">Last score</string>
+    <string name="home_resume">Resume game</string>
+    <string name="home_classic">Classic</string>
+    <string name="home_relaxed">Relaxed</string>
+    <string name="home_daily_sub">A new challenge every day!</string>
+    <string name="home_missions">Missions</string>
+    <string name="home_missions_1">Complete goals</string>
+    <string name="home_missions_2">and earn rewards!</string>
+    <string name="home_statistics">Statistics</string>
+    <string name="home_stats_1">Track your</string>
+    <string name="home_stats_2">progress.</string>
+    <string name="home_themes">Themes</string>
+    <string name="home_themes_1">Discover new</string>
+    <string name="home_themes_2">looks.</string>
+    <string name="home_settings_1">Make the game</string>
+    <string name="home_settings_2">your own.</string>
+    <string name="home_new_challenge">New challenge</string>
+    <string name="home_every_day">every day!</string>
 </resources>

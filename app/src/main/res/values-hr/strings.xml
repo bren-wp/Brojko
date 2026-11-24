@@ -112,4 +112,24 @@
     <string name="accessibility_progress">Brojko, rezultat %1$s, najveća pločica %2$s, potez %3$d</string>
     <string name="accessibility_victory">Bravo! Dosegnuli ste pločicu 2048. Tvoj rezultat je %1$s.</string>
     <string name="accessibility_victory_actions">%1$s Nastavi igrati, Nova igra ili Podijeli rezultat.</string>
+    <string name="home_slogan">Spajaj brojeve. Ruši rekorde.</string>
+    <string name="home_best">Najbolji rezultat</string>
+    <string name="home_last">Zadnji rezultat</string>
+    <string name="home_resume">Nastavi igru</string>
+    <string name="home_classic">Klasično</string>
+    <string name="home_relaxed">Opušteno</string>
+    <string name="home_daily_sub">Novi izazov svaki dan!</string>
+    <string name="home_missions">Misije</string>
+    <string name="home_missions_1">Ispuni ciljeve</string>
+    <string name="home_missions_2">i osvoji nagrade!</string>
+    <string name="home_statistics">Statistika</string>
+    <string name="home_stats_1">Prati svoj</string>
+    <string name="home_stats_2">napredak.</string>
+    <string name="home_themes">Teme</string>
+    <string name="home_themes_1">Otkrij nove</string>
+    <string name="home_themes_2">izglede.</string>
+    <string name="home_settings_1">Prilagodi</string>
+    <string name="home_settings_2">igru sebi.</string>
+    <string name="home_new_challenge">Novi izazov</string>
+    <string name="home_every_day">svaki dan!</string>
 </resources>
