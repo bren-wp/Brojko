@@ -27,3 +27,7 @@ Real capture review found icon/label collisions on localized CTA buttons; the ne
 ## Capture evidence hardening
 
 All six capture jobs in [PR #159 final locale run](https://github.com/bren-wp/Brojko/actions/runs/45502544028) reported 460 native images and 40 staged Play images each (2,760 and 240 in total). The older validation checked headers/dimensions, not full PNG decoding. PR #160 adds Pillow verify + decode and SHA-256 manifests for each shard, with checked-out Git SHA and Actions run identifiers. New evidence is pending CI. This is not owner-reference RGB certification or native-speaker proofreading.
+
+## Targeted copy review
+
+PR #160 corrects selected backup, no-cloud, daily reward and undo mission messages in English, Croatian, German and French. This is a targeted linguistic pass; no native-speaker sign-off or complete proofreading of 30 languages is claimed. The existing Croatian artwork and all format placeholders are preserved.

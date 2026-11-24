@@ -55,3 +55,28 @@ dependencies {
 tasks.named('cyclonedxDirectBom') {
     includeConfigs = project.hasProperty('brojkoFullSbom') ? [] : ['releaseRuntimeClasspath']
 }
+
+// Scoped remediation candidates for the previously measured Android Lint
+// dependency paths. Do not alter application runtime/test configurations or
+// downgrade newer versions selected by the parent toolchain.
+def lintSecurityUpgrades = [
+ 'org.bouncycastle:bcprov-jdk18on:1.80.2': '1.85',
+ 'org.bouncycastle:bcpkix-jdk18on:1.80.2': '1.85',
+ 'org.bouncycastle:bcutil-jdk18on:1.80.2': '1.85',
+ 'com.google.guava:guava:33.4.0-jre': '33.7.2-jre',
+ 'org.apache.httpcomponents:httpclient:4.5.6': '4.5.14',
+ 'org.apache.httpcomponents:httpmime:4.5.6': '4.5.14',
+ 'org.apache.commons:commons-lang3:3.16.0': '3.18.0'
+]
+configurations.configureEach { cfg ->
+    if (cfg.name.toLowerCase(java.util.Locale.ROOT).contains('lint')) {
+        cfg.resolutionStrategy.eachDependency { details ->
+            def requested = details.requested
+            def replacement = lintSecurityUpgrades["${requested.group}:${requested.name}:${requested.version}".toString()]
+            if (replacement != null) {
+                details.useVersion(replacement)
+                details.because('Security remediation of measured Lint dependency; verify with full SBOM and SCA')
+            }
+        }
+    }
+}

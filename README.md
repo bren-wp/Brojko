@@ -13,7 +13,7 @@
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="72">
 </a>
 
-[Android downloads](https://github.com/bren-wp/Brojko/releases) · [Screenshots](#real-android-screenshots) · [Privacy](PRIVACY.md) · [Hrvatski](README.hr.md) · [Brendigo](https://brendigo.com)
+[Android downloads](https://github.com/bren-wp/Brojko/releases) · [Screenshots](#real-android-screenshots) · [Privacy](PRIVACY.md) · [Hrvatski](README.hr.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · [Brendigo](https://brendigo.com)
 
 </div>
 

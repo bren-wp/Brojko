@@ -60,3 +60,14 @@ https://github.com/CycloneDX/cyclonedx-gradle-plugin
 ## PR #160 — evidence and remediation status
 
 The final PR #159 runtime SCA reported 0 matches across 38 packages; build-tool High/Critical findings remained. The previously measured paths above identify Android Lint/SDK configurations, not merely the root plugin classpath. PR #160 archives buildEnvironment inventories alongside runtime inventories and publishes both SARIF files with release assets. Exact current transitive paths and patched version compatibility still require a fresh resolved graph and scans; no advisory is suppressed or marked fixed.
+
+## Scoped remediation candidates (PR #160)
+
+Previously measured Lint dependency paths, from the recorded CycloneDX graph, are listed above. The following candidate updates are limited to exact previously observed requests in Lint-named configurations, with no global force or app runtime upgrade:
+
+- BC provider / PKIX / utility: aligned to 1.85 (CVE-2026-8763, CVE-2026-13506, CVE-2026-5588).
+- Guava JRE: 33.7.2-jre (CVE-2026-102554).
+- HttpClient / HttpMime: aligned to 4.5.14 (CVE-2020-13956).
+- Commons Lang: 3.18.0 (CVE-2025-48924).
+
+The referenced patched versions were checked against the GitHub advisory database and Maven Central. Full app configuration inventory is also archived because buildEnvironment alone does not cover the Lint worker classpath. This is an unverified remediation candidate until Gradle resolution, lint/build tests, both SBOMs and both scans confirm the result. Any residual finding stays open; no suppression or SBOM exclusion is added. See https://github.com/advisories/GHSA-9pwp-9qqc-pr26, https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/advisories/GHSA-wg6q-6289-32hp, https://github.com/advisories/GHSA-xxph-c9ww-hj94, https://github.com/advisories/GHSA-7r82-7xv7-xcpj and https://github.com/advisories/GHSA-j288-q9x7-2f5v.

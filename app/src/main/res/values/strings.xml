@@ -33,7 +33,7 @@
     <string name="backup_export">Export backup</string>
     <string name="backup_restore">Restore backup</string>
     <string name="backup_replace">Restoring replaces local progress.</string>
-    <string name="backup_no_cloud">Cloud sync is not enabled.</string>
+    <string name="backup_no_cloud">No cloud sync.</string>
     <string name="about_title">About the game</string>
     <string name="about_goal">Merge matching tiles and reach 2048.</string>
     <string name="about_swipe">Swipe up, down, left or right.</string>
@@ -155,7 +155,7 @@
     <string name="mission_merge_title">Merge 20 tiles</string>
     <string name="mission_merge_description">Merge any tiles 20 times.</string>
     <string name="mission_no_undo_title">Reach 512 without undo</string>
-    <string name="mission_no_undo_description">Reach tile 512 without undo</string>
+    <string name="mission_no_undo_description">Reach tile 512 without undoing a move.</string>
     <string name="mission_streak_title">Play 7 days in a row</string>
     <string name="mission_streak_description">Play on 7 consecutive days.</string>
     <string name="mission_week_score_title">Score 10,000 points in total</string>
@@ -180,7 +180,7 @@
     <string name="daily_motivation">See how far you can go!</string>
     <string name="daily_reward_won">REWARD EARNED</string>
     <string name="daily_reward_today">TODAY\'S REWARD</string>
-    <string name="daily_reward_congrats">Well done, earned!</string>
+    <string name="daily_reward_congrats">Well done!</string>
     <string name="daily_reward_special">Special reward</string>
     <string name="daily_reward_already">Today\'s reward has already been claimed.</string>
     <string name="daily_reward_finish">Complete all goals and earn</string>
