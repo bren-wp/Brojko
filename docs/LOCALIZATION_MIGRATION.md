@@ -1,21 +1,18 @@
 # Localization migration
 
-This branch is a staged resource migration, not a release of a multilingual UI.
-The active Canvas locale remains Croatian until English coverage and behavior
-are verified end-to-end. Existing owner reference art includes Croatian glyph
-contours that require language-aware fallback rendering before enabling English.
+English is the explicit product default. English, Croatian, German and French have
+complete string-key inventories for the current migrated UI and are offered
+in the functional Canvas language picker and Android 13+ app language settings.
+Android 24–32 uses a separate private language preference. Android 13+ uses the
+framework LocaleManager, with migration of older explicit preferences.
 
-Migrated areas: reminders, Settings and language page, Help, Backup, About,
-Privacy, game result and confirmation dialogs, Home, selected accessibility
-announcements and activity messages. Internal game IDs, backup schema, app ID,
-signing and date keys remain unchanged.
+The existing Croatian reference suite uses a test-only runner selecting Croatian.
+Production does not read test arguments. Croatian fixed artwork is used only
+for Croatian; other languages use localized Canvas text. New history dates are
+stored as ISO values; old v1 dates are displayed without rewriting backup data.
 
-Remaining: gameplay HUD, missions, stats, history, themes, branded headline
-contours, all dynamic plural and number formatting, persisted language choice,
-Android per-app locale integration, RTL and complex-script text shaping,
-28 additional complete translations and localized store screenshots. The
-English Fastlane listing is a draft for use after the English UI is complete.
-
-The owner visual QA must still compare the Croatian render on the same viewport
-and verify actual screenshots for each enabled locale. Do not claim 1:1 or
-complete translations based solely on resource-key parity.
+Static inventory parity is not native visual QA. Each language still requires
+real-device review, layout/accessibility and lifecycle testing. Remaining 26
+languages and full Arabic/Hebrew RTL mirroring and complex-script validation
+are not advertised yet. English Fastlane copy is a draft; no Play Console
+publication has been performed.

@@ -212,3 +212,16 @@ for key in base_strings:
 assert '"Jezik".equals(caption)' not in java["MainActivity.java"]
 assert '"Sinkronizacija napretka".equals(caption)' not in java["MainActivity.java"]
 print("Localization foundation: migrated notification and settings resources present in English and Croatian.")
+
+# Every advertised language must have a complete explicit resource set.
+locale_config=ET.parse(APP / "res/xml/locales_config.xml").getroot()
+configured_tags={node.get(ANDROID+"name") for node in locale_config.findall("locale")}
+assert "en" in configured_tags
+locale_tags=set(re.findall(r'\b[A-Z_]+\("([a-zA-Z-]+)","[^"]+"\)',java["LocaleManager.java"]))
+assert locale_tags == configured_tags, "Language picker and Android per-app language config differ"
+for tag in sorted(configured_tags-{"en"}):
+    translated=localized_strings(APP / ("res/values-"+tag+"/strings.xml"))
+    assert base_strings.keys()==translated.keys(), "Incomplete locale: "+tag
+    for key in base_strings:
+        assert signature(base_strings[key])==signature(translated[key]), "Format signature mismatch: "+tag+":"+key
+print("Configured locale resource coverage verified: "+", ".join(sorted(configured_tags)))

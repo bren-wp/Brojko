@@ -18,7 +18,8 @@ final class LocaleManager {
     private static final String KEY_PLATFORM_MIGRATED="platform_migrated";
 
     enum Language {
-        ENGLISH("en","English"), CROATIAN("hr","Hrvatski");
+        ENGLISH("en","English"), CROATIAN("hr","Hrvatski"),
+        GERMAN("de","Deutsch"), FRENCH("fr","Français");
 
         final String tag;
         final String nativeName;
