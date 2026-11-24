@@ -50,7 +50,7 @@ public final class AppReminder extends BroadcastReceiver {
         NotificationManager manager=(NotificationManager)context.getSystemService(
             Context.NOTIFICATION_SERVICE);
         if(manager==null)return;
-        Resources strings=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
+        Resources strings=LocaleManager.resourcesFor(context,LocaleManager.selected(context).locale());
         if(Build.VERSION.SDK_INT>=26){
             NotificationChannel channel=new NotificationChannel(CHANNEL,
                 strings.getString(R.string.reminder_channel_name),NotificationManager.IMPORTANCE_DEFAULT);

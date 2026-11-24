@@ -40,6 +40,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.animation.ValueAnimator;
 import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.Date;
 import android.content.res.Resources;
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -109,11 +111,17 @@ public final class MainActivity extends ComponentActivity {
     static final int NOTIFICATION_PERMISSION_REQUEST=704;
     float pulse=1f;
     ToneGenerator tones;
-    final NumberFormat number=NumberFormat.getIntegerInstance(LocaleManager.legacyUiLocale());
+    NumberFormat number;
+    LocaleManager.Language uiLanguage;
+    Locale uiLocale;
 
     @Override public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        activityResources=LocaleManager.resourcesFor(this,LocaleManager.legacyUiLocale());
+        LocaleManager.migratePlatformPreference(this);
+        uiLanguage=LocaleManager.selected(this);
+        uiLocale=uiLanguage.locale();
+        number=NumberFormat.getIntegerInstance(uiLocale);
+        activityResources=LocaleManager.resourcesFor(this,uiLocale);
         // Draw behind both system bars on API 24-36. Use the manual
         // edge-to-edge contract instead of WindowCompat.enableEdgeToEdge():
         // AndroidX's setup helper can invoke deprecated Window bar-color
@@ -272,7 +280,21 @@ public final class MainActivity extends ComponentActivity {
     String yesterday(){return GameCalendar.yesterday();}
     String compactTime(){return GameCalendar.compactTime();}
     String historyDate(){return GameCalendar.historyDate();}
-    String dailyLongDate(){return GameCalendar.dailyLongDate();}
+    String dailyLongDate(){return GameCalendar.dailyLongDate(new Date(),uiLocale);}
+    void selectLanguage(LocaleManager.Language language){
+        if(language==uiLanguage)return;
+        if(backupDocumentBusy||gameTransitionBusy){
+            Toast.makeText(this,activityText(R.string.storage_busy),Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(!LocaleManager.select(this,language)){
+            Toast.makeText(this,activityText(R.string.language_change_failed),Toast.LENGTH_LONG).show();
+            return;
+        }
+        // API 33+ automatically recreates the Activity on app-locale change.
+        // Older versions use the same saved-instance-state recovery path.
+        if(Build.VERSION.SDK_INT<33)recreate();
+    }
     String fmt(int x){return number.format(x);}
     String labelMode(String m) {
         return activityText("relaxed".equals(m)?R.string.mode_relaxed:"daily".equals(m)?R.string.mode_daily:R.string.mode_classic);
@@ -775,7 +797,9 @@ public final class MainActivity extends ComponentActivity {
         }
         BoardScreen(Context context){
             super(context);
-            localizedResources=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
+            localizedResources=LocaleManager.resourcesFor(context,uiLocale);
+            setLayoutDirection(LocaleManager.isRtl(uiLocale)?View.LAYOUT_DIRECTION_RTL:View.LAYOUT_DIRECTION_LTR);
+            setTextDirection(View.TEXT_DIRECTION_LOCALE);
             p.setTextLocale(localizedResources.getConfiguration().getLocales().get(0));
             accessibilityHelper=new BoardAccessibilityDelegate(this);
             ViewCompat.setAccessibilityDelegate(this,accessibilityHelper);
@@ -7068,7 +7092,7 @@ public final class MainActivity extends ComponentActivity {
             settingsSwitch(uiText(R.string.settings_vibration),"phone-vibrate",TEAL,rowY[1],vibration,()->{
                 vibration=!vibration;persist();invalidate();
             });
-            settingsAction(uiText(R.string.settings_language),uiText(R.string.language_croatian),"globe",0xff378ef6,rowY[2],
+            settingsAction(uiText(R.string.settings_language),uiLanguage.nativeName,"globe",0xff378ef6,rowY[2],
                 ()->navigate("language"));
             settingsSwitch(uiText(R.string.settings_notifications),"bell",0xffffb630,rowY[3],
                 notifications,()->toggleNotifications());
@@ -7195,13 +7219,35 @@ public final class MainActivity extends ComponentActivity {
             button(uiText(R.string.settings_title),"back",24,755,352,63,card,false,()->navigate("settings"));
             bottomBrand();
         }
+        int languagePageIndex=0;
         void languagePage(){
             title(uiText(R.string.settings_language));
-            txt(uiText(R.string.language_interface),200,181,21,muted,true);
-            card(25,223,350,95,20,card);
-            icon("check",67,269,28,TEAL);
-            txt(uiText(R.string.language_croatian),208,278,25,ink,true);
-            txt(uiText(R.string.language_unavailable),200,369,15,muted,false);
+            fitted(uiText(R.string.language_interface),200,174,21,340,muted,true);
+            fitted(uiLanguage.nativeName,200,204,22,340,ink,true);
+            button(uiText(R.string.language_search),"globe",25,222,350,49,card,false,
+                ()->LanguageSearchDialog.show(MainActivity.this,localizedResources,language->selectLanguage(language)));
+            LocaleManager.Language[] languages=LocaleManager.Language.values();
+            final int perPage=4;
+            int pages=(languages.length+perPage-1)/perPage;
+            languagePageIndex=Math.max(0,Math.min(languagePageIndex,pages-1));
+            int first=languagePageIndex*perPage;
+            for(int i=first;i<Math.min(first+perPage,languages.length);i++){
+                LocaleManager.Language language=languages[i];
+                float y=286+(i-first)*79;
+                boolean selected=language==uiLanguage;
+                card(25,y,350,68,20,card);
+                if(selected)icon("check",62,y+34,27,TEAL);
+                else icon("globe",62,y+34,23,muted);
+                leftFitted(language.nativeName,101,y+42,23,225,ink,true);
+                String label=selected?localizedResources.getString(R.string.language_selected,language.nativeName):language.nativeName;
+                taps.add(new Tap(25,y,375,y+68,label,()->selectLanguage(language)));
+            }
+            if(pages>1){
+                if(languagePageIndex>0)
+                    button(uiText(R.string.language_previous),"back",25,624,165,58,card,false,()->{languagePageIndex--;invalidate();});
+                if(languagePageIndex+1<pages)
+                    button(uiText(R.string.language_next),"chevron-right",210,624,165,58,card,false,()->{languagePageIndex++;invalidate();});
+            }
             button(uiText(R.string.language_back),"back",25,720,350,70,CORAL,true,()->navigate("settings"));
         }
         void aboutPage(){

@@ -61,7 +61,7 @@ jobs:
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             # Preserve the failing test output and any generated screenshots
             # so a regression can be diagnosed directly from the PR artifact.
-            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
+            adb shell am instrument -w com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee instrumentation-results.txt
             grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             bash scripts/pull-verified-screenshots.sh
             python3 scripts/stage-marketing-screenshots.py
@@ -85,7 +85,7 @@ jobs:
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             # Preserve the failing test output and any generated screenshots
             # so a regression can be diagnosed directly from the PR artifact.
-            adb shell am instrument -w com.brendigo.brojko.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation-results.txt
+            adb shell am instrument -w com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee instrumentation-results.txt
             grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             bash scripts/pull-verified-screenshots.sh
             python3 scripts/stage-marketing-screenshots.py

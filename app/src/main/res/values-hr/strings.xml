@@ -16,8 +16,6 @@
     <string name="settings_switch_on">%1$s uključeno</string>
     <string name="settings_switch_off">%1$s isključeno</string>
     <string name="language_interface">Jezik sučelja</string>
-    <string name="language_croatian">Hrvatski</string>
-    <string name="language_unavailable">Ostali jezici nisu dostupni u ovoj verziji.</string>
     <string name="language_back">Natrag na postavke</string>
     <string name="help_title">Kako igrati</string>
     <string name="help_merge">Spajaj jednake pločice</string>
@@ -242,4 +240,10 @@
     <string name="accessibility_page">Brojko — %1$s</string>
     <string name="accessibility_page_score">Brojko — %1$s. Rezultat %2$s</string>
     <string name="home_title">Početna</string>
+    <string name="language_search">Pretraži jezike</string>
+    <string name="language_selected">%1$s, odabrano</string>
+    <string name="language_previous">Prethodno</string>
+    <string name="language_next">Sljedeće</string>
+    <string name="language_no_results">Nema pronađenih jezika.</string>
+    <string name="language_change_failed">Promjena jezika nije uspjela. Pokušajte ponovno.</string>
 </resources>

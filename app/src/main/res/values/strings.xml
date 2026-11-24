@@ -16,8 +16,6 @@
     <string name="settings_switch_on">%1$s on</string>
     <string name="settings_switch_off">%1$s off</string>
     <string name="language_interface">Interface language</string>
-    <string name="language_croatian">Hrvatski</string>
-    <string name="language_unavailable">Other languages are not available in this version.</string>
     <string name="language_back">Back to settings</string>
     <string name="help_title">How to play</string>
     <string name="help_merge">Merge matching tiles</string>
@@ -242,4 +240,10 @@
     <string name="accessibility_page">Brojko — %1$s</string>
     <string name="accessibility_page_score">Brojko — %1$s. Score %2$s</string>
     <string name="home_title">Home</string>
+    <string name="language_search">Search languages</string>
+    <string name="language_selected">%1$s, selected</string>
+    <string name="language_previous">Previous</string>
+    <string name="language_next">Next</string>
+    <string name="language_no_results">No languages found.</string>
+    <string name="language_change_failed">Could not change the language. Please try again.</string>
 </resources>
