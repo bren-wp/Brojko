@@ -72,10 +72,13 @@ jobs:
           ./gradlew --no-daemon -PbrojkoFullSbom=true cyclonedxBom
           test -s build/reports/cyclonedx/bom.json
           cp build/reports/cyclonedx/bom.json SBOM.build.cdx.json
+          ./gradlew --no-daemon --no-configuration-cache exportPluginClasspath
+          python3 scripts/merge-plugin-classpath-sbom.py SBOM.build.cdx.json build/reports/security/plugin-classpath.json
           ./gradlew --no-daemon cyclonedxBom
           test -s build/reports/cyclonedx/bom.json
           cp build/reports/cyclonedx/bom.json SBOM.cdx.json
           python3 scripts/verify-sbom-scopes.py SBOM.cdx.json SBOM.build.cdx.json
+          python3 -m unittest discover -s tools -p 'test_plugin_classpath_sbom.py' -v
       - name: Scan shipping Android dependencies for High and Critical CVEs
         uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         with:
@@ -88,7 +91,7 @@ jobs:
         uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         with:
           sbom: SBOM.build.cdx.json
-          fail-build: false
+          fail-build: true
           severity-cutoff: high
           output-format: sarif
           output-file: grype-build.sarif
@@ -101,6 +104,7 @@ jobs:
           path: |
             SBOM.cdx.json
             SBOM.build.cdx.json
+            build/reports/security/plugin-classpath.json
             grype-runtime.sarif
             grype-build.sarif
       - name: Generate release and build-tool dependency inventories

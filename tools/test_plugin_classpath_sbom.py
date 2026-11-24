@@ -1,0 +1,44 @@
+import importlib.util
+from pathlib import Path
+import unittest
+
+spec = importlib.util.spec_from_file_location("merge_plugin", Path(__file__).resolve().parents[1] / "scripts/merge-plugin-classpath-sbom.py")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+class PluginClasspathSBOMTest(unittest.TestCase):
+    def fixture(self):
+        agp = ["com.android.tools.build", "gradle", "9.5.2"]
+        bc = ["org.bouncycastle", "bcprov-jdk18on", "1.85"]
+        bom = {"bomFormat":"CycloneDX", "metadata":{"component":{"bom-ref":"root"}},
+               "components":[{"group":bc[0],"name":bc[1],"version":bc[2],"bom-ref":"existing"}],
+               "dependencies":[{"ref":"root","dependsOn":["existing"]}]}
+        graph = {"schema":1,"roots":[agp],"components":[
+            {"coordinate":agp,"dependencies":[bc]},{"coordinate":bc,"dependencies":[]}]}
+        return bom, graph
+
+    def test_merge_retains_existing_component_and_links_resolved_graph(self):
+        bom, graph = self.fixture()
+        result = mod.merge(bom, graph)
+        self.assertEqual(2, len(result["components"]))
+        agp = next(c["bom-ref"] for c in result["components"] if c["name"]=="gradle")
+        edges = {e["ref"]:e["dependsOn"] for e in result["dependencies"]}
+        self.assertEqual(["existing",agp], edges["root"])
+        self.assertEqual(["existing"],edges[agp])
+
+    def test_reject_old_plugin_version(self):
+        bom, graph = self.fixture()
+        old = ["org.bouncycastle","bcprov-jdk18on","1.80.2"]
+        graph["components"][0]["dependencies"] = [old]
+        graph["components"][1]["coordinate"] = old
+        with self.assertRaisesRegex(ValueError, "unpatched"):
+            mod.merge(bom,graph)
+
+    def test_reject_missing_dependency(self):
+        bom, graph = self.fixture()
+        graph["components"].pop()
+        with self.assertRaisesRegex(ValueError, "unresolved"):
+            mod.merge(bom,graph)
+
+if __name__ == "__main__":
+    unittest.main()
