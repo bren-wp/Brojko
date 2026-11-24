@@ -58,6 +58,24 @@ public final class LocaleMatrixTest {
                         try{board.onTouchEvent(down);board.onTouchEvent(up);}
                         finally{down.recycle();up.recycle();}
                         assertEquals(language.tag+": physical tap reaches settings","settings",activity.page);
+                        render(board,941,1672).recycle();
+                        String backup=board.uiText(R.string.settings_progress_sync);
+                        MainActivity.BoardScreen.Tap backupTap=null;
+                        int backupCount=0;
+                        for(MainActivity.BoardScreen.Tap tap:board.taps)
+                            if(backup.equals(tap.label)){backupTap=tap;backupCount++;}
+                        assertEquals(language.tag+": one backup action",1,backupCount);
+                        assertNotNull(backupTap);
+                        assertTrue(backupTap.right-backupTap.left>=360f);
+                        assertTrue(backupTap.bottom-backupTap.top>=48f);
+                        float backupX=board.physicalX((backupTap.left+backupTap.right)/2f);
+                        float backupY=board.offY+(backupTap.top+backupTap.bottom)/2f*board.scale;
+                        long backupNow=android.os.SystemClock.uptimeMillis();
+                        MotionEvent backupDown=MotionEvent.obtain(backupNow,backupNow,MotionEvent.ACTION_DOWN,backupX,backupY,0);
+                        MotionEvent backupUp=MotionEvent.obtain(backupNow,backupNow+40,MotionEvent.ACTION_UP,backupX,backupY,0);
+                        try{board.onTouchEvent(backupDown);board.onTouchEvent(backupUp);}
+                        finally{backupDown.recycle();backupUp.recycle();}
+                        assertEquals(language.tag+": physical backup tap","backup",activity.page);
                         assertNotNull(board.localizedResources.getQuantityString(
                             R.plurals.daily_moves_remaining,1,1));
                     });

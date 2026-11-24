@@ -1254,22 +1254,11 @@ public final class MainActivity extends ComponentActivity {
                     xs[i]=12+(float)Math.cos(angle)*radius;
                     ys[i]=12+(float)Math.sin(angle)*radius;
                 }
-                Path star=new Path();
-                for(int i=0;i<10;i++){
-                    int prev=(i+9)%10,next=(i+1)%10;
-                    float corner=page.equals("win")?.73f:
-                        ("missions".equals(page)&&theme==0&&referencePortraitLayout?.64f:
-                         "missions".equals(page)&&theme==0?.72f:
-                         ("daily".equals(page)&&theme==0&&referencePortraitLayout?.73f:.82f));
-                    float startX=xs[i]*corner+xs[prev]*(1f-corner);
-                    float startY=ys[i]*corner+ys[prev]*(1f-corner);
-                    float endX=xs[i]*corner+xs[next]*(1f-corner);
-                    float endY=ys[i]*corner+ys[next]*(1f-corner);
-                    if(i==0)star.moveTo(startX,startY);
-                    else star.lineTo(startX,startY);
-                    star.quadTo(xs[i],ys[i],endX,endY);
-                }
-                star.close();
+                float corner=page.equals("win")?.73f:
+                    ("missions".equals(page)&&theme==0&&referencePortraitLayout?.64f:
+                     "missions".equals(page)&&theme==0?.72f:
+                     ("daily".equals(page)&&theme==0&&referencePortraitLayout?.73f:.82f));
+                Path star=RoundedStarPath.create(xs,ys,corner);
                 // Statistics uses a BLUE star; mission rewards are gold.
                 // Respect the supplied accent instead of recoloring every star.
                 boolean golden=Color.red(color)>200 &&
@@ -5605,7 +5594,6 @@ public final class MainActivity extends ComponentActivity {
         void statisticsSourceBlueStar(float cx,float cy,float size){
             c.save();c.translate(cx,cy);
             c.scale(size/24f,size/24f);
-            Path star=new Path();
             float[] x=new float[10],y=new float[10];
             for(int i=0;i<10;i++){
                 double angle=-Math.PI/2+i*Math.PI/5;
@@ -5613,18 +5601,7 @@ public final class MainActivity extends ComponentActivity {
                 x[i]=(float)Math.cos(angle)*r;
                 y[i]=(float)Math.sin(angle)*r;
             }
-            for(int i=0;i<10;i++){
-                int previous=(i+9)%10,next=(i+1)%10;
-                float corner=.76f;
-                float startX=x[i]*corner+x[previous]*(1f-corner);
-                float startY=y[i]*corner+y[previous]*(1f-corner);
-                float endX=x[i]*corner+x[next]*(1f-corner);
-                float endY=y[i]*corner+y[next]*(1f-corner);
-                if(i==0)star.moveTo(startX,startY);
-                else star.lineTo(startX,startY);
-                star.quadTo(x[i],y[i],endX,endY);
-            }
-            star.close();
+            Path star=RoundedStarPath.create(x,y,.76f);
             p.clearShadowLayer();p.setStyle(Paint.Style.FILL);p.setShader(null);
             c.save();c.translate(0f,1.6f);
             p.setColor(0x335180bc);c.drawPath(star,p);c.restore();

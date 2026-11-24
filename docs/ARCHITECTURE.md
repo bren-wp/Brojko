@@ -120,3 +120,7 @@ The confirmation and archive predicates are extracted to `SessionTransitionPolic
 ## Statistics chart data
 
 `StatisticsChartData` extracts the shared score/tile metric lookup and maximum computation used by both compact and tall statistics layouts. The Activity delegates retain the original interfaces, history order and all drawing geometry. Four JVM regressions cover score/tile selection, null/negative values, malformed rows and the requested history window. Locale capture daily-win fixtures now contain the attained 256 tile and assert the genuine daily goal predicate, avoiding a contradictory success screenshot. Fresh native CI remains required.
+
+## Rounded star geometry
+
+Two confirmed duplicate rounded-star contour algorithms in reward and statistics artwork now delegate to `RoundedStarPath`. Every caller retains its original vertices, radius, corner factor, color and transform; no path interpolation operation changed. A native instrumentation test compares exact raster pixels against the original formula for 30 corner/radius combinations. This is a bounded semantic clone extraction, not full renderer modularization.

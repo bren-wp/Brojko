@@ -208,7 +208,7 @@ public final class RealHistoryChartAndBackupPhase143Test {
                             screen.textRegions)
                         localDisclosure|="Lokalna kopija".equals(region.text);
                     for(MainActivity.BoardScreen.Tap tap:screen.taps)
-                        if("Sinkronizacija napretka".equals(tap.label))
+                        if(screen.uiText(R.string.settings_progress_sync).equals(tap.label))
                             backup=tap;
                     assertTrue("No pretend cloud sync",localDisclosure);
                     assertNotNull("Reachable local backup action",backup);
