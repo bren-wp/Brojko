@@ -134,6 +134,49 @@ class ReleaseGateTest(unittest.TestCase):
                 cwd=folder, text=True, capture_output=True)
             self.assertNotEqual(0, missing.returncode)
 
+    def test_signed_checksum_manifest_requires_debug_apk(self):
+        files = (
+            "app/build/outputs/apk/debug/app-debug.apk",
+            "app/build/outputs/apk/release/app-release.apk",
+            "app/build/outputs/bundle/release/app-release.aab",
+        )
+        with TemporaryDirectory() as temp:
+            folder = Path(temp)
+            for path in files:
+                target = folder / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(path.encode())
+            result = subprocess.run(
+                ["bash", str(CHECKSUMS), "--release-only"],
+                cwd=folder, text=True, capture_output=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+            names = [line.split("  ", 1)[1] for line in
+                     (folder / "SHA256SUMS").read_text().splitlines()]
+            self.assertEqual(["app-debug.apk", "app-release.aab",
+                              "app-release.apk"], names)
+            (folder / files[0]).unlink()
+            missing = subprocess.run(
+                ["bash", str(CHECKSUMS), "--release-only"],
+                cwd=folder, text=True, capture_output=True)
+            self.assertNotEqual(0, missing.returncode)
+
+    def test_both_release_modes_publish_security_evidence(self):
+        release = RELEASE.read_text(encoding="utf-8")
+        for step in ("Upload unsigned APK, unsigned AAB, test APK and QA evidence",
+                     "Upload signed build artifacts",
+                     "Publish signed GitHub release",
+                     "Publish unsigned GitHub preview release"):
+            block = release.split("- name: " + step, 1)[1].split(
+                "\n      - name: ", 1)[0]
+            for name in ("grype.sarif", "grype-build.sarif", "app-debug.apk"):
+                self.assertIn(name, block)
+        self.assertIn("make_latest: false", release)
+        self.assertIn(":buildEnvironment :app:buildEnvironment", release)
+        pr = (ROOT / ".github/workflows/android-pr-validation.yml").read_text(
+            encoding="utf-8")
+        self.assertIn(":buildEnvironment :app:buildEnvironment", pr)
+        self.assertIn("build-tool-dependency-inventory.txt", pr)
+
     def test_gallery_accepts_signed_or_unsigned_release(self):
         workflow = UI.read_text(encoding="utf-8")
         for artifact in ("app-release.apk", "app-release-unsigned.apk",

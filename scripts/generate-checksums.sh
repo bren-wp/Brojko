@@ -4,14 +4,15 @@ set -euo pipefail
 shopt -s nullglob
 
 # Release checksum manifests contain exactly the files present in that
-# GitHub Release: either two signed packages, or three unsigned-preview
-# packages (including a debug-key-signed APK for device testing).
+# GitHub Release: three packages in either mode, including a
+# debug-key-signed APK for device testing.
 if [[ "${1:-}" == "--release-only" ]]; then
   artifacts=(
+    app/build/outputs/apk/debug/app-debug.apk
     app/build/outputs/apk/release/app-release.apk
     app/build/outputs/bundle/release/app-release.aab
   )
-  minimum=2
+  minimum=3
 elif [[ "${1:-}" == "--unsigned-release" ]]; then
   artifacts=(
     app/build/outputs/apk/debug/app-debug.apk
