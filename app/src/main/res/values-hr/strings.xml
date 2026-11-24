@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_channel_name">Brojko dnevni izazov</string>
+    <string name="reminder_channel_description">Podsjetnik za dnevnu logičku igru Brojko.</string>
+    <string name="reminder_title">Brojko — novi dnevni izazov</string>
+    <string name="reminder_body">Spajaj brojeve, osvoji zvjezdice i postavi novi rekord!</string>
+</resources>

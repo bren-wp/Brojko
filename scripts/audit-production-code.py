@@ -57,7 +57,7 @@ expected_sources = {
     "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
-    "BoardAccessibilityDelegate.java",
+    "BoardAccessibilityDelegate.java", "LocaleManager.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
@@ -184,3 +184,24 @@ assert "LocalBackupRepository.export(" in bridge
 assert "LocalBackupRepository.validate(" in bridge
 assert "LocalBackupRepository.apply(" in bridge
 assert "skipPersistOnPauseAfterImport=true" in bridge
+
+# Initial localization resource gate. This covers migrated resources only,
+# not the still untranslated Canvas renderer or the planned 30 languages.
+def localized_strings(path):
+    result = {}
+    for item in ET.parse(path).getroot().findall("string"):
+        key = item.get("name")
+        assert key and key not in result, "Duplicate or unnamed string: " + str(path)
+        value = "".join(item.itertext()).strip()
+        assert value, "Empty translation: " + key
+        result[key] = value
+    return result
+
+base_strings = localized_strings(APP / "res/values/strings.xml")
+hr_strings = localized_strings(APP / "res/values-hr/strings.xml")
+assert base_strings.keys() == hr_strings.keys(), "English/Croatian string inventory differs"
+reminder_keys = {"reminder_channel_name", "reminder_channel_description", "reminder_title", "reminder_body"}
+assert reminder_keys <= base_strings.keys()
+for key in reminder_keys:
+    assert "R.string." + key in java["AppReminder.java"], "Reminder bypasses resource: " + key
+print("Localization foundation: migrated notification resources present in English and Croatian.")

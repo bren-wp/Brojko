@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminder_channel_name">Brojko daily challenge</string>
+    <string name="reminder_channel_description">Reminder for the Brojko daily puzzle.</string>
+    <string name="reminder_title">Brojko — new daily challenge</string>
+    <string name="reminder_body">Merge numbers, earn stars and set a new record!</string>
+</resources>

@@ -1,11 +1,12 @@
 package com.brendigo.brojko;
 
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-/** Extracted Croatian day, week, history and countdown logic, unchanged. */
+/** Locale-independent date identities and locale-aware display formatting. */
 final class GameCalendar {
     private GameCalendar(){}
     static String today(){return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(new Date());}
@@ -21,12 +22,27 @@ final class GameCalendar {
         return new SimpleDateFormat("yyyy-MM-dd",Locale.ROOT).format(c.getTime());
     }
 
-    static String compactTime(){return new SimpleDateFormat("HH:mm",new Locale("hr","HR")).format(new Date());}
+    // Compatibility wrappers preserve the current Croatian renderer geometry.
+    static String compactTime(){return compactTime(new Date(),LocaleManager.legacyUiLocale());}
+    static String historyDate(){return historyDate(new Date(),LocaleManager.legacyUiLocale());}
+    static String dailyLongDate(){return dailyLongDate(new Date(),LocaleManager.legacyUiLocale());}
 
-    static String historyDate(){return new SimpleDateFormat("d. MMM yyyy.",new Locale("hr","HR")).format(new Date());}
+    static String compactTime(Date date,Locale locale){
+        return "hr".equals(locale.getLanguage())
+            ? new SimpleDateFormat("HH:mm",locale).format(date)
+            : DateFormat.getTimeInstance(DateFormat.SHORT,locale).format(date);
+    }
 
-    static String dailyLongDate(){
-        return new SimpleDateFormat("d. MMMM yyyy.",new Locale("hr","HR")).format(new Date());
+    static String historyDate(Date date,Locale locale){
+        return "hr".equals(locale.getLanguage())
+            ? new SimpleDateFormat("d. MMM yyyy.",locale).format(date)
+            : DateFormat.getDateInstance(DateFormat.MEDIUM,locale).format(date);
+    }
+
+    static String dailyLongDate(Date date,Locale locale){
+        return "hr".equals(locale.getLanguage())
+            ? new SimpleDateFormat("d. MMMM yyyy.",locale).format(date)
+            : DateFormat.getDateInstance(DateFormat.LONG,locale).format(date);
     }
 
     static String timeRemainingInPeriod(boolean week){
