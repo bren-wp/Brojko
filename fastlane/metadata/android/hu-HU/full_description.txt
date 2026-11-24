@@ -1,0 +1,21 @@
+A Brojko színes logikai játék, amelyben a saját tempódban egyesíthetsz számokat.
+
+Húzd az ujjad a táblán, egyesíts azonos lapkákat és hozz létre egyre nagyobb számokat. Érd el a 2048-at, döntsd meg rekordodat és kövesd a haladásodat.
+
+JÁTÉKMÓDOK
+• Klasszikus 4×4: tervezd meg lépéseidet és érd el a 2048-at.
+• Pihentető 5×5: több hely a hosszabb játékokhoz.
+• Napi kihívás: érd el a 256-ot és 3000 pontot legfeljebb 80 lépésben.
+
+MIÉRT BROJKO?
+• Színes témák és lapkastílusok.
+• Csillagok küldetésekért és napi kihívásokért.
+• Statisztikák, rekordok és játékelőzmények.
+• Utolsó lépés visszavonása.
+• Offline játék fiók, hirdetések és alkalmazáson belüli vásárlások nélkül.
+• Helyi haladás és exportálható biztonsági mentés.
+
+Egyesíts számokat. Dönts rekordokat.
+
+Brojko by Brendigo
+brendigo.com

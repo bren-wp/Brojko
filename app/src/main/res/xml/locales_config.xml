@@ -22,4 +22,8 @@
     <locale android:name="da"/>
     <locale android:name="nb"/>
     <locale android:name="fi"/>
+    <locale android:name="hu"/>
+    <locale android:name="ro"/>
+    <locale android:name="bg"/>
+    <locale android:name="el"/>
 </locale-config>

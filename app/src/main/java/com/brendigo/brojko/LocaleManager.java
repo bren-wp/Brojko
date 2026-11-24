@@ -27,7 +27,8 @@ final class LocaleManager {
         JAPANESE("ja","日本語"), KOREAN("ko","한국어"),
         CHINESE_SIMPLIFIED("zh-Hans","简体中文"),
         SLOVAK("sk","Slovenčina"), DUTCH("nl","Nederlands"), UKRAINIAN("uk","Українська"),
-        SWEDISH("sv","Svenska"), DANISH("da","Dansk"), NORWEGIAN_BOKMAL("nb","Norsk bokmål"), FINNISH("fi","Suomi");
+        SWEDISH("sv","Svenska"), DANISH("da","Dansk"), NORWEGIAN_BOKMAL("nb","Norsk bokmål"), FINNISH("fi","Suomi"),
+        HUNGARIAN("hu","Magyar"), ROMANIAN("ro","Română"), BULGARIAN("bg","Български"), GREEK("el","Ελληνικά");
 
         final String tag;
         final String nativeName;

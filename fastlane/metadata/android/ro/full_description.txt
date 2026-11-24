@@ -1,0 +1,21 @@
+Brojko este un joc de logică plin de culoare, în care combini numere în ritmul tău.
+
+Glisează pe tablă, combină piese identice și creează numere tot mai mari. Ajungi la 2048, doboară recordul și urmărește progresul.
+
+MODURI DE JOC
+• Clasic 4×4: planifică mutările și ajungi la 2048.
+• Relaxat 5×5: mai mult spațiu pentru jocuri mai lungi.
+• Provocare zilnică: ajungi la 256 și obții 3000 de puncte în cel mult 80 de mutări.
+
+DE CE BROJKO?
+• Teme colorate și stiluri de piese.
+• Stele pentru misiuni și provocări zilnice.
+• Statistici, recorduri și istoricul jocurilor.
+• Anularea ultimei mutări.
+• Joacă offline, fără cont, reclame sau achiziții în aplicație.
+• Progres local și copie de rezervă exportabilă.
+
+Combină numere. Doboară recorduri.
+
+Brojko by Brendigo
+brendigo.com
