@@ -24,6 +24,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Verify pinned Gradle bootstrap and distribution
+        run: bash scripts/verify-gradle-toolchain.sh
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
       - name: Prepare SDK and fonts
         run: |

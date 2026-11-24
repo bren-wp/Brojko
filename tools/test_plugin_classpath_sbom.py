@@ -10,21 +10,24 @@ class PluginClasspathSBOMTest(unittest.TestCase):
     def fixture(self):
         agp = ["com.android.tools.build", "gradle", "9.5.2"]
         bc = ["org.bouncycastle", "bcprov-jdk18on", "1.85"]
+        kgp = ["org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.4.21"]
         bom = {"bomFormat":"CycloneDX", "metadata":{"component":{"bom-ref":"root"}},
                "components":[{"group":bc[0],"name":bc[1],"version":bc[2],"bom-ref":"existing"}],
                "dependencies":[{"ref":"root","dependsOn":["existing"]}]}
         graph = {"schema":1,"roots":[agp],"components":[
-            {"coordinate":agp,"dependencies":[bc]},{"coordinate":bc,"dependencies":[]}]}
+            {"coordinate":agp,"dependencies":[bc,kgp]},{"coordinate":bc,"dependencies":[]},
+            {"coordinate":kgp,"dependencies":[]}]}
         return bom, graph
 
     def test_merge_retains_existing_component_and_links_resolved_graph(self):
         bom, graph = self.fixture()
         result = mod.merge(bom, graph)
-        self.assertEqual(2, len(result["components"]))
+        self.assertEqual(3, len(result["components"]))
         agp = next(c["bom-ref"] for c in result["components"] if c["name"]=="gradle")
         edges = {e["ref"]:e["dependsOn"] for e in result["dependencies"]}
         self.assertEqual(["existing",agp], edges["root"])
-        self.assertEqual(["existing"],edges[agp])
+        kgp = next(c["bom-ref"] for c in result["components"] if c["name"]=="kotlin-gradle-plugin")
+        self.assertEqual(sorted(["existing",kgp]),edges[agp])
 
     def test_reject_old_plugin_version(self):
         bom, graph = self.fixture()
@@ -52,6 +55,21 @@ class PluginClasspathSBOMTest(unittest.TestCase):
                     "version": coordinate[2], "bom-ref": "old"})
                 with self.assertRaisesRegex(ValueError, "unpatched"):
                     mod.merge(bom, graph)
+
+    def test_reject_unpatched_kotlin_plugin(self):
+        bom, graph = self.fixture()
+        old = ["org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.2.10"]
+        graph["components"][0]["dependencies"][1] = old
+        graph["components"][2]["coordinate"] = old
+        with self.assertRaisesRegex(ValueError, "patched Kotlin"):
+            mod.merge(bom, graph)
+
+    def test_reject_second_kotlin_plugin_version(self):
+        bom, graph = self.fixture()
+        bom["components"].append({"group":"org.jetbrains.kotlin", "name":"kotlin-gradle-plugin",
+                                  "version":"2.2.10", "bom-ref":"old"})
+        with self.assertRaisesRegex(ValueError, "Unexpected Kotlin"):
+            mod.merge(bom, graph)
 
     def test_reject_missing_dependency(self):
         bom, graph = self.fixture()

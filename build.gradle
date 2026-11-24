@@ -1,6 +1,12 @@
 // Plugin resolution is separate from app Lint configurations. Upgrade only
 // the exact vulnerable requests observed in buildEnvironment, before plugins resolve.
 buildscript {
+    // AGP's documented higher-KGP classpath declaration. Do not apply the
+    // Kotlin Android plugin to this native Java application.
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+    dependencies {
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.21'
+    }
     configurations.classpath {
         resolutionStrategy.eachDependency { details ->
             def upgrades = [

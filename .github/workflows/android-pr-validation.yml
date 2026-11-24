@@ -4,9 +4,9 @@ on:
     branches: [main]
 
 concurrency:
-  # Cancel obsolete commits of the same PR, never cancel release QA jobs.
-  group: brojko-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Preserve security evidence for each commit instead of cancelling scans.
+  group: brojko-${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -63,6 +63,8 @@ jobs:
           SDKMANAGER=$(find /usr/local/lib/android/sdk/cmdline-tools -name sdkmanager -type f | head -n 1)
           test -n "$SDKMANAGER"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+      - name: Verify pinned Gradle bootstrap and distribution
+        run: bash scripts/verify-gradle-toolchain.sh
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
       - name: Prepare open-source font and license
         run: bash scripts/prepare-nunito.sh

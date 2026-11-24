@@ -15,6 +15,7 @@ OLD = {
     ("org.apache.httpcomponents", "httpclient", "4.5.6"),
     ("org.apache.httpcomponents", "httpmime", "4.5.6"),
     ("org.apache.commons", "commons-lang3", "3.16.0"),
+    ("org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.2.10"),
     ("org.jdom", "jdom2", "2.0.6"),
     ("org.bitbucket.b_c", "jose4j", "0.9.5"),
     ("com.fasterxml.jackson.core", "jackson-core", "2.22.2"),
@@ -47,6 +48,13 @@ def merge(bom, graph):
         raise ValueError("Plugin graph references unresolved modules")
     if ("com.android.tools.build", "gradle", "9.5.2") not in nodes:
         raise ValueError("Plugin graph missing resolved AGP")
+    kgp = ("org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.4.21")
+    if kgp not in nodes:
+        raise ValueError("Plugin graph missing the pinned patched Kotlin Gradle Plugin")
+    kgp_versions = {key[2] for key in set(refs) | set(nodes)
+                    if key[:2] == kgp[:2]}
+    if kgp_versions != {kgp[2]}:
+        raise ValueError("Unexpected Kotlin Gradle Plugin versions: " + repr(sorted(kgp_versions)))
     vulnerable = OLD & (set(refs) | set(nodes))
     if vulnerable:
         raise ValueError("Known unpatched build coordinates: " + repr(sorted(vulnerable)))
