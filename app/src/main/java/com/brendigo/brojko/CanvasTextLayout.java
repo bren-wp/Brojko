@@ -63,9 +63,8 @@ final class CanvasTextLayout {
             .setAlignment(Layout.Alignment.ALIGN_NORMAL)
             .setTextDirection(LocaleManager.isRtl(locale)?
                 TextDirectionHeuristics.FIRSTSTRONG_RTL:TextDirectionHeuristics.FIRSTSTRONG_LTR)
-            .setIncludePad(false).setMaxLines(1)
-            .setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE)
-            .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE).build();
+            // Single line: builder defaults are simple breaking and no hyphenation.
+            .setIncludePad(false).setMaxLines(1).build();
         float lineLeft=layout.getLineLeft(0);
         float advance=layout.getLineRight(0)-lineLeft;
         float anchor=paint.getTextAlign()==Paint.Align.CENTER?advance/2:
