@@ -1344,9 +1344,35 @@ public class ScreensSmokeTest {
         });
     }
 
+    /** Wait outside the main thread so the archive worker can deliver its UI callback. */
+    private void awaitSmokeArchiveIdle(){
+        long deadline=android.os.SystemClock.uptimeMillis()+20000L;
+        while(android.os.SystemClock.uptimeMillis()<deadline){
+            java.util.concurrent.atomic.AtomicBoolean idle=
+                new java.util.concurrent.atomic.AtomicBoolean();
+            rule.getScenario().onActivity(activity->idle.set(!activity.gameTransitionBusy));
+            if(idle.get())return;
+            android.os.SystemClock.sleep(35L);
+        }
+        fail("Smoke test archive transaction did not finish within 20 seconds");
+    }
+
     @Test public void renderAllScreensAndGameFlow() {
+        // Earlier instrumentation tests may have left a played session.
+        // newGame archives that session asynchronously and disables input
+        // until the durable commit completes. Do not hold the UI thread
+        // across the archive request, screenshot loop and subsequent tap.
+        awaitSmokeArchiveIdle();
+        rule.getScenario().onActivity(activity->activity.newGame("classic"));
+        awaitSmokeArchiveIdle();
         rule.getScenario().onActivity(activity->{
-            activity.newGame("classic");
+            assertFalse("Archive transaction must be complete",activity.gameTransitionBusy);
+            assertTrue("Canvas must accept input after archive",activity.screen.isEnabled());
+            assertEquals("New classic game must actually start","game",activity.page);
+            assertNotNull(activity.game);
+            assertEquals("classic",activity.game.mode);
+            assertEquals(0,activity.game.moves);
+            String session=activity.game.toJson().toString();
             String[] pages={
                 "splash","home","game","pause","win","over","confirm","confirmEnd",
                 "daily","missions","stats","themes","settings",
@@ -1358,18 +1384,34 @@ public class ScreensSmokeTest {
             }
             activity.page="home";
             capture(activity,"home-ready");
-            float x=200*activity.screen.scale+activity.screen.offX;
-            float y=374*activity.screen.scale+activity.screen.offY;
+            MainActivity.BoardScreen board=activity.screen;
+            MainActivity.BoardScreen.Tap resume=null;
+            String expectedLabel=board.uiText(R.string.home_resume);
+            for(MainActivity.BoardScreen.Tap tap:board.taps){
+                if(expectedLabel.equals(tap.label)){
+                    assertNull("Duplicate resume control",resume);
+                    resume=tap;
+                }
+            }
+            assertNotNull("Home must expose a real Resume game control",resume);
+            assertTrue("Resume touch target must have usable dimensions",
+                resume.right-resume.left>=48f&&resume.bottom-resume.top>=48f);
+            float x=board.physicalX((resume.left+resume.right)/2f);
+            float y=board.offY+(resume.top+resume.bottom)/2f*board.scale;
+            assertTrue("Resume control must be inside the actual viewport",
+                x>=0&&x<board.getWidth()&&y>=0&&y<board.getHeight());
             long time=android.os.SystemClock.uptimeMillis();
             MotionEvent down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,x,y,0);
             MotionEvent up=MotionEvent.obtain(time,time+30,MotionEvent.ACTION_UP,x,y,0);
-            activity.screen.onTouchEvent(down);
-            activity.screen.onTouchEvent(up);
-            down.recycle();up.recycle();
-            assertEquals("game",activity.page);
+            try{
+                assertTrue(board.dispatchTouchEvent(down));
+                assertTrue(board.dispatchTouchEvent(up));
+            }finally{down.recycle();up.recycle();}
+            assertEquals("Resume tap must navigate to gameplay","game",activity.page);
             capture(activity,"game-active");
             assertNotNull(activity.game);
-            assertTrue(activity.game.cells.length==16||activity.game.cells.length==25);
+            assertEquals("Resume must preserve the original game",session,activity.game.toJson().toString());
+            assertEquals(16,activity.game.cells.length);
         });
     }
     @Test public void iconOnlyControlsUseLocalizedLabelsAndGenerousTouchAreas(){
