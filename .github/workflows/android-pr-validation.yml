@@ -40,6 +40,10 @@ jobs:
         run: bash scripts/verify-edge-to-edge.sh
       - name: Security + dead-code audit (static source gate)
         run: python3 scripts/audit-production-code.py
+      - name: Verify localized Play metadata and native screenshot staging
+        run: |
+          python3 scripts/stage-localized-store-assets.py --metadata-only
+          python3 -m unittest discover -s tools -p 'test_localized_store_assets.py' -v
       - name: Structural Java clone candidate report
         run: |
           python3 -m unittest discover -s tools -p 'test_structural_clones.py' -v
