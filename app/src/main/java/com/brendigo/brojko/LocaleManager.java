@@ -23,7 +23,9 @@ final class LocaleManager {
         ARABIC("ar","العربية"), SPANISH("es","Español"),
         HEBREW("he","עברית"), ITALIAN("it","Italiano"),
         PORTUGUESE_BRAZIL("pt-BR","Português (Brasil)"),
-        SLOVENIAN("sl","Slovenščina"), POLISH("pl","Polski"), CZECH("cs","Čeština");
+        SLOVENIAN("sl","Slovenščina"), POLISH("pl","Polski"), CZECH("cs","Čeština"),
+        JAPANESE("ja","日本語"), KOREAN("ko","한국어"),
+        CHINESE_SIMPLIFIED("zh-Hans","简体中文");
 
         final String tag;
         final String nativeName;
