@@ -175,7 +175,6 @@
     <string name="mission_no_undo_line2">einen Zug rückgängig zu machen.</string>
     <string name="mission_week_line1">Erziele 10.000 Punkte über alle</string>
     <string name="mission_week_line2">Spiele hinweg.</string>
-    <string name="daily_streak">Tage in Folge</string>
     <string name="daily_intro_special">Löse die heutige Aufgabe und verdiene eine besondere Belohnung.</string>
     <string name="daily_intro">Löse die heutige Aufgabe und verdiene eine Belohnung!</string>
     <string name="daily_motivation">Zeige, wie weit du kommst!</string>
@@ -235,7 +234,6 @@
     <string name="accessibility_undo">Zug rückgängig machen</string>
     <string name="accessibility_activate">Aktivieren</string>
     <string name="accessibility_action">Aktion</string>
-    <string name="daily_moves_remaining">TAGESAUFGABE • NOCH %1$d ZÜGE</string>
     <string name="history_detail_index">Spieldetails %1$d</string>
     <string name="accessibility_page">Brojko — %1$s</string>
     <string name="accessibility_page_score">Brojko — %1$s. Punkte %2$s</string>
@@ -249,4 +247,12 @@
     <string name="countdown_hours">%1$d Std.</string>
     <string name="countdown_days_hours">%1$d T. %2$d Std.</string>
     <string name="countdown_hours_minutes">%1$d Std. %2$d Min.</string>
+    <plurals name="daily_moves_remaining">
+        <item quantity="one">TAGESAUFGABE • NOCH %1$d ZUG</item>
+        <item quantity="other">TAGESAUFGABE • NOCH %1$d ZÜGE</item>
+    </plurals>
+    <plurals name="daily_streak">
+        <item quantity="one">Tag in Folge</item>
+        <item quantity="other">Tage in Folge</item>
+    </plurals>
 </resources>

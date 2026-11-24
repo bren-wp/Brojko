@@ -57,7 +57,7 @@ expected_sources = {
     "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
-    "BoardAccessibilityDelegate.java", "LocaleManager.java", "StatMetric.java", "MissionKind.java", "DailyGoal.java", "LanguageSearchDialog.java", "CanvasTextLayout.java",
+    "BoardAccessibilityDelegate.java", "LocaleManager.java", "StatMetric.java", "MissionKind.java", "DailyGoal.java", "LanguageSearchDialog.java", "CanvasTextLayout.java", "CanvasDirection.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
@@ -225,3 +225,33 @@ for tag in sorted(configured_tags-{"en"}):
     for key in base_strings:
         assert signature(base_strings[key])==signature(translated[key]), "Format signature mismatch: "+tag+":"+key
 print("Configured locale resource coverage verified: "+", ".join(sorted(configured_tags)))
+
+def plural_resources(path):
+    result={}
+    for node in ET.parse(path).getroot().findall("plurals"):
+        name=node.get("name")
+        assert name and name not in result, "Duplicate plural: "+str(path)
+        forms={}
+        for item in node.findall("item"):
+            quantity=item.get("quantity")
+            value="".join(item.itertext()).strip()
+            assert quantity not in forms and value, "Invalid plural: "+name
+            assert quantity in {"zero","one","two","few","many","other"}
+            forms[quantity]=value
+        assert "other" in forms, "Missing other plural: "+name
+        result[name]=forms
+    return result
+
+base_plurals=plural_resources(APP / "res/values/strings.xml")
+assert set(base_plurals)=={"daily_moves_remaining","daily_streak"}
+required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many","other"},
+                "fr":{"one","many","other"},"de":{"one","other"},"en":{"one","other"}}
+for tag in sorted(configured_tags):
+    directory="values" if tag=="en" else "values-"+tag
+    forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
+    assert forms.keys()==base_plurals.keys(), "Incomplete plurals: "+tag
+    for key, quantities in forms.items():
+        assert required_forms.get(tag,{"other"}) <= quantities.keys(), "Missing plural forms: "+tag+":"+key
+        for value in quantities.values():
+            assert signature(value)==signature(base_plurals[key]["other"]), "Plural placeholder mismatch: "+tag+":"+key
+print("Plural inventory and format contracts verified.")

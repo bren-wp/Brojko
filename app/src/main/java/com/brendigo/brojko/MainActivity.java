@@ -833,7 +833,41 @@ public final class MainActivity extends ComponentActivity {
         }
         String uiText(int id){return localizedResources.getString(id);}
         float measureUiText(String text){return CanvasTextLayout.measure(text,p,uiLocale);}
-        void drawUiText(String text,float x,float baseline){CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);}
+        boolean mirroredDrawing;
+        boolean rtlLayout(){return LocaleManager.isRtl(uiLocale);}
+        float screenLogicalX(float screenX){
+            return CanvasDirection.logicalX(screenX,offX,scale,rtlLayout());
+        }
+        float physicalX(float logicalX){
+            return CanvasDirection.physicalX(logicalX,offX,scale,rtlLayout());
+        }
+        void drawUiText(String text,float x,float baseline){
+            if(!mirroredDrawing){
+                CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);
+                return;
+            }
+            Paint.Align align=p.getTextAlign();
+            c.save();
+            try{
+                c.scale(-1f,1f,x,baseline);
+                p.setTextAlign(CanvasDirection.opposite(align));
+                CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);
+            }finally{
+                p.setTextAlign(align);
+                c.restore();
+            }
+        }
+        // Brand and puzzle board retain their intrinsic left-to-right artwork
+        // and physical movement, even when surrounding UI is mirrored.
+        void intrinsicArtwork(Runnable renderer){
+            if(!mirroredDrawing){renderer.run();return;}
+            c.save();
+            mirroredDrawing=false;
+            try{
+                c.scale(-1f,1f,200f,0f);
+                renderer.run();
+            }finally{mirroredDrawing=true;c.restore();}
+        }
         boolean croatianArtwork(){return LocaleManager.usesCroatianArtwork(localizedResources.getConfiguration().getLocales().get(0));}
         void palette() {
             boolean dark=theme==1;
@@ -1818,6 +1852,9 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         void brand(float y,float size,boolean includeByline) {
+            intrinsicArtwork(()->drawBrand(y,size,includeByline));
+        }
+        private void drawBrand(float y,float size,boolean includeByline) {
             if(includeByline&&theme==0&&referencePortraitLayout&&
                 ("missions".equals(page)||"themes".equals(page)||
                  "stats".equals(page))){
@@ -1959,6 +1996,8 @@ public final class MainActivity extends ComponentActivity {
             if(tallOwnerPortrait&&maxScroll==0f)
                 offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
+            mirroredDrawing=rtlLayout();
+            if(mirroredDrawing)c.scale(-1f,1f,200f,0f);
             taps.clear();
             switch(page) {
                 case "splash":splashPage();break;
@@ -2001,6 +2040,7 @@ public final class MainActivity extends ComponentActivity {
                 }
             }
             c.restore();
+            mirroredDrawing=false;
         }
         void bottomBrand(){txt("BROJKO  •  BY BRENDIGO",200,852,12,muted,true);}
         void splashAmbient(float x,float y,float width,float height,
@@ -2110,7 +2150,7 @@ public final class MainActivity extends ComponentActivity {
             p.setColor(0xd6ffffff);p.setTypeface(displayFont);
             p.setTextAlign(Paint.Align.CENTER);p.setTextSize(45);
             p.setShadowLayer(7f,0,0,0xaaffffff);
-            c.drawText("256",364,726,p);
+            drawUiText("256",364,726);
             p.clearShadowLayer();p.setMaskFilter(null);c.restore();
         }
         // Logo-specific, rounded fill+stroke reproduces the extra
@@ -2147,7 +2187,8 @@ public final class MainActivity extends ComponentActivity {
         // a shorter coral number tile and three pronounced accent strokes.
         // Never substitute a reference bitmap: draw each part natively so
         // the screen remains responsive and the brand is theme-aware.
-        void splashWordmark(){
+        void splashWordmark(){intrinsicArtwork(this::drawSplashWordmark);}
+        private void drawSplashWordmark(){
             final float y=399f,size=116f;
             p.setTypeface(displayFont);
             p.setTextSize(size);
@@ -2228,7 +2269,8 @@ public final class MainActivity extends ComponentActivity {
         // Splash. The contour geometry is scalable native Canvas artwork,
         // not a screenshot. Home, the other themes and landscape retain the
         // separately responsive wordmark implementations.
-        void ownerSplashNavyWordmark(){
+        void ownerSplashNavyWordmark(){intrinsicArtwork(this::drawOwnerSplashNavyWordmark);}
+        private void drawOwnerSplashNavyWordmark(){
             if(ownerSplashNavyPath==null){
                 Path path=new Path();
                 path.setFillType(Path.FillType.EVEN_ODD);
@@ -2281,7 +2323,7 @@ public final class MainActivity extends ComponentActivity {
                     p.setTextSize(37f);p.setStyle(Paint.Style.FILL);
                     p.setColor(0x79ffffff);
                     p.setShadowLayer(8f,0,0,0x8bffffff);
-                    c.drawText("32",360.5f,499f,p);
+                    drawUiText("32",360.5f,499f);
                     p.clearShadowLayer();c.restore();
                 }
                 // Reference accents sit OUTSIDE raised tiles.
@@ -2487,7 +2529,8 @@ public final class MainActivity extends ComponentActivity {
         // decorative rays must remain one illustrated identity on tall as
         // well as reference-ratio portrait Android phones. Every Canvas
         // transform is local: touch targets, cards and scores are unaffected.
-        void homeIllustratedBrand(boolean tallPortrait){
+        void homeIllustratedBrand(boolean tallPortrait){intrinsicArtwork(()->drawHomeIllustratedBrand(tallPortrait));}
+        private void drawHomeIllustratedBrand(boolean tallPortrait){
             c.save();
             if(tallPortrait){
                 c.translate(0f,42f);
@@ -2977,7 +3020,7 @@ public final class MainActivity extends ComponentActivity {
             drawGrid();
             if(daily){
                 int remaining=Math.max(0,80-game.moves);
-                fitted(localizedResources.getString(R.string.daily_moves_remaining,remaining),
+                fitted(localizedResources.getQuantityString(R.plurals.daily_moves_remaining,remaining,remaining),
                     200,narrow?561:624,15,351,remaining<=10?CORAL:muted,true);
             }
             boolean portraitFour=compactBoardLayout&&game.size==4;
@@ -3433,7 +3476,8 @@ public final class MainActivity extends ComponentActivity {
                 icon("undo",x+w/2,y+h/2,Math.min(23,h*.52f),muted);
             }
         }
-        void drawGrid(){
+        void drawGrid(){intrinsicArtwork(this::drawIntrinsicGrid);}
+        private void drawIntrinsicGrid(){
             if(game==null)return;
             int n=game.size;
             boolean tallFour=compactBoardLayout&&n==4;
@@ -3499,7 +3543,7 @@ public final class MainActivity extends ComponentActivity {
                     else
                         glossyTile(rx+inset,ry+inset,tile-2*inset,
                             tileHeight-2*inset,round,color);
-                    String str=Integer.toString(value);
+                    String str=rtlLayout()?fmt(value).replace("٬",""):Integer.toString(value);
                     int digits=str.length();
                     float fontsize=classicSource?
                         (digits>=3?37.5f:40.5f)-(digits>3?(digits-3)*5f:0f):
@@ -4315,9 +4359,9 @@ public final class MainActivity extends ComponentActivity {
             else card(portrait?302:291,streakTop,portrait?80:87,
                 portrait?72:83,18,theme==1?card:0xffffebd4);
             icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
-            fitted(Integer.toString(streak),portrait?358:351,streakTop+40,
+            fitted(fmt(streak),portrait?358:351,streakTop+40,
                 25,46,CORAL,true);
-            fitted(uiText(R.string.daily_streak),portrait?344:335,streakTop+
+            fitted(localizedResources.getQuantityString(R.plurals.daily_streak,streak),portrait?344:335,streakTop+
                 (portrait?60:65),12,83,muted,true);
             if(portrait&&theme==0)dailyIntroMarks();
             if(portrait){
@@ -7025,7 +7069,8 @@ public final class MainActivity extends ComponentActivity {
         // contours as Home; its cropped source bounds differ, so place
         // the illustration with a local transform instead of replacing
         // a functional menu row or loading a bitmap screenshot.
-        void ownerSettingsFooterBrand(){
+        void ownerSettingsFooterBrand(){intrinsicArtwork(this::drawOwnerSettingsFooterBrand);}
+        private void drawOwnerSettingsFooterBrand(){
             c.save();
             c.translate(43.2f,528.5f);
             c.scale(.775f,.70f);
@@ -7322,7 +7367,7 @@ public final class MainActivity extends ComponentActivity {
         }
         @Override public boolean onTouchEvent(MotionEvent event){
             if(!isEnabled())return true;
-            float x=(event.getX()-offX)/Math.max(.1f,scale);
+            float x=screenLogicalX(event.getX());
             float y=(event.getY()-offY)/Math.max(.1f,scale);
             if(event.getActionMasked()==MotionEvent.ACTION_DOWN){
                 touchX=x;touchY=y;
@@ -7370,9 +7415,7 @@ public final class MainActivity extends ComponentActivity {
                 if(draggingScroll){draggingScroll=false;return true;}
                 float dx=x-touchX,dy=y-touchY;
                 if(pointerBoard&&Math.max(Math.abs(dx),Math.abs(dy))>=25) {
-                    move(Math.abs(dx)>Math.abs(dy)?
-                        (dx<0?TileGame.LEFT:TileGame.RIGHT):
-                        (dy<0?TileGame.UP:TileGame.DOWN));
+                    move(CanvasDirection.swipeDirection(dx,dy,rtlLayout()));
                     pointerBoard=false;return true;
                 }
                 pointerBoard=false;
