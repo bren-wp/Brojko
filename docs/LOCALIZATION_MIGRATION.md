@@ -1,7 +1,7 @@
 # Global locale support and verification
 
-English is the explicit default. Fifteen locales are implemented: en, hr, de, fr,
-ar, es, he, it, pt-BR, sl, pl, cs, ja, ko, zh-Hans. Each has the same 247 string keys and two plural resources.
+English is the explicit default. Eighteen locales are implemented: en, hr, de, fr,
+ar, es, he, it, pt-BR, sl, pl, cs, ja, ko, zh-Hans, sk, nl, uk. Each has the same 247 string keys and two plural resources.
 Arabic and Hebrew use RTL Canvas navigation and mirrored hit/accessibility
 bounds. The puzzle's physical direction and wordmark remain intrinsic artwork.
 Mixed scripts use Android StaticLayout and system-font fallback when necessary.
@@ -16,5 +16,5 @@ instrumentation and capture workflows exercise supported languages across
 platform boundaries. The captured PNGs are actual production Canvas output,
 not mockups or resized reference screenshots. Their presence alone does not
 certify visual equivalence, translation accuracy or all-device verification.
-Remaining 15 languages are not exposed yet. Full audit and native sign-off
+Remaining 12 languages are not exposed yet. Full audit and native sign-off
 remain release gates.
