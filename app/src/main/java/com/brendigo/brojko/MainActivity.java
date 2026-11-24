@@ -4335,10 +4335,13 @@ public final class MainActivity extends ComponentActivity {
             else card(portrait?302:291,streakTop,portrait?80:87,
                 portrait?72:83,18,theme==1?card:0xffffebd4);
             icon("flame",portrait?325:315,streakTop+29,30,0xffff8b2c);
-            fitted(fmt(streak),portrait?358:351,streakTop+40,
+            String[] streakLines=localizedResources.getQuantityString(
+                R.plurals.daily_streak,streak,fmt(streak)).split("\n",2);
+            fitted(streakLines[0],portrait?358:351,streakTop+40,
                 25,46,CORAL,true);
-            fitted(localizedResources.getQuantityString(R.plurals.daily_streak,streak),portrait?344:335,streakTop+
-                (portrait?60:65),12,83,muted,true);
+            if(streakLines.length==2)
+                fitted(streakLines[1],portrait?344:335,streakTop+
+                    (portrait?60:65),12,83,muted,true);
             if(portrait&&theme==0)dailyIntroMarks();
             if(portrait){
                 // The original portrait artwork has two subtitle lines,

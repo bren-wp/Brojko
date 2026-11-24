@@ -253,8 +253,8 @@
         <item quantity="other">אתגר יומי • נותרו %1$d מהלכים</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">יום ברצף</item>
-        <item quantity="two">ימים ברצף</item>
-        <item quantity="other">ימים ברצף</item>
+        <item quantity="one">%1$s\nיום ברצף</item>
+        <item quantity="two">%1$s\nימים ברצף</item>
+        <item quantity="other">%1$s\nימים ברצף</item>
     </plurals>
 </resources>

@@ -253,8 +253,8 @@
         <item quantity="other">SFIDA QUOTIDIANA • %1$d MOSSE RIMASTE</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">giorno di fila</item>
-        <item quantity="many">giorni di fila</item>
-        <item quantity="other">giorni di fila</item>
+        <item quantity="one">%1$s\ngiorno di fila</item>
+        <item quantity="many">%1$s\ngiorni di fila</item>
+        <item quantity="other">%1$s\ngiorni di fila</item>
     </plurals>
 </resources>

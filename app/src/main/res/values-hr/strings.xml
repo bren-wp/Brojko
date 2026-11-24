@@ -253,8 +253,8 @@
         <item quantity="other">DNEVNI IZAZOV • %1$d POTEZA PREOSTALO</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">dan zaredom</item>
-        <item quantity="few">dana zaredom</item>
-        <item quantity="other">dana zaredom</item>
+        <item quantity="one">%1$s\ndan zaredom</item>
+        <item quantity="few">%1$s\ndana zaredom</item>
+        <item quantity="other">%1$s\ndana zaredom</item>
     </plurals>
 </resources>

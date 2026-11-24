@@ -253,8 +253,8 @@
         <item quantity="other">DESAFÍO DIARIO • QUEDAN %1$d MOVIMIENTOS</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">día seguido</item>
-        <item quantity="many">días seguidos</item>
-        <item quantity="other">días seguidos</item>
+        <item quantity="one">%1$s\ndía seguido</item>
+        <item quantity="many">%1$s\ndías seguidos</item>
+        <item quantity="other">%1$s\ndías seguidos</item>
     </plurals>
 </resources>

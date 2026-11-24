@@ -253,8 +253,8 @@
         <item quantity="other">DÉFI QUOTIDIEN • %1$d COUPS RESTANTS</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">jour de suite</item>
-        <item quantity="many">jours de suite</item>
-        <item quantity="other">jours de suite</item>
+        <item quantity="one">%1$s\njour de suite</item>
+        <item quantity="many">%1$s\njours de suite</item>
+        <item quantity="other">%1$s\njours de suite</item>
     </plurals>
 </resources>

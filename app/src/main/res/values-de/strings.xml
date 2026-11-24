@@ -252,7 +252,7 @@
         <item quantity="other">TAGESAUFGABE • NOCH %1$d ZÜGE</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">Tag in Folge</item>
-        <item quantity="other">Tage in Folge</item>
+        <item quantity="one">%1$s\nTag in Folge</item>
+        <item quantity="other">%1$s\nTage in Folge</item>
     </plurals>
 </resources>

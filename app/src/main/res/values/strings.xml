@@ -252,7 +252,7 @@
         <item quantity="other">DAILY CHALLENGE • %1$d MOVES LEFT</item>
     </plurals>
     <plurals name="daily_streak">
-        <item quantity="one">day in a row</item>
-        <item quantity="other">days in a row</item>
+        <item quantity="one">%1$s\nday in a row</item>
+        <item quantity="other">%1$s\ndays in a row</item>
     </plurals>
 </resources>
