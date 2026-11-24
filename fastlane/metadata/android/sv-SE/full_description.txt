@@ -1,0 +1,21 @@
+Brojko är ett färgglatt pusselspel där du slår ihop tal i din egen takt.
+
+Svep på spelplanen, slå ihop lika brickor och skapa allt större tal. Nå 2048, slå ditt rekord och följ dina framsteg.
+
+SPELLÄGEN
+• Klassiskt 4×4: planera dina drag och nå 2048.
+• Avslappnat 5×5: mer plats för längre spel.
+• Daglig utmaning: nå 256 och 3 000 poäng på högst 80 drag.
+
+VARFÖR BROJKO?
+• Färgglada teman och brickstilar.
+• Stjärnor för uppdrag och dagliga utmaningar.
+• Statistik, rekord och spelhistorik.
+• Ångra senaste draget.
+• Spela offline utan konto, reklam eller köp i appen.
+• Lokala framsteg och exporterbar säkerhetskopia.
+
+Slå ihop tal. Slå rekord.
+
+Brojko by Brendigo
+brendigo.com

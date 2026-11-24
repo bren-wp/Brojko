@@ -251,7 +251,8 @@ required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many"
                 "it":{"one","many","other"},"pt-BR":{"one","many","other"},
                 "sl":{"one","two","few","other"},"pl":{"one","few","many","other"},
                 "cs":{"one","few","many","other"},"sk":{"one","few","many","other"},
-                "nl":{"one","other"},"uk":{"one","few","many","other"}}
+                "nl":{"one","other"},"uk":{"one","few","many","other"},
+                "sv":{"one","other"},"da":{"one","other"},"nb":{"one","other"},"fi":{"one","other"}}
 for tag in sorted(configured_tags):
     directory={"en":"values","he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans"}.get(tag,"values-"+tag)
     forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
