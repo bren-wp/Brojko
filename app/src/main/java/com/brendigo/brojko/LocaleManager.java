@@ -20,7 +20,8 @@ final class LocaleManager {
     enum Language {
         ENGLISH("en","English"), CROATIAN("hr","Hrvatski"),
         GERMAN("de","Deutsch"), FRENCH("fr","Français"),
-        ARABIC("ar","العربية");
+        ARABIC("ar","العربية"), SPANISH("es","Español"),
+        HEBREW("he","עברית");
 
         final String tag;
         final String nativeName;

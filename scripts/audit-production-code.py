@@ -220,7 +220,8 @@ assert "en" in configured_tags
 locale_tags=set(re.findall(r'\b[A-Z_]+\("([a-zA-Z-]+)","[^"]+"\)',java["LocaleManager.java"]))
 assert locale_tags == configured_tags, "Language picker and Android per-app language config differ"
 for tag in sorted(configured_tags-{"en"}):
-    translated=localized_strings(APP / ("res/values-"+tag+"/strings.xml"))
+    directory="values-iw" if tag=="he" else "values-"+tag
+    translated=localized_strings(APP / ("res/"+directory+"/strings.xml"))
     assert base_strings.keys()==translated.keys(), "Incomplete locale: "+tag
     for key in base_strings:
         assert signature(base_strings[key])==signature(translated[key]), "Format signature mismatch: "+tag+":"+key
@@ -245,9 +246,10 @@ def plural_resources(path):
 base_plurals=plural_resources(APP / "res/values/strings.xml")
 assert set(base_plurals)=={"daily_moves_remaining","daily_streak"}
 required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many","other"},
-                "fr":{"one","many","other"},"de":{"one","other"},"en":{"one","other"}}
+                "fr":{"one","many","other"},"de":{"one","other"},"en":{"one","other"},
+                "es":{"one","many","other"},"he":{"one","two","other"}}
 for tag in sorted(configured_tags):
-    directory="values" if tag=="en" else "values-"+tag
+    directory="values" if tag=="en" else "values-iw" if tag=="he" else "values-"+tag
     forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
     assert forms.keys()==base_plurals.keys(), "Incomplete plurals: "+tag
     for key, quantities in forms.items():
