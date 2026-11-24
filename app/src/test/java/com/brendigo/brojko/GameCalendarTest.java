@@ -37,6 +37,19 @@ public final class GameCalendarTest {
             GameCalendar.today());
     }
 
+    @Test public void invariantAndLegacyHistoryDatesRemainReadable(){
+        Locale hr=Locale.forLanguageTag("hr-HR");
+        Locale en=Locale.US;
+        assertEquals("10.9.2026.",GameCalendar.displayHistoryDate("10.9.2026.",hr));
+        assertEquals(GameCalendar.displayHistoryDate("2026-09-10",en),
+            GameCalendar.displayHistoryDate("10.9.2026.",en));
+        assertEquals("unknown",GameCalendar.displayHistoryDate("unknown",en));
+        assertEquals("",GameCalendar.displayHistoryDate("",en));
+        assertEquals("14:32",GameCalendar.displayHistoryTime("14:32",hr));
+        assertEquals("",GameCalendar.displayHistoryTime("",en));
+        assertTrue(GameCalendar.remainingMinutes(false)>=0);
+    }
+
     @Test public void periodCountdownNeverDisplaysNegativeAmounts(){
         String daily=GameCalendar.timeRemainingInPeriod(false);
         String weekly=GameCalendar.timeRemainingInPeriod(true);

@@ -23,7 +23,7 @@ final class LocaleManager {
         final String tag;
         final String nativeName;
         Language(String tag,String nativeName){this.tag=tag;this.nativeName=nativeName;}
-        Locale locale(){return Locale.forLanguageTag(tag);}
+        Locale locale(){return Locale.forLanguageTag("hr".equals(tag)?"hr-HR":"en".equals(tag)?"en-US":tag);}
     }
 
     private LocaleManager() {}

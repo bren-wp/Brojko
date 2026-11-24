@@ -246,4 +246,7 @@
     <string name="language_next">Sljedeće</string>
     <string name="language_no_results">Nema pronađenih jezika.</string>
     <string name="language_change_failed">Promjena jezika nije uspjela. Pokušajte ponovno.</string>
+    <string name="countdown_hours">%1$dh</string>
+    <string name="countdown_days_hours">%1$dd %2$dh</string>
+    <string name="countdown_hours_minutes">%1$dh %2$dmin</string>
 </resources>

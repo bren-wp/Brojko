@@ -276,7 +276,13 @@ public final class MainActivity extends ComponentActivity {
         reward(16,1000,best>=50000);
         reward(32,200,weekPoints>=10000);
     }
-    String timeRemainingInPeriod(boolean week){return GameCalendar.timeRemainingInPeriod(week);}
+    String timeRemainingInPeriod(boolean week){
+        long minutes=GameCalendar.remainingMinutes(week);
+        if(week)return minutes<1440
+            ?activityText(R.string.countdown_hours,minutes/60)
+            :activityText(R.string.countdown_days_hours,minutes/1440,(minutes%1440)/60);
+        return activityText(R.string.countdown_hours_minutes,minutes/60,minutes%60);
+    }
     String yesterday(){return GameCalendar.yesterday();}
     String compactTime(){return GameCalendar.compactTime();}
     String historyDate(){return GameCalendar.historyDate();}
@@ -508,7 +514,7 @@ public final class MainActivity extends ComponentActivity {
 
     /** Start one durable archive with immutable game data. */
     private void beginGameArchive(String nextMode,boolean ending){
-        if(!GameArchiveCoordinator.start(this,prefs,game,historyDate(),
+        if(!GameArchiveCoordinator.start(this,prefs,game,today(),
             compactTime(),nextMode,ending)){
             Toast.makeText(this,activityText(R.string.archive_unavailable),
                 Toast.LENGTH_LONG).show();
@@ -5550,8 +5556,8 @@ public final class MainActivity extends ComponentActivity {
         }
         String historyTimestamp(JSONObject row){
             if(row==null)return "";
-            String day=row.optString("day","");
-            String time=row.optString("time","");
+            String day=GameCalendar.displayHistoryDate(row.optString("day",""),uiLocale);
+            String time=GameCalendar.displayHistoryTime(row.optString("time",""),uiLocale);
             return time.isEmpty()?day:day+" · "+time;
         }
         int consecutiveWins(){
@@ -6502,8 +6508,8 @@ public final class MainActivity extends ComponentActivity {
                 boolean record=best>0&&score>=best;
                 shape(25,y,350,accessibleRows?44:30,12,
                     theme==1?0xff34445f:0xfffaf5ee);
-                leftFitted(row.optString("day",""),33,y+21,11.3f,83,muted,false);
-                String completedAt=row.optString("time","");
+                leftFitted(GameCalendar.displayHistoryDate(row.optString("day",""),uiLocale),33,y+21,11.3f,83,muted,false);
+                String completedAt=GameCalendar.displayHistoryTime(row.optString("time",""),uiLocale);
                 // Legacy archives have no time: keep the field empty, never
                 // fabricate a timestamp for past users.
                 if(!completedAt.isEmpty())

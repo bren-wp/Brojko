@@ -246,4 +246,7 @@
     <string name="language_next">Next</string>
     <string name="language_no_results">No languages found.</string>
     <string name="language_change_failed">Could not change the language. Please try again.</string>
+    <string name="countdown_hours">%1$dh</string>
+    <string name="countdown_days_hours">%1$dd %2$dh</string>
+    <string name="countdown_hours_minutes">%1$dh %2$dmin</string>
 </resources>

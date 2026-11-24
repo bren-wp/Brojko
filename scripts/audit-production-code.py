@@ -172,7 +172,7 @@ assert "gameTransitionBusy" in flow_test
 assert "GameArtworkData.HOME_SOURCE_NAVY_CONTOURS" in java["MainActivity.java"]
 assert "GameArtworkData.OWNER_BRAVO_CONTOURS" in java["MainActivity.java"]
 assert "GameCalendar.today()" in java["MainActivity.java"]
-assert "GameCalendar.timeRemainingInPeriod(week)" in java["MainActivity.java"]
+assert "GameCalendar.remainingMinutes(week)" in java["MainActivity.java"]
 assert "MissionProgress.completionFraction(" in java["MainActivity.java"]
 assert "MissionProgress.displayValue(" in java["MainActivity.java"]
 assert "Math.max(0, Math.min(value, target))" in java["MissionProgress.java"]
