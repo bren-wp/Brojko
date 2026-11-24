@@ -761,7 +761,7 @@ public final class MainActivity extends ComponentActivity {
             android.graphics.Rect ink=new android.graphics.Rect();
             p.getTextBounds(content,0,content.length(),ink);
             if(ink.isEmpty())return;
-            float advance=p.measureText(content);
+            float advance=measureUiText(content);
             float alignX=p.getTextAlign()==Paint.Align.CENTER?
                 x-advance/2f:p.getTextAlign()==Paint.Align.RIGHT?
                 x-advance:x;
@@ -832,6 +832,8 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         String uiText(int id){return localizedResources.getString(id);}
+        float measureUiText(String text){return CanvasTextLayout.measure(text,p,uiLocale);}
+        void drawUiText(String text,float x,float baseline){CanvasTextLayout.draw(c,text,x,baseline,p,uiLocale);}
         boolean croatianArtwork(){return LocaleManager.usesCroatianArtwork(localizedResources.getConfiguration().getLocales().get(0));}
         void palette() {
             boolean dark=theme==1;
@@ -990,7 +992,7 @@ public final class MainActivity extends ComponentActivity {
             if(bold&&size>=25&&color==ink) p.setShadowLayer(.75f,0,1,
                 theme==1?0x44000000:0x150c1d3e);
             recordTextInk(content,x,baseline);
-            c.drawText(content,x,baseline,p);
+            drawUiText(content,x,baseline);
             p.clearShadowLayer();p.setFakeBoldText(false);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
@@ -1000,7 +1002,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setFakeBoldText(false);
             p.setTextSize(size);
-            while(p.measureText(content)>maxWidth && size>10){
+            while(measureUiText(content)>maxWidth && size>10){
                 size=Math.max(10,size-1);
                 p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
                 p.setTextSize(size);
@@ -1008,7 +1010,7 @@ public final class MainActivity extends ComponentActivity {
             // Extremely long localized values can still exceed their card at
             // 10 units. Scale ONLY the text's x axis instead of drawing over
             // adjacent buttons or changing responsive hit areas.
-            float width=p.measureText(content);
+            float width=measureUiText(content);
             if(width>maxWidth){
                 c.save();c.translate(x,baseline);
                 c.scale(maxWidth/width,1f);
@@ -1026,7 +1028,7 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            while(p.measureText(label)>maxWidth&&size>10f){
+            while(measureUiText(label)>maxWidth&&size>10f){
                 size=Math.max(10f,size-.5f);p.setTextSize(size);
             }
             p.setTextAlign(Paint.Align.CENTER);p.setColor(color);
@@ -1049,7 +1051,7 @@ public final class MainActivity extends ComponentActivity {
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(label,x,baseline);
-            c.drawText(label,x,baseline,p);
+            drawUiText(label,x,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
@@ -1060,7 +1062,7 @@ public final class MainActivity extends ComponentActivity {
                            float size,float maxWidth,int color){
             p.setTypeface(regularFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            float actualWidth=p.measureText(content);
+            float actualWidth=measureUiText(content);
             if(actualWidth>maxWidth){
                 c.save();c.translate(x,baseline);
                 c.scale(maxWidth/actualWidth,1f);
@@ -1076,7 +1078,7 @@ public final class MainActivity extends ComponentActivity {
             p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
             p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            while(p.measureText(content)>maxWidth&&size>10){
+            while(measureUiText(content)>maxWidth&&size>10){
                 size=Math.max(10,size-.5f);
                 p.setTypeface(bold?(size>=26?displayFont:boldFont):regularFont);
                 p.setTextSize(size);
@@ -1084,14 +1086,14 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);p.setStyle(Paint.Style.FILL);
             p.setColor(color);p.setTextAlign(Paint.Align.LEFT);
             p.setStrokeWidth(0);
-            float drawnWidth=p.measureText(content);
+            float drawnWidth=measureUiText(content);
             if(drawnWidth>maxWidth){
                 c.save();c.translate(left,baseline);c.scale(maxWidth/drawnWidth,1f);
                 recordTextInk(content,0,0);
-                c.drawText(content,0,0,p);c.restore();
+                drawUiText(content,0,0);c.restore();
             }else{
                 recordTextInk(content,left,baseline);
-                c.drawText(content,left,baseline,p);
+                drawUiText(content,left,baseline);
             }
             p.setTextAlign(Paint.Align.CENTER);
         }
@@ -2137,7 +2139,7 @@ public final class MainActivity extends ComponentActivity {
                     0xff263657,0xff1d2947,Shader.TileMode.CLAMP));
             }
             p.setColor(color);
-            c.drawText(letters,cx,baseline,p);
+            drawUiText(letters,cx,baseline);
             p.setShader(null);
             p.setStrokeWidth(0);p.setStyle(Paint.Style.FILL);
         }
@@ -2882,7 +2884,7 @@ public final class MainActivity extends ComponentActivity {
                     float headingSize=43f;
                     p.setTextScaleX(1f);p.setTypeface(displayFont);
                     p.setTextSize(headingSize);
-                    while(p.measureText(uiText(R.string.home_classic))>201f&&headingSize>10f){
+                    while(measureUiText(uiText(R.string.home_classic))>201f&&headingSize>10f){
                         headingSize=Math.max(10f,headingSize-1f);
                         p.setTextSize(headingSize);
                     }
@@ -3037,7 +3039,7 @@ public final class MainActivity extends ComponentActivity {
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            while(p.measureText(label)>199f&&size>28f){
+            while(measureUiText(label)>199f&&size>28f){
                 size-=.5f;p.setTextSize(size);
             }
             p.setTextAlign(Paint.Align.CENTER);
@@ -3050,7 +3052,7 @@ public final class MainActivity extends ComponentActivity {
                 new int[]{0xff344563,0xff263758,0xff1b2947},
                 new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));
             recordTextInk(label,105f,89f);
-            c.drawText(label,105f,89f,p);
+            drawUiText(label,105f,89f);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
         }
@@ -5175,7 +5177,7 @@ public final class MainActivity extends ComponentActivity {
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(title,63f,baseline);
-            c.drawText(title,63f,baseline,p);
+            drawUiText(title,63f,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStyle(Paint.Style.FILL);p.setStrokeWidth(0f);
             p.setTextAlign(Paint.Align.CENTER);
@@ -5200,7 +5202,7 @@ public final class MainActivity extends ComponentActivity {
                     Shader.TileMode.CLAMP));
             }
             recordTextInk(label,left,baseline);
-            c.drawText(label,left,baseline,p);
+            drawUiText(label,left,baseline);
             p.clearShadowLayer();p.setShader(null);
             p.setStrokeWidth(0f);p.setStyle(Paint.Style.FILL);
             p.setTextAlign(Paint.Align.CENTER);
@@ -5266,12 +5268,12 @@ public final class MainActivity extends ComponentActivity {
             float maxWidth=portrait?312f:338f;
             p.setTypeface(displayFont);p.setTextScaleX(1f);
             p.setFakeBoldText(false);p.setTextSize(size);
-            float initialWidth=p.measureText(navy)+p.measureText(coral);
+            float initialWidth=measureUiText(navy)+measureUiText(coral);
             if(initialWidth+gap>maxWidth)
                 size*=Math.max(.7f,(maxWidth-gap)/initialWidth);
             p.setTextSize(size);
-            float navyWidth=p.measureText(navy);
-            float coralWidth=p.measureText(coral);
+            float navyWidth=measureUiText(navy);
+            float coralWidth=measureUiText(coral);
             float left=(400f-navyWidth-gap-coralWidth)/2f;
             float baseline=portrait?105f:128f;
             if(portrait&&theme==0){
@@ -6038,11 +6040,11 @@ public final class MainActivity extends ComponentActivity {
             float size=proposedSize,gap=8f,maxWidth=308f;
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
-            while(p.measureText(navy)+p.measureText(coral)+gap>maxWidth
+            while(measureUiText(navy)+measureUiText(coral)+gap>maxWidth
                     &&size>10f){
                 size=Math.max(10f,size-.5f);p.setTextSize(size);
             }
-            float w1=p.measureText(navy),w2=p.measureText(coral);
+            float w1=measureUiText(navy),w2=measureUiText(coral);
             float start=(400f-w1-w2-gap)*.5f;
             if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
                 // The owner's 941x1672 heading ink is materially taller
@@ -7214,14 +7216,14 @@ public final class MainActivity extends ComponentActivity {
             card(24,161,352,206,22,card);
             icon("shield",200,214,45,TEAL);
             txt(uiText(R.string.backup_save_progress),200,270,23,ink,true);
-            txt(uiText(R.string.backup_export_description),200,305,16,muted,false);
-            txt(uiText(R.string.backup_control),200,335,15,muted,false);
+            fitted(uiText(R.string.backup_export_description),200,305,16,330,muted,false);
+            fitted(uiText(R.string.backup_control),200,335,15,330,muted,false);
             button(uiText(R.string.backup_export),"share",24,404,352,79,CORAL,true,
                 ()->chooseBackupFile(true));
             button(uiText(R.string.backup_restore),"undo",24,507,352,79,card,false,
                 ()->chooseBackupFile(false));
-            txt(uiText(R.string.backup_replace),200,649,16,muted,false);
-            txt(uiText(R.string.backup_no_cloud),200,684,16,muted,false);
+            fitted(uiText(R.string.backup_replace),200,649,16,350,muted,false);
+            fitted(uiText(R.string.backup_no_cloud),200,684,16,350,muted,false);
             button(uiText(R.string.settings_title),"back",24,755,352,63,card,false,()->navigate("settings"));
             bottomBrand();
         }

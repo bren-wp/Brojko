@@ -28,6 +28,12 @@ public final class LocaleResourcesTest {
         assertEquals("Najbolji",hr.getString(StatMetric.BEST.topResource));
         assertEquals("score",en.getString(StatMetric.BEST.bottomResource));
         assertEquals("rezultat",hr.getString(StatMetric.BEST.bottomResource));
+        Resources de=LocaleManager.resourcesFor(context,Locale.GERMAN);
+        Resources fr=LocaleManager.resourcesFor(context,Locale.FRENCH);
+        assertEquals("Sprache",de.getString(R.string.settings_language));
+        assertEquals("Langue",fr.getString(R.string.settings_language));
+        assertEquals("256 erreichen",de.getString(DailyGoal.TILE.titleResource));
+        assertEquals("Fusionner 20 tuiles",fr.getString(MissionKind.MERGE.titleResource));
         assertEquals(before,context.getResources().getConfiguration().getLocales().toLanguageTags());
     }
 }

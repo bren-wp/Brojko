@@ -24,7 +24,8 @@ public final class LanguagePickerTest {
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
             final String[] session=new String[1];
             scenario.onActivity(activity->{
-                activity.newGame("classic");
+                activity.game=new TileGame("classic","",734L);
+                activity.persist();
                 activity.navigate("language");
                 session[0]=activity.game.toJson().toString();
                 assertEquals(LocaleManager.Language.CROATIAN,activity.uiLanguage);
