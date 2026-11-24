@@ -22,6 +22,12 @@ public final class LocaleResourcesTest {
         assertEquals("Jezik",hr.getString(R.string.settings_language));
         assertEquals("Sound on",en.getString(R.string.settings_switch_on,"Sound"));
         assertEquals("Zvuk uključeno",hr.getString(R.string.settings_switch_on,"Zvuk"));
+        assertEquals("crown",StatMetric.BEST.symbol);
+        assertEquals("gamepad",StatMetric.TOTAL.symbol);
+        assertEquals("Best",en.getString(StatMetric.BEST.topResource));
+        assertEquals("Najbolji",hr.getString(StatMetric.BEST.topResource));
+        assertEquals("score",en.getString(StatMetric.BEST.bottomResource));
+        assertEquals("rezultat",hr.getString(StatMetric.BEST.bottomResource));
         assertEquals(before,context.getResources().getConfiguration().getLocales().toLanguageTags());
     }
 }

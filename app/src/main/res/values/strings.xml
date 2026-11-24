@@ -132,8 +132,6 @@
     <string name="home_settings_2">your own.</string>
     <string name="home_new_challenge">New challenge</string>
     <string name="home_every_day">every day!</string>
-    <string name="stats_total">Total games</string>
-    <string name="stats_average">Average score</string>
     <string name="stats_streak">Win streak</string>
     <string name="stats_recent">Last 10 games</string>
     <string name="stats_points">Points</string>

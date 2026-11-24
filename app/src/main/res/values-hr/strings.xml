@@ -132,8 +132,6 @@
     <string name="home_settings_2">igru sebi.</string>
     <string name="home_new_challenge">Novi izazov</string>
     <string name="home_every_day">svaki dan!</string>
-    <string name="stats_total">Ukupno partija</string>
-    <string name="stats_average">Prosjek bodova</string>
     <string name="stats_streak">Niz pobjeda</string>
     <string name="stats_recent">Zadnjih 10 partija</string>
     <string name="stats_points">Bodovi</string>

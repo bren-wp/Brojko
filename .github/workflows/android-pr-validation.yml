@@ -40,6 +40,10 @@ jobs:
         run: bash scripts/verify-edge-to-edge.sh
       - name: Security + dead-code audit (static source gate)
         run: python3 scripts/audit-production-code.py
+      - name: Structural Java clone candidate report
+        run: |
+          python3 -m unittest discover -s tools -p 'test_structural_clones.py' -v
+          python3 scripts/scan-structural-clones.py
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
