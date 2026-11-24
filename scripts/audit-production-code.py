@@ -57,7 +57,7 @@ expected_sources = {
     "GameArtworkData.java", "GameCalendar.java",
     "BackupDocumentIo.java",
     "BackNavigationPolicy.java",
-    "BoardAccessibilityDelegate.java", "LocaleManager.java", "StatMetric.java",
+    "BoardAccessibilityDelegate.java", "LocaleManager.java", "StatMetric.java", "MissionKind.java", "DailyGoal.java",
 }
 assert set(java) == expected_sources, (
     "Audit inventory changed: added=" + str(set(java)-expected_sources)
