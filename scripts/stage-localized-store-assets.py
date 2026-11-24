@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Validate real native captures; stage exact PNG bytes without resampling."""
 import argparse
+import hashlib
+import json
+import os
+import subprocess
 from pathlib import Path
 import shutil
 import struct
@@ -38,6 +42,22 @@ def png_dimensions(path):
 def validate_capture(path,dimensions):
     assert path.is_file() and path.stat().st_size>1000, f"Missing or empty capture: {path}"
     assert png_dimensions(path)==dimensions, f"Wrong dimensions: {path}"
+    from PIL import Image
+    with Image.open(path) as image:
+        assert image.format=="PNG" and image.size==dimensions, f"Invalid PNG: {path}"
+        image.verify()
+    # verify checks chunks; loading also validates the compressed pixel stream.
+    with Image.open(path) as image:
+        image.load()
+
+def digest(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream,"sha256").hexdigest()
+
+def capture_record(path, relative, dimensions):
+    validate_capture(path,dimensions)
+    return {"path":relative,"width":dimensions[0],"height":dimensions[1],
+            "sha256":digest(path),"bytes":path.stat().st_size}
 
 def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
     validate_metadata(root)
@@ -49,12 +69,15 @@ def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
     order=[item.get(ANDROID+"name") for item in config.findall("locale")]
     assert 0<=offset<len(order) and count>0
     selected=order[offset:offset+count]
+    records=[]
+    store_records=[]
     for tag in selected:
         folder=LOCALES[tag]
         for size in sizes:
             dims=tuple(map(int,size.split("x")))
             for page in PAGES:
-                validate_capture(captures/tag/size/(page+".png"),dims)
+                relative=f"{tag}/{size}/{page}.png"
+                records.append(capture_record(captures/relative,relative,dims))
         destination=output/"fastlane/metadata/android"/folder
         destination.mkdir(parents=True,exist_ok=True)
         for name in ("title","short_description","full_description"):
@@ -66,9 +89,19 @@ def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
             target=screenshots/f"{index:02d}-{page}.png"
             shutil.copyfile(source,target)
             assert source.read_bytes()==target.read_bytes()
+            store_records.append({"path":target.relative_to(output).as_posix(),
+                                  "source":source.relative_to(captures).as_posix(),
+                                  "sha256":digest(target)})
             width,height=png_dimensions(target)
             assert 320<=min(width,height)<=max(width,height)<=3840
             assert max(width,height)<=2*min(width,height)
+    revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()
+    manifest={"schema":1,"checkout_sha":revision,"run_id":os.getenv("GITHUB_RUN_ID"),
+              "run_attempt":os.getenv("GITHUB_RUN_ATTEMPT"),
+              "locales":selected,"sizes":list(sizes),"captures":records,
+              "store_screenshots":store_records}
+    (output/"capture-manifest.json").write_text(
+        json.dumps(manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     print(f"Verified {len(selected)*len(sizes)*len(PAGES)} native captures; staged {len(selected)*len(STORE_PAGES)} unmodified Play-size screenshots.")
 
 if __name__=="__main__":

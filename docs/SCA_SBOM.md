@@ -56,3 +56,7 @@ artefaktima. Uspješno izdanje uključuje oba CycloneDX JSON-a.
 
 Dokumentacija konfiguriranja CycloneDX 3.5.1:
 https://github.com/CycloneDX/cyclonedx-gradle-plugin
+
+## PR #160 — evidence and remediation status
+
+The final PR #159 runtime SCA reported 0 matches across 38 packages; build-tool High/Critical findings remained. The previously measured paths above identify Android Lint/SDK configurations, not merely the root plugin classpath. PR #160 archives buildEnvironment inventories alongside runtime inventories and publishes both SARIF files with release assets. Exact current transitive paths and patched version compatibility still require a fresh resolved graph and scans; no advisory is suppressed or marked fixed.
