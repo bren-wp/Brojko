@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 import java.util.Locale;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,7 +14,8 @@ import static org.junit.Assert.*;
 public final class LocaleResourcesTest {
     @Test public void explicitLocalesResolveWithoutChangingApplicationConfiguration() {
         Context context=ApplicationProvider.getApplicationContext();
-        String before=context.getResources().getConfiguration().getLocales().toLanguageTags();
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{
+            String before=context.getResources().getConfiguration().getLocales().toLanguageTags();
         Resources en=LocaleManager.resourcesFor(context,Locale.ENGLISH);
         Resources hr=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
         assertEquals("Brojko — new daily challenge",en.getString(R.string.reminder_title));
@@ -34,6 +36,7 @@ public final class LocaleResourcesTest {
         assertEquals("Langue",fr.getString(R.string.settings_language));
         assertEquals("256 erreichen",de.getString(DailyGoal.TILE.titleResource));
         assertEquals("Fusionner 20 tuiles",fr.getString(MissionKind.MERGE.titleResource));
-        assertEquals(before,context.getResources().getConfiguration().getLocales().toLanguageTags());
+            assertEquals(before,context.getResources().getConfiguration().getLocales().toLanguageTags());
+        });
     }
 }

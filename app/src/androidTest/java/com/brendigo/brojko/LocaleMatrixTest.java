@@ -70,11 +70,16 @@ public final class LocaleMatrixTest {
         String capture=InstrumentationRegistry.getArguments().getString("captureLocales","false");
         if(!"true".equals(capture))return;
         boolean full="true".equals(InstrumentationRegistry.getArguments().getString("fullViewports","false"));
+        int offset=Integer.parseInt(InstrumentationRegistry.getArguments().getString("localeOffset","0"));
+        int count=Integer.parseInt(InstrumentationRegistry.getArguments().getString("localeCount","30"));
         int[][] sizes=full?new int[][]{{320,480},{360,800},{941,1672},{1080,2400}}:
             new int[][]{{941,1672}};
         Context context=ApplicationProvider.getApplicationContext();
         try{
-            for(LocaleManager.Language language:LocaleManager.Language.values()){
+            LocaleManager.Language[] languages=LocaleManager.Language.values();
+            assertTrue(offset>=0&&count>0&&offset<languages.length);
+            for(int index=offset;index<Math.min(offset+count,languages.length);index++){
+                LocaleManager.Language language=languages[index];
                 choose(context,language);
                 try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
                     scenario.onActivity(activity->{

@@ -18,3 +18,6 @@ not mockups or resized reference screenshots. Their presence alone does not
 certify visual equivalence, translation accuracy or all-device verification.
 All requested locales are exposed in the picker; linguistic review and native QA remain required. Full audit and native sign-off
 remain release gates.
+
+## Final QA expansion
+PR validation now covers API 24–36 individually. Capture shards cover five locales at all four requested viewports per job, producing 2,520 native captures across all shards. Compact detail actions and RTL help equation corrected after visual inspection of real captures. Native QA still required for the new commit.

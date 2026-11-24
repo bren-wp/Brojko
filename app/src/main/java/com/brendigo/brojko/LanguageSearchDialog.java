@@ -57,7 +57,7 @@ final class LanguageSearchDialog {
             for(LocaleManager.Language language:LocaleManager.Language.values()){
                 String translated=language.locale().getDisplayLanguage(activity.uiLocale);
                 if(normalized(language.nativeName).contains(term)||
-                    normalized(translated).contains(term)||language.tag.contains(term)){
+                    normalized(translated).contains(term)||language.tag.toLowerCase(Locale.ROOT).contains(term)){
                     matches.add(language);adapter.add(language.nativeName);
                 }
             }

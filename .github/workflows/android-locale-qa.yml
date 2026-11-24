@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: ${{ fromJSON(github.event_name == 'workflow_dispatch' && '[24,25,26,27,28,29,30,31,32,33,34,35,36]' || '[24,32,33,36]') }}
+        api: [24,25,26,27,28,29,30,31,32,33,34,35,36]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -64,9 +64,13 @@ jobs:
           if-no-files-found: warn
 
   localized-captures:
-    name: Localized native screenshots and Fastlane staging
+    name: Localized captures (locale offset ${{ matrix.offset }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        offset: [0,5,10,15,20,25]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -100,15 +104,15 @@ jobs:
           script: |
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w -e class com.brendigo.brojko.LocaleMatrixTest#captureEveryLocalizedScreenAtRequestedViewports -e captureLocales true -e fullViewports ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }} com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-capture-results.txt
+            adb shell am instrument -w -e class com.brendigo.brojko.LocaleMatrixTest#captureEveryLocalizedScreenAtRequestedViewports -e captureLocales true -e fullViewports true -e localeOffset ${{ matrix.offset }} -e localeCount 5 com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee locale-capture-results.txt
             grep -Eq '^OK [(]1 test[s]?[)]$' locale-capture-results.txt
             adb pull /sdcard/Android/data/com.brendigo.brojko/files/locale-screenshots/ ./locale-screenshots
-            python3 scripts/stage-localized-store-assets.py --captures locale-screenshots --output localized-fastlane --full-viewports ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+            python3 scripts/stage-localized-store-assets.py --captures locale-screenshots --output localized-fastlane --full-viewports true --locale-offset ${{ matrix.offset }} --locale-count 5
       - name: Upload native localized captures and staged metadata
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: Brojko-localized-screenshots
+          name: Brojko-localized-screenshots-${{ matrix.offset }}
           path: |
             locale-screenshots/
             localized-fastlane/

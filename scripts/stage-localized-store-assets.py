@@ -39,13 +39,18 @@ def validate_capture(path,dimensions):
     assert path.is_file() and path.stat().st_size>1000, f"Missing or empty capture: {path}"
     assert png_dimensions(path)==dimensions, f"Wrong dimensions: {path}"
 
-def stage(captures,output,full=False,root=ROOT):
+def stage(captures,output,full=False,root=ROOT,offset=0,count=30):
     validate_metadata(root)
     # The ADB destination varies depending on whether it already exists.
     if (captures/"locale-screenshots").is_dir():
         captures=captures/"locale-screenshots"
     sizes=SIZES if full else ("941x1672",)
-    for tag,folder in LOCALES.items():
+    config=ET.parse(root/"app/src/main/res/xml/locales_config.xml").getroot()
+    order=[item.get(ANDROID+"name") for item in config.findall("locale")]
+    assert 0<=offset<len(order) and count>0
+    selected=order[offset:offset+count]
+    for tag in selected:
+        folder=LOCALES[tag]
         for size in sizes:
             dims=tuple(map(int,size.split("x")))
             for page in PAGES:
@@ -64,7 +69,7 @@ def stage(captures,output,full=False,root=ROOT):
             width,height=png_dimensions(target)
             assert 320<=min(width,height)<=max(width,height)<=3840
             assert max(width,height)<=2*min(width,height)
-    print(f"Verified {len(LOCALES)*len(sizes)*len(PAGES)} native captures; staged {len(LOCALES)*len(STORE_PAGES)} unmodified Play-size screenshots.")
+    print(f"Verified {len(selected)*len(sizes)*len(PAGES)} native captures; staged {len(selected)*len(STORE_PAGES)} unmodified Play-size screenshots.")
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__)
@@ -72,8 +77,10 @@ if __name__=="__main__":
     parser.add_argument("--captures",type=Path,default=Path("locale-screenshots"))
     parser.add_argument("--output",type=Path,default=Path("localized-fastlane"))
     parser.add_argument("--full-viewports",choices=("true","false"),default="false")
+    parser.add_argument("--locale-offset",type=int,default=0)
+    parser.add_argument("--locale-count",type=int,default=30)
     args=parser.parse_args()
     if args.metadata_only:
         validate_metadata()
     else:
-        stage(args.captures,args.output,args.full_viewports=="true")
+        stage(args.captures,args.output,args.full_viewports=="true",offset=args.locale_offset,count=args.locale_count)

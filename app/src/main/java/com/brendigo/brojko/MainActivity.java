@@ -1858,119 +1858,15 @@ public final class MainActivity extends ComponentActivity {
             if(auditTextLayout)textRegions.clear();
             float usableWidth=Math.max(1,getWidth()-getPaddingLeft()-getPaddingRight());
             float usableHeight=Math.max(1,getHeight()-getPaddingTop()-getPaddingBottom());
-            boolean inGame=page.equals("game")||page.equals("pause")||
-                page.equals("win")||page.equals("over")||page.equals("confirm")||
-                page.equals("confirmEnd")||page.equals("dailyWin")||page.equals("dailyFail");
-            // Themes has a compact bottom navigation within the 880-unit design.
-            // Fit it to the available window INCLUDING system bar insets; only
-            // genuinely taller content (statistics/history) must always scroll.
-            // These four screens have supplied, distinct owner reference
-            // compositions at 941x1672 (400x710 design units). Tall portrait
-            // phones must not switch to the unrelated 880-unit arrangement:
-            // it substantially changes the Stats chart/history geometry and
-            // Themes cards. Preserve the source Canvas composition and
-            // center it on the available viewport, without stretching.
-            // All other pages retain their own existing breakpoints.
-            // Three additional supplied owner references are fully drawn
-            // on the 400x710 portrait plane. Tall phones previously
-            // switched them to an unrelated 880-unit layout, changing
-            // the Missions cards, Daily challenge and Classic gameplay.
-            // Scope Classic to the actual 4x4 mode: 5x5 and Daily gameplay
-            // keep their own independent responsive behavior.
-            boolean ownerClassicGame=page.equals("game")&&game!=null&&
-                "classic".equals(game.mode)&&game.size==4;
-            boolean tallOwnerPortrait=(page.equals("splash")||
-                page.equals("home")||page.equals("themes")||
-                page.equals("stats")||page.equals("missions")||
-                page.equals("daily")||ownerClassicGame)&&
-                usableHeight>usableWidth&&usableHeight/usableWidth>=1.85f;
-            referencePortraitLayout=
-                usableHeight/usableWidth<1.85f||tallOwnerPortrait;
-            compactBoardLayout=inGame&&referencePortraitLayout;
-            gridY=compactBoardLayout&&game!=null&&game.size==4?159:(compactBoardLayout?171:222);
-            boolean extended=page.equals("stats");
-            // Keep buttons touch-sized on 16:9 screens; permit scrolling
-            // outside the board rather than scaling the whole game to tiny size.
-            // Splash uses its own width-fitted short-portrait arrangement.
-            // Using the 880-unit tall layout shrank the reference by ~19%.
-            // Decorative edge tiles may be cropped, but logo/slogan must fit.
-            boolean compact=referencePortraitLayout||
-                (!page.equals("splash")&&extended);
-            // Landscape phones and resizable tablets must keep the whole
-            // interaction region reachable; portrait stays pixel-identical.
-            boolean landscape=usableWidth>usableHeight;
-            // Landscape Splash must fit the complete 880-unit scene.
-            // Other landscape screens retain touch-sized controls and scroll
-            // if their 880-unit content is taller than the available window.
-            // Landscape Home uses larger touch-friendly shortcut cards.
-            // It can scroll vertically instead of shrinking the buttons.
-            float landscapeScale=Math.min(usableWidth/400f,
-                usableHeight/(page.equals("splash")?880f:
-                    page.equals("home")?580f:720f));
-            if(landscape&&page.equals("home")){
-                // Very short split-screen and foldable windows previously made
-                // all four 88-unit Home shortcuts too small to touch. Grow
-                // them toward 48 dp, but never crop the 400-unit canvas or
-                // make the 120-unit shortcut card taller than the viewport.
-                // Vertical scrolling, not horizontal clipping, absorbs the
-                // extra height. Portrait reference pixels are unchanged.
-                float desiredTouchScale=48f*getResources()
-                    .getDisplayMetrics().density/88f;
-                landscapeScale=Math.min(usableWidth/400f,
-                    Math.min(usableHeight/120f,
-                        Math.max(landscapeScale,desiredTouchScale)));
-            }
-            scale=landscape?landscapeScale:
-                (compact?usableWidth/400f:
-                    Math.min(usableWidth/400f,usableHeight/880f));
-            // A 320x480 compact phone cannot fit the 628-unit slogan with
-            // pure width scaling. Cap only Splash; the 941x1672 design
-            // reference and its native positions remain unchanged.
-            if(page.equals("splash")&&compact)
-                scale=Math.min(scale,usableHeight/640f);
-            float contentHeight=page.equals("stats")?
-                (referencePortraitLayout?
-                    (statsTouchExploration()?
-                        Math.max(710f,545f+Math.min(5,history().length())*48f):
-                        710f)
-                    :1120f):
-                // All Home shortcuts end at y=690 plus their card shadows.
-                // The old 880-unit height caused ~170 units of empty scrolling
-                // at the original 941x1672 reference viewport. Preserve real
-                // scrolling on shorter devices without cropping any shortcut.
-                ((page.equals("pause")||page.equals("confirm")||
-                    page.equals("confirmEnd"))&&referencePortraitLayout?654f:
-                (page.equals("over")&&referencePortraitLayout?705f:
-                ((page.equals("dailyWin")||page.equals("dailyFail"))&&
-                    referencePortraitLayout?700f:
-                (page.equals("home")&&referencePortraitLayout?710f:
-                ((page.equals("settings")||page.equals("themes")||
-                    page.equals("missions")||page.equals("daily"))&&
-                    referencePortraitLayout?710f:880f)))));
-            // The owner Classic 4x4 artwork ends at y~671 of its
-            // 710-unit reference scene. The inherited 880-unit content
-            // height caused a phantom 169-unit scroll on 941x1672,
-            // despite all gameplay actions already fitting. Keep real
-            // overflow scroll on genuinely short screens.
-            if(ownerClassicGame&&referencePortraitLayout)
-                contentHeight=710f;
-            // Splash must never scroll; its compact lettering fits a 360x600
-            // viewport while longer non-splash pages still scroll as needed.
-            maxScroll=page.equals("splash")?0:
-                ((compact||landscape)?
-                    Math.max(0,contentHeight-usableHeight/scale):0);
-            if(!page.equals(renderedPage)){scrollOffset=0;renderedPage=page;}
-            scrollOffset=Math.max(0,Math.min(maxScroll,scrollOffset));
-            offX=getPaddingLeft()+(usableWidth-400*scale)/2f;
-            offY=(compact||landscape&&!page.equals("splash"))?
-                getPaddingTop()-scrollOffset*scale:
-                getPaddingTop()+(usableHeight-880*scale)/2f;
-            // Reference 941x1672 is unchanged (tallOwnerPortrait=false).
-            // On taller portrait phones, center the full 710-unit source
-            // scene when it fits. Compact split-screen and short windows
-            // continue to scroll instead of clipping interactive controls.
-            if(tallOwnerPortrait&&maxScroll==0f)
-                offY+=Math.max(0f,(usableHeight-710f*scale)/2f);
+            boolean accessibleHistory="stats".equals(page)&&statsTouchExploration();
+            BoardViewport viewport=BoardViewport.calculate(page,game==null?"":game.mode,
+                game==null?0:game.size,usableWidth,usableHeight,getPaddingLeft(),getPaddingTop(),
+                getResources().getDisplayMetrics().density,accessibleHistory,
+                accessibleHistory?history().length():0,scrollOffset,!page.equals(renderedPage));
+            referencePortraitLayout=viewport.referencePortraitLayout;
+            compactBoardLayout=viewport.compactBoardLayout;gridY=viewport.gridY;
+            scale=viewport.scale;maxScroll=viewport.maxScroll;scrollOffset=viewport.scrollOffset;
+            offX=viewport.offX;offY=viewport.offY;renderedPage=page;
             c.drawColor(bg);c.save();c.translate(offX,offY);c.scale(scale,scale);
             mirroredDrawing=rtlLayout();
             if(mirroredDrawing)c.scale(-1f,1f,200f,0f);
@@ -5981,7 +5877,7 @@ public final class MainActivity extends ComponentActivity {
             JSONObject row=rows.optJSONObject(selectedHistoryIndex);
             if(row==null){
                 txt(uiText(R.string.history_missing),200,273,19,muted,false);
-                button(uiText(R.string.home_statistics),"back",32,729,336,68,CORAL,true,
+                button(uiText(R.string.home_statistics),"back",32,referencePortraitLayout?630:729,336,68,CORAL,true,
                     ()->navigate("stats"));
                 return;
             }
@@ -5991,13 +5887,13 @@ public final class MainActivity extends ComponentActivity {
             fitted(fmt(row.optInt("score")),200,357,49,310,CORAL,true);
             fitted(labelMode(row.optString("mode","classic")),200,405,22,318,ink,true);
             fitted(historyTimestamp(row),200,448,17,318,muted,false);
-            card(26,523,165,121,20,card);
-            card(209,523,165,121,20,card);
+            card(26,523,165,referencePortraitLayout?100:121,20,card);
+            card(209,523,165,referencePortraitLayout?100:121,20,card);
             txt(uiText(R.string.game_peak_tile),108,565,17,muted,true);
-            fitted(fmt(row.optInt("peak")),108,615,29,145,TEAL,true);
+            fitted(fmt(row.optInt("peak")),108,referencePortraitLayout?602:615,29,145,TEAL,true);
             txt(uiText(R.string.history_moves),291,565,17,muted,true);
-            fitted(fmt(row.optInt("moves")),291,615,29,145,ink,true);
-            button(uiText(R.string.history_back),"back",28,729,344,69,CORAL,true,
+            fitted(fmt(row.optInt("moves")),291,referencePortraitLayout?602:615,29,145,ink,true);
+            button(uiText(R.string.history_back),"back",28,referencePortraitLayout?638:729,344,referencePortraitLayout?60:69,CORAL,true,
                 ()->navigate("stats"));
         }
         void themesTabIcon(String type,float cx,float cy,float width,int color){
@@ -7207,6 +7103,7 @@ public final class MainActivity extends ComponentActivity {
             txt(uiText(R.string.help_merge),200,170,24,ink,true);
             card(42,202,316,139,22,card);
             // Readable visual equation; neither operator overlaps its tiles.
+            intrinsicArtwork(()->{
             glossyTile(58,235,70,70,15,TILES[1]);
             glossyTile(156,235,70,70,15,TILES[1]);
             glossyTile(274,235,70,70,15,TILES[2]);
@@ -7215,33 +7112,36 @@ public final class MainActivity extends ComponentActivity {
             txt("2",191,283,36,WHITE,true);
             txt("→",250,280,29,CORAL,true);
             txt("4",309,283,36,WHITE,true);
-            card(29,381,342,196,20,card);
-            txt(uiText(R.string.help_swipe),200,424,23,ink,true);
-            fitted(uiText(R.string.help_move),200,461,17,314,muted,false);
-            fitted(uiText(R.string.help_pair),200,495,17,314,muted,false);
-            fitted(uiText(R.string.help_goal),200,529,16,314,muted,false);
-            card(29,594,342,89,20,theme==1?card:0xffe5f7f3);
-            fitted(uiText(R.string.help_pace),200,630,21,310,ink,true);
-            fitted(uiText(R.string.help_modes),200,658,15,312,muted,false);
-            button(uiText(R.string.help_start),"play",29,727,342,73,CORAL,true,
+            });
+            boolean compact=referencePortraitLayout;
+            card(29,compact?352:381,342,compact?168:196,20,card);
+            fitted(uiText(R.string.help_swipe),200,compact?388:424,23,314,ink,true);
+            fitted(uiText(R.string.help_move),200,compact?423:461,17,314,muted,false);
+            fitted(uiText(R.string.help_pair),200,compact?454:495,17,314,muted,false);
+            fitted(uiText(R.string.help_goal),200,compact?485:529,16,314,muted,false);
+            card(29,compact?531:594,342,compact?82:89,20,theme==1?card:0xffe5f7f3);
+            fitted(uiText(R.string.help_pace),200,compact?562:630,21,310,ink,true);
+            fitted(uiText(R.string.help_modes),200,compact?589:658,15,312,muted,false);
+            button(uiText(R.string.help_start),"play",29,compact?630:727,342,compact?66:73,CORAL,true,
                 ()->requestNew("classic"));
-            bottomBrand();
+            if(!compact)bottomBrand();
         }
         void backupPage(){
             title(uiText(R.string.backup_title));
-            card(24,161,352,206,22,card);
+            boolean compact=referencePortraitLayout;
+            card(24,161,352,compact?188:206,22,card);
             icon("shield",200,214,45,TEAL);
             txt(uiText(R.string.backup_save_progress),200,270,23,ink,true);
             fitted(uiText(R.string.backup_export_description),200,305,16,330,muted,false);
             fitted(uiText(R.string.backup_control),200,335,15,330,muted,false);
-            button(uiText(R.string.backup_export),"share",24,404,352,79,CORAL,true,
+            button(uiText(R.string.backup_export),"share",24,compact?370:404,352,compact?70:79,CORAL,true,
                 ()->chooseBackupFile(true));
-            button(uiText(R.string.backup_restore),"undo",24,507,352,79,card,false,
+            button(uiText(R.string.backup_restore),"undo",24,compact?455:507,352,compact?70:79,card,false,
                 ()->chooseBackupFile(false));
-            fitted(uiText(R.string.backup_replace),200,649,16,350,muted,false);
-            fitted(uiText(R.string.backup_no_cloud),200,684,16,350,muted,false);
-            button(uiText(R.string.settings_title),"back",24,755,352,63,card,false,()->navigate("settings"));
-            bottomBrand();
+            fitted(uiText(R.string.backup_replace),200,compact?564:649,16,350,muted,false);
+            fitted(uiText(R.string.backup_no_cloud),200,compact?594:684,16,350,muted,false);
+            button(uiText(R.string.settings_title),"back",24,compact?630:755,352,63,card,false,()->navigate("settings"));
+            if(!compact)bottomBrand();
         }
         final LanguagePickerRenderer languagePicker=new LanguagePickerRenderer();
         void languagePage(){languagePicker.render(this,MainActivity.this);}
@@ -7255,14 +7155,14 @@ public final class MainActivity extends ComponentActivity {
             // the previously decorative website address genuinely actionable.
             button(uiText(R.string.about_website),"globe",24,529,352,69,card,false,
                 ()->openBrendigoWebsite());
-            fitted(uiText(R.string.about_browser),200,644,15,344,muted,false);
+            fitted(uiText(R.string.about_browser),200,referencePortraitLayout?619:644,15,344,muted,false);
         }
         void textPage(String heading,String[] lines){
             title(heading);
             card(24,170,352,Math.max(290,lines.length*50),25,card);
             for(int i=0;i<lines.length;i++)
                 fitted(lines[i],200,219+i*48,17,330,ink,false);
-            button(uiText(R.string.action_back),"back",25,722,350,72,CORAL,true,()->navigate("settings"));
+            button(uiText(R.string.action_back),"back",25,referencePortraitLayout?638:722,350,referencePortraitLayout?60:72,CORAL,true,()->navigate("settings"));
         }
         @Override public boolean dispatchHoverEvent(MotionEvent event){
             return accessibilityHelper.dispatchHoverEvent(event)||
