@@ -13,6 +13,10 @@ final class LocaleManager {
     // Never expose partially translated languages as selectable.
     static Locale legacyUiLocale() { return Locale.forLanguageTag("hr-HR"); }
 
+    static boolean usesCroatianArtwork(Locale locale) {
+        return "hr".equals(locale.getLanguage());
+    }
+
     static Resources resourcesFor(Context context, Locale locale) {
         Configuration configuration = new Configuration(context.getResources().getConfiguration());
         configuration.setLocale(locale);

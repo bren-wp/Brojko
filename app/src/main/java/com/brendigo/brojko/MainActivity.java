@@ -315,11 +315,39 @@ public final class MainActivity extends ComponentActivity {
         if(!today().equals(statsDay)){ensureDay();persist();}
         if("game".equals(target)&&game==null){newGame("classic");return;}
         page=target;updateBars();
-        screen.setContentDescription("Brojko — "+target+
-            (game==null?"":". Rezultat "+fmt(game.score)));
+        String pageTitle=activityText(pageTitleResource(target));
+        screen.setContentDescription(game==null
+            ?activityText(R.string.accessibility_page,pageTitle)
+            :activityText(R.string.accessibility_page_score,pageTitle,fmt(game.score)));
         screen.invalidate();
         screen.accessibilityHelper.invalidateRoot();
         screen.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
+    }
+    private int pageTitleResource(String target){
+        switch(target){
+            case "game": return game==null?R.string.mode_classic:
+                "daily".equals(game.mode)?R.string.mode_daily:
+                "relaxed".equals(game.mode)?R.string.mode_relaxed:R.string.mode_classic;
+            case "pause": return R.string.pause_title;
+            case "win": return R.string.victory_bravo;
+            case "over": return R.string.game_over_title;
+            case "dailyWin": return R.string.daily_success;
+            case "dailyFail": return R.string.daily_failure;
+            case "confirm": return R.string.confirm_new;
+            case "confirmEnd": return R.string.confirm_end;
+            case "daily": return R.string.mode_daily;
+            case "missions": return R.string.home_missions;
+            case "stats": return R.string.home_statistics;
+            case "historyDetail": return R.string.history_detail;
+            case "themes": return R.string.themes_heading;
+            case "settings": return R.string.settings_title;
+            case "language": return R.string.settings_language;
+            case "backup": return R.string.backup_title;
+            case "help": return R.string.help_title;
+            case "about": return R.string.about_title;
+            case "privacy": return R.string.privacy_title;
+            default: return R.string.home_title;
+        }
     }
     void requestNew(String mode){
         if(gameTransitionBusy)return;
@@ -738,16 +766,17 @@ public final class MainActivity extends ComponentActivity {
         class Tap {
             float left,top,right,bottom;Runnable action;String label;
             Tap(float l,float t,float r,float b,Runnable a) {
-                this(l,t,r,b,"Aktiviraj",a);
+                this(l,t,r,b,uiText(R.string.accessibility_activate),a);
             }
             Tap(float l,float t,float r,float b,String caption,Runnable a){
                 left=l;top=t;right=r;bottom=b;action=a;
-                label=caption==null||caption.isEmpty()?"Akcija":caption;
+                label=caption==null||caption.isEmpty()?uiText(R.string.accessibility_action):caption;
             }
         }
         BoardScreen(Context context){
             super(context);
             localizedResources=LocaleManager.resourcesFor(context,LocaleManager.legacyUiLocale());
+            p.setTextLocale(localizedResources.getConfiguration().getLocales().get(0));
             accessibilityHelper=new BoardAccessibilityDelegate(this);
             ViewCompat.setAccessibilityDelegate(this,accessibilityHelper);
             Typeface base;
@@ -773,6 +802,7 @@ public final class MainActivity extends ComponentActivity {
             }
         }
         String uiText(int id){return localizedResources.getString(id);}
+        boolean croatianArtwork(){return LocaleManager.usesCroatianArtwork(localizedResources.getConfiguration().getLocales().get(0));}
         void palette() {
             boolean dark=theme==1;
             // The very light canvas matches the user-provided nine portrait
@@ -979,7 +1009,7 @@ public final class MainActivity extends ComponentActivity {
                 p.setStrokeWidth("daily".equals(page)&&
                     referencePortraitLayout?1.55f:
                     ("themes".equals(page)&&referencePortraitLayout&&
-                     ("Teme i".equals(label)||"izgled".equals(label))?
+                     (uiText(R.string.themes_heading_first).equals(label)||uiText(R.string.themes_heading_second).equals(label))?
                      1.55f:
                     ("stats".equals(page)&&referencePortraitLayout&&
                      uiText(R.string.home_statistics).equals(label)?0.95f:0.7f)));
@@ -1653,7 +1683,7 @@ public final class MainActivity extends ComponentActivity {
                     c.save();
                     c.scale(1f,1.14f,textCenter,y+h/2+font*.35f);
                 }
-                boolean ownerDailyCta=page.equals("daily")&&prominent&&
+                boolean ownerDailyCta=croatianArtwork()&&page.equals("daily")&&prominent&&
                     theme==0&&referencePortraitLayout&&
                     uiText(R.string.daily_start).equals(label);
                 if(ownerDailyCta){
@@ -1672,10 +1702,10 @@ public final class MainActivity extends ComponentActivity {
             boolean iconOnly=label==null||label.isEmpty();
             String accessibleLabel=label;
             if(iconOnly) {
-                if("back".equals(symbol))accessibleLabel="Natrag";
-                else if("pause".equals(symbol))accessibleLabel="Pauziraj igru";
-                else if("undo".equals(symbol))accessibleLabel="Poništi potez";
-                else accessibleLabel=symbol==null?"Akcija":symbol;
+                if("back".equals(symbol))accessibleLabel=uiText(R.string.accessibility_back);
+                else if("pause".equals(symbol))accessibleLabel=uiText(R.string.accessibility_pause);
+                else if("undo".equals(symbol))accessibleLabel=uiText(R.string.accessibility_undo);
+                else accessibleLabel=uiText(R.string.accessibility_action);
             }
             float extraX=iconOnly?Math.max(0,(54f-w)/2):0;
             float extraY=iconOnly?Math.max(0,(54f-h)/2):0;
@@ -2296,11 +2326,11 @@ public final class MainActivity extends ComponentActivity {
                     c.save();
                     c.scale(1f,1.12f,127f,588f);
                     c.translate(0f,.5f);
-                    fitted("Spajaj brojeve.",127,594,24.2f,187,
+                    fitted(uiText(R.string.slogan_merge),127,594,24.2f,187,
                         0xfffd5a3e,true);
                     c.restore();
-                }else fitted("Spajaj brojeve.",127,594,24.2f,187,CORAL,true);
-                fitted("Ruši rekorde.",287,594,23.8f,179,TEAL,true);
+                }else fitted(uiText(R.string.slogan_merge),127,594,24.2f,187,CORAL,true);
+                fitted(uiText(R.string.slogan_records),287,594,23.8f,179,TEAL,true);
                 return;
             }
             // Taller devices retain the full-height composition.
@@ -2336,8 +2366,8 @@ public final class MainActivity extends ComponentActivity {
                 txt("by Brendigo",284f,533f,19f,muted,true);
             }else brand(487,108);
             card(26,704,348,77,32,theme==1?card:0xfffff0db);
-            fitted("Spajaj brojeve.",128,751,22,192,CORAL,true);
-            fitted("Ruši rekorde.",290,751,22,182,TEAL,true);
+            fitted(uiText(R.string.slogan_merge),128,751,22,192,CORAL,true);
+            fitted(uiText(R.string.slogan_records),290,751,22,182,TEAL,true);
         }
         // Home is a dedicated illustrated surface: softer cream cards and
         // ambient shadows belong here, not on shared in-game controls.
@@ -2811,7 +2841,7 @@ public final class MainActivity extends ComponentActivity {
             boolean relaxedArtwork=relaxed&&"game".equals(page)&&
                 theme==0&&tileStyle==0&&getHeight()>=getWidth();
             if(narrow&&!daily&&!relaxed){
-                if(theme==0&&"game".equals(page)&&referencePortraitLayout)
+                if(croatianArtwork()&&theme==0&&"game".equals(page)&&referencePortraitLayout)
                     ownerClassicVectorHeading();
                 else {
                     // Preserve the existing adaptive font title on dark,
@@ -2822,11 +2852,11 @@ public final class MainActivity extends ComponentActivity {
                     float headingSize=43f;
                     p.setTextScaleX(1f);p.setTypeface(displayFont);
                     p.setTextSize(headingSize);
-                    while(p.measureText("Klasično")>201f&&headingSize>10f){
+                    while(p.measureText(uiText(R.string.home_classic))>201f&&headingSize>10f){
                         headingSize=Math.max(10f,headingSize-1f);
                         p.setTextSize(headingSize);
                     }
-                    raisedWordmarkLetters("Klasično",105,89,headingSize,ink);
+                    raisedWordmarkLetters(uiText(R.string.home_classic),105,89,headingSize,ink);
                     c.restore();
                 }
                 // Thick coral rays in the owner reference are distinct
@@ -2837,7 +2867,7 @@ public final class MainActivity extends ComponentActivity {
                 if(relaxed&&theme==0&&"game".equals(page))
                     relaxedGameplayHeading();
                 else
-                    fitted(daily?"Dnevni":relaxed?"Opušteno":"Klasično",
+                    fitted(daily?uiText(R.string.daily_title_first):relaxed?uiText(R.string.home_relaxed):uiText(R.string.home_classic),
                         105,89,daily?32:43,201,ink,true);
             }
             if(!daily) {
@@ -2856,12 +2886,12 @@ public final class MainActivity extends ComponentActivity {
                     }
                 }
             }else{
-                fitted("izazov",103,135,36,195,CORAL,true);
+                fitted(uiText(R.string.daily_title_second),103,135,36,195,CORAL,true);
             }
             // Both score labels have independent, non-overlapping bounds even
             // for 5+ digit values shown in the original populated 4x4 artwork.
             icon("crown",narrow?231:224,70,24,0xffffb43d);
-            fitted("Najbolji",narrow?230:255,100,12,narrow?66:70,muted,true);
+            fitted(uiText(R.string.stats_best_top),narrow?230:255,100,12,narrow?66:70,muted,true);
             // Owner Classic 941x1672 HUD ink is ~107x34px for best and
             // ~100x34px for score; older wide Nunito figures measured
             // ~129x40px and ~132x38px, also ~10px too low.
@@ -2879,7 +2909,7 @@ public final class MainActivity extends ComponentActivity {
                 sourceClassicHud?19.7f:24,narrow?64:70,ink,true);
             if(sourceClassicHud)c.restore();
             icon("stats",narrow?299:313,69,23,muted);
-            fitted("Rezultat",narrow?301:334,101,12,narrow?65:70,muted,true);
+            fitted(uiText(R.string.score_label),narrow?301:334,101,12,narrow?65:70,muted,true);
             float scoreHudX=narrow?301:334;
             if(sourceClassicHud){c.save();c.scale(.86f,1f,scoreHudX,125f);}
             // Source score column already matches horizontally, but its
@@ -2915,7 +2945,7 @@ public final class MainActivity extends ComponentActivity {
             drawGrid();
             if(daily){
                 int remaining=Math.max(0,80-game.moves);
-                fitted("DNEVNI IZAZOV • "+remaining+" POTEZA PREOSTALO",
+                fitted(localizedResources.getString(R.string.daily_moves_remaining,remaining),
                     200,narrow?561:624,15,351,remaining<=10?CORAL:muted,true);
             }
             boolean portraitFour=compactBoardLayout&&game.size==4;
@@ -2934,17 +2964,17 @@ public final class MainActivity extends ComponentActivity {
             // Apply special artwork only to the coral confirmation button,
             // avoiding a measurable regression in the two cream controls.
             if(classicArtwork||relaxedArtwork)
-                classicBottomControl("Novo","refresh",firstX,actionsY,
+                classicBottomControl(uiText(R.string.action_new_short),"refresh",firstX,actionsY,
                     113,actionsH,()->requestNew(game.mode));
             else
-                button("Novo","refresh",firstX,actionsY,113,actionsH,card,false,
+                button(uiText(R.string.action_new_short),"refresh",firstX,actionsY,113,actionsH,card,false,
                     ()->requestNew(game.mode));
             if(game.canUndo()){
                 if(classicArtwork||relaxedArtwork)
-                    classicBottomControl("Poništi","undo",undoX,actionsY,
+                    classicBottomControl(uiText(R.string.action_undo),"undo",undoX,actionsY,
                         112,actionsH,()->undo());
                 else
-                    button("Poništi","undo",undoX,actionsY,112,actionsH,
+                    button(uiText(R.string.action_undo),"undo",undoX,actionsY,112,actionsH,
                         card,false,()->undo());
             }else{
                 if(relaxedArtwork)
@@ -2953,18 +2983,18 @@ public final class MainActivity extends ComponentActivity {
                     card(undoX,actionsY,112,actionsH,20,
                         theme==1?0xff29364a:0xffeae5de);
                 icon("undo",undoX+56,actionsY+27,25,muted);
-                txt("Poništi",undoX+56,actionsY+actionsH-15,17,muted,true);
+                txt(uiText(R.string.action_undo),undoX+56,actionsY+actionsH-15,17,muted,true);
             }
             if(portraitFour&&theme==0)
                 portraitClassicFinish(finishX,actionsY,120,actionsH,
                     ()->navigate("confirmEnd"));
             else
-                button("Završi","check",finishX,actionsY,portraitFour?120:113,
+                button(uiText(R.string.action_finish),"check",finishX,actionsY,portraitFour?120:113,
                     actionsH,CORAL,true,()->navigate("confirmEnd"));
             if(!narrow){
-                button("Izbornik","home",22,757,171,64,card,false,
+                button(uiText(R.string.action_menu),"home",22,757,171,64,card,false,
                     ()->navigate("home"));
-                button("Podijeli","share",207,757,171,64,card,false,()->share());
+                button(uiText(R.string.action_share),"share",207,757,171,64,card,false,()->share());
                 bottomBrand();
             }
         }
@@ -2972,7 +3002,7 @@ public final class MainActivity extends ComponentActivity {
         // language as Classic, without stretching or overlapping the crown.
         // Keep one measured baseline on short and tall phones.
         void relaxedGameplayHeading(){
-            final String label="Opušteno";
+            final String label=uiText(R.string.home_relaxed);
             float size=43f;
             p.clearShadowLayer();p.setShader(null);
             p.setTypeface(displayFont);p.setFakeBoldText(false);
@@ -2998,7 +3028,7 @@ public final class MainActivity extends ComponentActivity {
         // view. Do not change achievements, tile values, scoring, gameplay
         // physics, other themes, 5x5, or any modal/backdrop rendering.
         // Pixel-derived 941x1672 owner title. Maintain the visible
-        // "Klasično" ink bounds for QA using the *real vector path*, not
+        // uiText(R.string.home_classic) ink bounds for QA using the *real vector path*, not
         // separate font glyphs placed over the illustration.
         void ownerClassicVectorHeading(){
             if(ownerClassicVectorPath==null){
@@ -3021,7 +3051,7 @@ public final class MainActivity extends ComponentActivity {
                 ownerClassicVectorPath.computeBounds(realInk,true);
                 android.graphics.Matrix transform=new android.graphics.Matrix();
                 c.getMatrix(transform);transform.mapRect(realInk);
-                textRegions.add(new TextRegion("Klasično",realInk));
+                textRegions.add(new TextRegion(uiText(R.string.home_classic),realInk));
             }
             p.setStyle(Paint.Style.FILL);
             p.clearShadowLayer();p.setShader(null);p.setColor(ink);
@@ -3120,7 +3150,7 @@ public final class MainActivity extends ComponentActivity {
             p.setStrokeWidth(4.0f);
             if("refresh".equals(glyph)){
                 // Broad clockwise ring plus a separate filled, rounded
-                // forward arrow, matching the visible "Novo" source glyph.
+                // forward arrow, matching the visible uiText(R.string.action_new_short) source glyph.
                 Path ring=new Path();
                 ring.arcTo(new RectF(4.1f,4.1f,19.9f,19.9f),
                     40f,288f,false);
@@ -3215,7 +3245,7 @@ public final class MainActivity extends ComponentActivity {
                 float extraY=Math.max(0,(54f-h)/2f);
                 taps.add(new Tap(Math.max(0,x-extraX),Math.max(0,y-extraY),
                     Math.min(400,x+w+extraX),y+h+extraY,
-                    glyph.equals("pause")?"Pauziraj igru":"Poništi potez",
+                    glyph.equals("pause")?uiText(R.string.accessibility_pause):uiText(R.string.accessibility_undo),
                     action));
             }
         }
@@ -3357,9 +3387,9 @@ public final class MainActivity extends ComponentActivity {
             float center=x+width/2f;
             icon("check",center,y+height*.37f-(ownerFrame?3.5f:0f),
                 39f,WHITE);
-            fitted("Završi",center,y+height*.81f+(ownerFrame?8.5f:0f),
+            fitted(uiText(R.string.action_finish),center,y+height*.81f+(ownerFrame?8.5f:0f),
                 ownerFrame?16f:18.5f,width-10,WHITE,true);
-            taps.add(new Tap(x,y,x+width,y+height,"Završi",action));
+            taps.add(new Tap(x,y,x+width,y+height,uiText(R.string.action_finish),action));
         }
         void headerUndo(float x,float y,float w,float h){
             if(game!=null && game.canUndo()){
@@ -3501,10 +3531,10 @@ public final class MainActivity extends ComponentActivity {
             card(205,18,81,78,15,card);
             card(297,18,81,78,15,card);
             icon("crown",245,37,24,0xffffb52b);
-            fitted("Najbolji",245,56,12,78,muted,true);
+            fitted(uiText(R.string.stats_best_top),245,56,12,78,muted,true);
             fitted(fmt(best),245,79,20,75,ink,true);
             icon("stats",335,37,23,muted);
-            fitted("Rezultat",335,56,12,77,muted,true);
+            fitted(uiText(R.string.score_label),335,56,12,77,muted,true);
             fitted(fmt(game.score),335,79,20,75,ink,true);
             float prevGridY=gridY;
             // The illustrated post-win board begins 10 units above the
@@ -3518,9 +3548,9 @@ public final class MainActivity extends ComponentActivity {
             icon("refresh",75,645,33,ink);
             icon("crown",200,645,31,ink);
             icon("settings",325,645,30,ink);
-            fitted("Novo",75,685,15,105,muted,true);
-            fitted("Rekordi",200,685,15,105,muted,true);
-            fitted("Postavke",325,685,15,105,muted,true);
+            fitted(uiText(R.string.action_new_short),75,685,15,105,muted,true);
+            fitted(uiText(R.string.nav_records),200,685,15,105,muted,true);
+            fitted(uiText(R.string.settings_title),325,685,15,105,muted,true);
         }
         void victoryCrown(float cx,float cy,float size){
             // Soft three-peak silhouette with an ivory outline, in real Canvas
@@ -3662,6 +3692,10 @@ public final class MainActivity extends ComponentActivity {
         void victoryHeading(){ 
             // Source lettering only on the supplied light portrait modal.
             // All other responsive themes retain the existing Nunito path.
+            if(!croatianArtwork()){
+                illustratedTitle(uiText(R.string.victory_bravo),200,287,53,285,ink);
+                return;
+            }
             if(theme==0&&referencePortraitLayout){
                 ownerBravoVectorHeading();
                 return;
@@ -3792,7 +3826,7 @@ public final class MainActivity extends ComponentActivity {
             if(theme==1)card(95,299,210,30,17,card);
             else gradient(95,299,210,30,17,
                 0xfffff5e7,0xffffeedb);
-            fitted("Dosegnuli ste",161,323,20,133,0xffff5537,true);
+            fitted(uiText(R.string.victory_reached),161,323,20,133,0xffff5537,true);
             fitted("2048!",258,323,21,88,0xff008d83,true);
             // Measured reference card interior averages RGB(249,237,221);
             // the generic nearly-white card was RGB(255,253,250).
@@ -3801,8 +3835,8 @@ public final class MainActivity extends ComponentActivity {
             if(theme==0&&referencePortraitLayout){
                 // Owner score labels occupy native y828..850; old emulator
                 // was y817..841, too wide and 10px too high.
-                txt("Tvoj rezultat",138f,360f,10.5f,muted,false);
-                txt("Osvojene zvjezdice",265f,360f,10f,muted,false);
+                txt(uiText(R.string.score_yours),138f,360f,10.5f,muted,false);
+                txt(uiText(R.string.stars_earned),265f,360f,10f,muted,false);
                 // Owner 2.048 ink x217..433/y870..935; the old emulator
                 // was x213..427/y863..922. Scale about the text baseline,
                 // then move down/right without changing the game score.
@@ -4211,18 +4245,18 @@ public final class MainActivity extends ComponentActivity {
                 c.translate(2f,8f);
                 c.scale(1f,1.07f,196f,54f);
                 // Source navy median RGB ~25/43/79.
-                illustratedTitle("Dnevni",196,54,51,240,0xff16284e);
+                illustratedTitle(uiText(R.string.daily_title_first),196,54,51,240,0xff16284e);
                 c.restore();
                 c.save();
                 c.translate(0f,-5f);
                 c.scale(.95f,.93f,205f,99f);
                 // Source coral median RGB ~253/101/59.
-                illustratedTitle("izazov",205,99,49,234,0xffff663d);
+                illustratedTitle(uiText(R.string.daily_title_second),205,99,49,234,0xffff663d);
                 c.restore();
             }else{
-                illustratedTitle("Dnevni",portrait?196:184,portrait?54:90,
+                illustratedTitle(uiText(R.string.daily_title_first),portrait?196:184,portrait?54:90,
                     portrait?51:48,portrait?240:223,ink);
-                illustratedTitle("izazov",portrait?205:199,portrait?99:141,
+                illustratedTitle(uiText(R.string.daily_title_second),portrait?205:199,portrait?99:141,
                     portrait?49:48,234,CORAL);
             }
             dailyHeaderAccents(154,portrait?16:39);
@@ -5080,12 +5114,12 @@ public final class MainActivity extends ComponentActivity {
         void missionSectionTitle(String title,float baseline,float textSize){
             // Exact source letter shapes for three static Croatian section
             // captions. No dynamic target, progress or reward data stored.
-            if(theme==0&&referencePortraitLayout&&"missions".equals(page)){
-                int key="Dnevne".equals(title)?
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout&&"missions".equals(page)){
+                int key=uiText(R.string.missions_daily).equals(title)?
                     OwnerHeadlineContours.MISSIONS_DAILY:
-                    "Tjedne".equals(title)?
+                    uiText(R.string.missions_weekly).equals(title)?
                     OwnerHeadlineContours.MISSIONS_WEEKLY:
-                    "Postignuća".equals(title)?
+                    uiText(R.string.missions_achievements).equals(title)?
                     OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS:-1;
                 if(key>=0){
                     float y1=key==OwnerHeadlineContours.MISSIONS_DAILY?330f:
@@ -5170,17 +5204,17 @@ public final class MainActivity extends ComponentActivity {
                 c.getMatrix(transform);
                 transform.mapRect(realInk);
                 String title=key==OwnerHeadlineContours.MISSIONS_NAVY?
-                    "Misije i":key==OwnerHeadlineContours.MISSIONS_CORAL?
-                    "postignuća":key==OwnerHeadlineContours.THEMES_NAVY?
-                    "Teme i":key==OwnerHeadlineContours.THEMES_CORAL?
-                    "izgled":key==OwnerHeadlineContours.SETTINGS_NAVY?
-                    "Postavke":key==OwnerHeadlineContours.STATS_CHART?
-                    "Zadnjih 10 partija":key==OwnerHeadlineContours.THEMES_STYLE?
-                    "Stil pločica":key==OwnerHeadlineContours.MISSIONS_DAILY?
-                    "Dnevne":key==OwnerHeadlineContours.MISSIONS_WEEKLY?
-                    "Tjedne":key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
-                    "Postignuća":key==OwnerHeadlineContours.DAILY_START?
-                    uiText(R.string.daily_start):"Statistika";
+                    uiText(R.string.missions_heading_first):key==OwnerHeadlineContours.MISSIONS_CORAL?
+                    uiText(R.string.missions_heading_second):key==OwnerHeadlineContours.THEMES_NAVY?
+                    uiText(R.string.themes_heading_first):key==OwnerHeadlineContours.THEMES_CORAL?
+                    uiText(R.string.themes_heading_second):key==OwnerHeadlineContours.SETTINGS_NAVY?
+                    uiText(R.string.settings_title):key==OwnerHeadlineContours.STATS_CHART?
+                    uiText(R.string.stats_recent):key==OwnerHeadlineContours.THEMES_STYLE?
+                    uiText(R.string.themes_tile_style):key==OwnerHeadlineContours.MISSIONS_DAILY?
+                    uiText(R.string.missions_daily):key==OwnerHeadlineContours.MISSIONS_WEEKLY?
+                    uiText(R.string.missions_weekly):key==OwnerHeadlineContours.MISSIONS_ACHIEVEMENTS?
+                    uiText(R.string.missions_achievements):key==OwnerHeadlineContours.DAILY_START?
+                    uiText(R.string.daily_start):uiText(R.string.home_statistics);
                 textRegions.add(new TextRegion(title,realInk));
             }
             c.drawPath(shapePath,p);
@@ -5188,14 +5222,14 @@ public final class MainActivity extends ComponentActivity {
             c.restore();
         }
         void missionMeasuredHeadline(boolean portrait){
-            if(portrait&&theme==0){
+            if(croatianArtwork()&&portrait&&theme==0){
                 ownerHeadline(OwnerHeadlineContours.MISSIONS_NAVY,
                     0xff1a2a4c,0xff182647,190f,278f);
                 ownerHeadline(OwnerHeadlineContours.MISSIONS_CORAL,
                     0xfffb5534,0xfffc5734,190f,279f);
                 return;
             }
-            final String navy="Misije i",coral="postignuća";
+            final String navy=uiText(R.string.missions_heading_first),coral=uiText(R.string.missions_heading_second);
             float size=portrait?36f:33f;
             float gap=portrait?10f:11f;
             // Leave the owner's orange rays outside the heading ink.
@@ -5277,8 +5311,8 @@ public final class MainActivity extends ComponentActivity {
                 p.setShader(null);p.setColor(0xffffb431);
                 p.setStyle(Paint.Style.FILL);c.drawCircle(43,sunY,6,p);
             }
-            if(portrait&&theme==0)missionSectionTitle("Dnevne",155f,20.5f);
-            else txt("Dnevne",110,portrait?150:204,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_daily),155f,20.5f);
+            else txt(uiText(R.string.missions_daily),110,portrait?150:204,23,ink,true);
             missionPeriodPill("day",portrait?134:182);
             if(portrait&&theme!=1)
                 missionWeeklyHeaderIcon(43,portrait?346:420);
@@ -5299,14 +5333,14 @@ public final class MainActivity extends ComponentActivity {
                 (game!=null&&game.peak>=512&&!undoUsedThisGame);
             missionRow(MissionKind.NO_UNDO,
                 noUndo512?1:0,1,100,portrait?238:308,0xffa663e4);
-            if(portrait&&theme==0)missionSectionTitle("Tjedne",352f,20.5f);
-            else txt("Tjedne",105,portrait?348:422,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_weekly),352f,20.5f);
+            else txt(uiText(R.string.missions_weekly),105,portrait?348:422,23,ink,true);
             missionRow(MissionKind.STREAK,
                 playDayStreak,7,150,portrait&&theme==0?365:portrait?356:433,0xff3ecb8c);
             missionRow(MissionKind.WEEK_SCORE,
                 weekPoints,10000,200,portrait&&theme==0?443:portrait?434:516,0xffff934b);
-            if(portrait&&theme==0)missionSectionTitle("Postignuća",560f,16.1f);
-            else txt("Postignuća",132,portrait?542:638,23,ink,true);
+            if(portrait&&theme==0)missionSectionTitle(uiText(R.string.missions_achievements),560f,16.1f);
+            else txt(uiText(R.string.missions_achievements),132,portrait?542:638,23,ink,true);
             missionRow(MissionKind.MASTER,
                 recordTile,1024,500,portrait&&theme==0?565:portrait?550:648,0xffa663e4);
             missionRow(MissionKind.KING,
@@ -5598,7 +5632,7 @@ public final class MainActivity extends ComponentActivity {
                     fitted(fmt(peak),324,y+40,15,52,0xff8a41bc,true);
                 }
                 txt("›",367,y+48,25,muted,true);
-                taps.add(new Tap(22,y,378,y+70,"Detalji partije "+(i+1),()->{
+                taps.add(new Tap(22,y,378,y+70,localizedResources.getString(R.string.history_detail_index,i+1),()->{
                     selectedHistoryIndex=idx;
                     navigate("historyDetail");
                 }));
@@ -5887,28 +5921,28 @@ public final class MainActivity extends ComponentActivity {
             if(sourceTopValue)c.restore();
         }
         void historyDetail(){
-            title("Detalji partije");
+            title(uiText(R.string.history_detail));
             JSONArray rows=history();
             JSONObject row=rows.optJSONObject(selectedHistoryIndex);
             if(row==null){
-                txt("Partija više nije dostupna.",200,273,19,muted,false);
-                button("Statistika","back",32,729,336,68,CORAL,true,
+                txt(uiText(R.string.history_missing),200,273,19,muted,false);
+                button(uiText(R.string.home_statistics),"back",32,729,336,68,CORAL,true,
                     ()->navigate("stats"));
                 return;
             }
             card(26,189,348,313,25,card);
             icon("crown",200,246,57,0xffffad27);
-            txt("Rezultat",200,293,23,ink,true);
+            txt(uiText(R.string.score_label),200,293,23,ink,true);
             fitted(fmt(row.optInt("score")),200,357,49,310,CORAL,true);
             fitted(labelMode(row.optString("mode","classic")),200,405,22,318,ink,true);
             fitted(historyTimestamp(row),200,448,17,318,muted,false);
             card(26,523,165,121,20,card);
             card(209,523,165,121,20,card);
-            txt("Najveća pločica",108,565,17,muted,true);
+            txt(uiText(R.string.game_peak_tile),108,565,17,muted,true);
             fitted(fmt(row.optInt("peak")),108,615,29,145,TEAL,true);
-            txt("Potezi",291,565,17,muted,true);
+            txt(uiText(R.string.history_moves),291,565,17,muted,true);
             fitted(fmt(row.optInt("moves")),291,615,29,145,ink,true);
-            button("Natrag na statistiku","back",28,729,344,69,CORAL,true,
+            button(uiText(R.string.history_back),"back",28,729,344,69,CORAL,true,
                 ()->navigate("stats"));
         }
         void themesTabIcon(String type,float cx,float cy,float width,int color){
@@ -5963,14 +5997,14 @@ public final class MainActivity extends ComponentActivity {
         // Previous separate fitted() boxes could touch at the "i/iz" seam
         // on narrow fonts or distort just one segment.
         void themesMeasuredHeading(float baseline,float proposedSize){
-            if(theme==0&&referencePortraitLayout&&"themes".equals(page)){
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout&&"themes".equals(page)){
                 ownerHeadline(OwnerHeadlineContours.THEMES_NAVY,
                     0xff172c53,0xff122347,223f,307f);
                 ownerHeadline(OwnerHeadlineContours.THEMES_CORAL,
                     0xfffd663b,0xfffa552e,223f,323f);
                 return;
             }
-            final String navy="Teme i",coral="izgled";
+            final String navy=uiText(R.string.themes_heading_first),coral=uiText(R.string.themes_heading_second);
             float size=proposedSize,gap=8f,maxWidth=308f;
             p.setTypeface(displayFont);p.setFakeBoldText(false);
             p.setTextScaleX(1f);p.setTextSize(size);
@@ -6140,8 +6174,8 @@ public final class MainActivity extends ComponentActivity {
             brand(61,38);
             themesTitlePill(99,53);
             themesMeasuredHeading(126,35f);
-            fitted("Prilagodi igru svojem stilu.",200,169,18,350,muted,false);
-            String[] names={"Svijetla","Tamna","Živopisna"};
+            fitted(uiText(R.string.themes_intro),200,169,18,350,muted,false);
+            String[] names={uiText(R.string.theme_light),uiText(R.string.theme_dark),uiText(R.string.theme_vivid)};
             for(int i=0;i<3;i++){
                 final int chosen=i;
                 int x=19+i*126;
@@ -6169,8 +6203,8 @@ public final class MainActivity extends ComponentActivity {
                 }));
             }
             card(20,395,360,405,28,card);
-            leftFitted("Pregled",30,434,24,167,ink,true);
-            leftFitted("Stil pločica",210,433,19,162,ink,true);
+            leftFitted(uiText(R.string.theme_preview),30,434,24,167,ink,true);
+            leftFitted(uiText(R.string.themes_tile_style),210,433,19,162,ink,true);
             shape(201,416,1,360,0,theme==1?0xff47536a:0xffebdfd0);
             // Real visual tile preview for all 16 values, independent of the game board.
             themeBoardTray(29,465,167,172);
@@ -6181,9 +6215,9 @@ public final class MainActivity extends ComponentActivity {
                 themePreviewTile(x,y,36,36,tileColor(val),tileStyle);
                 fitted(Integer.toString(val),x+18,y+24,val>=1000?12:16,33,WHITE,true);
             }
-            txt("Ovako će izgledati",113,671,13,muted,false);
-            txt("tvoja ploča.",113,690,13,muted,false);
-            String[] styles={"Zaobljene","Ravne","Staklaste"};
+            txt(uiText(R.string.theme_preview_line1),113,671,13,muted,false);
+            txt(uiText(R.string.theme_preview_line2),113,690,13,muted,false);
+            String[] styles={uiText(R.string.tile_rounded),uiText(R.string.tile_flat),uiText(R.string.tile_glass)};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
                 card(x,456,51,93,15,card);
@@ -6209,29 +6243,29 @@ public final class MainActivity extends ComponentActivity {
             // Source shows labels, explanations and dividers, not bare toggles.
             shape(208,565,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
             icon("phone-vibrate",220,587,29,ink);
-            leftFitted("Vibracija",245,590,17,86,ink,true);
-            leftFitted("Kada spojiš brojeve.",245,610,10,86,muted,false);
+            leftFitted(uiText(R.string.settings_vibration),245,590,17,86,ink,true);
+            leftFitted(uiText(R.string.theme_vibration_help),245,610,10,86,muted,false);
             shape(337,570,43,27,14,vibration?CORAL:0xffb7c1cf);
             shape(vibration?355:339,572,23,23,12,WHITE);
-            taps.add(new Tap(205,564,378,615,"Vibracija",()->{
+            taps.add(new Tap(205,564,378,615,uiText(R.string.settings_vibration),()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,655,29,ink);
-            leftFitted("Zvukovi",245,658,17,86,ink,true);
-            leftFitted("Zvučni efekti u igri.",245,678,10,86,muted,false);
+            leftFitted(uiText(R.string.theme_sounds),245,658,17,86,ink,true);
+            leftFitted(uiText(R.string.theme_sounds_help),245,678,10,86,muted,false);
             shape(337,636,43,27,14,sound?CORAL:0xffb7c1cf);
             shape(sound?355:339,638,23,23,12,WHITE);
             shape(208,696,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,628,378,683,"Zvukovi",()->{
+            taps.add(new Tap(205,628,378,683,uiText(R.string.theme_sounds),()->{
                 sound=!sound;persist();invalidate();
             }));
-            leftFitted("Jačina animacija",208,720,18,162,ink,true);
-            leftFitted("Koliko su izražene animacije spajanja.",208,738,
+            leftFitted(uiText(R.string.theme_animation),208,720,18,162,ink,true);
+            leftFitted(uiText(R.string.theme_animation_help),208,738,
                 10,166,muted,false);
             shape(211,756,159,9,5,theme==1?0xff536078:0xffe8ded1);
             shape(211,756,11+animation*68,9,5,CORAL);
             shape(211+animation*68,748,23,23,12,CORAL);
-            String[] intensities={"Niska","Srednja","Visoka"};
+            String[] intensities={uiText(R.string.animation_low),uiText(R.string.animation_medium),uiText(R.string.animation_high)};
             for(int i=0;i<3;i++){
                 int pos=i;
                 fitted(intensities[i],236+i*54,791,12,62,muted,false);
@@ -6242,14 +6276,14 @@ public final class MainActivity extends ComponentActivity {
                 }));
             }
             card(20,805,360,72,29,card);
-            String[] tabs={"Novo","Rekordi","Teme","Postavke"};
+            String[] tabs={uiText(R.string.action_new_short),uiText(R.string.nav_records),uiText(R.string.home_themes),uiText(R.string.settings_title)};
             String[] glyphs={"home","crown","palette","settings"};
             String[] destinations={"home","stats","themes","settings"};
             for(int i=0;i<4;i++){
                 int index=i;float cx=65+i*90;
                 if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
                 themesTabIcon(glyphs[i],cx,830,27,i==2?CORAL:muted);
-                fitted(i==2?"Teme i izgled":tabs[i],cx,863,
+                fitted(i==2?uiText(R.string.themes_heading):tabs[i],cx,863,
                     i==2?10:13,86,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
                     ()->navigate(destinations[index])));
@@ -6284,13 +6318,13 @@ public final class MainActivity extends ComponentActivity {
             // Use only this screen's native Canvas card and live Tap.
             card(13,12,42,42,17,card);
             icon("back",34,33,23,ink);
-            taps.add(new Tap(7,7,61,61,"Natrag",()->navigate("home")));
+            taps.add(new Tap(7,7,61,61,uiText(R.string.accessibility_back),()->navigate("home")));
             brand(40,35);
             // Owner's dark-navy Stats title raster is x238..714,
             // y184..285 at 941x1672. Preserve horizontal/vertical
             // position of the original word while restoring its tall
             // softly rounded lettering; other themes keep the fallback.
-            if(theme==0){
+            if(croatianArtwork()&&theme==0){
                 c.save();
                 // In the 941x1672 source the navy title ink spans
                 // x238..714/y184..285. The verified emulator span was
@@ -6319,7 +6353,7 @@ public final class MainActivity extends ComponentActivity {
             // Owner source caption is optically narrower than Nunito Bold
             // while keeping the same baseline and left anchor. This local
             // x compression never changes chart tabs or history data.
-            if(theme==0&&referencePortraitLayout){
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout){
                 // Source title x67..354/y808..842 at 941px. Draw just
                 // static text contours; keep history points entirely live.
                 ownerHeadline(OwnerHeadlineContours.STATS_CHART,
@@ -6467,7 +6501,7 @@ public final class MainActivity extends ComponentActivity {
                 }
                 icon("chevron-right",366,y+15,15,muted);
                 taps.add(new Tap(22,y-2,378,y+(accessibleRows?46:32),
-                    "Detalji partije "+(i+1),
+                    localizedResources.getString(R.string.history_detail_index,i+1),
                     ()->{selectedHistoryIndex=idx;navigate("historyDetail");}));
             }
         }
@@ -6476,8 +6510,8 @@ public final class MainActivity extends ComponentActivity {
             brand(52,42);
             themesTitlePill(85,53);
             themesMeasuredHeading(125,36f);
-            fitted("Prilagodi igru svojem stilu.",200,154,16,344,muted,false);
-            String[] names={"Svijetla","Tamna","Živopisna"};
+            fitted(uiText(R.string.themes_intro),200,154,16,344,muted,false);
+            String[] names={uiText(R.string.theme_light),uiText(R.string.theme_dark),uiText(R.string.theme_vivid)};
             for(int i=0;i<3;i++){
                 final int chosen=i;float x=19+i*126,y=165;
                 if(theme==i){
@@ -6603,11 +6637,11 @@ public final class MainActivity extends ComponentActivity {
                 gradient(15.6f,340.6f,368.8f,286.8f,25.4f,
                     0xfffdf9f1,0xfffefbf5);
             }
-            leftFitted("Pregled",26,373,22,167,ink,true);
-            if(theme==0&&referencePortraitLayout)
+            leftFitted(uiText(R.string.theme_preview),26,373,22,167,ink,true);
+            if(croatianArtwork()&&theme==0&&referencePortraitLayout)
                 ownerHeadline(OwnerHeadlineContours.THEMES_STYLE,
                     0xff1b2c50,0xff0f1d3e,836f,870f);
-            else leftFitted("Stil pločica",201,369,18,172,ink,true);
+            else leftFitted(uiText(R.string.themes_tile_style),201,369,18,172,ink,true);
             shape(193,356,1,257,0,theme==1?0xff47536a:0xffebdfd0);
             themeBoardTray(25,413,163,169);
             int[] sample={2,4,8,16,4,8,16,32,8,16,32,64,128,256,512,1024};
@@ -6645,9 +6679,9 @@ public final class MainActivity extends ComponentActivity {
                     y+(sourceTile?24.5f:25f),
                     val>=1000?11:15,side-3f,WHITE,true);
             }
-            leftFitted("Ovako će izgledati",26,389,12,159,muted,false);
-            leftFitted("pločica u odabranoj temi.",26,404,11,161,muted,false);
-            String[] styles={"Zaobljene","Ravne","Staklaste"};
+            leftFitted(uiText(R.string.theme_preview_line1),26,389,12,159,muted,false);
+            leftFitted(uiText(R.string.theme_preview_tile),26,404,11,161,muted,false);
+            String[] styles={uiText(R.string.tile_rounded),uiText(R.string.tile_flat),uiText(R.string.tile_glass)};
             for(int i=0;i<3;i++){
                 final int value=i;float x=210+i*56;
                 // Selected Zaobljene frame is ~133px wide in the
@@ -6700,14 +6734,14 @@ public final class MainActivity extends ComponentActivity {
                 // x577..698/y1104..1134. Narrow, lower and move right
                 // only this painted title; tap switch and action unchanged.
                 c.save();c.scale(.85f,1f,249f,482f);
-                leftFitted("Vibracija",249,482,12.6f,86,ink,true);
+                leftFitted(uiText(R.string.settings_vibration),249,482,12.6f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,495f);
-                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_vibration_help),245,495,10,86,muted,false);
                 c.restore();
             }else{
-                leftFitted("Vibracija",245,480,15,86,ink,true);
-                leftFitted("Kada spojiš brojeve.",245,495,10,86,muted,false);
+                leftFitted(uiText(R.string.settings_vibration),245,480,15,86,ink,true);
+                leftFitted(uiText(R.string.theme_vibration_help),245,495,10,86,muted,false);
             }
             // Sampled owner mask: orange vibration switch is 89×51px
             // at native x798..886/y1112..1162, versus the former
@@ -6721,7 +6755,7 @@ public final class MainActivity extends ComponentActivity {
                 shape(337,466,43,27,14,vibration?CORAL:0xffb7c1cf);
                 shape(vibration?355:339,468,23,23,12,WHITE);
             }
-            taps.add(new Tap(205,461,378,509,"Vibracija",()->{
+            taps.add(new Tap(205,461,378,509,uiText(R.string.settings_vibration),()->{
                 vibration=!vibration;persist();invalidate();
             }));
             icon("sound",219,520,26,ink);
@@ -6729,14 +6763,14 @@ public final class MainActivity extends ComponentActivity {
                 // User source ink x586..678/y1212..1231;
                 // deployed ink x577..682/y1205..1229.
                 c.save();c.scale(.85f,1f,249f,524.5f);
-                leftFitted("Zvukovi",249,524.5f,13.2f,86,ink,true);
+                leftFitted(uiText(R.string.theme_sounds),249,524.5f,13.2f,86,ink,true);
                 c.restore();
                 c.save();c.scale(.88f,1f,245f,538f);
-                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_sounds_help),245,538,10,86,muted,false);
                 c.restore();
             }else{
-                leftFitted("Zvukovi",245,523,15,86,ink,true);
-                leftFitted("Zvučni efekti u igri.",245,538,10,86,muted,false);
+                leftFitted(uiText(R.string.theme_sounds),245,523,15,86,ink,true);
+                leftFitted(uiText(R.string.theme_sounds_help),245,538,10,86,muted,false);
             }
             // Native source sound toggle is also ~89×51px but needs
             // only a 3px vertical shift (unlike vibration's 16px).
@@ -6748,7 +6782,7 @@ public final class MainActivity extends ComponentActivity {
                 shape(sound?355:339,513,23,23,12,WHITE);
             }
             shape(208,550,161,1,0,theme==1?0xff4a5871:0xffe9dfd4);
-            taps.add(new Tap(205,509,378,557,"Zvukovi",()->{
+            taps.add(new Tap(205,509,378,557,uiText(R.string.theme_sounds),()->{
                 sound=!sound;persist();invalidate();
             }));
             if(theme==0&&referencePortraitLayout){
@@ -6757,15 +6791,15 @@ public final class MainActivity extends ComponentActivity {
                 // Shrink glyphs to owner dimensions and center on
                 // the existing visual section; keep slider geometry.
                 c.save();c.scale(.83f,1f,206f,569f);
-                leftFitted("Jačina animacija",206,569,13.7f,162,ink,true);
+                leftFitted(uiText(R.string.theme_animation),206,569,13.7f,162,ink,true);
                 c.restore();
                 c.save();c.scale(.92f,1f,208f,588f);
-                leftFitted("Koliko su izražene animacije spajanja.",
+                leftFitted(uiText(R.string.theme_animation_help),
                     208,588,9.5f,166,muted,false);
                 c.restore();
             }else{
-                leftFitted("Jačina animacija",208,570,17,162,ink,true);
-                leftFitted("Koliko su izražene animacije spajanja.",
+                leftFitted(uiText(R.string.theme_animation),208,570,17,162,ink,true);
+                leftFitted(uiText(R.string.theme_animation_help),
                     208,588,9.5f,166,muted,false);
             }
             // Source 941x1672: one pill-shaped selection per intensity,
@@ -6777,7 +6811,7 @@ public final class MainActivity extends ComponentActivity {
             shape(activeX-2,592,60,17,9,WHITE);
             gradient(activeX,594,56,13,7,
                 lighten(CORAL,.04f),CORAL);
-            String[] intensities={"Niska","Srednja","Visoka"};
+            String[] intensities={uiText(R.string.animation_low),uiText(R.string.animation_medium),uiText(R.string.animation_high)};
             for(int i=0;i<3;i++){
                 int pos=i;
                 fitted(intensities[i],236+i*54,619,11,62,muted,false);
@@ -6789,7 +6823,7 @@ public final class MainActivity extends ComponentActivity {
                     }));
             }
             card(20,635,360,69,28,card);
-            String[] tabs={"Novo","Rekordi","Teme","Postavke"};
+            String[] tabs={uiText(R.string.action_new_short),uiText(R.string.nav_records),uiText(R.string.home_themes),uiText(R.string.settings_title)};
             String[] glyphs={"home","crown","palette","settings"};
             String[] destinations={"home","stats","themes","settings"};
             for(int i=0;i<4;i++){
@@ -6803,7 +6837,7 @@ public final class MainActivity extends ComponentActivity {
                 float iconY=sourceHome?665f:658f;
                 themesTabIcon(glyphs[i],iconX,iconY,
                     sourceHome?24:26,i==2?CORAL:muted);
-                fitted(i==2?"Teme i izgled":tabs[i],iconX,690,
+                fitted(i==2?uiText(R.string.themes_heading):tabs[i],iconX,690,
                     i==2?10:13,86,i==2?CORAL:muted,true);
                 taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
                     ()->navigate(destinations[index])));
@@ -7014,7 +7048,7 @@ public final class MainActivity extends ComponentActivity {
             // Original 941x1672 Settings title is taller and ends farther
             // right than the previous native Nunito contour. Correct only
             // the light owner viewport; all other layouts remain unchanged.
-            if(compact&&theme==0){
+            if(croatianArtwork()&&compact&&theme==0){
                 // The real 941x1672 owner title spans native pixels
                 // x245..709/y87..183. A compressed vector contour of
                 // just the static text preserves its actual Nunito-style
