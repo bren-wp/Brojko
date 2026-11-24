@@ -271,12 +271,8 @@ public final class MainActivity extends ComponentActivity {
         }
     }
     void updateRewards(){
-        reward(1,50,todayMerges>=20);
-        reward(2,100,game!=null&&game.peak>=512&&!undoUsedThisGame);
-        reward(4,150,playDayStreak>=7);
-        reward(8,500,recordTile>=1024);
-        reward(16,1000,best>=50000);
-        reward(32,200,weekPoints>=10000);
+        RewardPolicy.evaluate(todayMerges,game==null?0:game.peak,
+            undoUsedThisGame,playDayStreak,recordTile,best,weekPoints,this::reward);
     }
     String timeRemainingInPeriod(boolean week){
         long minutes=GameCalendar.remainingMinutes(week);

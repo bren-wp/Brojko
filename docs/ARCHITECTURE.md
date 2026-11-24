@@ -108,3 +108,7 @@ provjerava `isDailyOutOfMoves()` prije svakog pomaka. Ne dopušta
 81. potez, izradu nove pločice ni povećanje rezultata nakon
 neuspjelog 80. poteza. Zadnji dopušteni 80. potez ostaje
 funkcionalan; novi JVM regresijski test pokriva oba slučaja.
+
+## Mission threshold policy
+
+`RewardPolicy` extracts the six existing threshold/amount decisions from `MainActivity` into a pure Java component. The original reward bits, order, thresholds, amounts, saturation and once-only persistence are retained; `MainActivity.reward` still owns mutation. Boundary and undo regression tests are included. This is a bounded extraction, not completion of the Activity/renderer refactor.
