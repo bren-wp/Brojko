@@ -26,4 +26,8 @@
     <locale android:name="ro"/>
     <locale android:name="bg"/>
     <locale android:name="el"/>
+    <locale android:name="tr"/>
+    <locale android:name="hi"/>
+    <locale android:name="id"/>
+    <locale android:name="vi"/>
 </locale-config>

@@ -28,7 +28,8 @@ final class LocaleManager {
         CHINESE_SIMPLIFIED("zh-Hans","简体中文"),
         SLOVAK("sk","Slovenčina"), DUTCH("nl","Nederlands"), UKRAINIAN("uk","Українська"),
         SWEDISH("sv","Svenska"), DANISH("da","Dansk"), NORWEGIAN_BOKMAL("nb","Norsk bokmål"), FINNISH("fi","Suomi"),
-        HUNGARIAN("hu","Magyar"), ROMANIAN("ro","Română"), BULGARIAN("bg","Български"), GREEK("el","Ελληνικά");
+        HUNGARIAN("hu","Magyar"), ROMANIAN("ro","Română"), BULGARIAN("bg","Български"), GREEK("el","Ελληνικά"),
+        TURKISH("tr","Türkçe"), HINDI("hi","हिन्दी"), INDONESIAN("id","Bahasa Indonesia"), VIETNAMESE("vi","Tiếng Việt");
 
         final String tag;
         final String nativeName;

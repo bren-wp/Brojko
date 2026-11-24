@@ -220,7 +220,7 @@ assert "en" in configured_tags
 locale_tags=set(re.findall(r'\b[A-Z_]+\("([a-zA-Z-]+)","[^"]+"\)',java["LocaleManager.java"]))
 assert locale_tags == configured_tags, "Language picker and Android per-app language config differ"
 for tag in sorted(configured_tags-{"en"}):
-    directory={"he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans"}.get(tag,"values-"+tag)
+    directory={"he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans","id":"values-in"}.get(tag,"values-"+tag)
     translated=localized_strings(APP / ("res/"+directory+"/strings.xml"))
     assert base_strings.keys()==translated.keys(), "Incomplete locale: "+tag
     for key in base_strings:
@@ -253,9 +253,10 @@ required_forms={"hr":{"one","few","other"},"ar":{"zero","one","two","few","many"
                 "cs":{"one","few","many","other"},"sk":{"one","few","many","other"},
                 "nl":{"one","other"},"uk":{"one","few","many","other"},
                 "sv":{"one","other"},"da":{"one","other"},"nb":{"one","other"},"fi":{"one","other"},
-                "hu":{"one","other"},"ro":{"one","few","other"},"bg":{"one","other"},"el":{"one","other"}}
+                "hu":{"one","other"},"ro":{"one","few","other"},"bg":{"one","other"},"el":{"one","other"},
+                "tr":{"one","other"},"hi":{"one","other"}}
 for tag in sorted(configured_tags):
-    directory={"en":"values","he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans"}.get(tag,"values-"+tag)
+    directory={"en":"values","he":"values-iw","pt-BR":"values-pt-rBR","zh-Hans":"values-b+zh+Hans","id":"values-in"}.get(tag,"values-"+tag)
     forms=plural_resources(APP / ("res/"+directory+"/strings.xml"))
     assert forms.keys()==base_plurals.keys(), "Incomplete plurals: "+tag
     for key, quantities in forms.items():
