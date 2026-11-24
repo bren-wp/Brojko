@@ -6327,21 +6327,32 @@ public final class MainActivity extends ComponentActivity {
                     animation=pos;persist();invalidate();
                 }));
             }
-            card(20,805,360,72,29,card);
-            String[] tabs={uiText(R.string.action_new_short),uiText(R.string.nav_records),uiText(R.string.home_themes),uiText(R.string.settings_title)};
+            themeBottomNavigation(false);
+        }
+
+
+        /** Shared functional theme navigation with the two original viewport profiles. */
+        void themeBottomNavigation(boolean compact){
+            card(20,compact?635:805,360,compact?69:72,compact?28:29,card);
+            int[] labels={R.string.action_new_short,R.string.nav_records,R.string.home_themes,R.string.settings_title};
             String[] glyphs={"home","crown","palette","settings"};
             String[] destinations={"home","stats","themes","settings"};
-            for(int i=0;i<4;i++){
-                int index=i;float cx=65+i*90;
-                if(i==2)shape(205,809,90,65,27,theme==1?0xff453a48:0xffffecdf);
-                themesTabIcon(glyphs[i],cx,830,27,i==2?CORAL:muted);
-                fitted(i==2?uiText(R.string.themes_heading):tabs[i],cx,863,
+            for(int i=0;i<labels.length;i++){
+                final int index=i;float cx=65+i*90;
+                if(i==2)shape(205,compact?639:809,90,compact?61:65,compact?25:27,
+                    theme==1?0xff453a48:0xffffecdf);
+                boolean sourceHome=compact&&theme==0&&i==0;
+                float iconX=sourceHome?59f:cx;
+                float iconY=compact?(sourceHome?665f:658f):830f;
+                themesTabIcon(glyphs[i],iconX,iconY,compact?(sourceHome?24:26):27,
+                    i==2?CORAL:muted);
+                String label=uiText(labels[i]);
+                fitted(i==2?uiText(R.string.themes_heading):label,iconX,compact?690:863,
                     i==2?10:13,86,i==2?CORAL:muted,true);
-                taps.add(new Tap(22+i*89,805,110+i*89,877,tabs[i],
+                taps.add(new Tap(22+i*89,compact?635:805,110+i*89,compact?704:877,label,
                     ()->navigate(destinations[index])));
             }
         }
-
 
         boolean statsTouchExploration(){
             // Keep the owner's dense five-row layout normally, but expand
@@ -6874,26 +6885,7 @@ public final class MainActivity extends ComponentActivity {
                         animation=pos;persist();invalidate();
                     }));
             }
-            card(20,635,360,69,28,card);
-            String[] tabs={uiText(R.string.action_new_short),uiText(R.string.nav_records),uiText(R.string.home_themes),uiText(R.string.settings_title)};
-            String[] glyphs={"home","crown","palette","settings"};
-            String[] destinations={"home","stats","themes","settings"};
-            for(int i=0;i<4;i++){
-                final int index=i;float cx=65+i*90;
-                if(i==2)shape(205,639,90,61,25,
-                    theme==1?0xff453a48:0xffffecdf);
-                // Native 941px source home icon is 50px wide, centered
-                // around x139,y1564. The generic glyph was right/up.
-                boolean sourceHome=theme==0&&i==0;
-                float iconX=sourceHome?59f:cx;
-                float iconY=sourceHome?665f:658f;
-                themesTabIcon(glyphs[i],iconX,iconY,
-                    sourceHome?24:26,i==2?CORAL:muted);
-                fitted(i==2?uiText(R.string.themes_heading):tabs[i],iconX,690,
-                    i==2?10:13,86,i==2?CORAL:muted,true);
-                taps.add(new Tap(22+i*89,635,110+i*89,704,tabs[i],
-                    ()->navigate(destinations[index])));
-            }
+            themeBottomNavigation(true);
         }
 
         // The reference settings screen has its own restrained cards/icons.

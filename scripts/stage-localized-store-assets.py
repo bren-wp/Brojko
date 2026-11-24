@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 ROOT=Path(__file__).resolve().parents[1]
 ANDROID="{http://schemas.android.com/apk/res/android}"
 LOCALES={"en":"en-US","hr":"hr-HR","de":"de-DE","fr":"fr-FR",
-         "es":"es-ES","ar":"ar","he":"iw-IL"}
+         "es":"es-ES","ar":"ar","he":"iw-IL","it":"it-IT","pt-BR":"pt-BR"}
 PAGES=("splash","home","game","pause","win","over","confirm","confirmEnd",
        "dailyWin","dailyFail","daily","missions","stats","historyDetail",
        "themes","settings","language","backup","help","privacy","about")

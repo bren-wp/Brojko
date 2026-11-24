@@ -21,7 +21,8 @@ final class LocaleManager {
         ENGLISH("en","English"), CROATIAN("hr","Hrvatski"),
         GERMAN("de","Deutsch"), FRENCH("fr","Français"),
         ARABIC("ar","العربية"), SPANISH("es","Español"),
-        HEBREW("he","עברית");
+        HEBREW("he","עברית"), ITALIAN("it","Italiano"),
+        PORTUGUESE_BRAZIL("pt-BR","Português (Brasil)");
 
         final String tag;
         final String nativeName;
