@@ -22,9 +22,9 @@
 Swipe to merge matching tiles: 2 → 4 → 8 → 16 and beyond. Plan your next move, keep space on the board, and build your best score at your own pace.
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-home.png" width="242" alt="Real Android screenshot of Brojko: Home" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-classic-live.png" width="242" alt="Real Android screenshot of Brojko: Classic Live" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-victory.png" width="242" alt="Real Android screenshot of Brojko: Victory" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-home.png" width="242" alt="Real English Android screenshot of Brojko: Home" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-game.png" width="242" alt="Real English Android screenshot of Brojko: Classic 4×4" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-win.png" width="242" alt="Real English Android screenshot of Brojko: Victory" />
 </p>
 
 | Mode | Play your way |
@@ -45,64 +45,53 @@ English · Hrvatski · Deutsch · Français · Español · Italiano · Portuguê
 
 ## Real Android screenshots
 
-Gallery uses verified captures from release **v1.12.256**. These are actual Android captures, not generated mockups. This historical gallery uses the Croatian reference suite. English is the app's default language; new verified releases are configured to include a separate English gallery (`brojko-en-*.png`).
+English is the default language. Gallery uses native English captures from release **v1.12.257**. These are actual Android captures of the game, not generated mockups. [Croatian screenshots](README.hr.md) are also available.
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-icon.png" width="222" alt="Real Android screenshot of Brojko: Icon" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-home.png" width="222" alt="Real Android screenshot of Brojko: Home" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-classic-live.png" width="222" alt="Real Android screenshot of Brojko: Classic Live" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-splash.png" width="222" alt="Real English Android screenshot of Brojko: Splash" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-home.png" width="222" alt="Real English Android screenshot of Brojko: Home" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-game.png" width="222" alt="Real English Android screenshot of Brojko: Classic 4×4" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-victory.png" width="222" alt="Real Android screenshot of Brojko: Victory" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-classic.png" width="222" alt="Real Android screenshot of Brojko: Classic" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-relaxed.png" width="222" alt="Real Android screenshot of Brojko: Relaxed" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-gameRelaxed.png" width="222" alt="Real English Android screenshot of Brojko: Relaxed 5×5" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-daily.png" width="222" alt="Real English Android screenshot of Brojko: Daily challenge" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-gameDaily.png" width="222" alt="Real English Android screenshot of Brojko: Daily gameplay" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-daily.png" width="222" alt="Real Android screenshot of Brojko: Daily" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-missions.png" width="222" alt="Real Android screenshot of Brojko: Missions" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-statistics.png" width="222" alt="Real Android screenshot of Brojko: Statistics" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-win.png" width="222" alt="Real English Android screenshot of Brojko: Victory" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-over.png" width="222" alt="Real English Android screenshot of Brojko: Game over" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-pause.png" width="222" alt="Real English Android screenshot of Brojko: Pause" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-history-detail.png" width="222" alt="Real Android screenshot of Brojko: History Detail" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-classic-dark.png" width="222" alt="Real Android screenshot of Brojko: Classic Dark" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-classic-vivid.png" width="222" alt="Real Android screenshot of Brojko: Classic Vivid" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-confirm.png" width="222" alt="Real English Android screenshot of Brojko: New game confirmation" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-confirmEnd.png" width="222" alt="Real English Android screenshot of Brojko: End game confirmation" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-dailyWin.png" width="222" alt="Real English Android screenshot of Brojko: Daily challenge completed" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-themes.png" width="222" alt="Real Android screenshot of Brojko: Themes" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-splash.png" width="222" alt="Real Android screenshot of Brojko: Splash" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-settings.png" width="222" alt="Real Android screenshot of Brojko: Settings" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-dailyFail.png" width="222" alt="Real English Android screenshot of Brojko: Daily challenge failed" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-missions.png" width="222" alt="Real English Android screenshot of Brojko: Missions" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-stats.png" width="222" alt="Real English Android screenshot of Brojko: Statistics" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-game-over.png" width="222" alt="Real Android screenshot of Brojko: Game Over" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-relaxed-live.png" width="222" alt="Real Android screenshot of Brojko: Relaxed Live" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-daily-gameplay.png" width="222" alt="Real Android screenshot of Brojko: Daily Gameplay" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-historyDetail.png" width="222" alt="Real English Android screenshot of Brojko: Game details" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-themes.png" width="222" alt="Real English Android screenshot of Brojko: Themes" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-settings.png" width="222" alt="Real English Android screenshot of Brojko: Settings" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-pause.png" width="222" alt="Real Android screenshot of Brojko: Pause" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-confirm-new.png" width="222" alt="Real Android screenshot of Brojko: Confirm New" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-confirm-end.png" width="222" alt="Real Android screenshot of Brojko: Confirm End" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-language.png" width="222" alt="Real English Android screenshot of Brojko: Language" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-backup.png" width="222" alt="Real English Android screenshot of Brojko: Local backup" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-help.png" width="222" alt="Real English Android screenshot of Brojko: How to play" />
 </p>
 
 <p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-daily-win.png" width="222" alt="Real Android screenshot of Brojko: Daily Win" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-daily-fail.png" width="222" alt="Real Android screenshot of Brojko: Daily Fail" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-help.png" width="222" alt="Real Android screenshot of Brojko: Help" />
-</p>
-
-<p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-privacy.png" width="222" alt="Real Android screenshot of Brojko: Privacy" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-about.png" width="222" alt="Real Android screenshot of Brojko: About" />
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-backup.png" width="222" alt="Real Android screenshot of Brojko: Backup" />
-</p>
-
-<p align="center">
-<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.256/brojko-language.png" width="222" alt="Real Android screenshot of Brojko: Language" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-privacy.png" width="222" alt="Real English Android screenshot of Brojko: Privacy" />
+<img src="https://github.com/bren-wp/Brojko/releases/download/v1.12.257/brojko-en-about.png" width="222" alt="Real English Android screenshot of Brojko: About" />
 </p>
 
 ## Your game, your data

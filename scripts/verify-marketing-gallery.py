@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Check that the README only advertises real screenshots staged by Android QA.
+"""Validate the English-first marketing gallery and separate Croatian gallery.
 
 No web requests, no artificial images and no screenshots packaged into the APK.
+Release asset existence must also be checked before merging a gallery update.
 """
 import ast
 from pathlib import Path
@@ -9,41 +10,46 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 stage = (ROOT / "scripts/stage-marketing-screenshots.py").read_text(encoding="utf-8")
+local_stage = (ROOT / "scripts/stage-localized-store-assets.py").read_text(encoding="utf-8")
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
+croatian = (ROOT / "README.hr.md").read_text(encoding="utf-8")
 workflow = (ROOT / ".github/workflows/android-ui-qa.yml").read_text(encoding="utf-8")
 
-syntax = ast.parse(stage)
-mapping = None
-for node in syntax.body:
-    if isinstance(node, ast.Assign) and any(
-        isinstance(target, ast.Name) and target.id == "CAPTURES"
-        for target in node.targets
-    ):
-        mapping = ast.literal_eval(node.value)
-        break
-assert isinstance(mapping, dict) and len(mapping) == 28, (
-    "The production screenshot gallery must cover 28 real Android captures"
-)
-assert len(set(mapping.values())) == len(mapping), "Do not reuse one capture for multiple screens"
-assert "if (( ${#screenshots[@]} != 28 )); then" in workflow, (
-    "Publication asset count must match the real screenshots in CAPTURES"
-)
-# Link images to a release that already contains all real emulator captures.
-# The latest release may temporarily have only APK/AAB while UI QA is running.
+def literal_assignment(source, name):
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == name for target in node.targets
+        ):
+            return ast.literal_eval(node.value)
+    raise AssertionError("Missing staging inventory: " + name)
+
+mapping = literal_assignment(stage, "CAPTURES")
+pages = literal_assignment(local_stage, "PAGES")
+assert isinstance(mapping, dict) and len(mapping) == 28
+assert len(set(mapping.values())) == len(mapping)
+assert len(pages) == len(set(pages)) == 23
+assert 'if (( ${#screenshots[@]} != 28 )); then' in workflow
+assert 'if (( ${#english[@]} != 23 )); then' in workflow
+assert "python3 scripts/stage-marketing-screenshots.py" in workflow
+assert "--english-gallery" in workflow
+
 verified = re.search(
-    r"Gallery uses verified captures from release \*\*(v\d+\.\d+\.\d+)\*\*",
+    r"Gallery uses native English captures from release \*\*(v\d+\.\d+\.\d+)\*\*",
     readme,
 )
-assert verified, "README must identify its complete verified screenshot release"
-gallery_tag = verified.group(1)
-assert "releases/latest/download/brojko-" not in readme, (
-    "Do not embed images from a release before screenshot QA has finished"
-)
+assert verified, "README must identify the exact English gallery release"
+tag = verified.group(1)
+prefix = "https://github.com/bren-wp/Brojko/releases/download/"
+assert "releases/latest/download/brojko-" not in readme
+gallery = readme.split("## Real Android screenshots", 1)[1].split("## Your game, your data", 1)[0]
+english = re.findall(r'src="([^"]+brojko-en-[^"]+\.png)"', gallery)
+expected = {prefix + tag + "/brojko-en-" + page + ".png" for page in pages}
+assert len(english) == len(expected) and set(english) == expected, "English gallery must cover every native state exactly once"
+all_game_images = re.findall(r'src="([^"]+/brojko-[^"]+\.png)"', readme)
+assert all(url in expected or url.endswith("/brojko-icon.png") for url in all_game_images), "Croatian game captures must not appear in English README"
+assert "actual android captures" in readme.lower()
+assert 'alt="Real English Android screenshot of Brojko:' in gallery
 for name, origin in mapping.items():
     assert name.endswith(".png") and origin.endswith(".png")
-    url = "https://github.com/bren-wp/Brojko/releases/download/" + gallery_tag + "/" + name
-    assert f'src="{url}"' in readme, "Missing screenshot in README: " + name
-    assert f'alt="Real Android screenshot of Brojko:' in readme, "Screenshot alt text is required"
-assert "actual android captures" in readme.lower()
-assert "python3 scripts/stage-marketing-screenshots.py" in workflow
-print(f"OK: README advertises {len(mapping)} distinct Android captures from verified emulator QA")
+    assert any(url.endswith("/" + name) for url in re.findall(r'src="([^"]+)"', croatian)), "Missing Croatian gallery image: " + name
+print(f"OK: {len(pages)} English native states in README; {len(mapping)} original Croatian images in README.hr.md")
