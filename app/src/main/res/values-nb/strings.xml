@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibrasjon</string>
     <string name="settings_language">Språk</string>
     <string name="settings_notifications">Varsler</string>
-    <string name="settings_progress_sync">Synkroniser fremgang</string>
+    <string name="settings_progress_sync">Lagre fremgang</string>
     <string name="settings_local_backup">Lokal sikkerhetskopi</string>
     <string name="settings_privacy">Personvernregler</string>
     <string name="settings_about">Om</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Eksporter sikkerhetskopi</string>
     <string name="backup_restore">Gjenopprett sikkerhetskopi</string>
     <string name="backup_replace">Gjenoppretting erstatter lokal fremgang.</string>
-    <string name="backup_no_cloud">Skysynkronisering er slått av.</string>
+    <string name="backup_no_cloud">Ingen skysynkronisering.</string>
     <string name="about_title">Om spillet</string>
     <string name="about_goal">Slå sammen like brikker og nå 2048.</string>
     <string name="about_swipe">Sveip opp, ned, til venstre eller høyre.</string>

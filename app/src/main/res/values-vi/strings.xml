@@ -9,7 +9,7 @@
     <string name="settings_vibration">Rung</string>
     <string name="settings_language">Ngôn ngữ</string>
     <string name="settings_notifications">Thông báo</string>
-    <string name="settings_progress_sync">Đồng bộ tiến độ</string>
+    <string name="settings_progress_sync">Sao lưu tiến độ</string>
     <string name="settings_local_backup">Sao lưu cục bộ</string>
     <string name="settings_privacy">Chính sách quyền riêng tư</string>
     <string name="settings_about">Giới thiệu</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Xuất bản sao lưu</string>
     <string name="backup_restore">Khôi phục bản sao lưu</string>
     <string name="backup_replace">Khôi phục thay thế tiến độ cục bộ.</string>
-    <string name="backup_no_cloud">Đồng bộ đám mây đã tắt.</string>
+    <string name="backup_no_cloud">Không có đồng bộ đám mây.</string>
     <string name="about_title">Giới thiệu trò chơi</string>
     <string name="about_goal">Gộp các ô giống nhau và đạt 2048.</string>
     <string name="about_swipe">Vuốt lên, xuống, trái hoặc phải.</string>

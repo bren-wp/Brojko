@@ -2806,7 +2806,7 @@ public class ScreensSmokeTest {
                        tap.label.startsWith("Vibracija ")||
                        "Jezik".equals(tap.label)||
                        tap.label.startsWith("Obavijesti ")||
-                       tap.label.startsWith("Sinkronizacija napretka")||
+                       view.uiText(R.string.settings_progress_sync).equals(tap.label)||
                        "Pravila privatnosti".equals(tap.label)||
                        "O aplikaciji".equals(tap.label)){
                         rows++;
@@ -3877,7 +3877,7 @@ public class ScreensSmokeTest {
                 try{board.draw(new Canvas(bmp));}finally{bmp.recycle();}
                 boolean found=false;
                 for(MainActivity.BoardScreen.Tap tap:board.taps){
-                    if("Sinkronizacija napretka".equals(tap.label)){
+                    if(board.uiText(R.string.settings_progress_sync).equals(tap.label)){
                         found=true;
                         assertTrue("Local-backup navigation needs a full-height target",
                             tap.bottom-tap.top>=48);
@@ -4541,7 +4541,7 @@ public class ScreensSmokeTest {
                         new int[]{97,161,223,286,360,433,498}:
                         new int[]{148,229,310,391,478,559,640};
                     String[] labels={"Zvuk","Vibracija","Jezik","Obavijesti",
-                        "Sinkronizacija napretka","Pravila privatnosti","O aplikaciji"};
+                        board.uiText(R.string.settings_progress_sync),"Pravila privatnosti","O aplikaciji"};
                     assertEquals("Seven rows and a separate Back arrow",
                         8,board.taps.size());
                     MainActivity.BoardScreen.Tap back=board.taps.get(0);
@@ -4613,7 +4613,7 @@ public class ScreensSmokeTest {
                 assertEquals("The original layout fits without scrolling",
                     0f,board.maxScroll,.01f);
                 String[] expected={"Zvuk","Vibracija","Jezik","Obavijesti",
-                    "Sinkronizacija napretka","Pravila privatnosti",
+                    board.uiText(R.string.settings_progress_sync),"Pravila privatnosti",
                     "O aplikaciji"};
                 assertEquals("Seven setting rows plus Back",8,board.taps.size());
                 assertEquals("Natrag",board.taps.get(0).label);

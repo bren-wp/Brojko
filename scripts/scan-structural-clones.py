@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Report token-normalized Java clone candidates, not proven semantic clones."""
+import argparse
+import hashlib
+import json
 from collections import defaultdict
 from pathlib import Path
 import re
@@ -58,6 +61,9 @@ def candidates(sources, window=64, stride=8):
     )
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--report', type=Path)
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     sources = {
         str(path.relative_to(root)): path.read_text(encoding="utf-8")
@@ -69,6 +75,20 @@ def main():
     for group in groups[:40]:
         print("REVIEW:", ", ".join(f"{path}:{first}-{last}" for path, first, last, _ in group[:8]))
     print("Confirm control/data flow, lifecycle and behavior before refactoring.")
+    if args.report:
+        report = {
+            "schema": 1,
+            "classification": "unreviewed structural candidates, not semantic equivalence",
+            "window": 64, "stride": 8,
+            "sources": {path: hashlib.sha256(source.encode("utf-8")).hexdigest()
+                        for path, source in sorted(sources.items())},
+            "groups": [
+                [{"path": path, "first_line": first, "last_line": last,
+                  "token_offset": offset} for path, first, last, offset in group]
+                for group in groups
+            ]
+        }
+        args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
     main()

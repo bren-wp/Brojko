@@ -9,7 +9,7 @@
     <string name="settings_vibration">الاهتزاز</string>
     <string name="settings_language">اللغة</string>
     <string name="settings_notifications">الإشعارات</string>
-    <string name="settings_progress_sync">مزامنة التقدم</string>
+    <string name="settings_progress_sync">نسخ التقدم احتياطيًا</string>
     <string name="settings_local_backup">نسخة احتياطية محلية</string>
     <string name="settings_privacy">سياسة الخصوصية</string>
     <string name="settings_about">حول التطبيق</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">تصدير النسخة الاحتياطية</string>
     <string name="backup_restore">استعادة النسخة الاحتياطية</string>
     <string name="backup_replace">تحل الاستعادة محل التقدم المحلي.</string>
-    <string name="backup_no_cloud">المزامنة السحابية غير مفعّلة.</string>
+    <string name="backup_no_cloud">لا توجد مزامنة سحابية.</string>
     <string name="about_title">حول اللعبة</string>
     <string name="about_goal">ادمج البلاطات المتطابقة واصل إلى 2048.</string>
     <string name="about_swipe">اسحب لأعلى أو لأسفل أو لليسار أو لليمين.</string>

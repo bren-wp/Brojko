@@ -16,7 +16,7 @@
     <string name="settings_switch_on">%1$s an</string>
     <string name="settings_switch_off">%1$s aus</string>
     <string name="language_interface">Anzeigesprache</string>
-    <string name="language_back">Zurück zu Einstellungen</string>
+    <string name="language_back">Zurück zu den Einstellungen</string>
     <string name="help_title">Spielanleitung</string>
     <string name="help_merge">Gleiche Kacheln verbinden</string>
     <string name="help_swipe">1. Wischen</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Sicherung exportieren</string>
     <string name="backup_restore">Sicherung wiederherstellen</string>
     <string name="backup_replace">Die Wiederherstellung ersetzt den lokalen Fortschritt.</string>
-    <string name="backup_no_cloud">Cloud-Synchronisierung ist deaktiviert.</string>
+    <string name="backup_no_cloud">Keine Cloud-Synchronisierung.</string>
     <string name="about_title">Über das Spiel</string>
     <string name="about_goal">Verbinde gleiche Kacheln und erreiche 2048.</string>
     <string name="about_swipe">Wische nach oben, unten, links oder rechts.</string>
@@ -154,8 +154,8 @@
     <string name="stats_streak_bottom">in Folge</string>
     <string name="mission_merge_title">20 Kacheln verbinden</string>
     <string name="mission_merge_description">Verbinde beliebige Kacheln 20-mal.</string>
-    <string name="mission_no_undo_title">512 ohne Rückgängig erreichen</string>
-    <string name="mission_no_undo_description">Erreiche die Kachel 512 ohne Rückgängig</string>
+    <string name="mission_no_undo_title">512 ohne Rückgängigmachen</string>
+    <string name="mission_no_undo_description">Erreiche die Kachel 512, ohne einen Zug rückgängig zu machen.</string>
     <string name="mission_streak_title">7 Tage in Folge spielen</string>
     <string name="mission_streak_description">Spiele an 7 aufeinanderfolgenden Tagen.</string>
     <string name="mission_week_score_title">Insgesamt 10.000 Punkte erzielen</string>

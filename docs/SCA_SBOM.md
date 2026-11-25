@@ -56,3 +56,42 @@ artefaktima. Uspješno izdanje uključuje oba CycloneDX JSON-a.
 
 Dokumentacija konfiguriranja CycloneDX 3.5.1:
 https://github.com/CycloneDX/cyclonedx-gradle-plugin
+
+## PR #160 — evidence and remediation status
+
+The final PR #159 runtime SCA reported 0 matches across 38 packages; build-tool High/Critical findings remained. The previously measured paths above identify Android Lint/SDK configurations, not merely the root plugin classpath. PR #160 archives buildEnvironment inventories alongside runtime inventories and publishes both SARIF files with release assets. Exact current transitive paths and patched version compatibility still require a fresh resolved graph and scans; no advisory is suppressed or marked fixed.
+
+## Scoped remediation candidates (PR #160)
+
+Previously measured Lint dependency paths, from the recorded CycloneDX graph, are listed above. The following candidate updates are limited to exact previously observed requests in Lint-named configurations, with no global force or app runtime upgrade:
+
+- BC provider / PKIX / utility: aligned to 1.85 (CVE-2026-8763, CVE-2026-13506, CVE-2026-5588).
+- Guava JRE: 33.7.2-jre (CVE-2026-102554).
+- HttpClient / HttpMime: aligned to 4.5.14 (CVE-2020-13956).
+- Commons Lang: 3.18.0 (CVE-2025-48924).
+
+The referenced patched versions were checked against the GitHub advisory database and Maven Central. Full app configuration inventory is also archived because buildEnvironment alone does not cover the Lint worker classpath. This is an unverified remediation candidate until Gradle resolution, lint/build tests, both SBOMs and both scans confirm the result. Any residual finding stays open; no suppression or SBOM exclusion is added. See https://github.com/advisories/GHSA-9pwp-9qqc-pr26, https://github.com/advisories/GHSA-qp49-qgx5-5m26, https://github.com/advisories/GHSA-wg6q-6289-32hp, https://github.com/advisories/GHSA-xxph-c9ww-hj94, https://github.com/advisories/GHSA-7r82-7xv7-xcpj and https://github.com/advisories/GHSA-j288-q9x7-2f5v.
+
+## Independent verification of PR #160 head 579b9b2
+
+Run 45507848719 artifact 14974247877 contains 37 runtime and 137 app/build-configuration components (excluding BOM root) and zero findings in both SARIF files; all six previous advisories are absent. However artifact 14974092479 independently confirms root `buildEnvironment` still selects BC 1.80.2, Commons Lang 3.16.0 and Guava 33.7.1-jre. The app Lint upgrade alone therefore did not cover the plugin classpath. The next commit adds exact-version root classpath remediation, a resolved Gradle module graph export, and a build-only CycloneDX merge with validation of graph edges and known old coordinates. The high/critical build-tool SCA now blocks CI and release. The fresh combined graph/scan is pending, not presumed clean.
+
+## Expanded build SCA, run 45510192667 (head 4be843a)
+
+Original artifact 14974418289 contains runtime and expanded build SBOMs, resolved plugin classpath and both SARIF reports. Runtime: 0 findings. Build: 6 High + 1 Medium; previous six advisories absent. Shortest paths computed directly from the resolved plugin graph:
+
+| Module | Resolved | Advisory | Remediation candidate |
+|---|---|---|---|
+| JDOM2 via AGP -> jetifier-processor | 2.0.6 | GHSA-2363-cqg2-863c | 2.0.6.1 |
+| jose4j via AGP -> bundletool 1.18.3 | 0.9.5 | GHSA-3677-xxcr-wjqv | 0.9.7 (fixed since 0.9.6) |
+| Jackson Core via CycloneDX plugin -> core-java 13.2.0 -> jackson-dataformat-xml | 2.22.2 | GHSA-p6pp-m3f8-5c89 / GHSA-7hhh-6rmp-j9qf | 2.22.4 (fixed since 2.22.3) |
+| Jackson Databind via same CycloneDX path | 2.22.2 | GHSA-cxp5-3px4-pw24 / GHSA-wv8q-qhhj-9h54 | 2.22.4 (fixed since 2.22.3) |
+| Kotlin Gradle Plugin directly via AGP 9.5.2 | 2.2.10 | GHSA-r937-wjx7-w2jp | OPEN: fixed since 2.4.20-Beta1; compatible AGP/Gradle upgrade needs testing |
+
+Advisory details: https://github.com/advisories/GHSA-2363-cqg2-863c, https://github.com/advisories/GHSA-3677-xxcr-wjqv, https://github.com/advisories/GHSA-p6pp-m3f8-5c89, https://github.com/advisories/GHSA-7hhh-6rmp-j9qf, https://github.com/advisories/GHSA-cxp5-3px4-pw24, https://github.com/advisories/GHSA-wv8q-qhhj-9h54, https://github.com/advisories/GHSA-r937-wjx7-w2jp. Scoped exact-version plugin-classpath overrides align Jackson BOM, core, databind and XML/YAML modules without changing jackson-annotations 2.22. Runtime configurations unchanged. Kotlin 2.4.20 documents Gradle support only through 9.7.0; current wrapper is 9.8.2, so no blind Kotlin force is used. Explicitly disable Gradle task-output caching as defense in depth; this does not close the advisory. All overrides require fresh resolution and scans; no SCA suppression. Current High/Critical build SCA is blocking.
+
+## Kotlin and Gradle distribution security review — 2026-11-25
+
+CVE-2026-53914 / GHSA-r937-wjx7-w2jp is fixed in KGP 2.4.20-Beta1 or later. Use the stable 2.4.21 classpath declaration documented by Android Developers, not the Kotlin Android plugin or a forced runtime-library upgrade. Kotlin's fully supported matrix lists Gradle through 9.7.0 and AGP through 9.3.1, so this is a compatibility candidate, not a certified combination. A downgrade to the listed Gradle versions would reintroduce newly disclosed tool vulnerabilities: Gradle advisory GHSA-3cfg-jpcr-gfp3 (Critical 9.3) and GHSA-gqrr-4j89-5267 (High 8.6) explicitly affect 9.8.2. Upgrade the wrapper and distribution to 9.9.2, which also addresses four more High issues from the second patch release. The distribution and wrapper SHA-256 values are pinned to Gradle's official checksum reference; CI verifies the bootstrap before launching Gradle. The native Java application and AGP 9.5.2 remain unchanged. The combined build SBOM gate requires exactly KGP 2.4.21 and rejects a second KGP version. Keep task-output caching disabled as defense in depth. Full compilation, Lint, release bundles, native QA and SCA must still pass. The Gradle distribution itself is separately tracked and is not represented as a complete distribution SBOM by the plugin-module graph. No claim that every newly disclosed issue is exploitable in Brojko or that remediation is already verified.
+
+References: https://github.com/advisories/GHSA-r937-wjx7-w2jp ; https://developer.android.com/build/releases/agp-9-0-0-release-notes#runtime-dependency-on-kotlin-gradle-plugin ; https://kotlinlang.org/docs/gradle-configure-project.html ; https://docs.gradle.org/9.9.2/release-notes.html ; https://gradle.org/release-checksums/ ; https://github.com/gradle/gradle/security/advisories/GHSA-3cfg-jpcr-gfp3 ; https://github.com/gradle/gradle/security/advisories/GHSA-gqrr-4j89-5267 .

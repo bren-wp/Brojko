@@ -35,9 +35,15 @@ jobs:
           test -n "$SDKMANAGER"
           echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+      - name: Verify pinned Gradle bootstrap and distribution
+        run: bash scripts/verify-gradle-toolchain.sh
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
       - name: Prepare and verify Nunito font + OFL license
         run: bash scripts/prepare-nunito.sh
+      - name: Prepare English screenshot verification
+        run: |
+          python3 -m venv /tmp/brojko-english-venv
+          /tmp/brojko-english-venv/bin/python -m pip install --disable-pip-version-check 'Pillow>=11.3,<13'
       - name: Enable KVM
         run: |
           if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
@@ -65,6 +71,10 @@ jobs:
             grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             bash scripts/pull-verified-screenshots.sh
             python3 scripts/stage-marketing-screenshots.py
+            adb shell am instrument -w -e class 'com.brendigo.brojko.LocaleMatrixTest#captureEveryLocalizedScreenAtRequestedViewports' -e captureLocales true -e fullViewports false -e localeOffset 0 -e localeCount 1 com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee english-capture-results.txt
+            grep -Eq '^OK [(]1 test[s]?[)]$' english-capture-results.txt
+            adb pull /sdcard/Android/data/com.brendigo.brojko/files/locale-screenshots/ ./english-native
+            /tmp/brojko-english-venv/bin/python scripts/stage-localized-store-assets.py --captures english-native --output english-fastlane --locale-offset 0 --locale-count 1 --english-gallery
       - name: Retry emulator if the first boot failed before instrumenting
         id: emulator-retry
         if: ${{ steps.emulator-primary.outcome == 'failure' && hashFiles('instrumentation-results.txt') == '' }}
@@ -89,6 +99,10 @@ jobs:
             grep -Eq '^OK [(][0-9]+ tests?[)]$' instrumentation-results.txt
             bash scripts/pull-verified-screenshots.sh
             python3 scripts/stage-marketing-screenshots.py
+            adb shell am instrument -w -e class 'com.brendigo.brojko.LocaleMatrixTest#captureEveryLocalizedScreenAtRequestedViewports' -e captureLocales true -e fullViewports false -e localeOffset 0 -e localeCount 1 com.brendigo.brojko.test/com.brendigo.brojko.BrojkoTestRunner | tee english-capture-results.txt
+            grep -Eq '^OK [(]1 test[s]?[)]$' english-capture-results.txt
+            adb pull /sdcard/Android/data/com.brendigo.brojko/files/locale-screenshots/ ./english-native
+            /tmp/brojko-english-venv/bin/python scripts/stage-localized-store-assets.py --captures english-native --output english-fastlane --locale-offset 0 --locale-count 1 --english-gallery
       - name: Require a successful emulator test run
         if: always()
         run: |
@@ -107,6 +121,9 @@ jobs:
           path: |
             android-screenshots/
             instrumentation-results.txt
+            english-capture-results.txt
+            english-fastlane/english-gallery/
+            english-fastlane/capture-manifest.json
 
   publish-marketing:
     name: Publish genuine Android gallery with the release
@@ -162,7 +179,7 @@ jobs:
       - name: Verify and stage unmodified emulator screenshots
         if: steps.verified_release.outputs.available == 'true'
         run: python3 scripts/stage-marketing-screenshots.py
-      - name: Upload all 28 genuine screenshots to this exact release
+      - name: Upload 28 reference and 23 English native screenshots to this exact release
         if: steps.verified_release.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -175,6 +192,12 @@ jobs:
             echo "::error::Expected 28 real Android gallery files, found ${#screenshots[@]}"
             exit 1
           fi
+          english=(english-fastlane/english-gallery/*.png)
+          if (( ${#english[@]} != 23 )); then
+            echo "::error::Expected 23 English native screenshots, found ${#english[@]}"
+            exit 1
+          fi
+          screenshots+=("${english[@]}")
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
           # GitHub upload endpoints occasionally return transient HTTP 500.
           # Retry each individual *real* image without masking persistent errors.

@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibracija</string>
     <string name="settings_language">Jezik</string>
     <string name="settings_notifications">Obavijesti</string>
-    <string name="settings_progress_sync">Sinkronizacija napretka</string>
+    <string name="settings_progress_sync">Spremi napredak</string>
     <string name="settings_local_backup">Lokalna kopija</string>
     <string name="settings_privacy">Pravila privatnosti</string>
     <string name="settings_about">O aplikaciji</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Izvezi kopiju</string>
     <string name="backup_restore">Vrati kopiju</string>
     <string name="backup_replace">Vraćanje zamjenjuje lokalni napredak.</string>
-    <string name="backup_no_cloud">Cloud sinkronizacija nije uključena.</string>
+    <string name="backup_no_cloud">Nema sinkronizacije u oblaku.</string>
     <string name="about_title">O igri</string>
     <string name="about_goal">Spajaj jednake pločice i osvoji 2048.</string>
     <string name="about_swipe">Povuci gore, dolje, lijevo ili desno.</string>
@@ -105,8 +105,8 @@
     <string name="backup_restored">Sigurnosna kopija vraćena.</string>
     <string name="backup_unavailable">Sigurnosna kopija trenutačno nije dostupna.</string>
     <string name="share_message">U igri Brojko osvojio/la sam %1$s bodova! Spajaj brojeve. Ruši rekorde. — Brojko by Brendigo</string>
-    <string name="backup_import_failed">Vraćanje sigurnosne kopije nije uspjelo. Provjerite datoteku i pokušajte ponovno.</string>
-    <string name="backup_export_failed">Spremanje sigurnosne kopije nije uspjelo. Pokušajte ponovno.</string>
+    <string name="backup_import_failed">Vraćanje sigurnosne kopije nije uspjelo. Provjeri datoteku i pokušaj ponovno.</string>
+    <string name="backup_export_failed">Spremanje sigurnosne kopije nije uspjelo. Pokušaj ponovno.</string>
     <string name="accessibility_progress">Brojko, rezultat %1$s, najveća pločica %2$s, potez %3$d</string>
     <string name="accessibility_victory">Bravo! Dosegnuli ste pločicu 2048. Tvoj rezultat je %1$s.</string>
     <string name="accessibility_victory_actions">%1$s Nastavi igrati, Nova igra ili Podijeli rezultat.</string>
@@ -155,7 +155,7 @@
     <string name="mission_merge_title">Spoji 20 pločica</string>
     <string name="mission_merge_description">Spoji bilo koje pločice 20 puta.</string>
     <string name="mission_no_undo_title">Dosegni 512 bez poništavanja</string>
-    <string name="mission_no_undo_description">Ostvari pločicu 512 bez poništavanja</string>
+    <string name="mission_no_undo_description">Ostvari pločicu 512 bez poništavanja poteza.</string>
     <string name="mission_streak_title">Igraj 7 dana zaredom</string>
     <string name="mission_streak_description">Pokreni igru 7 uzastopnih dana.</string>
     <string name="mission_week_score_title">Ostvari 10.000 bodova ukupno</string>
@@ -243,7 +243,7 @@
     <string name="language_previous">Prethodno</string>
     <string name="language_next">Sljedeće</string>
     <string name="language_no_results">Nema pronađenih jezika.</string>
-    <string name="language_change_failed">Promjena jezika nije uspjela. Pokušajte ponovno.</string>
+    <string name="language_change_failed">Promjena jezika nije uspjela. Pokušaj ponovno.</string>
     <string name="countdown_hours">%1$dh</string>
     <string name="countdown_days_hours">%1$dd %2$dh</string>
     <string name="countdown_hours_minutes">%1$dh %2$dmin</string>

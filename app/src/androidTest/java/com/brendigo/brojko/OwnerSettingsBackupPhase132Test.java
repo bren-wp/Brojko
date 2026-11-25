@@ -43,19 +43,19 @@ public class OwnerSettingsBackupPhase132Test {
                     screen.draw(new Canvas(rendered));
                     assertTrue("Owner reference viewport must remain active",
                         screen.referencePortraitLayout);
-                    RectF title=ink(screen,"Sinkronizacija napretka");
+                    RectF title=ink(screen,screen.uiText(R.string.settings_progress_sync));
                     RectF subtitle=ink(screen,"Lokalna kopija");
                     assertNotNull("Backup title must be rendered",title);
                     assertNotNull("Honest local-only caption must remain",subtitle);
-                    // Reference dark ink: x215..628/y899..937; previously
-                    // deployed Android: x216..642/y873..909.
-                    // Permit font raster/density rounding, but reject the
-                    // previous clearly over-wide and high positioning.
+                    // Preserve the original left anchor, vertical baseline,
+                    // maximum reference width and card clearance. The honest
+                    // shorter translated label must not be stretched to the
+                    // old cloud-sync string's measured width.
                     assertTrue("Backup heading near source x position",
                         title.left>=202f && title.left<=233f &&
-                        title.right>=608f && title.right<=648f);
-                    assertTrue("Backup heading has source-like width",
-                        title.width()<=427f && title.width()>=379f);
+                        title.right<=648f);
+                    assertTrue("Backup heading has readable bounded width",
+                        title.width()<=427f && title.width()>=100f);
                     assertTrue("Backup heading near source baseline",
                         title.top>=891f && title.top<=919f &&
                         title.bottom>=926f && title.bottom<=955f);
@@ -66,7 +66,7 @@ public class OwnerSettingsBackupPhase132Test {
 
                     int matches=0;
                     for(MainActivity.BoardScreen.Tap tap:screen.taps){
-                        if("Sinkronizacija napretka".equals(tap.label)){
+                        if(screen.uiText(R.string.settings_progress_sync).equals(tap.label)){
                             matches++;
                             assertNotNull("Real backup action required",tap.action);
                             assertTrue("Backup tap target must stay full-row",
@@ -107,7 +107,7 @@ public class OwnerSettingsBackupPhase132Test {
                         finally{image.recycle();}
                         boolean hasBackup=false;
                         for(MainActivity.BoardScreen.Tap tap:screen.taps)
-                            if("Sinkronizacija napretka".equals(tap.label)){
+                            if(screen.uiText(R.string.settings_progress_sync).equals(tap.label)){
                                 hasBackup=tap.action!=null;
                                 assertTrue(tap.right<=400f);
                             }

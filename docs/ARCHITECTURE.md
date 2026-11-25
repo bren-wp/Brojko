@@ -108,3 +108,19 @@ provjerava `isDailyOutOfMoves()` prije svakog pomaka. Ne dopušta
 81. potez, izradu nove pločice ni povećanje rezultata nakon
 neuspjelog 80. poteza. Zadnji dopušteni 80. potez ostaje
 funkcionalan; novi JVM regresijski test pokriva oba slučaja.
+
+## Mission threshold policy
+
+`RewardPolicy` extracts the six existing threshold/amount decisions from `MainActivity` into a pure Java component. The original reward bits, order, thresholds, amounts, saturation and once-only persistence are retained; `MainActivity.reward` still owns mutation. Boundary and undo regression tests are included. This is a bounded extraction, not completion of the Activity/renderer refactor.
+
+## Session transition policy
+
+The confirmation and archive predicates are extracted to `SessionTransitionPolicy` and used by `requestNew`, `newGame` and `endSession`. Finished games still require archiving without confirmation; archived or unused games cannot be archived again. Four JVM tests cover these branches. The durable asynchronous archive coordinator and Canvas renderer are unchanged. This is a bounded refactoring, not completion of MainActivity modularization.
+
+## Statistics chart data
+
+`StatisticsChartData` extracts the shared score/tile metric lookup and maximum computation used by both compact and tall statistics layouts. The Activity delegates retain the original interfaces, history order and all drawing geometry. Four JVM regressions cover score/tile selection, null/negative values, malformed rows and the requested history window. Locale capture daily-win fixtures now contain the attained 256 tile and assert the genuine daily goal predicate, avoiding a contradictory success screenshot. Fresh native CI remains required.
+
+## Rounded star geometry
+
+Two confirmed duplicate rounded-star contour algorithms in reward and statistics artwork now delegate to `RoundedStarPath`. Every caller retains its original vertices, radius, corner factor, color and transform; no path interpolation operation changed. A native instrumentation test compares exact raster pixels against the original formula for 30 corner/radius combinations. This is a bounded semantic clone extraction, not full renderer modularization.

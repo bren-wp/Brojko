@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibrazione</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_notifications">Notifiche</string>
-    <string name="settings_progress_sync">Sincronizzazione progressi</string>
+    <string name="settings_progress_sync">Salva i progressi</string>
     <string name="settings_local_backup">Backup locale</string>
     <string name="settings_privacy">Informativa sulla privacy</string>
     <string name="settings_about">Informazioni</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Esporta backup</string>
     <string name="backup_restore">Ripristina backup</string>
     <string name="backup_replace">Il ripristino sostituisce i progressi locali.</string>
-    <string name="backup_no_cloud">La sincronizzazione cloud è disattivata.</string>
+    <string name="backup_no_cloud">Nessuna sincronizzazione cloud.</string>
     <string name="about_title">Informazioni sul gioco</string>
     <string name="about_goal">Unisci le tessere uguali e raggiungi 2048.</string>
     <string name="about_swipe">Scorri in alto, in basso, a sinistra o a destra.</string>

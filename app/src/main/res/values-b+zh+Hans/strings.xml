@@ -9,7 +9,7 @@
     <string name="settings_vibration">振动</string>
     <string name="settings_language">语言</string>
     <string name="settings_notifications">通知</string>
-    <string name="settings_progress_sync">进度同步</string>
+    <string name="settings_progress_sync">备份进度</string>
     <string name="settings_local_backup">本地备份</string>
     <string name="settings_privacy">隐私政策</string>
     <string name="settings_about">关于</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">导出备份</string>
     <string name="backup_restore">恢复备份</string>
     <string name="backup_replace">恢复将替换本地进度。</string>
-    <string name="backup_no_cloud">云端同步未启用。</string>
+    <string name="backup_no_cloud">不提供云端同步。</string>
     <string name="about_title">关于游戏</string>
     <string name="about_goal">合并相同方块，达到2048。</string>
     <string name="about_swipe">向上、下、左或右滑动。</string>

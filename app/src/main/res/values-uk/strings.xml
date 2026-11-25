@@ -9,7 +9,7 @@
     <string name="settings_vibration">Вібрація</string>
     <string name="settings_language">Мова</string>
     <string name="settings_notifications">Сповіщення</string>
-    <string name="settings_progress_sync">Синхронізація прогресу</string>
+    <string name="settings_progress_sync">Зберегти прогрес</string>
     <string name="settings_local_backup">Локальна резервна копія</string>
     <string name="settings_privacy">Політика конфіденційності</string>
     <string name="settings_about">Про застосунок</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Експорт резервної копії</string>
     <string name="backup_restore">Відновити резервну копію</string>
     <string name="backup_replace">Відновлення замінює локальний прогрес.</string>
-    <string name="backup_no_cloud">Хмарну синхронізацію вимкнено.</string>
+    <string name="backup_no_cloud">Хмарної синхронізації немає.</string>
     <string name="about_title">Про гру</string>
     <string name="about_goal">Об’єднуй однакові плитки та досягни 2048.</string>
     <string name="about_swipe">Проведи вгору, вниз, ліворуч або праворуч.</string>

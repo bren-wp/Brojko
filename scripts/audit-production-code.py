@@ -50,7 +50,7 @@ java = {p.name: p.read_text(encoding="utf-8") for p in sorted(SRC.glob("*.java")
 expected_sources = {
     "AppReminder.java", "AppReminderBoot.java",
     "ClassicBrandContours.java", "SplashBrandContours.java",
-    "MainActivity.java", "MissionProgress.java", "TileGame.java", "TileLineMerger.java",
+    "MainActivity.java", "RoundedStarPath.java", "StatisticsChartData.java", "SessionTransitionPolicy.java", "RewardPolicy.java", "MissionProgress.java", "TileGame.java", "TileLineMerger.java",
     "OwnerHeadlineContours.java",
     "LocalBackupRepository.java", "LocalHistoryRepository.java",
     "GameArchiveCoordinator.java",
@@ -130,6 +130,11 @@ assert not re.search(r"(implementation|androidTestImplementation|testImplementat
 # dynamic page routing and Java reflection make automatic deletion unsafe.
 # Confirm one-by-one before touching code.
 candidates = []
+reviewed_framework_callbacks = {
+    "BoardAccessibilityDelegate.java": {"getVirtualViewAt", "getVisibleVirtualViews",
+        "onPopulateNodeForVirtualView", "onPerformActionForVirtualView"},
+    "LanguageSearchDialog.java": {"beforeTextChanged", "onTextChanged", "afterTextChanged"},
+}
 for path, body in java.items():
     for match in re.finditer(
         r"\b(?:void|boolean|int|long|float|String|JSONObject|JSONArray|byte\[\])\s+"
@@ -139,6 +144,10 @@ for path, body in java.items():
         method = match.group(1)
         # Use all production classes, not merely the defining file.
         mentions = len(re.findall(r"\b" + re.escape(method) + r"\s*\(", combined))
+        mentions += len(re.findall(r"::\s*" + re.escape(method) + r"\b", combined))
+        if mentions == 1 and method in reviewed_framework_callbacks.get(path, set()):
+            print("  REVIEWED FRAMEWORK CALLBACK: " + path + ":" + method)
+            continue
         if mentions == 1 and method not in {
             "onCreate", "onPause", "onDestroy", "onDraw", "onReceive",
             "onActivityResult", "onRequestPermissionsResult",

@@ -81,3 +81,7 @@ povratne kompatibilnosti datoteka i Android lifecycle callbackova
 nije dopušteno bez dokaza. Rezultat nije tvrdnja o potpunom 100%
 dead-code auditu: preostaje ručna inspekcija `BoardScreen` i
 verifikacija R8 usage reporta nakon objavljene minificirane gradnje.
+
+## PR #160 — individual review of all eleven previous candidates
+
+Seven are framework callbacks: four ExploreByTouchHelper overrides (getVirtualViewAt, getVisibleVirtualViews, onPopulateNodeForVirtualView, onPerformActionForVirtualView) and three TextWatcher callbacks (beforeTextChanged, onTextChanged, afterTextChanged). Four are active Canvas method references: drawSplashWordmark, drawOwnerSplashNavyWordmark, drawIntrinsicGrid, drawOwnerSettingsFooterBrand. None is safe to delete. The source scanner now counts Java method-reference syntax and reports the explicitly reviewed framework callbacks separately, without changing the production rendering path. Structural token clone groups still need individual semantic review; different vector coordinates are not interchangeable.

@@ -61,14 +61,15 @@ public final class OwnerDailyBackupEmptyChartPhase142Test {
                     assertTrue("Must disclose real local-only backup",localCopy);
                     int actions=0;
                     for(MainActivity.BoardScreen.Tap tap:screen.taps){
-                        if("Sinkronizacija napretka".equals(tap.label)){
+                        if(screen.uiText(R.string.settings_progress_sync).equals(tap.label)){
                             actions++;
                             assertNotNull(tap.action);
                             assertTrue("Whole row remains touchable",
                                 tap.right-tap.left>=350f);
                         }
                         assertFalse("No fictitious sync-enabled toggle",
-                            tap.label.startsWith("Sinkronizacija napretka uključeno"));
+                            tap.label.equals(screen.localizedResources.getString(R.string.settings_switch_on,
+                                screen.uiText(R.string.settings_progress_sync))));
                     }
                     assertEquals("One backup navigation",1,actions);
                 }finally{pixels.recycle();}

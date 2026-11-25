@@ -31,7 +31,7 @@ assert "if (( ${#screenshots[@]} != 28 )); then" in workflow, (
 # Link images to a release that already contains all real emulator captures.
 # The latest release may temporarily have only APK/AAB while UI QA is running.
 verified = re.search(
-    r"Galerija koristi provjerene snimke iz izdanja \*\*(v\d+\.\d+\.\d+)\*\*",
+    r"Gallery uses verified captures from release \*\*(v\d+\.\d+\.\d+)\*\*",
     readme,
 )
 assert verified, "README must identify its complete verified screenshot release"
@@ -43,7 +43,7 @@ for name, origin in mapping.items():
     assert name.endswith(".png") and origin.endswith(".png")
     url = "https://github.com/bren-wp/Brojko/releases/download/" + gallery_tag + "/" + name
     assert f'src="{url}"' in readme, "Missing screenshot in README: " + name
-    assert f'alt="Stvarna Android snimka Brojko:' in readme, "Screenshot alt text is required"
-assert "realne snimke" in readme.lower() or "stvarne snimke" in readme.lower()
+    assert f'alt="Real Android screenshot of Brojko:' in readme, "Screenshot alt text is required"
+assert "actual android captures" in readme.lower()
 assert "python3 scripts/stage-marketing-screenshots.py" in workflow
 print(f"OK: README advertises {len(mapping)} distinct Android captures from verified emulator QA")

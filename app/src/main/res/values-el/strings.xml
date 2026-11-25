@@ -9,7 +9,7 @@
     <string name="settings_vibration">Δόνηση</string>
     <string name="settings_language">Γλώσσα</string>
     <string name="settings_notifications">Ειδοποιήσεις</string>
-    <string name="settings_progress_sync">Συγχρονισμός προόδου</string>
+    <string name="settings_progress_sync">Αποθήκευση προόδου</string>
     <string name="settings_local_backup">Τοπικό αντίγραφο ασφαλείας</string>
     <string name="settings_privacy">Πολιτική απορρήτου</string>
     <string name="settings_about">Σχετικά</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Εξαγωγή αντιγράφου</string>
     <string name="backup_restore">Επαναφορά αντιγράφου</string>
     <string name="backup_replace">Η επαναφορά αντικαθιστά την τοπική πρόοδο.</string>
-    <string name="backup_no_cloud">Ο συγχρονισμός στο cloud είναι απενεργοποιημένος.</string>
+    <string name="backup_no_cloud">Χωρίς συγχρονισμό στο cloud.</string>
     <string name="about_title">Σχετικά με το παιχνίδι</string>
     <string name="about_goal">Ένωσε ίδια πλακίδια και φτάσε το 2048.</string>
     <string name="about_swipe">Σύρε πάνω, κάτω, αριστερά ή δεξιά.</string>

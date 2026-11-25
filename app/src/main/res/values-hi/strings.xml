@@ -9,7 +9,7 @@
     <string name="settings_vibration">कंपन</string>
     <string name="settings_language">भाषा</string>
     <string name="settings_notifications">सूचनाएँ</string>
-    <string name="settings_progress_sync">प्रगति सिंक करें</string>
+    <string name="settings_progress_sync">प्रगति का बैकअप लें</string>
     <string name="settings_local_backup">स्थानीय बैकअप</string>
     <string name="settings_privacy">गोपनीयता नीति</string>
     <string name="settings_about">परिचय</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">बैकअप निर्यात करें</string>
     <string name="backup_restore">बैकअप बहाल करें</string>
     <string name="backup_replace">बहाली स्थानीय प्रगति की जगह लेती है।</string>
-    <string name="backup_no_cloud">क्लाउड सिंक बंद है।</string>
+    <string name="backup_no_cloud">क्लाउड सिंक उपलब्ध नहीं है।</string>
     <string name="about_title">गेम के बारे में</string>
     <string name="about_goal">समान टाइलें मिलाएँ और 2048 तक पहुँचें।</string>
     <string name="about_swipe">ऊपर, नीचे, बाएँ या दाएँ स्वाइप करें।</string>

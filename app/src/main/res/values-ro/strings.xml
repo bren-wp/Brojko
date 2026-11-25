@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibrații</string>
     <string name="settings_language">Limbă</string>
     <string name="settings_notifications">Notificări</string>
-    <string name="settings_progress_sync">Sincronizare progres</string>
+    <string name="settings_progress_sync">Salvează progresul</string>
     <string name="settings_local_backup">Copie de rezervă locală</string>
     <string name="settings_privacy">Politica de confidențialitate</string>
     <string name="settings_about">Despre</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportă copia de rezervă</string>
     <string name="backup_restore">Restaurează copia de rezervă</string>
     <string name="backup_replace">Restaurarea înlocuiește progresul local.</string>
-    <string name="backup_no_cloud">Sincronizarea în cloud este dezactivată.</string>
+    <string name="backup_no_cloud">Fără sincronizare în cloud.</string>
     <string name="about_title">Despre joc</string>
     <string name="about_goal">Combină piese identice și atinge 2048.</string>
     <string name="about_swipe">Glisează în sus, jos, stânga sau dreapta.</string>

@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibración</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_notifications">Notificaciones</string>
-    <string name="settings_progress_sync">Sincronizar progreso</string>
+    <string name="settings_progress_sync">Guardar el progreso</string>
     <string name="settings_local_backup">Copia local</string>
     <string name="settings_privacy">Política de privacidad</string>
     <string name="settings_about">Acerca de</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Exportar copia</string>
     <string name="backup_restore">Restaurar copia</string>
     <string name="backup_replace">La restauración sustituye el progreso local.</string>
-    <string name="backup_no_cloud">La sincronización en la nube está desactivada.</string>
+    <string name="backup_no_cloud">No hay sincronización en la nube.</string>
     <string name="about_title">Acerca del juego</string>
     <string name="about_goal">Combina fichas iguales y llega a 2048.</string>
     <string name="about_swipe">Desliza hacia arriba, abajo, izquierda o derecha.</string>

@@ -9,7 +9,7 @@
     <string name="settings_vibration">Wibracje</string>
     <string name="settings_language">Język</string>
     <string name="settings_notifications">Powiadomienia</string>
-    <string name="settings_progress_sync">Synchronizacja postępów</string>
+    <string name="settings_progress_sync">Zapisz postępy</string>
     <string name="settings_local_backup">Lokalna kopia zapasowa</string>
     <string name="settings_privacy">Polityka prywatności</string>
     <string name="settings_about">Informacje</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Eksportuj kopię</string>
     <string name="backup_restore">Przywróć kopię</string>
     <string name="backup_replace">Przywrócenie zastępuje lokalne postępy.</string>
-    <string name="backup_no_cloud">Synchronizacja w chmurze jest wyłączona.</string>
+    <string name="backup_no_cloud">Brak synchronizacji w chmurze.</string>
     <string name="about_title">O grze</string>
     <string name="about_goal">Łącz identyczne kafelki i osiągnij 2048.</string>
     <string name="about_swipe">Przesuwaj palcem w górę, dół, lewo lub prawo.</string>

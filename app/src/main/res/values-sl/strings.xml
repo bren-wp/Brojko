@@ -9,7 +9,7 @@
     <string name="settings_vibration">Vibriranje</string>
     <string name="settings_language">Jezik</string>
     <string name="settings_notifications">Obvestila</string>
-    <string name="settings_progress_sync">Sinhronizacija napredka</string>
+    <string name="settings_progress_sync">Shrani napredek</string>
     <string name="settings_local_backup">Lokalna varnostna kopija</string>
     <string name="settings_privacy">Pravilnik o zasebnosti</string>
     <string name="settings_about">O aplikaciji</string>
@@ -33,7 +33,7 @@
     <string name="backup_export">Izvozi varnostno kopijo</string>
     <string name="backup_restore">Obnovi varnostno kopijo</string>
     <string name="backup_replace">Obnovitev nadomesti lokalni napredek.</string>
-    <string name="backup_no_cloud">Sinhronizacija v oblaku ni omogočena.</string>
+    <string name="backup_no_cloud">Brez sinhronizacije v oblaku.</string>
     <string name="about_title">O igri</string>
     <string name="about_goal">Združuj enake ploščice in dosezi 2048.</string>
     <string name="about_swipe">Podrsaj gor, dol, levo ali desno.</string>
